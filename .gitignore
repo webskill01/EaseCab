@@ -3,6 +3,9 @@ node_modules/
 .pnp
 .pnp.js
 
+# Local-only project docs (planning, decisions, setup runbooks) — kept on disk, not committed
+docs/
+
 # Build outputs
 .next/
 out/
