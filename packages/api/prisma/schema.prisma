@@ -1,0 +1,433 @@
+// EaseCab — Prisma schema (Build Order Step 2)
+// JavaScript project: Prisma runs in JS mode; Zod (packages/shared) is the runtime
+// type-safety layer. This schema is the single source of truth for the DB structure.
+// All migrations are reversible. Never alter the DB directly.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL") // pooled (pgBouncer / transaction mode) — app runtime
+  directUrl  = env("DIRECT_URL")   // direct (session mode) — migrations only
+  extensions = [pg_trgm]           // fuzzy city-string matching (CityResolverService layer 3)
+}
+
+// ---------------------------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------------------------
+
+enum CityType {
+  metro
+  city
+  town
+  village
+  landmark
+}
+
+enum AliasSource {
+  migrated
+  manual
+  ai
+  inferred
+}
+
+enum RideStatus {
+  fresh
+  booked
+  hidden
+}
+
+enum PostedRideStatus {
+  active
+  done
+  expired
+  deleted
+}
+
+enum VerificationStatus {
+  none
+  submitted
+  approved
+  rejected
+}
+
+enum SubscriptionStatus {
+  trial
+  active
+  expired
+  halted
+  cancelled
+}
+
+enum ReportReason {
+  fake
+  spam
+  wrong_info
+  inappropriate
+  other
+}
+
+enum MessageType {
+  text
+  image
+}
+
+enum PushPlatform {
+  android
+  web
+  ios
+}
+
+enum AdminRole {
+  super
+  reviewer
+}
+
+// ---------------------------------------------------------------------------
+// CITY RESOLUTION
+// ---------------------------------------------------------------------------
+
+model City {
+  id            String   @id @default(uuid()) @db.Uuid
+  canonicalName String   @map("canonical_name")
+  state         String
+  district      String?
+  type          CityType @default(city)
+  lat           Decimal? @db.Decimal(9, 6)
+  lng           Decimal? @db.Decimal(9, 6)
+  population    Int?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  aliases          CityAlias[]
+  unresolvedHints  UnresolvedCityString[]
+  pickupRides      Ride[]        @relation("RidePickupCity")
+  dropRides        Ride[]        @relation("RideDropCity")
+  fromPostedRides  PostedRide[]  @relation("PostedRideFromCity")
+  toPostedRides    PostedRide[]  @relation("PostedRideToCity")
+
+  @@unique([canonicalName, state]) // natural key — idempotent seeding
+  @@index([state])
+  @@index([isActive])
+  // Trigram index for fuzzy matching on canonical_name (pg_trgm)
+  @@index([canonicalName(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@map("cities")
+}
+
+model CityAlias {
+  id         String      @id @default(uuid()) @db.Uuid
+  cityId     String      @map("city_id") @db.Uuid
+  aliasText  String      @map("alias_text")
+  source     AliasSource @default(manual)
+  confidence Decimal     @default(1.0) @db.Decimal(3, 2)
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([aliasText, cityId])
+  @@index([cityId])
+  // Trigram index powers CityResolverService layer 3 (similarity > 0.4)
+  @@index([aliasText(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@map("city_aliases")
+}
+
+model UnresolvedCityString {
+  id              String    @id @default(uuid()) @db.Uuid
+  rawText         String    @unique @map("raw_text")
+  occurrenceCount Int       @default(1) @map("occurrence_count")
+  suggestedCityId String?   @map("suggested_city_id") @db.Uuid
+  reviewedAt      DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  suggestedCity City? @relation(fields: [suggestedCityId], references: [id], onDelete: SetNull)
+
+  @@index([reviewedAt])
+  @@index([suggestedCityId])
+  @@map("unresolved_city_strings")
+}
+
+// ---------------------------------------------------------------------------
+// RIDES (bot-scraped) + FINGERPRINTS
+// ---------------------------------------------------------------------------
+
+model Ride {
+  id              String     @id @default(uuid()) @db.Uuid
+  rawText         String     @map("raw_text")                 // original WA message
+  displayText     String     @map("display_text")             // phone masked with ████
+  pickupCityId    String?    @map("pickup_city_id") @db.Uuid
+  dropCityId      String?    @map("drop_city_id") @db.Uuid
+  pickupRaw       String?    @map("pickup_raw")
+  dropRaw         String?    @map("drop_raw")
+  phoneNumber     String     @map("phone_number")             // never exposed without active sub
+  vehicleType     String?    @map("vehicle_type")
+  sourceGroupId   String?    @map("source_group_id")
+  sourceGroupName String?    @map("source_group_name")
+  botId           String?    @map("bot_id")
+  fingerprint     String                                       // dedup key (lives with row until hard delete)
+  status          RideStatus @default(fresh)
+  receivedAt      DateTime   @default(now()) @map("received_at") @db.Timestamptz(6)
+  expiresAt       DateTime   @map("expires_at") @db.Timestamptz(6)   // 30 min — feed removal
+  dbDeleteAt      DateTime   @map("db_delete_at") @db.Timestamptz(6) // 12h — hard delete
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  pickupCity City? @relation("RidePickupCity", fields: [pickupCityId], references: [id], onDelete: SetNull)
+  dropCity   City? @relation("RideDropCity", fields: [dropCityId], references: [id], onDelete: SetNull)
+  contacts   RideContact[]
+  reports    RideReport[]
+
+  @@index([fingerprint])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([dbDeleteAt])
+  @@index([createdAt])
+  @@index([pickupCityId])
+  @@index([dropCityId])
+  @@map("rides")
+}
+
+// Dedup authority. Separate table, 48h TTL, survives ride-row hard deletion.
+model RideFingerprint {
+  id          String   @id @default(uuid()) @db.Uuid
+  fingerprint String   @unique
+  rideId      String?  @map("ride_id") @db.Uuid // loose ref; nulled if ride deleted, row persists
+  firstSeenAt DateTime @default(now()) @map("first_seen_at") @db.Timestamptz(6)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(6) // 48h from first_seen_at
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([expiresAt])
+  @@map("ride_fingerprints")
+}
+
+// ---------------------------------------------------------------------------
+// POSTED RIDES (app-native, verified)
+// ---------------------------------------------------------------------------
+
+model PostedRide {
+  id          String           @id @default(uuid()) @db.Uuid
+  postedBy    String           @map("posted_by") @db.Uuid
+  fromCityId  String?          @map("from_city_id") @db.Uuid
+  toCityId    String?          @map("to_city_id") @db.Uuid
+  fromCityRaw String?          @map("from_city_raw")
+  toCityRaw   String?          @map("to_city_raw")
+  vehicleType String?          @map("vehicle_type")
+  fare        Decimal?         @db.Decimal(10, 2)
+  rideDate    DateTime?        @map("ride_date") @db.Date
+  rideTime    DateTime?        @map("ride_time") @db.Time(6)
+  phone       String
+  notes       String?
+  status      PostedRideStatus @default(active)
+  isClosed    Boolean          @default(false) @map("is_closed")
+  expiresAt   DateTime         @map("expires_at") @db.Timestamptz(6) // 24h default
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  poster   User          @relation(fields: [postedBy], references: [id], onDelete: Cascade)
+  fromCity City?         @relation("PostedRideFromCity", fields: [fromCityId], references: [id], onDelete: SetNull)
+  toCity   City?         @relation("PostedRideToCity", fields: [toCityId], references: [id], onDelete: SetNull)
+  contacts RideContact[]
+  reports  RideReport[]
+  chats    Chat[]
+
+  @@index([postedBy])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@index([fromCityId])
+  @@index([toCityId])
+  @@map("posted_rides")
+}
+
+// ---------------------------------------------------------------------------
+// USERS
+// ---------------------------------------------------------------------------
+
+model User {
+  id                 String             @id @default(uuid()) @db.Uuid
+  phone              String             @unique
+  name               String?
+  profilePicUrl      String?            @map("profile_pic_url")
+  baseCity           String?            @map("base_city")
+  vehicleType        String?            @map("vehicle_type")
+  languagesSpoken    String[]           @map("languages_spoken")
+  aadhaarVerified    Boolean            @default(false) @map("aadhaar_verified")
+  dlSubmitted        Boolean            @default(false) @map("dl_submitted")
+  rcSubmitted        Boolean            @default(false) @map("rc_submitted")
+  verificationStatus VerificationStatus @default(none) @map("verification_status")
+  licenseUrl         String?            @map("license_url")
+  rcUrl              String?            @map("rc_url")
+  notificationCities String[]           @map("notification_cities")
+  lastKnownCity      String?            @map("last_known_city")
+  isDeleted          Boolean            @default(false) @map("is_deleted")
+  deletedAt          DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  subscription      Subscription?
+  postedRides       PostedRide[]
+  contacts          RideContact[]
+  reports           RideReport[]
+  pushSubscriptions PushSubscription[]
+  initiatedChats    Chat[]             @relation("ChatInitiator")
+  postedChats       Chat[]             @relation("ChatPoster")
+  sentMessages      ChatMessage[]
+
+  @@index([isDeleted])
+  @@index([createdAt])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// SUBSCRIPTIONS
+// ---------------------------------------------------------------------------
+
+model Subscription {
+  id             String             @id @default(uuid()) @db.Uuid
+  userId         String             @unique @map("user_id") @db.Uuid
+  status         SubscriptionStatus @default(trial)
+  trialStartedAt DateTime           @default(now()) @map("trial_started_at") @db.Timestamptz(6)
+  trialExpiresAt DateTime           @map("trial_expires_at") @db.Timestamptz(6) // +7d
+  paidStartedAt  DateTime?          @map("paid_started_at") @db.Timestamptz(6)
+  expiresAt      DateTime?          @map("expires_at") @db.Timestamptz(6) // null in trial; stacks on renewal
+  razorpaySubId  String?            @map("razorpay_sub_id")
+  razorpayPlanId String?            @map("razorpay_plan_id")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([expiresAt])
+  @@index([trialExpiresAt])
+  @@map("subscriptions")
+}
+
+// ---------------------------------------------------------------------------
+// RIDE CONTACTS (history / "Contacted Rides")
+// ---------------------------------------------------------------------------
+
+model RideContact {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  rideId       String?  @map("ride_id") @db.Uuid          // bot ride
+  postedRideId String?  @map("posted_ride_id") @db.Uuid   // verified ride
+  contactedAt  DateTime @default(now()) @map("contacted_at") @db.Timestamptz(6)
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ride       Ride?       @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  postedRide PostedRide? @relation(fields: [postedRideId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, rideId])
+  @@unique([userId, postedRideId])
+  @@index([userId])
+  @@index([rideId])
+  @@index([postedRideId])
+  @@map("ride_contacts")
+}
+
+// ---------------------------------------------------------------------------
+// RIDE REPORTS
+// ---------------------------------------------------------------------------
+
+model RideReport {
+  id           String       @id @default(uuid()) @db.Uuid
+  reporterId   String       @map("reporter_id") @db.Uuid
+  rideId       String?      @map("ride_id") @db.Uuid
+  postedRideId String?      @map("posted_ride_id") @db.Uuid
+  reason       ReportReason
+  remarks      String?
+  screenshotUrl String?     @map("screenshot_url")
+  reviewedAt   DateTime?    @map("reviewed_at") @db.Timestamptz(6)
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  reporter   User        @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  ride       Ride?       @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  postedRide PostedRide? @relation(fields: [postedRideId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([rideId])
+  @@index([postedRideId])
+  @@index([reviewedAt])
+  @@index([createdAt])
+  @@map("ride_reports")
+}
+
+// ---------------------------------------------------------------------------
+// CHAT (Postgres mirror of Firestore threads)
+// ---------------------------------------------------------------------------
+
+model Chat {
+  id            String   @id @default(uuid()) @db.Uuid
+  postedRideId  String   @map("posted_ride_id") @db.Uuid
+  initiatorId   String   @map("initiator_id") @db.Uuid
+  posterId      String   @map("poster_id") @db.Uuid
+  isActive      Boolean  @default(true) @map("is_active") // false = read-only (ride expired/done)
+  lastMessageAt DateTime? @map("last_message_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  postedRide PostedRide    @relation(fields: [postedRideId], references: [id], onDelete: Cascade)
+  initiator  User          @relation("ChatInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  poster     User          @relation("ChatPoster", fields: [posterId], references: [id], onDelete: Cascade)
+  messages   ChatMessage[]
+
+  @@unique([postedRideId, initiatorId])
+  @@index([postedRideId])
+  @@index([initiatorId])
+  @@index([posterId])
+  @@index([isActive])
+  @@index([lastMessageAt])
+  @@map("chats")
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid()) @db.Uuid
+  chatId        String      @map("chat_id") @db.Uuid
+  senderId      String      @map("sender_id") @db.Uuid
+  messageType   MessageType @default(text) @map("message_type")
+  messageText   String?     @map("message_text")    // null if image
+  attachmentUrl String?     @map("attachment_url")  // null if text
+  readAt        DateTime?   @map("read_at") @db.Timestamptz(6)
+  sentAt        DateTime    @default(now()) @map("sent_at") @db.Timestamptz(6)
+
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@index([senderId])
+  @@index([sentAt])
+  @@map("chat_messages")
+}
+
+// ---------------------------------------------------------------------------
+// PUSH SUBSCRIPTIONS (device tokens)
+// ---------------------------------------------------------------------------
+
+model PushSubscription {
+  id          String       @id @default(uuid()) @db.Uuid
+  userId      String       @map("user_id") @db.Uuid
+  deviceToken String       @map("device_token") // FCM token OR Web Push subscription JSON
+  platform    PushPlatform
+  lastSeenAt  DateTime     @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceToken])
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+// ---------------------------------------------------------------------------
+// ADMIN USERS (isolated from app users)
+// ---------------------------------------------------------------------------
+
+model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  name         String?
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(reviewer)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("admin_users")
+}

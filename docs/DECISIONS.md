@@ -28,3 +28,7 @@ All architectural decisions that are final and must never be changed without exp
 
 <!-- Append here as implementation decisions are locked. -->
 <!-- Format: | YYYY-MM-DD | Decision | Reason | -->
+| 2026-05-30 | City seed = curated PB/HR/Delhi-NCR corridor set (102 cities, 213 aliases), not full Census 2011. | User chose curated set; full Census file unavailable. `seed.js` is data-source agnostic — Census can load later via same upsert path. |
+| 2026-05-30 | Prisma migrations applied via non-interactive baseline (`migrate diff --from-empty` → `migrate deploy`). | `migrate dev` requires an interactive TTY not available in the agent environment. |
+| 2026-05-30 | `CREATE EXTENSION IF NOT EXISTS pg_trgm` prepended to 0_init migration manually. | `migrate diff` omitted it, but the GIN `gin_trgm_ops` fuzzy-match indexes depend on it. |
+| 2026-05-30 | `ride_fingerprints` modeled as standalone table with `ride_id` ON DELETE SET NULL. | Dedup integrity: fingerprint row (48h TTL) must outlive the hard-deleted ride row. |
