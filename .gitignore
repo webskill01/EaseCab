@@ -50,6 +50,10 @@ packages/bot/auth_info_baileys/
 coverage/
 .eslintcache
 
+# Code-review tooling (local state)
+.last-db-reviewed-commit
+.code-review-graph/
+
 # OS
 .DS_Store
 Thumbs.db
