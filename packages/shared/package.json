@@ -9,5 +9,8 @@
   },
   "dependencies": {
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "c8": "^10.1.3"
   }
 }

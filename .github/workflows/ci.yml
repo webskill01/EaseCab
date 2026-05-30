@@ -1,0 +1,47 @@
+name: CI
+
+# Quality gate — must pass before merge. Mirrors CLAUDE.md §11:
+# install -> lint -> test (with coverage gate) -> build.
+# Any failing test or sub-threshold coverage fails the build.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'feature/**', 'fix/**', 'chore/**']
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # matches engines.node and the VPS runtime (not the dev machine's 24)
+          cache: npm
+
+      - name: Install (clean, lockfile-pinned)
+        run: npm ci
+
+      # Generate Prisma client so any workspace importing @prisma/client builds/tests cleanly.
+      - name: Prisma generate
+        run: npm run prisma:generate --workspace=packages/api
+
+      - name: Lint
+        run: npm run lint
+
+      # Coverage gate: c8 --check-coverage exits non-zero below thresholds (see each package).
+      - name: Test + coverage gate
+        run: npm run test:coverage
+
+      - name: Build web
+        run: npm run build:web
