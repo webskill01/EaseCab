@@ -37,8 +37,13 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
     try {
       const raw = await redis.get(key);
       if (!raw) return null;
-      const { cityId, canonicalName } = JSON.parse(raw);
-      return resolvedResult(cityId, canonicalName, RESOLVE_LAYER.CACHE, 1);
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.cityId !== 'string' || !parsed.cityId ||
+          typeof parsed?.canonicalName !== 'string' || !parsed.canonicalName) {
+        logger.warn?.({ key }, 'cityResolver: malformed cache entry — ignoring, degrading to DB');
+        return null;
+      }
+      return resolvedResult(parsed.cityId, parsed.canonicalName, RESOLVE_LAYER.CACHE, 1);
     } catch (err) {
       logger.warn?.({ err: err.message }, 'cityResolver: redis get failed — degrading to DB');
       return null;
@@ -165,8 +170,25 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
    * @returns {Promise<object>} resolve result
    */
   async function resolve(rawText) {
+    // DoS guard — reject oversized input before any normalization, Redis, or DB work.
+    if (typeof rawText !== 'string' || rawText.length > CITY_RESOLVER.MAX_INPUT_LENGTH) {
+      return unresolvedResult();
+    }
+
     const normalized = normalizeCityText(rawText);
     if (normalized.length < CITY_RESOLVER.MIN_LENGTH) return unresolvedResult();
+
+    // PII guard — the caller must pass only a city fragment, never a full message.
+    // A run of phone-length digits means a phone number slipped in; fail fast so it
+    // is never persisted to unresolved_city_strings (CLAUDE.md §10). Short numbers
+    // in real fragments ("sector 17", "phase 10") do not trip this.
+    if (new RegExp(`\\d{${CITY_RESOLVER.PHONE_DIGIT_RUN},}`).test(normalized)) {
+      throw new AppError(
+        ERROR_CODES.VALIDATION_ERROR,
+        'resolve() received a string with a phone-number-like digit run — pass only the city fragment',
+        400,
+      );
+    }
 
     const key = cacheKeyFor(normalized);
     try {

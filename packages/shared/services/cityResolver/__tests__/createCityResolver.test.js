@@ -157,6 +157,44 @@ test('no-candidate fuzzy queues with no suggestion', async () => {
   assert.equal(upsertArg.create.suggestedCityId, null);
 });
 
+test('over-length input returns unresolved before touching Redis or DB (DoS guard)', async () => {
+  let touched = false;
+  const redis = makeRedis({ get: async () => { touched = true; return null; } });
+  const prisma = makePrisma({ cityAlias: { findFirst: async () => { touched = true; return null; } } });
+  const resolver = createCityResolver({ prisma, redis, logger: silentLogger });
+
+  const result = await resolver.resolve('x'.repeat(200));
+  assert.equal(result.status, 'unresolved');
+  assert.equal(touched, false);
+});
+
+test('input with a phone-number-like digit run throws VALIDATION_ERROR (PII guard)', async () => {
+  const resolver = createCityResolver({ prisma: makePrisma(), redis: makeRedis(), logger: silentLogger });
+
+  await assert.rejects(
+    () => resolver.resolve('9876543210 delhi airport'),
+    (err) => err.name === 'AppError' && err.code === 'VALIDATION_ERROR' && err.statusCode === 400,
+  );
+});
+
+test('short numbers in city fragments (e.g. "sector 17") are allowed', async () => {
+  const prisma = makePrisma({
+    cityAlias: { findFirst: async () => ({ cityId: 'uuid-chd', city: { canonicalName: 'Chandigarh' } }) },
+  });
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  const result = await resolver.resolve('sector 17');
+  assert.equal(result.status, 'resolved'); // 2-digit run does not trip the phone guard
+});
+
+test('malformed cache entry (missing fields) degrades to DB instead of returning bad data', async () => {
+  const redis = makeRedis({ get: async () => JSON.stringify({ foo: 'bar' }) });
+  const resolver = createCityResolver({ prisma: makePrisma(), redis, logger: silentLogger });
+
+  const result = await resolver.resolve('delhi'); // cache miss-equivalent → DB → unresolved
+  assert.equal(result.status, 'unresolved');
+});
+
 test('DB failure throws AppError(INTERNAL_ERROR)', async () => {
   const prisma = makePrisma({
     cityAlias: { findFirst: async () => { throw new Error('db down'); } },

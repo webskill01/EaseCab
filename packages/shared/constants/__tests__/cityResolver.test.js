@@ -9,6 +9,8 @@ test('CITY_RESOLVER has the locked thresholds and is frozen', () => {
   assert.equal(CITY_RESOLVER.FUZZY_WINNER_GAP, 0.1);
   assert.equal(CITY_RESOLVER.FUZZY_QUEUE_FLOOR, 0.3);
   assert.equal(CITY_RESOLVER.MIN_LENGTH, 2);
+  assert.equal(CITY_RESOLVER.MAX_INPUT_LENGTH, 120);
+  assert.equal(CITY_RESOLVER.PHONE_DIGIT_RUN, 7);
   assert.equal(CITY_RESOLVER.CACHE_TTL_SECONDS, 86400);
   assert.deepEqual(CITY_RESOLVER.CACHE_KEY_PARTS, ['city', 'resolve']);
   assert.ok(Object.isFrozen(CITY_RESOLVER));
