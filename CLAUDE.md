@@ -103,7 +103,7 @@ Each feature folder is self-contained: components, hooks, services, tests.
 
 ## 7. DATABASE
 
-- Every migration must be reversible. Never alter tables directly.
+- Migrations are forward-only (roll-forward): to undo a change, write a NEW migration that reverses it. Never edit or delete an already-applied migration, and never alter tables directly. (Vanilla Prisma does not generate `down` migrations — see DECISIONS.md.)
 - Required indexes: all foreign keys, `users.phone`, `rides.fingerprint`, status columns on rides/subscriptions, `expires_at` on time-sensitive tables, `created_at` on high-volume tables.
 - Ride fingerprints in separate `ride_fingerprints` table with 48h TTL — never deleted when the ride row is deleted.
 - Soft delete for users: `is_deleted` + `deleted_at`. Hard delete after 30 days via cron.
