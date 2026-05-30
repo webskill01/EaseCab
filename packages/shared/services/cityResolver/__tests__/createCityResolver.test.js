@@ -131,3 +131,40 @@ test('fuzzy below auto-accept threshold is not resolved', async () => {
   const result = await resolver.resolve('ambl');
   assert.equal(result.status, 'unresolved');
 });
+
+test('mid-band fuzzy queues the normalized text WITH a suggestion', async () => {
+  let upsertArg = null;
+  const prisma = makePrismaFuzzy([{ city_id: 'uuid-a', canonical_name: 'Ambala', similarity: 0.45 }]);
+  prisma.unresolvedCityString.upsert = async (arg) => { upsertArg = arg; return {}; };
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  const result = await resolver.resolve('ambl xyz');
+  assert.equal(result.status, 'unresolved');
+  assert.equal(upsertArg.where.rawText, 'ambl xyz');
+  assert.equal(upsertArg.create.suggestedCityId, 'uuid-a');
+  assert.equal(upsertArg.create.occurrenceCount, 1);
+  assert.deepEqual(upsertArg.update, { occurrenceCount: { increment: 1 } });
+});
+
+test('no-candidate fuzzy queues with no suggestion', async () => {
+  let upsertArg = null;
+  const prisma = makePrismaFuzzy([]); // nothing >= floor
+  prisma.unresolvedCityString.upsert = async (arg) => { upsertArg = arg; return {}; };
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  const result = await resolver.resolve('zzqq plot');
+  assert.equal(result.status, 'unresolved');
+  assert.equal(upsertArg.create.suggestedCityId, null);
+});
+
+test('DB failure throws AppError(INTERNAL_ERROR)', async () => {
+  const prisma = makePrisma({
+    cityAlias: { findFirst: async () => { throw new Error('db down'); } },
+  });
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  await assert.rejects(
+    () => resolver.resolve('delhi'),
+    (err) => err.name === 'AppError' && err.code === 'INTERNAL_ERROR' && err.statusCode === 500,
+  );
+});

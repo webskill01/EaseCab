@@ -128,6 +128,22 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
   }
 
   /**
+   * Layer 4 — upsert the normalized string into the admin review queue.
+   * Inserts with occurrence_count 1 (and a suggestion if one exists), or
+   * increments occurrence_count on a repeat. Never overwrites an existing
+   * suggestion (admin's resolution wins).
+   * @param {string} normalized
+   * @param {string|null} suggestedCityId
+   */
+  async function queueUnresolved(normalized, suggestedCityId) {
+    await prisma.unresolvedCityString.upsert({
+      where: { rawText: normalized },
+      create: { rawText: normalized, occurrenceCount: 1, suggestedCityId },
+      update: { occurrenceCount: { increment: 1 } },
+    });
+  }
+
+  /**
    * Resolve a raw city string through the layers (first hit wins).
    * @param {string} rawText
    * @returns {Promise<object>} resolve result
@@ -153,7 +169,7 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
         return resolvedResult(fuzzy.cityId, fuzzy.canonicalName, RESOLVE_LAYER.FUZZY, fuzzy.similarity);
       }
 
-      // Unresolved-queue write is added in Task 7.
+      await queueUnresolved(normalized, fuzzy.suggestedCityId);
       return unresolvedResult();
     } catch (err) {
       if (err instanceof AppError) throw err;
