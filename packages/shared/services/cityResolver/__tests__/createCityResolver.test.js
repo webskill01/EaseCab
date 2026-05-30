@@ -88,3 +88,46 @@ test('exact canonical-name match resolves when no alias matches', async () => {
   assert.equal(result.layer, 'exact');
   assert.equal(result.cityId, 'uuid-mohali');
 });
+
+/** Build a prisma stub whose fuzzy query returns the given candidate rows. */
+function makePrismaFuzzy(rows) {
+  return makePrisma({
+    cityAlias: { findFirst: async () => null },
+    city: { findFirst: async () => null },
+    $queryRaw: async () => rows,
+  });
+}
+
+test('fuzzy auto-accepts a clear winner (>=0.55 and gap >=0.1)', async () => {
+  const prisma = makePrismaFuzzy([
+    { city_id: 'uuid-chd', canonical_name: 'Chandigarh', similarity: 0.7 },
+    { city_id: 'uuid-other', canonical_name: 'Other', similarity: 0.4 },
+  ]);
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  const result = await resolver.resolve('chandigrah');
+  assert.equal(result.status, 'resolved');
+  assert.equal(result.layer, 'fuzzy');
+  assert.equal(result.cityId, 'uuid-chd');
+  assert.equal(result.canonicalName, 'Chandigarh');
+  assert.ok(Math.abs(result.confidence - 0.7) < 1e-9);
+});
+
+test('fuzzy does NOT auto-accept an ambiguous top match (gap < 0.1)', async () => {
+  const prisma = makePrismaFuzzy([
+    { city_id: 'uuid-a', canonical_name: 'Patiala', similarity: 0.6 },
+    { city_id: 'uuid-b', canonical_name: 'Patran', similarity: 0.55 },
+  ]);
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  const result = await resolver.resolve('patala');
+  assert.equal(result.status, 'unresolved'); // queued (Task 7 records the suggestion)
+});
+
+test('fuzzy below auto-accept threshold is not resolved', async () => {
+  const prisma = makePrismaFuzzy([{ city_id: 'uuid-a', canonical_name: 'Ambala', similarity: 0.45 }]);
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  const result = await resolver.resolve('ambl');
+  assert.equal(result.status, 'unresolved');
+});

@@ -76,6 +76,58 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
   }
 
   /**
+   * Layer 3 — pg_trgm fuzzy match. Returns the best distinct-city candidates
+   * (max similarity per city, >= FUZZY_QUEUE_FLOOR) ordered desc, then applies
+   * the two-band + winner-gap rule.
+   *
+   * @param {string} normalized
+   * @returns {Promise<{accept: boolean, cityId?: string, canonicalName?: string,
+   *                     suggestedCityId: string|null, similarity: number}>}
+   */
+  async function fuzzyMatch(normalized) {
+    const rows = await prisma.$queryRaw`
+      SELECT city_id, canonical_name, max(sim) AS similarity
+      FROM (
+        SELECT c.id AS city_id, c.canonical_name AS canonical_name,
+               similarity(lower(c.canonical_name), ${normalized}) AS sim
+        FROM cities c
+        WHERE c.is_active = true
+        UNION ALL
+        SELECT ca.city_id AS city_id, c.canonical_name AS canonical_name,
+               similarity(lower(ca.alias_text), ${normalized}) AS sim
+        FROM city_aliases ca
+        JOIN cities c ON c.id = ca.city_id
+        WHERE c.is_active = true
+      ) m
+      WHERE m.sim >= ${CITY_RESOLVER.FUZZY_QUEUE_FLOOR}
+      GROUP BY city_id, canonical_name
+      ORDER BY similarity DESC
+      LIMIT 5
+    `;
+
+    if (!rows || rows.length === 0) {
+      return { accept: false, suggestedCityId: null, similarity: 0 };
+    }
+
+    const best = rows[0];
+    const bestSim = Number(best.similarity);
+    const secondSim = rows[1] ? Number(rows[1].similarity) : 0;
+    const winnerGapOk = !rows[1] || bestSim - secondSim >= CITY_RESOLVER.FUZZY_WINNER_GAP;
+
+    if (bestSim >= CITY_RESOLVER.FUZZY_AUTO_ACCEPT && winnerGapOk) {
+      return {
+        accept: true,
+        cityId: best.city_id,
+        canonicalName: best.canonical_name,
+        suggestedCityId: best.city_id,
+        similarity: bestSim,
+      };
+    }
+
+    return { accept: false, suggestedCityId: best.city_id, similarity: bestSim };
+  }
+
+  /**
    * Resolve a raw city string through the layers (first hit wins).
    * @param {string} rawText
    * @returns {Promise<object>} resolve result
@@ -95,7 +147,13 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
         return resolvedResult(exact.cityId, exact.canonicalName, RESOLVE_LAYER.EXACT, 1);
       }
 
-      // Fuzzy + unresolved layers are added in Tasks 6–7.
+      const fuzzy = await fuzzyMatch(normalized);
+      if (fuzzy.accept) {
+        await writeCache(key, fuzzy.cityId, fuzzy.canonicalName);
+        return resolvedResult(fuzzy.cityId, fuzzy.canonicalName, RESOLVE_LAYER.FUZZY, fuzzy.similarity);
+      }
+
+      // Unresolved-queue write is added in Task 7.
       return unresolvedResult();
     } catch (err) {
       if (err instanceof AppError) throw err;
