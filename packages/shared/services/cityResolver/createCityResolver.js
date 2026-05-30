@@ -80,6 +80,22 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
    * (max similarity per city, >= FUZZY_QUEUE_FLOOR) ordered desc, then applies
    * the two-band + winner-gap rule.
    *
+   * Why `similarity() >= constant` and not the index-friendly `%` operator:
+   * the `%` operator's threshold is the session GUC `pg_trgm.similarity_threshold`,
+   * and `SET pg_trgm.similarity_threshold` cannot run per-query under pgBouncer
+   * transaction mode ("cannot insert multiple commands into a prepared statement").
+   * Using an explicit constant keeps the floor independent of session state.
+   *
+   * Index/scale note (db-review 2026-05-31): the GIN gin_trgm_ops indexes are on
+   * the raw columns, but the query wraps them in lower(), so the planner does a
+   * seq scan. Fine at the curated corridor size (102 cities / 213 aliases).
+   * Trigger: before city count exceeds ~500, store canonical_name/alias_text
+   * pre-lowercased and drop lower() here so the GIN indexes are used. See DECISIONS.md.
+   *
+   * EXPLAIN ANALYZE (live Supabase, normalized="ambala"), 2026-05-31:
+   *   GroupAggregate → Sort → Append(Seq Scan cities Filter similarity()>=0.3,
+   *   Seq Scan city_aliases ⋈ cities). Total execution time ≈ 21.5 ms.
+   *
    * @param {string} normalized
    * @returns {Promise<{accept: boolean, cityId?: string, canonicalName?: string,
    *                     suggestedCityId: string|null, similarity: number}>}

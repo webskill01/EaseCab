@@ -129,7 +129,10 @@ model CityAlias {
 
   @@unique([aliasText, cityId])
   @@index([cityId])
-  // Trigram index powers CityResolverService layer 3 (similarity > 0.4)
+  // Trigram index powers CityResolverService layer 3 (similarity >= 0.3 floor).
+  // NOTE: the resolver currently wraps this column in lower(), so this index is
+  // not yet hit by the planner — see DECISIONS.md (db-review 2026-05-31) for the
+  // lowercase-storage migration to enable it before ~500 cities.
   @@index([aliasText(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("city_aliases")
 }
