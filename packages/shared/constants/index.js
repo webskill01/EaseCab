@@ -6,4 +6,5 @@ module.exports = {
   ...require('./httpStatus'),
   ...require('./errors'),
   ...require('./redis'),
+  ...require('./cityResolver'),
 };
