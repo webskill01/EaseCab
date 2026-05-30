@@ -55,6 +55,27 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
   }
 
   /**
+   * Layer 2 — case-insensitive exact match against alias_text then canonical_name.
+   * @param {string} normalized
+   * @returns {Promise<{cityId: string, canonicalName: string} | null>}
+   */
+  async function exactMatch(normalized) {
+    const alias = await prisma.cityAlias.findFirst({
+      where: { aliasText: { equals: normalized, mode: 'insensitive' } },
+      select: { cityId: true, city: { select: { canonicalName: true } } },
+    });
+    if (alias) return { cityId: alias.cityId, canonicalName: alias.city.canonicalName };
+
+    const city = await prisma.city.findFirst({
+      where: { canonicalName: { equals: normalized, mode: 'insensitive' }, isActive: true },
+      select: { id: true, canonicalName: true },
+    });
+    if (city) return { cityId: city.id, canonicalName: city.canonicalName };
+
+    return null;
+  }
+
+  /**
    * Resolve a raw city string through the layers (first hit wins).
    * @param {string} rawText
    * @returns {Promise<object>} resolve result
@@ -68,7 +89,13 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
       const cached = await readCache(key);
       if (cached) return cached;
 
-      // Exact + fuzzy + unresolved layers are added in Tasks 5–7.
+      const exact = await exactMatch(normalized);
+      if (exact) {
+        await writeCache(key, exact.cityId, exact.canonicalName);
+        return resolvedResult(exact.cityId, exact.canonicalName, RESOLVE_LAYER.EXACT, 1);
+      }
+
+      // Fuzzy + unresolved layers are added in Tasks 6–7.
       return unresolvedResult();
     } catch (err) {
       if (err instanceof AppError) throw err;
