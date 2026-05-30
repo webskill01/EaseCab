@@ -32,3 +32,4 @@ All architectural decisions that are final and must never be changed without exp
 | 2026-05-30 | Prisma migrations applied via non-interactive baseline (`migrate diff --from-empty` → `migrate deploy`). | `migrate dev` requires an interactive TTY not available in the agent environment. |
 | 2026-05-30 | `CREATE EXTENSION IF NOT EXISTS pg_trgm` prepended to 0_init migration manually. | `migrate diff` omitted it, but the GIN `gin_trgm_ops` fuzzy-match indexes depend on it. |
 | 2026-05-30 | `ride_fingerprints` modeled as standalone table with `ride_id` ON DELETE SET NULL. | Dedup integrity: fingerprint row (48h TTL) must outlive the hard-deleted ride row. |
+| 2026-05-30 | Checkpoint files (GOAL.md, PHASES.md, PROGRESS.md) are NOT committed to git. | User's global `~/.gitignore_global` ignores them machine-wide — they are local working state, not repo artifacts. Do not force-add. |
