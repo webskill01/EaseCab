@@ -5,7 +5,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:coverage": "c8 node --test"
   },
   "dependencies": {
     "zod": "^3.23.8"
