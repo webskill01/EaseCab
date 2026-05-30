@@ -1,0 +1,24 @@
+{
+  "name": "@easecab/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5",
+    "autoprefixer": "^10",
+    "eslint": "^8",
+    "eslint-config-next": "14",
+    "postcss": "^8",
+    "tailwindcss": "^3"
+  }
+}
