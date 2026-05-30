@@ -46,8 +46,8 @@ export default function PrivacyPolicy() {
 
       <h3>2.4 KYC Documents</h3>
       <p>
-        To unlock contact features, we collect and verify your identity through our KYC partner
-        Surepass:
+        To post your own ride leads and earn a verified trust badge, we collect and verify your
+        identity through our KYC partner Surepass:
       </p>
       <ul>
         <li>Aadhaar number and OTP (Aadhaar-linked mobile for verification)</li>
@@ -85,7 +85,7 @@ export default function PrivacyPolicy() {
       <ul>
         <li>Authenticate you via phone OTP and maintain your session</li>
         <li>Deliver and personalise the real-time ride leads feed</li>
-        <li>Verify your identity through KYC to enable contact features</li>
+        <li>Verify your identity through KYC to enable ride posting and the verified trust badge</li>
         <li>Process your subscription payment and manage access</li>
         <li>Send city-targeted push notifications for new ride leads (with your permission)</li>
         <li>Enable in-app 1:1 chat with other verified users on a confirmed ride</li>

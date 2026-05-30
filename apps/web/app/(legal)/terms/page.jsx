@@ -62,14 +62,20 @@ export default function TermsAndConditions() {
 
       <h2>4. KYC Verification</h2>
       <p>
-        To access contact details on ride leads and use posting features, you must complete identity
-        verification (KYC) using one or more of the following:
+        To post your own ride leads, you must complete identity verification (KYC) by submitting at
+        least one of the following. Identity verification is <strong>not</strong> required to view
+        contact details on ride leads — viewing contacts requires only an active trial or paid
+        subscription.
       </p>
       <ul>
         <li>Aadhaar OTP verification</li>
         <li>Driving Licence number verification</li>
         <li>Vehicle Registration Certificate (RC) verification</li>
       </ul>
+      <p>
+        A &quot;verified&quot; trust badge is granted only after our team approves your submitted
+        documents.
+      </p>
       <p>
         By submitting KYC information, you confirm that all details are accurate and genuine. Submitting
         false or fraudulent documents will result in immediate account suspension and may be reported
@@ -148,11 +154,11 @@ export default function TermsAndConditions() {
       </p>
       <ul>
         <li>
-          <strong>Viewing a contact number:</strong> requires an active subscription and completed
-          KYC
+          <strong>Viewing a contact number:</strong> requires an active trial or paid subscription
         </li>
         <li>
-          <strong>Posting a ride:</strong> requires an active subscription
+          <strong>Posting a ride:</strong> requires identity verification (at least one KYC document
+          submitted)
         </li>
       </ul>
       <p>
