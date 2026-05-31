@@ -419,11 +419,11 @@ Singhpura chownk zrk
  Kathuria'Z travel zirakpur
   Gourav Kathuria
 📲8847610810`,
-    isRide: true,
-    phone: '8847610810',
-    pickup: 'zrkpur',
-    drop: 'noida',
-    note: 'EDGE: real need ("Ertiga Zrkpur to Noida") buried in free-car advert noise (contains "Free in Delhi"); gate must still ACCEPT on the need; "Zrkpur" alias->Zirakpur',
+    isRide: false,
+    phone: null,
+    pickup: null,
+    drop: null,
+    note: 'REJECT (strict free/khali, locked 2026-05-31): a real "Ertiga Zrkpur to Noida" need IS present, but the message also advertises "Free in Delhi" (+ "Only Exchange") so the reject-first gate HARD-IGNORES it. User chose strict over a need-override heuristic — empty-car blasts that staple on a real route are dropped. See DECISIONS.md.',
   },
   {
     id: 22,
