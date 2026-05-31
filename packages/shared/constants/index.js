@@ -7,4 +7,5 @@ module.exports = {
   ...require('./errors'),
   ...require('./redis'),
   ...require('./cityResolver'),
+  ...require('./vehicles'),
 };

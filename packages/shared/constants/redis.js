@@ -25,4 +25,8 @@ function redisKey(...parts) {
   return REDIS_PREFIX + parts.join(':');
 }
 
-module.exports = { REDIS_PREFIX, redisKey };
+// Pub/sub channel: easecab-bot publishes here after a new ride is committed;
+// the Phase-3 SSE endpoint subscribes and fans the ride out to clients.
+const RIDES_NEW_CHANNEL = redisKey('rides', 'new');
+
+module.exports = { REDIS_PREFIX, redisKey, RIDES_NEW_CHANNEL };
