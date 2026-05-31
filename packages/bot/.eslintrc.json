@@ -3,6 +3,11 @@
   "env": { "node": true, "es2022": true },
   "parserOptions": { "ecmaVersion": 2022, "sourceType": "script" },
   "extends": "eslint:recommended",
-  "rules": { "eqeqeq": "error", "no-var": "error", "no-implicit-globals": "error" },
+  "rules": {
+    "eqeqeq": "error",
+    "no-var": "error",
+    "no-implicit-globals": "error",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "ignoreRestSiblings": true }]
+  },
   "ignorePatterns": ["coverage/", "node_modules/"]
 }
