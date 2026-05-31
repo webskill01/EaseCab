@@ -9,9 +9,11 @@ test('no duplicate canonical names', () => {
 });
 
 test('every city has at least one alias and a state', () => {
+  const VALID_TYPES = new Set(['metro', 'city', 'town', 'village', 'landmark']);
   for (const c of CITIES) {
     assert.ok(Array.isArray(c.aliases) && c.aliases.length > 0, `${c.canonicalName} aliases`);
     assert.ok(c.state && typeof c.state === 'string', `${c.canonicalName} state`);
+    assert.ok(VALID_TYPES.has(c.type), `${c.canonicalName} has invalid type: "${c.type}"`);
   }
 });
 
@@ -27,4 +29,6 @@ test('merged legacy landmark aliases resolve to expected cities', () => {
   assert.strictEqual(find('igi')?.canonicalName, 'Delhi');
   assert.strictEqual(find('golden temple')?.canonicalName, 'Amritsar');
   assert.strictEqual(find('chandigrah')?.canonicalName, 'Chandigarh'); // intentional typo
+  assert.strictEqual(find('ajmeri gate railway station')?.canonicalName, 'Delhi');
+  assert.strictEqual(find('pkl')?.canonicalName, 'Panchkula');
 });
