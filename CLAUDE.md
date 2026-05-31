@@ -105,7 +105,7 @@ Each feature folder is self-contained: components, hooks, services, tests.
 
 - Migrations are forward-only (roll-forward): to undo a change, write a NEW migration that reverses it. Never edit or delete an already-applied migration, and never alter tables directly. (Vanilla Prisma does not generate `down` migrations — see DECISIONS.md.)
 - Required indexes: all foreign keys, `users.phone`, `rides.fingerprint`, status columns on rides/subscriptions, `expires_at` on time-sensitive tables, `created_at` on high-volume tables.
-- Ride fingerprints in separate `ride_fingerprints` table with 48h TTL — never deleted when the ride row is deleted.
+- Ride fingerprints in separate `ride_fingerprints` table with 12h TTL (was 48h — changed 2026-05-31, see DECISIONS.md) — never deleted when the ride row is deleted.
 - Soft delete for users: `is_deleted` + `deleted_at`. Hard delete after 30 days via cron.
 - Never expose raw Prisma errors to API responses — catch and map to `AppError`.
 - Connection pooling via Supabase pgBouncer. No direct connections from bot or cron worker.
