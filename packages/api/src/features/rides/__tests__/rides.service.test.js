@@ -1,0 +1,120 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert');
+const { createRidesService, toPublicRide, isSubscriptionActive } = require('../rides.service');
+const { ERROR_CODES } = require('@easecab/shared');
+
+const FUTURE = new Date(Date.now() + 86_400_000);
+const PAST = new Date(Date.now() - 86_400_000);
+
+function ride(id, over = {}) {
+  return {
+    id,
+    displayText: 'Amritsar to Delhi ████',
+    pickupCityId: 'c1',
+    dropCityId: 'c2',
+    pickupRaw: 'amritsar',
+    dropRaw: 'delhi',
+    vehicleType: 'sedan',
+    status: 'fresh',
+    receivedAt: new Date('2026-06-01T10:00:00.000Z'),
+    expiresAt: FUTURE,
+    // intentionally include leaky fields to prove the whitelist drops them:
+    phoneNumber: '+919876543210',
+    rawText: 'Amritsar to Delhi +919876543210',
+    ...over,
+  };
+}
+
+test('toPublicRide whitelists public fields and drops phoneNumber/rawText', () => {
+  const pub = toPublicRide(ride('r1'));
+  assert.strictEqual('phoneNumber' in pub, false);
+  assert.strictEqual('rawText' in pub, false);
+  assert.deepStrictEqual(Object.keys(pub).sort(), [
+    'displayText', 'dropCityId', 'dropRaw', 'expiresAt', 'id',
+    'pickupCityId', 'pickupRaw', 'receivedAt', 'status', 'vehicleType',
+  ]);
+});
+
+test('isSubscriptionActive — gate truth table', () => {
+  assert.strictEqual(isSubscriptionActive(null), false);
+  assert.strictEqual(isSubscriptionActive({ status: 'trial', trialExpiresAt: FUTURE }), true);
+  assert.strictEqual(isSubscriptionActive({ status: 'trial', trialExpiresAt: PAST }), false);
+  assert.strictEqual(isSubscriptionActive({ status: 'active', expiresAt: FUTURE }), true);
+  assert.strictEqual(isSubscriptionActive({ status: 'active', expiresAt: PAST }), false);
+  assert.strictEqual(isSubscriptionActive({ status: 'active', expiresAt: null }), false);
+  assert.strictEqual(isSubscriptionActive({ status: 'expired', trialExpiresAt: FUTURE, expiresAt: FUTURE }), false);
+  assert.strictEqual(isSubscriptionActive({ status: 'cancelled', expiresAt: FUTURE }), false);
+});
+
+test('listFeed (no cursor) returns the masked page and no nextCursor when underfull', async () => {
+  const repo = { listVisibleRides: async () => [ride('r1'), ride('r2')] };
+  const svc = createRidesService({ repo });
+  const out = await svc.listFeed({ limit: 20 });
+  assert.strictEqual(out.rides.length, 2);
+  assert.strictEqual(out.nextCursor, null);
+  assert.strictEqual('phoneNumber' in out.rides[0], false);
+});
+
+test('listFeed slices to limit and emits a nextCursor when a further page exists', async () => {
+  // repo returns limit+1 rows -> there is a next page.
+  const repo = {
+    listVisibleRides: async ({ limit }) =>
+      Array.from({ length: limit + 1 }, (_, i) => ride(`r${i}`, { receivedAt: new Date(Date.now() - i * 1000) })),
+  };
+  const svc = createRidesService({ repo });
+  const out = await svc.listFeed({ limit: 2 });
+  assert.strictEqual(out.rides.length, 2);
+  assert.ok(typeof out.nextCursor === 'string' && out.nextCursor.length > 0);
+});
+
+test('listFeed passes the decoded cursor key through to the repo', async () => {
+  let seen;
+  const repo = { listVisibleRides: async (args) => { seen = args; return []; } };
+  const svc = createRidesService({ repo });
+  // build a real cursor via a first page
+  const { encodeCursor } = require('../../../lib/cursor');
+  const cursor = encodeCursor({ receivedAt: new Date('2026-06-01T09:00:00.000Z'), id: 'r9' });
+  await svc.listFeed({ limit: 5, cursor });
+  assert.strictEqual(seen.id, 'r9');
+  assert.strictEqual(seen.receivedAt.toISOString(), '2026-06-01T09:00:00.000Z');
+});
+
+test('listFeed throws VALIDATION_ERROR on a bad cursor', async () => {
+  const svc = createRidesService({ repo: { listVisibleRides: async () => [] } });
+  await assert.rejects(svc.listFeed({ limit: 5, cursor: 'garbage!!!' }), (e) => e.code === ERROR_CODES.VALIDATION_ERROR);
+});
+
+test('contactRide reveals the phone + records contact when the gate passes', async () => {
+  const calls = {};
+  const repo = {
+    findRideContactTarget: async (id) => { calls.target = id; return { id, phoneNumber: '+919876543210' }; },
+    findSubscriptionByUserId: async (uid) => { calls.sub = uid; return { status: 'trial', trialExpiresAt: FUTURE }; },
+    recordContact: async (uid, rid) => { calls.record = [uid, rid]; return { contactedAt: new Date('2026-06-01T00:00:00.000Z') }; },
+  };
+  const out = await createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' });
+  assert.strictEqual(out.phoneNumber, '+919876543210');
+  assert.strictEqual(out.contactedAt.toISOString(), '2026-06-01T00:00:00.000Z');
+  assert.deepStrictEqual(calls.record, ['u1', 'r1']);
+});
+
+test('contactRide throws NOT_FOUND for a missing ride and never consults the gate', async () => {
+  let gateChecked = false;
+  const repo = {
+    findRideContactTarget: async () => null,
+    findSubscriptionByUserId: async () => { gateChecked = true; return null; },
+    recordContact: async () => assert.fail('must not record'),
+  };
+  await assert.rejects(createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'gone' }), (e) => e.code === ERROR_CODES.NOT_FOUND);
+  assert.strictEqual(gateChecked, false);
+});
+
+test('contactRide throws SUBSCRIPTION_EXPIRED when the gate fails (no reveal, no record)', async () => {
+  const repo = {
+    findRideContactTarget: async (id) => ({ id, phoneNumber: '+919876543210' }),
+    findSubscriptionByUserId: async () => ({ status: 'expired' }),
+    recordContact: async () => assert.fail('must not record on a failed gate'),
+  };
+  await assert.rejects(createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' }), (e) => e.code === ERROR_CODES.SUBSCRIPTION_EXPIRED);
+});
