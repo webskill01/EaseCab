@@ -9,4 +9,5 @@ module.exports = {
   ...require('./cityResolver'),
   ...require('./vehicles'),
   ...require('./rides'),
+  ...require('./bot'),
 };
