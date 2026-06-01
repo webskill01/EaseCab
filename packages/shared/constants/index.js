@@ -10,4 +10,5 @@ module.exports = {
   ...require('./vehicles'),
   ...require('./rides'),
   ...require('./bot'),
+  ...require('./auth'),
 };
