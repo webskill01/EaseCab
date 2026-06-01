@@ -57,3 +57,33 @@ test('parseEnv labels a root-level issue as (root)', () => {
   assert.strictEqual(r.success, false);
   assert.match(r.errors[0], /^\(root\):/);
 });
+
+test('WA_NUMBERS defaults to a single slot-1 pool', () => {
+  const r = parseEnv(BASE);
+  assert.strictEqual(r.success, true);
+  assert.deepStrictEqual(r.data.WA_NUMBERS, ['slot-1']);
+});
+
+test('WA_NUMBERS splits, trims, and drops empties', () => {
+  const r = parseEnv({ ...BASE, WA_NUMBERS: 'slot-1, slot-2 ,slot-3,' });
+  assert.strictEqual(r.success, true);
+  assert.deepStrictEqual(r.data.WA_NUMBERS, ['slot-1', 'slot-2', 'slot-3']);
+});
+
+test('WA_NUMBERS rejects an all-empty list and names it', () => {
+  const r = parseEnv({ ...BASE, WA_NUMBERS: ' , ,' });
+  assert.strictEqual(r.success, false);
+  assert.ok(r.errors.some((line) => /WA_NUMBERS/.test(line)));
+});
+
+test('BOT_FEED_ENABLED defaults to true and coerces the enum to boolean', () => {
+  assert.strictEqual(parseEnv(BASE).data.BOT_FEED_ENABLED, true);
+  assert.strictEqual(parseEnv({ ...BASE, BOT_FEED_ENABLED: 'false' }).data.BOT_FEED_ENABLED, false);
+  assert.strictEqual(parseEnv({ ...BASE, BOT_FEED_ENABLED: 'true' }).data.BOT_FEED_ENABLED, true);
+});
+
+test('BOT_FEED_ENABLED rejects a non true/false value and names it', () => {
+  const r = parseEnv({ ...BASE, BOT_FEED_ENABLED: 'yes' });
+  assert.strictEqual(r.success, false);
+  assert.ok(r.errors.some((line) => /BOT_FEED_ENABLED/.test(line)));
+});
