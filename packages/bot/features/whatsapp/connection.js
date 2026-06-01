@@ -57,7 +57,9 @@ async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen
   const sock = makeWASocket({
     version,
     auth: state,
-    browser: Browsers.appropriate('EaseCab-Bot'),
+    // Present as a Chrome desktop web session (cosmetic — the read-only bot never
+    // sends, so device label has no bearing on ban risk). Shows as "Chrome (Mac OS)".
+    browser: Browsers.macOS('Chrome'),
     logger: pino({ level: 'silent' }), // silence Baileys internals; we log our own
     markOnlineOnConnect: false, // stay invisible — read-only listener
   });
