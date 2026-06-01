@@ -17,7 +17,9 @@ module.exports = {
   apps: [
     {
       name: 'easecab-bot', // packages/bot — Baileys WA listener (leaks; cap aggressively)
-      script: 'packages/bot/src/index.js',
+      script: 'index.js',
+      cwd: 'packages/bot', // run from the package so ./.wa-session + ./.env resolve here
+      node_args: '--env-file-if-exists=.env', // PM2 runs node directly — load packages/bot/.env
       exec_mode: 'fork',
       instances: 1,
       max_memory_restart: '400M',
@@ -54,8 +56,10 @@ module.exports = {
       env: { NODE_ENV: 'production', PORT: 5000 },
     },
     {
-      name: 'easecab-cron', // cron worker — ride status transitions + cleanup + bot heartbeat watch
-      script: 'packages/api/src/cron/worker.js',
+      name: 'easecab-cron', // cron worker — ride status transitions + cleanup + bot stale watch
+      script: 'src/cron/worker.js',
+      cwd: 'packages/api', // run from the package so ./.env resolves here
+      node_args: '--env-file-if-exists=.env', // load packages/api/.env (DATABASE_URL + REDIS_URL)
       exec_mode: 'fork',
       instances: 1,
       max_memory_restart: '250M',
