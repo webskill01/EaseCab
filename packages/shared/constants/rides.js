@@ -13,4 +13,13 @@ const RIDE_TIMING = Object.freeze({
   FINGERPRINT_TTL_HRS: 12, // dedup fingerprint lives 12h from first sight
 });
 
-module.exports = { RIDE_TIMING };
+/**
+ * Rides feed pagination bounds (CLAUDE.md §8 — every list endpoint paginated from
+ * day one; cursor-based). Consumed by the Step-10 ridesListQuerySchema + service.
+ */
+const RIDES_FEED = Object.freeze({
+  DEFAULT_LIMIT: 20, // page size when the client omits `limit`
+  MAX_LIMIT: 50, // hard ceiling so a client can't request an unbounded page
+});
+
+module.exports = { RIDE_TIMING, RIDES_FEED };
