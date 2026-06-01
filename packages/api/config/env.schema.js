@@ -23,6 +23,44 @@ const envSchema = z.object({
 });
 
 /**
+ * Default CORS allow-list (CLAUDE.md §6 — no wildcard in production). Dev/test
+ * add localhost via the CORS_ORIGINS env var.
+ */
+const DEFAULT_CORS_ORIGINS = 'https://easecab.com,https://api.easecab.com,https://admin.easecab.com';
+
+/**
+ * Express-server contract — a superset of the base env. The Express process loads
+ * THIS (via config/serverEnv.js); the cron worker loads only the base `envSchema`
+ * above, so adding JWT secrets here never breaks the cron (which has none). Secrets
+ * are floored at 32 chars; CORS_ORIGINS is a csv parsed into a trimmed array.
+ */
+const serverEnvSchema = envSchema.extend({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().positive().default(4000),
+  // User JWT (CLAUDE.md §3.6). Admin gets a SEPARATE secret in its own phase (§6).
+  JWT_ACCESS_SECRET: z.string().min(32),
+  JWT_REFRESH_SECRET: z.string().min(32),
+  JWT_ACCESS_TTL: z.string().default('15m'),
+  JWT_REFRESH_TTL: z.string().default('30d'),
+  CORS_ORIGINS: z
+    .string()
+    .default(DEFAULT_CORS_ORIGINS)
+    .transform((csv) => csv.split(',').map((s) => s.trim()).filter(Boolean)),
+});
+
+/**
+ * Map a Zod failure to human-readable lines that name the offending variable only
+ * (never its value — CLAUDE.md §10 no-PII / no-secret-leak).
+ * @param {import('zod').ZodError} error
+ * @returns {string[]}
+ */
+function formatIssues(error) {
+  return error.issues.map(
+    (issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`,
+  );
+}
+
+/**
  * Validate a raw env object without throwing or exiting.
  * @param {Record<string, unknown>} raw - typically process.env
  * @returns {{ success: true, data: object } | { success: false, errors: string[] }}
@@ -32,12 +70,23 @@ const envSchema = z.object({
 function parseEnv(raw) {
   const result = envSchema.safeParse(raw);
   if (!result.success) {
-    const errors = result.error.issues.map(
-      (issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`,
-    );
-    return { success: false, errors };
+    return { success: false, errors: formatIssues(result.error) };
   }
   return { success: true, data: Object.freeze(result.data) };
 }
 
-module.exports = { envSchema, parseEnv };
+/**
+ * Validate the Express-server env (base + JWT/PORT/CORS). Same contract as
+ * {@link parseEnv}, against {@link serverEnvSchema}.
+ * @param {Record<string, unknown>} raw - typically process.env
+ * @returns {{ success: true, data: object } | { success: false, errors: string[] }}
+ */
+function parseServerEnv(raw) {
+  const result = serverEnvSchema.safeParse(raw);
+  if (!result.success) {
+    return { success: false, errors: formatIssues(result.error) };
+  }
+  return { success: true, data: Object.freeze(result.data) };
+}
+
+module.exports = { envSchema, serverEnvSchema, parseEnv, parseServerEnv };
