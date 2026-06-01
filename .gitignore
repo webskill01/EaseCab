@@ -39,9 +39,11 @@ pids/
 *.pid
 *.pid.lock
 
-# Bot WhatsApp sessions
+# Bot WhatsApp sessions (auth creds — NEVER commit)
 packages/bot/sessions/
 packages/bot/auth_info_baileys/
+packages/bot/.wa-session/
+**/.wa-session/
 
 # PM2
 .pm2/

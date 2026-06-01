@@ -4,8 +4,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "pair": "node scripts/pair.js",
+    "start": "node --env-file-if-exists=.env index.js",
+    "pair": "node --env-file-if-exists=.env scripts/pair.js",
     "test": "node --test",
     "test:coverage": "c8 --check-coverage node --test",
     "lint": "eslint ."
