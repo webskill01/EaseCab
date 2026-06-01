@@ -1,0 +1,5 @@
+{
+  "check-coverage": true,
+  "lines": 70, "statements": 70, "functions": 70, "branches": 70,
+  "exclude": ["**/__tests__/**", "**/index.js", "config/env.js", "src/cron/worker.js", "prisma/**", "scripts/**", "coverage/**"]
+}

@@ -66,6 +66,7 @@ test('HTTP_STATUS exposes the codes the API uses', () => {
 
 test('RIDE_TIMING exposes frozen ride lifecycle durations', () => {
   assert.ok(Object.isFrozen(RIDE_TIMING));
+  assert.equal(RIDE_TIMING.BOOKED_AFTER_MIN, 5);
   assert.equal(RIDE_TIMING.FEED_TTL_MIN, 30);
   assert.equal(RIDE_TIMING.HARD_DELETE_HRS, 12);
   assert.equal(RIDE_TIMING.FINGERPRINT_TTL_HRS, 12);

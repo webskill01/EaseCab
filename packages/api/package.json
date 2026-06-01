@@ -9,16 +9,25 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "db:seed": "node prisma/seed.js",
-    "check:connections": "node scripts/check-connections.js"
+    "check:connections": "node scripts/check-connections.js",
+    "cron": "node src/cron/worker.js",
+    "test": "node --test",
+    "test:coverage": "c8 --check-coverage node --test",
+    "lint": "eslint ."
   },
   "prisma": {
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
+    "@easecab/shared": "*",
     "@prisma/client": "^5.22.0",
-    "ioredis": "^5.4.1"
+    "ioredis": "^5.4.1",
+    "pino": "^9.0.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "c8": "^10.1.2",
+    "eslint": "^8.57.0",
     "prisma": "^5.22.0"
   }
 }
