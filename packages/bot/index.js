@@ -7,10 +7,14 @@ const { env } = require('./config/env.js');
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
-const { createCityResolver } = require('@easecab/shared');
+const { DisconnectReason } = require('@whiskeysockets/baileys');
+const { createCityResolver, createAlerter } = require('@easecab/shared');
 const { createRideRepository } = require('./features/ingest/rideRepository');
 const { createProcessMessage } = require('./features/ingest/processMessage');
+const { createHeartbeat } = require('./features/health/recordHeartbeat');
 const { createConnection } = require('./features/whatsapp/connection');
+const { createSlotRegistry } = require('./features/whatsapp/slotRegistry');
+const { createNumberPool } = require('./features/whatsapp/numberPool');
 const { FILTERS } = require('./config/filters');
 
 const CITY_REFRESH_MS = 5 * 60 * 1000; // re-pull the city vocab every 5 min
@@ -38,6 +42,21 @@ async function loadCityVocab(prisma) {
 
 async function main() {
   const logger = pino({ level: 'info' });
+
+  // Kill switch (Phase 2.5 6d): when disabled the bot ingests nothing. Stay
+  // alive (idle) so PM2 doesn't treat a clean exit as a crash and restart-loop.
+  if (!env.BOT_FEED_ENABLED) {
+    logger.warn('BOT_FEED_ENABLED=false — bot feed disabled; not ingesting');
+    const idle = setInterval(() => {}, 1 << 30);
+    const stopIdle = () => {
+      clearInterval(idle);
+      process.exit(0);
+    };
+    process.on('SIGINT', stopIdle);
+    process.on('SIGTERM', stopIdle);
+    return;
+  }
+
   const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
   const redis = new Redis(env.REDIS_URL);
 
@@ -57,28 +76,40 @@ async function main() {
 
   const resolver = createCityResolver({ prisma, redis, logger });
   const repository = createRideRepository({ prisma, redis, logger });
+  const heartbeat = createHeartbeat({ redis, logger });
   const processMessage = createProcessMessage({
     resolver,
     repository,
     cityNames,
     filters: FILTERS,
+    heartbeat,
     logger,
   });
 
-  const sock = await createConnection({
-    sessionPath: env.WA_SESSION_PATH,
+  // Number-pool supervisor (Phase 2.5 6a): manages failover/rotation across the
+  // configured slots; createConnection is the per-slot live-socket factory.
+  const alerter = createAlerter({ redis, logger });
+  const registry = createSlotRegistry({ sessionPath: env.WA_SESSION_PATH, slots: env.WA_NUMBERS });
+  const pool = createNumberPool({
+    slots: env.WA_NUMBERS,
     targetGroupJid: env.WA_TARGET_GROUP_JID,
     onMessage: processMessage,
     logger,
+    redis,
+    alerter,
+    registry,
+    connectionFactory: createConnection,
+    loggedOutCode: DisconnectReason.loggedOut,
   });
+  pool.start();
 
   const shutdown = async (signal) => {
     logger.info({ signal }, 'shutting down');
     clearInterval(refresh);
     try {
-      sock.end(undefined);
+      pool.stop();
     } catch {
-      // socket may already be closed — nothing to do
+      // pool may already be stopped — nothing to do
     }
     await prisma.$disconnect().catch(() => {});
     redis.disconnect();
@@ -87,7 +118,7 @@ async function main() {
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-  logger.info('easecab-bot listening');
+  logger.info({ slots: env.WA_NUMBERS.length }, 'easecab-bot listening (number pool active)');
 }
 
 main().catch((err) => {
