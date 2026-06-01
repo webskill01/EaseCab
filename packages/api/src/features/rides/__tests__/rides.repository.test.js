@@ -81,6 +81,20 @@ test('findSubscriptionByUserId selects the gate fields by userId', async () => {
   });
 });
 
+test('incrementContactCount namespaces under easecab:contact: and re-asserts the TTL', async () => {
+  const store = new Map();
+  const redis = {
+    async incr(k) { const c = (store.get(k)?.value || 0) + 1; store.set(k, { value: c, ttl: store.get(k)?.ttl ?? -1 }); return c; },
+    async expire(k, s) { if (store.has(k)) store.get(k).ttl = s; return 1; },
+  };
+  const repo = createRidesRepository({ prisma: fakePrisma(), redis });
+  assert.strictEqual(await repo.incrementContactCount('u1', 60), 1);
+  assert.strictEqual(await repo.incrementContactCount('u1', 60), 2);
+  const key = [...store.keys()][0];
+  assert.ok(key.startsWith('easecab:contact:'));
+  assert.strictEqual(store.get(key).ttl, 60); // re-asserted every call
+});
+
 test('recordContact upserts on the composite unique (idempotent)', async () => {
   const prisma = fakePrisma({ upsert: { contactedAt: new Date('2026-06-01T00:00:00.000Z') } });
   const repo = createRidesRepository({ prisma });

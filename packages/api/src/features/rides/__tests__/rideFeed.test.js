@@ -96,6 +96,20 @@ test('onRide returns a working unsubscribe', async () => {
   assert.strictEqual(got.length, 0);
 });
 
+test('per-user connection cap: acquire up to the max, then refuse until a release', async () => {
+  const { SSE_MAX_CONNECTIONS_PER_USER } = require('@easecab/shared');
+  const feed = createRideFeed({ subscriber: fakeSubscriber(), repo: {}, logger: silentLogger });
+
+  for (let i = 0; i < SSE_MAX_CONNECTIONS_PER_USER; i += 1) {
+    assert.strictEqual(feed.tryAcquireConnection('u1'), true);
+  }
+  assert.strictEqual(feed.tryAcquireConnection('u1'), false); // at the cap
+  assert.strictEqual(feed.tryAcquireConnection('u2'), true); // a different user is independent
+
+  feed.releaseConnection('u1');
+  assert.strictEqual(feed.tryAcquireConnection('u1'), true); // a slot freed up
+});
+
 test('close unsubscribes and drops listeners', async () => {
   const subscriber = fakeSubscriber();
   const feed = createRideFeed({ subscriber, repo: {}, logger: silentLogger });

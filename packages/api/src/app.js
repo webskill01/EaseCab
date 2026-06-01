@@ -96,7 +96,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber }) {
 
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all
   // stream clients; start the subscription now and stash it for graceful shutdown.
-  const ridesRepo = createRidesRepository({ prisma });
+  const ridesRepo = createRidesRepository({ prisma, redis });
   const ridesService = createRidesService({ repo: ridesRepo });
   const rideFeed = createRideFeed({ subscriber, repo: ridesRepo, logger });
   rideFeed.start().catch((err) => logger.error({ err: err.message }, 'rides SSE subscribe failed'));

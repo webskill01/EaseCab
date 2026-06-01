@@ -22,4 +22,19 @@ const RIDES_FEED = Object.freeze({
   MAX_LIMIT: 50, // hard ceiling so a client can't request an unbounded page
 });
 
-module.exports = { RIDE_TIMING, RIDES_FEED };
+/**
+ * Contact-reveal abuse limits (security-review H1 — a subscribed account must not
+ * be able to loop through every ride id and harvest all driver phones).
+ */
+const CONTACT_RATE_LIMIT = Object.freeze({
+  MAX_PER_WINDOW: 20, // reveals allowed per user per window
+  WINDOW_SEC: 60, // rolling window
+});
+
+/**
+ * Max concurrent SSE feed connections per user (security-review H2 — one account
+ * must not be able to open thousands of streams and exhaust the fan-out / sockets).
+ */
+const SSE_MAX_CONNECTIONS_PER_USER = 3;
+
+module.exports = { RIDE_TIMING, RIDES_FEED, CONTACT_RATE_LIMIT, SSE_MAX_CONNECTIONS_PER_USER };

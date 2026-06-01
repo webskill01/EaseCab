@@ -60,6 +60,24 @@ test('maps a ZodError to 422 VALIDATION_ERROR', () => {
   assert.equal(res.body.error.code, ERROR_CODES.VALIDATION_ERROR);
 });
 
+test('ZodError logging strips the raw `received` value (PII guard, §10)', () => {
+  const res = mockRes();
+  const logger = mockLogger();
+  const handler = createErrorHandler({ logger });
+  let zErr;
+  try {
+    // Mimic a bad-phone failure: the raw input must NOT end up in the logs.
+    z.object({ phone: z.string().regex(/^\+91\d{10}$/) }).parse({ phone: '+91SECRET999' });
+  } catch (e) {
+    zErr = e;
+  }
+  handler(zErr, req, res, () => {});
+  const logged = JSON.stringify(logger._calls.warn);
+  assert.ok(!logged.includes('SECRET'), 'received value must not be logged');
+  assert.ok(!logged.includes('received'), 'no `received` field in the issue detail');
+  assert.ok(logged.includes('phone'), 'the field path is still logged for debugging');
+});
+
 test('maps an unknown error to a generic 500 INTERNAL_ERROR (no leak) and logs it', () => {
   const res = mockRes();
   const logger = mockLogger();

@@ -1,7 +1,7 @@
 'use strict';
 
 const { EventEmitter } = require('node:events');
-const { RIDES_NEW_CHANNEL } = require('@easecab/shared');
+const { RIDES_NEW_CHANNEL, SSE_MAX_CONNECTIONS_PER_USER } = require('@easecab/shared');
 const { toPublicRide } = require('./rides.service');
 
 /**
@@ -19,8 +19,12 @@ const { toPublicRide } = require('./rides.service');
  */
 function createRideFeed({ subscriber, repo, logger }) {
   const emitter = new EventEmitter();
-  emitter.setMaxListeners(0); // unbounded SSE clients — don't warn
+  emitter.setMaxListeners(0); // listener count is bounded by the per-user cap below
   let started = false;
+
+  // Per-user open SSE connection counts (security-review H2 — cap concurrent streams
+  // so one account can't exhaust the fan-out / sockets).
+  const connections = new Map();
 
   async function onMessage(channel, raw) {
     if (channel !== RIDES_NEW_CHANNEL) return;
@@ -48,6 +52,27 @@ function createRideFeed({ subscriber, repo, logger }) {
       started = true;
       subscriber.on('message', onMessage);
       await subscriber.subscribe(RIDES_NEW_CHANNEL);
+    },
+
+    /**
+     * Try to reserve a connection slot for a user. Returns false when the user is
+     * already at SSE_MAX_CONNECTIONS_PER_USER (the caller should 429). Pair every
+     * truthy result with exactly one releaseConnection on disconnect.
+     * @param {string} userId
+     * @returns {boolean}
+     */
+    tryAcquireConnection(userId) {
+      const n = connections.get(userId) || 0;
+      if (n >= SSE_MAX_CONNECTIONS_PER_USER) return false;
+      connections.set(userId, n + 1);
+      return true;
+    },
+
+    /** Release a previously acquired connection slot. */
+    releaseConnection(userId) {
+      const n = (connections.get(userId) || 1) - 1;
+      if (n <= 0) connections.delete(userId);
+      else connections.set(userId, n);
     },
 
     /**

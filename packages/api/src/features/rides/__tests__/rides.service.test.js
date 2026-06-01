@@ -91,6 +91,7 @@ test('contactRide reveals the phone + records contact when the gate passes', asy
   const repo = {
     findRideContactTarget: async (id) => { calls.target = id; return { id, phoneNumber: '+919876543210' }; },
     findSubscriptionByUserId: async (uid) => { calls.sub = uid; return { status: 'trial', trialExpiresAt: FUTURE }; },
+    incrementContactCount: async () => 1,
     recordContact: async (uid, rid) => { calls.record = [uid, rid]; return { contactedAt: new Date('2026-06-01T00:00:00.000Z') }; },
   };
   const out = await createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' });
@@ -104,6 +105,7 @@ test('contactRide throws NOT_FOUND for a missing ride and never consults the gat
   const repo = {
     findRideContactTarget: async () => null,
     findSubscriptionByUserId: async () => { gateChecked = true; return null; },
+    incrementContactCount: async () => assert.fail('must not rate-limit a missing ride'),
     recordContact: async () => assert.fail('must not record'),
   };
   await assert.rejects(createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'gone' }), (e) => e.code === ERROR_CODES.NOT_FOUND);
@@ -114,7 +116,22 @@ test('contactRide throws SUBSCRIPTION_EXPIRED when the gate fails (no reveal, no
   const repo = {
     findRideContactTarget: async (id) => ({ id, phoneNumber: '+919876543210' }),
     findSubscriptionByUserId: async () => ({ status: 'expired' }),
+    incrementContactCount: async () => assert.fail('must not rate-limit a gated-out user'),
     recordContact: async () => assert.fail('must not record on a failed gate'),
   };
   await assert.rejects(createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' }), (e) => e.code === ERROR_CODES.SUBSCRIPTION_EXPIRED);
+});
+
+test('contactRide throws RATE_LIMITED past the per-user reveal cap (no record/reveal)', async () => {
+  const { CONTACT_RATE_LIMIT } = require('@easecab/shared');
+  const repo = {
+    findRideContactTarget: async (id) => ({ id, phoneNumber: '+919876543210' }),
+    findSubscriptionByUserId: async () => ({ status: 'active', expiresAt: FUTURE }),
+    incrementContactCount: async () => CONTACT_RATE_LIMIT.MAX_PER_WINDOW + 1, // over the cap
+    recordContact: async () => assert.fail('must not record once rate-limited'),
+  };
+  await assert.rejects(
+    createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' }),
+    (e) => e.code === ERROR_CODES.RATE_LIMITED,
+  );
 });

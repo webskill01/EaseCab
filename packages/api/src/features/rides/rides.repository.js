@@ -1,6 +1,6 @@
 'use strict';
 
-const { RIDE_STATUS } = require('@easecab/shared');
+const { RIDE_STATUS, redisKey } = require('@easecab/shared');
 
 /**
  * The ONLY columns of a bot ride that may reach a client (CLAUDE.md §3.10 + the
@@ -28,9 +28,24 @@ const VISIBLE_STATUSES = Object.freeze([RIDE_STATUS.FRESH, RIDE_STATUS.BOOKED]);
  *
  * @param {object} deps
  * @param {import('@prisma/client').PrismaClient} deps.prisma
+ * @param {import('ioredis').Redis} deps.redis - for the contact-reveal rate limit
  */
-function createRidesRepository({ prisma }) {
+function createRidesRepository({ prisma, redis }) {
+  const contactCountKey = (userId) => redisKey('contact', userId);
+
   return {
+    /**
+     * Increment a user's contact-reveal counter and (re)assert the window expiry on
+     * every call — the same self-healing pattern as the OTP gate (auth.repository),
+     * so an orphaned key can never permanently block a user. Returns the new count.
+     */
+    async incrementContactCount(userId, windowSec) {
+      const key = contactCountKey(userId);
+      const count = await redis.incr(key);
+      await redis.expire(key, windowSec);
+      return count;
+    },
+
     /**
      * One keyset page of visible rides, newest first, masked to the public select.
      * Fetches `limit + 1` rows so the service can detect whether a next page exists

@@ -29,7 +29,9 @@ function classify(err) {
       code: ERROR_CODES.VALIDATION_ERROR,
       message: entry.message,
       logLevel: 'warn',
-      detail: { issues: err.issues },
+      // Log only the field path + rule — NEVER Zod's `received` value, which holds
+      // the raw input (a bad phone on /send-otp would otherwise be logged, §10).
+      detail: { issues: err.issues.map(({ path, code }) => ({ path, code })) },
     };
   }
   const entry = ERROR_CATALOG[ERROR_CODES.INTERNAL_ERROR];

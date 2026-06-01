@@ -76,10 +76,19 @@ function fakePrisma({ rides = [], subs = {} } = {}) {
   };
 }
 
+/** Minimal Redis double for the contact rate-limit counter. */
+function fakeRedis() {
+  const store = new Map();
+  return {
+    async incr(k) { const c = (store.get(k)?.value || 0) + 1; store.set(k, { value: c, ttl: -1 }); return c; },
+    async expire(k, s) { if (store.has(k)) store.get(k).ttl = s; return 1; },
+  };
+}
+
 function makeApp(seed = {}, subscriber) {
   const sub = subscriber || { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
   const prisma = fakePrisma(seed);
-  const app = buildApp({ prisma, redis: {}, logger: pino({ level: 'silent' }), config: CONFIG, identity: {}, subscriber: sub });
+  const app = buildApp({ prisma, redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity: {}, subscriber: sub });
   return { app, prisma };
 }
 
@@ -179,6 +188,20 @@ test('POST /:id/contact for an unknown ride → 404; a non-uuid id → 422', asy
   const bad = await request(app).post('/api/v1/rides/not-a-uuid/contact').set('Cookie', authCookie).send();
   assert.strictEqual(bad.status, 422);
   assert.strictEqual(bad.body.error.code, 'VALIDATION_ERROR');
+});
+
+test('contact reveals are rate-limited per user → 429 RATE_LIMITED past the cap', async () => {
+  const { CONTACT_RATE_LIMIT } = require('@easecab/shared');
+  const seed = { rides: [makeRide(R0)], subs: { [USER_ID]: { status: 'trial', trialExpiresAt: FUTURE } } };
+  const { app } = makeApp(seed);
+  // Burn the budget (same ride re-tap counts — it's still a reveal).
+  for (let i = 0; i < CONTACT_RATE_LIMIT.MAX_PER_WINDOW; i += 1) {
+    const ok = await request(app).post(`/api/v1/rides/${R0}/contact`).set('Cookie', authCookie).send();
+    assert.strictEqual(ok.status, 200);
+  }
+  const over = await request(app).post(`/api/v1/rides/${R0}/contact`).set('Cookie', authCookie).send();
+  assert.strictEqual(over.status, 429);
+  assert.strictEqual(over.body.error.code, 'RATE_LIMITED');
 });
 
 // ---- SSE ------------------------------------------------------------------

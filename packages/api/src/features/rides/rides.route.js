@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { ridesListQuerySchema, rideIdParamSchema } = require('@easecab/shared');
+const { AppError, ERROR_CODES, ridesListQuerySchema, rideIdParamSchema } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
@@ -32,7 +32,14 @@ function createRidesRouter({ service, feed, requireAuth }) {
   // GET /api/v1/rides/stream — SSE live feed. Declared before the param route so the
   // literal path is unambiguous. Intentionally NOT async: it does no awaited work
   // and must keep the connection open rather than end after a handler resolves.
-  router.get('/stream', (req, res) => {
+  router.get('/stream', (req, res, next) => {
+    // Cap concurrent streams per user (security-review H2). Reject via the normal
+    // envelope BEFORE any SSE headers are written.
+    if (!feed.tryAcquireConnection(req.user.id)) {
+      next(AppError.fromCode(ERROR_CODES.RATE_LIMITED));
+      return;
+    }
+
     res.set({
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
@@ -58,6 +65,7 @@ function createRidesRouter({ service, feed, requireAuth }) {
     req.on('close', () => {
       clearInterval(heartbeat);
       off();
+      feed.releaseConnection(req.user.id);
     });
   });
 

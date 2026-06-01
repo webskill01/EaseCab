@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, SUBSCRIPTION_STATUS } = require('@easecab/shared');
+const { AppError, ERROR_CODES, SUBSCRIPTION_STATUS, CONTACT_RATE_LIMIT } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
 /**
@@ -83,6 +83,13 @@ function createRidesService({ repo }) {
       const sub = await repo.findSubscriptionByUserId(userId);
       if (!isSubscriptionActive(sub)) {
         throw AppError.fromCode(ERROR_CODES.SUBSCRIPTION_EXPIRED);
+      }
+      // Throttle reveals so a subscribed account can't enumerate every ride's phone
+      // (security-review H1). Counted on the reveal path only — gated/404 calls leak
+      // no phone, so they don't burn the budget.
+      const count = await repo.incrementContactCount(userId, CONTACT_RATE_LIMIT.WINDOW_SEC);
+      if (count > CONTACT_RATE_LIMIT.MAX_PER_WINDOW) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
       const { contactedAt } = await repo.recordContact(userId, rideId);
       return { phoneNumber: ride.phoneNumber, contactedAt };
