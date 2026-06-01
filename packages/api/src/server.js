@@ -7,6 +7,7 @@ const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
 const { buildApp } = require('./app');
+const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
 
 /**
  * Express server entry point (PM2 `easecab-api`, port 4000). Validates env, builds
@@ -30,7 +31,13 @@ async function main() {
     },
   };
 
-  const app = buildApp({ prisma, redis, logger, config });
+  const identity = createFirebaseIdentity({
+    projectId: serverEnv.FIREBASE_PROJECT_ID,
+    clientEmail: serverEnv.FIREBASE_CLIENT_EMAIL,
+    privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
+  });
+
+  const app = buildApp({ prisma, redis, logger, config, identity });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });

@@ -8,11 +8,16 @@ const { parseServerEnv } = require('../env.schema');
 const SECRET_A = 'a'.repeat(32);
 const SECRET_B = 'b'.repeat(40);
 
+// BASE includes the full required server env (Phase 3 Step 9 added FIREBASE_* fields).
+// Tests that exercise "missing required field" spread BASE and delete/override the target.
 const BASE = Object.freeze({
   DATABASE_URL: 'postgresql://u:p@host:6543/db?pgbouncer=true',
   REDIS_URL: 'redis://127.0.0.1:6379',
   JWT_ACCESS_SECRET: SECRET_A,
   JWT_REFRESH_SECRET: SECRET_B,
+  FIREBASE_PROJECT_ID: 'easecab-test',
+  FIREBASE_CLIENT_EMAIL: 'svc@easecab-test.iam.gserviceaccount.com',
+  FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n',
 });
 
 test('accepts valid server env and freezes the result', () => {
@@ -71,4 +76,25 @@ test('rejects an invalid NODE_ENV, naming it', () => {
   const r = parseServerEnv({ ...BASE, NODE_ENV: 'staging' });
   assert.equal(r.success, false);
   assert.ok(r.errors.some((e) => e.startsWith('NODE_ENV')));
+});
+
+test('serverEnvSchema requires the FIREBASE_* credentials', () => {
+  // Build a base that has every required field EXCEPT the Firebase ones.
+  const baseNoFirebase = {
+    DATABASE_URL: BASE.DATABASE_URL,
+    REDIS_URL: BASE.REDIS_URL,
+    JWT_ACCESS_SECRET: BASE.JWT_ACCESS_SECRET,
+    JWT_REFRESH_SECRET: BASE.JWT_REFRESH_SECRET,
+  };
+  // Missing all FIREBASE_* → fail
+  assert.equal(parseServerEnv(baseNoFirebase).success, false);
+  // With them → success, private key preserved verbatim (newline restore happens in firebaseAdmin)
+  const ok = parseServerEnv({
+    ...baseNoFirebase,
+    FIREBASE_PROJECT_ID: 'easecab',
+    FIREBASE_CLIENT_EMAIL: 'svc@easecab.iam.gserviceaccount.com',
+    FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n',
+  });
+  assert.equal(ok.success, true);
+  assert.equal(ok.data.FIREBASE_PROJECT_ID, 'easecab');
 });

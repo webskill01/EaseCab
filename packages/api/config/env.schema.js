@@ -46,6 +46,12 @@ const serverEnvSchema = envSchema.extend({
     .string()
     .default(DEFAULT_CORS_ORIGINS)
     .transform((csv) => csv.split(',').map((s) => s.trim()).filter(Boolean)),
+  // Firebase Admin SDK service-account creds (verify-otp). Backend only — never in
+  // the frontend bundle (CLAUDE.md §11). PRIVATE_KEY holds literal "\n"; firebaseAdmin
+  // restores real newlines at init.
+  FIREBASE_PROJECT_ID: z.string().min(1),
+  FIREBASE_CLIENT_EMAIL: z.string().email(),
+  FIREBASE_PRIVATE_KEY: z.string().min(1),
 });
 
 /**

@@ -11,6 +11,9 @@ const { createJwt } = require('./lib/jwt');
 const { requestContext } = require('./middleware/requestContext');
 const { notFound } = require('./middleware/notFound');
 const { createErrorHandler } = require('./middleware/errorHandler');
+const { createAuthRepository } = require('./features/auth/auth.repository');
+const { createAuthService } = require('./features/auth/auth.service');
+const { createAuthRouter } = require('./features/auth/auth.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -29,9 +32,10 @@ const { createErrorHandler } = require('./middleware/errorHandler');
  * @param {string[]} deps.config.corsOrigins
  * @param {{ secure: boolean }} deps.config.cookie
  * @param {{ accessSecret, refreshSecret, accessTtl, refreshTtl }} deps.config.jwt
+ * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }} deps.identity
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config }) {
+function buildApp({ prisma, redis, logger, config, identity }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -71,8 +75,11 @@ function buildApp({ prisma, redis, logger, config }) {
   // Deploy health check — root path, OUTSIDE /api/v1 (CLAUDE.md §11 probes /ping).
   app.get('/ping', (_req, res) => sendSuccess(res, { data: { status: 'ok' } }));
 
-  // Versioned API surface. Auth (Step 9) + rides/SSE (Step 10) mount here.
+  // Versioned API surface. Auth (Step 9) mounted; rides/SSE (Step 10) mount here too.
   const v1 = express.Router();
+  const authRepo = createAuthRepository({ prisma, redis });
+  const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, config });
+  v1.use('/auth', createAuthRouter({ service: authService, config }));
   app.use('/api/v1', v1);
 
   // Terminal: unmatched route -> 404, then the single global error handler.
