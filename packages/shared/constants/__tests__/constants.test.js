@@ -11,6 +11,7 @@ const {
   SUBSCRIPTION_STATUS,
   REDIS_PREFIX,
   redisKey,
+  RIDE_TIMING,
 } = require('../index');
 
 test('ERROR_CODES contains the locked API error codes (CLAUDE.md §8)', () => {
@@ -61,6 +62,13 @@ test('HTTP_STATUS exposes the codes the API uses', () => {
   assert.equal(HTTP_STATUS.UNAUTHORIZED, 401);
   assert.equal(HTTP_STATUS.TOO_MANY_REQUESTS, 429);
   assert.equal(HTTP_STATUS.INTERNAL_SERVER_ERROR, 500);
+});
+
+test('RIDE_TIMING exposes frozen ride lifecycle durations', () => {
+  assert.ok(Object.isFrozen(RIDE_TIMING));
+  assert.equal(RIDE_TIMING.FEED_TTL_MIN, 30);
+  assert.equal(RIDE_TIMING.HARD_DELETE_HRS, 12);
+  assert.equal(RIDE_TIMING.FINGERPRINT_TTL_HRS, 12);
 });
 
 test('REDIS_PREFIX namespaces the shared Redis box', () => {

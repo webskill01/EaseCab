@@ -8,4 +8,5 @@ module.exports = {
   ...require('./redis'),
   ...require('./cityResolver'),
   ...require('./vehicles'),
+  ...require('./rides'),
 };
