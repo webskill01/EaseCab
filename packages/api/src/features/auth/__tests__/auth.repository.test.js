@@ -32,14 +32,17 @@ test('OTP keys are namespaced under easecab: and gate logic is correct', async (
   assert.ok([...redis._store.keys()].every((k) => k.startsWith('easecab:otp:')));
 });
 
-test('first incrementOtpCount sets the window expiry, later ones do not reset it', async () => {
+test('incrementOtpCount re-asserts the window expiry every call (self-heals a lost TTL)', async () => {
   const redis = fakeRedis();
   const repo = createAuthRepository({ prisma: {}, redis });
   await repo.incrementOtpCount('+919000000000', 3600);
   const key = 'easecab:otp:count:+919000000000';
   assert.strictEqual(redis._store.get(key).ttl, 3600);
+  // Simulate a lost TTL (e.g. a crash between a past INCR/EXPIRE) — the next call
+  // must re-assert it so the key can never be orphaned without an expiry.
+  redis._store.get(key).ttl = -1;
   await repo.incrementOtpCount('+919000000000', 3600);
-  assert.strictEqual(redis._store.get(key).ttl, 3600); // unchanged
+  assert.strictEqual(redis._store.get(key).ttl, 3600); // self-healed
 });
 
 test('createUserWithTrial nests a trial subscription; findUserByPhone has no isDeleted filter', async () => {

@@ -21,13 +21,18 @@ function createAuthRepository({ prisma, redis }) {
       return redis.ttl(cooldownKey(phone));
     },
 
-    /** Increment the rolling hourly counter; set the window on the first hit only. */
+    /**
+     * Increment the per-phone counter and (re)assert its expiry on EVERY call.
+     * Re-applying the TTL each time is the cheap, atomic-enough fix for the
+     * INCR-then-EXPIRE crash window: if a process death ever leaves the key
+     * without a TTL, the next request self-heals it — so a phone can never be
+     * permanently locked out by an orphaned counter. Effectively a sliding hourly
+     * window, which still honours "max 3/phone/hour" (CLAUDE.md §6).
+     */
     async incrementOtpCount(phone, windowSec) {
       const key = countKey(phone);
       const count = await redis.incr(key);
-      if (count === 1) {
-        await redis.expire(key, windowSec);
-      }
+      await redis.expire(key, windowSec);
       return count;
     },
 

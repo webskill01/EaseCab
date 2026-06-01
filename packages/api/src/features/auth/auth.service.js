@@ -35,7 +35,6 @@ function toPublicUser(user) {
  * @param {ReturnType<import('./auth.repository').createAuthRepository>} deps.repo
  * @param {{ signAccess, signRefresh, verifyRefresh }} deps.jwt - from lib/jwt
  * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }} deps.identity
- * @param {object} deps.config
  */
 function createAuthService({ repo, jwt, identity }) {
   function issueTokens(user) {
@@ -51,10 +50,13 @@ function createAuthService({ repo, jwt, identity }) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
       const count = await repo.incrementOtpCount(phone, OTP_RATE_LIMIT.WINDOW_SEC);
+      // Arm the cooldown on EVERY attempt (including a capped one) so a caller that
+      // has hit the hourly limit still can't hammer the endpoint faster than the
+      // resend interval.
+      await repo.setResendCooldown(phone, OTP_RATE_LIMIT.RESEND_COOLDOWN_SEC);
       if (count > OTP_RATE_LIMIT.MAX_PER_HOUR) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
-      await repo.setResendCooldown(phone, OTP_RATE_LIMIT.RESEND_COOLDOWN_SEC);
       return { sent: true };
     },
 

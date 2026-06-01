@@ -18,6 +18,8 @@ const admin = require('firebase-admin');
  * @returns {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }}
  */
 function createFirebaseIdentity({ projectId, clientEmail, privateKey }) {
+  // Named (non-default) app so a future second init — e.g. Step 15 FCM messaging —
+  // can call initializeApp with its own name without an "app already exists" clash.
   const app = admin.initializeApp({
     credential: admin.credential.cert({
       projectId,
@@ -25,7 +27,7 @@ function createFirebaseIdentity({ projectId, clientEmail, privateKey }) {
       // .env stores the PEM with literal "\n"; restore real newlines for the SDK.
       privateKey: privateKey.replace(/\\n/g, '\n'),
     }),
-  });
+  }, 'easecab-auth');
   const auth = admin.auth(app);
 
   return {
