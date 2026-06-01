@@ -5,16 +5,18 @@ const path = require('node:path');
 
 /**
  * Default pairing check: a slot is paired iff its session dir holds a
- * `creds.json` whose `registered` flag is true (Baileys sets this once the
- * number completes QR pairing). Any fs/JSON error → treated as unpaired (false)
+ * `creds.json` for a logged-in account. We accept EITHER `registered === true`
+ * (set by the pairing-code flow) OR a populated `me.id` (set by QR login) —
+ * QR pairing does not reliably flip `registered`, so checking it alone would
+ * wrongly skip a freshly QR-paired slot. Any fs/JSON error → unpaired (false),
  * so a missing or half-written session dir is simply skipped, never crashes.
  * @param {string} dir - the slot's session directory
  * @returns {boolean}
  */
 function defaultIsPaired(dir) {
   try {
-    const raw = fs.readFileSync(path.join(dir, 'creds.json'), 'utf8');
-    return Boolean(JSON.parse(raw).registered);
+    const creds = JSON.parse(fs.readFileSync(path.join(dir, 'creds.json'), 'utf8'));
+    return Boolean(creds.registered || (creds.me && creds.me.id));
   } catch {
     return false;
   }

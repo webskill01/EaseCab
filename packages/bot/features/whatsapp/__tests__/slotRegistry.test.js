@@ -37,7 +37,13 @@ test('default isPaired: true only when creds.json has registered:true', () => {
   // slot-ok: registered creds
   fs.mkdirSync(path.join(base, 'slot-ok'));
   fs.writeFileSync(path.join(base, 'slot-ok', 'creds.json'), JSON.stringify({ registered: true }));
-  // slot-unreg: creds present but not registered
+  // slot-qr: QR-paired — no `registered`, but a logged-in `me.id` is present
+  fs.mkdirSync(path.join(base, 'slot-qr'));
+  fs.writeFileSync(
+    path.join(base, 'slot-qr', 'creds.json'),
+    JSON.stringify({ registered: false, me: { id: '919999999999:1@s.whatsapp.net' } }),
+  );
+  // slot-unreg: creds present but neither registered nor logged in
   fs.mkdirSync(path.join(base, 'slot-unreg'));
   fs.writeFileSync(path.join(base, 'slot-unreg', 'creds.json'), JSON.stringify({ registered: false }));
   // slot-corrupt: unparseable
@@ -47,10 +53,10 @@ test('default isPaired: true only when creds.json has registered:true', () => {
 
   const reg = createSlotRegistry({
     sessionPath: base,
-    slots: ['slot-ok', 'slot-unreg', 'slot-corrupt', 'slot-missing'],
+    slots: ['slot-ok', 'slot-qr', 'slot-unreg', 'slot-corrupt', 'slot-missing'],
   });
 
-  assert.deepEqual(reg.eligibleSlots(), ['slot-ok']);
+  assert.deepEqual(reg.eligibleSlots(), ['slot-ok', 'slot-qr']);
 
   fs.rmSync(base, { recursive: true, force: true });
 });
