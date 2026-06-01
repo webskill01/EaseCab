@@ -9,11 +9,16 @@ const pinoHttp = require('pino-http');
 const { sendSuccess } = require('./http/respond');
 const { createJwt } = require('./lib/jwt');
 const { requestContext } = require('./middleware/requestContext');
+const { createRequireAuth } = require('./middleware/requireAuth');
 const { notFound } = require('./middleware/notFound');
 const { createErrorHandler } = require('./middleware/errorHandler');
 const { createAuthRepository } = require('./features/auth/auth.repository');
 const { createAuthService } = require('./features/auth/auth.service');
 const { createAuthRouter } = require('./features/auth/auth.route');
+const { createRidesRepository } = require('./features/rides/rides.repository');
+const { createRidesService } = require('./features/rides/rides.service');
+const { createRideFeed } = require('./features/rides/rideFeed');
+const { createRidesRouter } = require('./features/rides/rides.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -33,9 +38,12 @@ const { createAuthRouter } = require('./features/auth/auth.route');
  * @param {{ secure: boolean }} deps.config.cookie
  * @param {{ accessSecret, refreshSecret, accessTtl, refreshTtl }} deps.config.jwt
  * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }} deps.identity
+ * @param {import('ioredis').Redis} deps.subscriber - dedicated redis subscriber
+ *   (a `redis.duplicate()`) backing the rides SSE fan-out; a subscriber-mode
+ *   connection can't run normal commands, so it must be separate from `redis`.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity }) {
+function buildApp({ prisma, redis, logger, config, identity, subscriber }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -75,11 +83,26 @@ function buildApp({ prisma, redis, logger, config, identity }) {
   // Deploy health check — root path, OUTSIDE /api/v1 (CLAUDE.md §11 probes /ping).
   app.get('/ping', (_req, res) => sendSuccess(res, { data: { status: 'ok' } }));
 
-  // Versioned API surface. Auth (Step 9) mounted; rides/SSE (Step 10) mount here too.
+  // Shared cookie auth gate for the protected routers (auth routes are public).
+  const requireAuth = createRequireAuth({ jwt: app.locals.jwt });
+
+  // Versioned API surface.
   const v1 = express.Router();
+
+  // Auth (Step 9) — public.
   const authRepo = createAuthRepository({ prisma, redis });
   const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, config });
   v1.use('/auth', createAuthRouter({ service: authService, config }));
+
+  // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all
+  // stream clients; start the subscription now and stash it for graceful shutdown.
+  const ridesRepo = createRidesRepository({ prisma });
+  const ridesService = createRidesService({ repo: ridesRepo });
+  const rideFeed = createRideFeed({ subscriber, repo: ridesRepo, logger });
+  rideFeed.start().catch((err) => logger.error({ err: err.message }, 'rides SSE subscribe failed'));
+  app.locals.rideFeed = rideFeed;
+  v1.use('/rides', createRidesRouter({ service: ridesService, feed: rideFeed, requireAuth }));
+
   app.use('/api/v1', v1);
 
   // Terminal: unmatched route -> 404, then the single global error handler.

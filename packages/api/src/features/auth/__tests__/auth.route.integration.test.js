@@ -45,8 +45,10 @@ function fakePrisma() {
   };
 }
 
+const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
+
 function appWith(identity) {
-  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity });
+  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber });
 }
 
 const okIdentity = { verifyOtpToken: async () => ({ phone: '+919876543210' }) };

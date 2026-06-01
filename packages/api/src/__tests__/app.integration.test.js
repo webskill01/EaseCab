@@ -7,11 +7,15 @@ const pino = require('pino');
 const { ERROR_CODES } = require('@easecab/shared');
 const { buildApp } = require('../app');
 
+/** Inert subscriber stub — the rides SSE fan-out subscribes at startup. */
+const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
+
 /** Build a real app with inert deps + a silent logger. */
 function makeApp() {
   return buildApp({
     prisma: {},
     redis: {},
+    subscriber: inertSubscriber,
     logger: pino({ level: 'silent' }),
     config: {
       corsOrigins: ['https://easecab.com'],

@@ -19,6 +19,9 @@ async function main() {
   const logger = pino({ level: serverEnv.NODE_ENV === 'production' ? 'info' : 'debug' });
   const prisma = new PrismaClient({ datasources: { db: { url: serverEnv.DATABASE_URL } } });
   const redis = new Redis(serverEnv.REDIS_URL);
+  // Dedicated connection for the rides SSE fan-out — once it enters subscriber mode
+  // it can't run normal commands, so it must be separate from the main `redis`.
+  const subscriber = redis.duplicate();
 
   const config = {
     corsOrigins: serverEnv.CORS_ORIGINS,
@@ -37,7 +40,7 @@ async function main() {
     privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
   });
 
-  const app = buildApp({ prisma, redis, logger, config, identity });
+  const app = buildApp({ prisma, redis, logger, config, identity, subscriber });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });
@@ -45,7 +48,9 @@ async function main() {
   const shutdown = (signal) => {
     logger.info({ signal }, 'shutting down api server');
     server.close(async () => {
+      await app.locals.rideFeed?.close().catch(() => {});
       await prisma.$disconnect().catch(() => {});
+      subscriber.disconnect();
       redis.disconnect();
       process.exit(0);
     });
