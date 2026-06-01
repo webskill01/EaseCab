@@ -3,4 +3,5 @@
 /** Barrel for all shared services. */
 module.exports = {
   ...require('./cityResolver'),
+  ...require('./botAlerts'),
 };
