@@ -3,7 +3,6 @@
 const makeWASocket = require('@whiskeysockets/baileys').default;
 const {
   useMultiFileAuthState,
-  DisconnectReason,
   Browsers,
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
@@ -24,21 +23,31 @@ function extractText(message) {
 }
 
 /**
- * Open a READ-ONLY Baileys connection to a single target WhatsApp group and hand
- * every inbound group message to `onMessage`. This module NEVER sends. It
- * reconnects on transient drops and stops only on an explicit logout. Excluded
- * from coverage (live I/O) — verified by the manual integration run (plan Task 11).
+ * Open a READ-ONLY Baileys connection for ONE number slot and hand every inbound
+ * target-group message to `onMessage`. This module NEVER sends and owns NO
+ * reconnect/failover policy — it just reports lifecycle via callbacks and cleans
+ * itself up on close. The numberPool supervisor decides reconnect vs rotate
+ * (Phase 2.5 6a). Excluded from coverage (live I/O) — verified by the manual
+ * integration run.
+ *
+ * On close it removes its own listeners and ends the socket BEFORE calling
+ * `onClose`, so the supervisor can spin up a fresh connection with no orphaned
+ * listeners or sockets (this replaces the old self-recursion — security-review
+ * L2).
  *
  * @param {object} deps
- * @param {string} deps.sessionPath - directory for multi-file auth state
+ * @param {string} deps.sessionPath - this slot's multi-file auth-state dir
  * @param {string} deps.targetGroupJid - the only group JID we ingest from
  * @param {(msg: {text: string, senderJid: string, groupId: string, groupName?: string}) => Promise<unknown>} deps.onMessage
+ * @param {() => void} [deps.onOpen] - called once the connection is open
+ * @param {(code: number|undefined) => void} [deps.onClose] - called after cleanup on close, with the disconnect status code
  * @param {{ info: Function, warn: Function, error: Function }} deps.logger
- * @returns {Promise<object>} the live socket (caller closes it on shutdown)
+ * @returns {Promise<object>} the live socket (caller may end it on timeout/shutdown)
  */
-async function createConnection({ sessionPath, targetGroupJid, onMessage, logger }) {
+async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen, onClose, logger }) {
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
   let groupName; // cached subject of the target group, filled on connect
+  let closed = false; // guard so we report close exactly once
 
   const sock = makeWASocket({
     auth: state,
@@ -60,18 +69,26 @@ async function createConnection({ sessionPath, targetGroupJid, onMessage, logger
       } catch (err) {
         logger.warn({ err: err.message }, 'could not fetch target group metadata');
       }
+      if (onOpen) onOpen();
     } else if (connection === 'close') {
+      if (closed) return; // ignore duplicate close events
+      closed = true;
       const code =
         lastDisconnect &&
         lastDisconnect.error &&
         lastDisconnect.error.output &&
         lastDisconnect.error.output.statusCode;
-      if (code === DisconnectReason.loggedOut) {
-        logger.error('WA logged out — delete the session dir and re-pair to reconnect');
-      } else {
-        logger.warn({ code }, 'WA connection closed — reconnecting');
-        createConnection({ sessionPath, targetGroupJid, onMessage, logger });
+      logger.warn({ code }, 'WA connection closed — handing off to supervisor');
+      // Clean up BEFORE handing back so no listeners/sockets leak across reconnects.
+      try {
+        sock.ev.removeAllListeners('connection.update');
+        sock.ev.removeAllListeners('creds.update');
+        sock.ev.removeAllListeners('messages.upsert');
+        sock.end(undefined);
+      } catch {
+        // socket may already be torn down — nothing to do
       }
+      if (onClose) onClose(code);
     }
   });
 
