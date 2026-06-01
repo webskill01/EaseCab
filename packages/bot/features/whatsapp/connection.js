@@ -42,10 +42,11 @@ function extractText(message) {
  * @param {(msg: {text: string, senderJid: string, groupId: string, groupName?: string}) => Promise<unknown>} deps.onMessage
  * @param {() => void} [deps.onOpen] - called once the connection is open
  * @param {(code: number|undefined) => void} [deps.onClose] - called after cleanup on close, with the disconnect status code
+ * @param {(qr: string) => void} [deps.onQr] - called with each QR string while unpaired (pairing only; supervised slots are already paired)
  * @param {{ info: Function, warn: Function, error: Function }} deps.logger
  * @returns {Promise<object>} the live socket (caller may end it on timeout/shutdown)
  */
-async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen, onClose, logger }) {
+async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen, onClose, onQr, logger }) {
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
   // Pin the current WhatsApp Web build — a stale hardcoded version makes WA reject
   // the handshake with a 405 ("connection failure"). Required for every connect.
@@ -65,6 +66,9 @@ async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen
 
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
+    // While unpaired Baileys emits a fresh QR string here (printQRInTerminal is
+    // deprecated/no-op in current Baileys, so the caller renders it).
+    if (update.qr && onQr) onQr(update.qr);
     if (connection === 'open') {
       logger.info('WA connection open');
       try {
