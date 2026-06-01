@@ -10,6 +10,7 @@
     "prisma:studio": "prisma studio",
     "db:seed": "node prisma/seed.js",
     "check:connections": "node scripts/check-connections.js",
+    "start": "node src/server.js",
     "cron": "node src/cron/worker.js",
     "test": "node --test",
     "test:coverage": "c8 --check-coverage node --test",
