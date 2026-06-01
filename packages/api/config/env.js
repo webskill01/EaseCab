@@ -21,7 +21,7 @@ if (!result.success) {
   process.exit(1);
 }
 
-/** @type {Readonly<{ DATABASE_URL: string }>} */
+/** @type {Readonly<{ DATABASE_URL: string, REDIS_URL: string, BOT_FEED_ENABLED: boolean, STALE_AFTER_MIN: number, ACTIVE_HOUR_START_IST: number, ACTIVE_HOUR_END_IST: number }>} */
 const env = result.data;
 
 module.exports = { env };
