@@ -42,6 +42,12 @@ function createRidesRouter({ service, feed, requireAuth }) {
     res.flushHeaders();
     res.write(': connected\n\n');
 
+    // A client dropping mid-write (mobile networks, tab close) can make the
+    // response stream emit 'error' in the race before 'close' fires. Swallow it —
+    // an unhandled 'error' on the stream would otherwise crash the process. The
+    // 'close' handler below does the real cleanup.
+    res.on('error', () => {});
+
     const heartbeat = setInterval(() => res.write(': ping\n\n'), HEARTBEAT_MS);
     const off = feed.onRide((ride) => {
       res.write(`event: ride\ndata: ${JSON.stringify(ride)}\n\n`);
