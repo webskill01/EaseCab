@@ -34,10 +34,11 @@ const REASON = Object.freeze({
  * @param {{ isDuplicate: (fp: string) => Promise<boolean>, saveRide: (d: object) => Promise<object> }} deps.repository
  * @param {string[]} deps.cityNames - DB-loaded city vocabulary (canonical + aliases)
  * @param {{ rideKeywords: string[], ignoreKeywords: string[], blockedPhoneNumbers: string[], blockedSenders: string[] }} deps.filters
+ * @param {{ record: () => Promise<void> }} [deps.heartbeat] - ingestion heartbeat; fired only on a successful save (Phase 2.5 6b)
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
  * @returns {(msg: {text: string, senderJid: string, groupId?: string, groupName?: string, botId?: string}) => Promise<{saved: boolean, reason: string, ride?: object}>}
  */
-function createProcessMessage({ resolver, repository, cityNames, filters, logger }) {
+function createProcessMessage({ resolver, repository, cityNames, filters, heartbeat, logger }) {
   const log = logger || { info() {}, warn() {}, error() {} };
 
   /**
@@ -111,6 +112,17 @@ function createProcessMessage({ resolver, repository, cityNames, filters, logger
         sourceGroupName: groupName,
         botId,
       });
+
+      // Operational heartbeat: stamp the last successful ingest so the cron
+      // stale watcher can distinguish a dead feed from a quiet group (6b).
+      // Best-effort — the helper swallows its own errors, guarded again here.
+      if (heartbeat) {
+        try {
+          await heartbeat.record();
+        } catch {
+          // never let an operational signal break ingestion
+        }
+      }
 
       return { saved: true, reason: REASON.SAVED, ride };
     } catch (err) {

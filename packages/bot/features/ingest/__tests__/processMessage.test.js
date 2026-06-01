@@ -112,3 +112,32 @@ test('never throws — an unexpected internal error returns reason=error', async
   assert.strictEqual(r.saved, false);
   assert.strictEqual(r.reason, 'error');
 });
+
+test('fires the heartbeat once on a successful save', async () => {
+  const deps = baseDeps();
+  let beats = 0;
+  deps.heartbeat = { record: async () => { beats += 1; } };
+  const pm = createProcessMessage(deps);
+  const r = await pm(msg());
+  assert.strictEqual(r.saved, true);
+  assert.strictEqual(beats, 1);
+});
+
+test('does NOT fire the heartbeat on a dropped message', async () => {
+  const deps = baseDeps();
+  deps.filters.blockedPhoneNumbers = ['9876543210'];
+  let beats = 0;
+  deps.heartbeat = { record: async () => { beats += 1; } };
+  const pm = createProcessMessage(deps);
+  const r = await pm(msg());
+  assert.strictEqual(r.saved, false);
+  assert.strictEqual(beats, 0);
+});
+
+test('a heartbeat failure does not break a successful save', async () => {
+  const deps = baseDeps();
+  deps.heartbeat = { record: async () => { throw new Error('redis down'); } };
+  const pm = createProcessMessage(deps);
+  const r = await pm(msg());
+  assert.strictEqual(r.saved, true);
+});
