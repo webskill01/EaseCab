@@ -1,6 +1,7 @@
 'use strict';
 
 const { RIDE_STATUS, redisKey } = require('@easecab/shared');
+const { fixedWindowIncr } = require('../../lib/rateLimit');
 
 /**
  * The ONLY columns of a bot ride that may reach a client (CLAUDE.md §3.10 + the
@@ -35,15 +36,11 @@ function createRidesRepository({ prisma, redis }) {
 
   return {
     /**
-     * Increment a user's contact-reveal counter and (re)assert the window expiry on
-     * every call — the same self-healing pattern as the OTP gate (auth.repository),
-     * so an orphaned key can never permanently block a user. Returns the new count.
+     * Increment a user's contact-reveal counter in an atomic fixed window — same
+     * shared limiter as the OTP gate (security-review H1/H3). Returns the new count.
      */
     async incrementContactCount(userId, windowSec) {
-      const key = contactCountKey(userId);
-      const count = await redis.incr(key);
-      await redis.expire(key, windowSec);
-      return count;
+      return fixedWindowIncr(redis, contactCountKey(userId), windowSec);
     },
 
     /**

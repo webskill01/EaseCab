@@ -17,8 +17,13 @@ function fakeRedis() {
   const store = new Map();
   return {
     async ttl(k) { return store.has(k) ? store.get(k).ttl : -2; },
-    async incr(k) { const c = store.get(k) || { value: 0, ttl: -1 }; c.value += 1; store.set(k, c); return c.value; },
-    async expire(k, s) { if (store.has(k)) store.get(k).ttl = s; return 1; },
+    async eval(_s, _n, k, windowSec) {
+      const c = store.get(k) || { value: 0, ttl: -1 };
+      c.value += 1;
+      if (c.ttl < 0) c.ttl = Number(windowSec);
+      store.set(k, c);
+      return c.value;
+    },
     async set(k, v, _m, s) { store.set(k, { value: v, ttl: s }); return 'OK'; },
   };
 }

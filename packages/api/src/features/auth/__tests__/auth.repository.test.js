@@ -9,11 +9,14 @@ function fakeRedis() {
   return {
     calls: [],
     async ttl(key) { return store.has(key) ? store.get(key).ttl : -2; },
-    async incr(key) {
+    // Models the FIXED_WINDOW_INCR script: INCR, set TTL only when absent.
+    async eval(_script, _numKeys, key, windowSec) {
       const cur = store.get(key) || { value: 0, ttl: -1 };
-      cur.value += 1; store.set(key, cur); return cur.value;
+      cur.value += 1;
+      if (cur.ttl < 0) cur.ttl = Number(windowSec);
+      store.set(key, cur);
+      return cur.value;
     },
-    async expire(key, secs) { if (store.has(key)) store.get(key).ttl = secs; return 1; },
     async set(key, value, mode, secs) { store.set(key, { value, ttl: secs }); return 'OK'; },
     _store: store,
   };
@@ -32,17 +35,20 @@ test('OTP keys are namespaced under easecab: and gate logic is correct', async (
   assert.ok([...redis._store.keys()].every((k) => k.startsWith('easecab:otp:')));
 });
 
-test('incrementOtpCount re-asserts the window expiry every call (self-heals a lost TTL)', async () => {
+test('incrementOtpCount uses a FIXED window (TTL set once, self-heals a lost TTL)', async () => {
   const redis = fakeRedis();
   const repo = createAuthRepository({ prisma: {}, redis });
   await repo.incrementOtpCount('+919000000000', 3600);
   const key = 'easecab:otp:count:+919000000000';
   assert.strictEqual(redis._store.get(key).ttl, 3600);
-  // Simulate a lost TTL (e.g. a crash between a past INCR/EXPIRE) — the next call
-  // must re-assert it so the key can never be orphaned without an expiry.
+  // A normal second hit increments but must NOT push the window forward (fixed window).
+  redis._store.get(key).ttl = 1800; // pretend time elapsed
+  await repo.incrementOtpCount('+919000000000', 3600);
+  assert.strictEqual(redis._store.get(key).ttl, 1800); // unchanged — not slidable
+  // But a key left WITHOUT a TTL (old-crash orphan) self-heals on the next hit.
   redis._store.get(key).ttl = -1;
   await repo.incrementOtpCount('+919000000000', 3600);
-  assert.strictEqual(redis._store.get(key).ttl, 3600); // self-healed
+  assert.strictEqual(redis._store.get(key).ttl, 3600); // re-applied
 });
 
 test('createUserWithTrial nests a trial subscription; findUserByPhone has no isDeleted filter', async () => {

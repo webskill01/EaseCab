@@ -1,6 +1,7 @@
 'use strict';
 
 const { redisKey } = require('@easecab/shared');
+const { fixedWindowIncr } = require('../../lib/rateLimit');
 
 /**
  * Auth data access — Prisma (users + nested trial subscription) and Redis (the OTP
@@ -22,18 +23,14 @@ function createAuthRepository({ prisma, redis }) {
     },
 
     /**
-     * Increment the per-phone counter and (re)assert its expiry on EVERY call.
-     * Re-applying the TTL each time is the cheap, atomic-enough fix for the
-     * INCR-then-EXPIRE crash window: if a process death ever leaves the key
-     * without a TTL, the next request self-heals it — so a phone can never be
-     * permanently locked out by an orphaned counter. Effectively a sliding hourly
-     * window, which still honours "max 3/phone/hour" (CLAUDE.md §6).
+     * Increment the per-phone OTP counter in an atomic FIXED window
+     * (security-review H3, supersedes the earlier re-assert-TTL approach). The
+     * shared script sets the expiry only when the key has none, so the hourly cap
+     * is a hard "max 3/phone/hour" (CLAUDE.md §6) — not slidable — and the
+     * INCR/EXPIRE crash gap is gone.
      */
     async incrementOtpCount(phone, windowSec) {
-      const key = countKey(phone);
-      const count = await redis.incr(key);
-      await redis.expire(key, windowSec);
-      return count;
+      return fixedWindowIncr(redis, countKey(phone), windowSec);
     },
 
     /** Arm the resend cooldown for this phone. */

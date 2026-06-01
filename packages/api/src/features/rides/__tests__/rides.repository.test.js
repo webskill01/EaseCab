@@ -81,18 +81,24 @@ test('findSubscriptionByUserId selects the gate fields by userId', async () => {
   });
 });
 
-test('incrementContactCount namespaces under easecab:contact: and re-asserts the TTL', async () => {
+test('incrementContactCount namespaces under easecab:contact: with a fixed-window TTL', async () => {
   const store = new Map();
   const redis = {
-    async incr(k) { const c = (store.get(k)?.value || 0) + 1; store.set(k, { value: c, ttl: store.get(k)?.ttl ?? -1 }); return c; },
-    async expire(k, s) { if (store.has(k)) store.get(k).ttl = s; return 1; },
+    // Models FIXED_WINDOW_INCR: INCR, set TTL only when absent.
+    async eval(_s, _n, key, windowSec) {
+      const cur = store.get(key) || { value: 0, ttl: -1 };
+      cur.value += 1;
+      if (cur.ttl < 0) cur.ttl = Number(windowSec);
+      store.set(key, cur);
+      return cur.value;
+    },
   };
   const repo = createRidesRepository({ prisma: fakePrisma(), redis });
   assert.strictEqual(await repo.incrementContactCount('u1', 60), 1);
   assert.strictEqual(await repo.incrementContactCount('u1', 60), 2);
   const key = [...store.keys()][0];
   assert.ok(key.startsWith('easecab:contact:'));
-  assert.strictEqual(store.get(key).ttl, 60); // re-asserted every call
+  assert.strictEqual(store.get(key).ttl, 60);
 });
 
 test('recordContact upserts on the composite unique (idempotent)', async () => {

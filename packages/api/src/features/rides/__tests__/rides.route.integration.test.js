@@ -76,12 +76,17 @@ function fakePrisma({ rides = [], subs = {} } = {}) {
   };
 }
 
-/** Minimal Redis double for the contact rate-limit counter. */
+/** Minimal Redis double for the contact rate-limit counter (FIXED_WINDOW_INCR). */
 function fakeRedis() {
   const store = new Map();
   return {
-    async incr(k) { const c = (store.get(k)?.value || 0) + 1; store.set(k, { value: c, ttl: -1 }); return c; },
-    async expire(k, s) { if (store.has(k)) store.get(k).ttl = s; return 1; },
+    async eval(_s, _n, k, windowSec) {
+      const c = store.get(k) || { value: 0, ttl: -1 };
+      c.value += 1;
+      if (c.ttl < 0) c.ttl = Number(windowSec);
+      store.set(k, c);
+      return c.value;
+    },
   };
 }
 
