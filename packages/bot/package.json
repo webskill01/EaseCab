@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "pair": "node scripts/pair.js",
     "test": "node --test",
     "test:coverage": "c8 --check-coverage node --test",
     "lint": "eslint ."
