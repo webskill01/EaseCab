@@ -4,6 +4,7 @@ const makeWASocket = require('@whiskeysockets/baileys').default;
 const {
   useMultiFileAuthState,
   Browsers,
+  fetchLatestBaileysVersion,
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 
@@ -46,12 +47,15 @@ function extractText(message) {
  */
 async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen, onClose, logger }) {
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
+  // Pin the current WhatsApp Web build — a stale hardcoded version makes WA reject
+  // the handshake with a 405 ("connection failure"). Required for every connect.
+  const { version } = await fetchLatestBaileysVersion();
   let groupName; // cached subject of the target group, filled on connect
   let closed = false; // guard so we report close exactly once
 
   const sock = makeWASocket({
+    version,
     auth: state,
-    printQRInTerminal: true, // first run prints the pairing QR
     browser: Browsers.appropriate('EaseCab-Bot'),
     logger: pino({ level: 'silent' }), // silence Baileys internals; we log our own
     markOnlineOnConnect: false, // stay invisible — read-only listener
