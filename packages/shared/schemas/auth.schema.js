@@ -1,4 +1,3 @@
-// packages/shared/schemas/auth.schema.js
 'use strict';
 
 const { z } = require('zod');
