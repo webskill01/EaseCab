@@ -53,7 +53,12 @@ function createProcessMessage({ resolver, repository, cityNames, filters, logger
       const res = await resolver.resolve(raw);
       return res && res.status === 'resolved' ? res.cityId : null;
     } catch (err) {
-      log.warn({ err: err.message, raw }, 'city resolve failed; treating as unresolved');
+      // Log a truncated fragment, never the full raw value — it comes from
+      // untrusted WA text and could carry partial PII (CLAUDE.md §10).
+      log.warn(
+        { err: err.message, fragment: String(raw).slice(0, 30) },
+        'city resolve failed; treating as unresolved',
+      );
       return null;
     }
   }

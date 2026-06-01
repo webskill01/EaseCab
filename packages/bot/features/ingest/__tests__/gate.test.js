@@ -21,6 +21,16 @@ test('containsBlockedNumber matches with/without country code', () => {
   assert.strictEqual(containsBlockedNumber('call 919876543210', ['9876543210']), true);
   assert.strictEqual(containsBlockedNumber('call 9000000000', ['9876543210']), false);
 });
+test('containsBlockedNumber matches blocked numbers written in Unicode digits (no bypass)', () => {
+  // Arabic-Indic ٩٨٧٦٥٤٣٢١٠ and Devanagari ९८७६५४३२१० both == 9876543210
+  assert.strictEqual(containsBlockedNumber('call ٩٨٧٦٥٤٣٢١٠', ['9876543210']), true);
+  assert.strictEqual(containsBlockedNumber('call ९८७६५४३२१०', ['9876543210']), true);
+  // full-width ９８７６ mixed with ASCII still normalizes
+  assert.strictEqual(containsBlockedNumber('call ９８７６543210', ['9876543210']), true);
+});
+test('isBlockedSender normalizes Unicode digits in a JID', () => {
+  assert.strictEqual(isBlockedSender('91٩٨٧٦٥٤٣٢١٠@s.whatsapp.net', ['9876543210']), true);
+});
 test('isBlockedSender matches JID last 10 digits', () => {
   assert.strictEqual(isBlockedSender('919876543210@s.whatsapp.net', ['9876543210']), true);
   assert.strictEqual(isBlockedSender('911111111111@s.whatsapp.net', ['9876543210']), false);

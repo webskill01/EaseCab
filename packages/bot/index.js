@@ -1,7 +1,8 @@
 'use strict';
 
 // Side-effect import: validates env via Zod and exits the process on bad config.
-const env = require('./config/env.js');
+// Must destructure — env.js exports `{ env }`, not the config directly.
+const { env } = require('./config/env.js');
 
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
