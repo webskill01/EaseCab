@@ -76,9 +76,14 @@ function fakePrisma({ rides = [], subs = {} } = {}) {
   };
 }
 
-/** Minimal Redis double for the contact rate-limit counter (FIXED_WINDOW_INCR). */
+/**
+ * Minimal Redis double: `eval` for the contact rate-limit counter (FIXED_WINDOW_INCR)
+ * and get/set/del for the §15 subscription-status cache (cache-first gate). A miss
+ * (get → null) falls the gate through to the prisma seed.
+ */
 function fakeRedis() {
   const store = new Map();
+  const kv = new Map();
   return {
     async eval(_s, _n, k, windowSec) {
       const c = store.get(k) || { value: 0, ttl: -1 };
@@ -87,6 +92,9 @@ function fakeRedis() {
       store.set(k, c);
       return c.value;
     },
+    async get(k) { return kv.has(k) ? kv.get(k) : null; },
+    async set(k, v) { kv.set(k, v); return 'OK'; },
+    async del(k) { return kv.delete(k) ? 1 : 0; },
   };
 }
 

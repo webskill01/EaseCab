@@ -2,6 +2,7 @@
 
 const { RIDE_STATUS, redisKey } = require('@easecab/shared');
 const { fixedWindowIncr } = require('../../lib/rateLimit');
+const { getCachedSub, setCachedSub } = require('../../lib/subscriptionCache');
 
 /**
  * The ONLY columns of a bot ride that may reach a client (CLAUDE.md §3.10 + the
@@ -85,12 +86,16 @@ function createRidesRepository({ prisma, redis }) {
       return prisma.ride.findUnique({ where: { id }, select: { id: true, phoneNumber: true } });
     },
 
-    /** The caller's subscription window fields for the soft gate. null if none. */
+    /** The caller's subscription window for the soft gate — cache-first (§15). null if none. */
     async findSubscriptionByUserId(userId) {
-      return prisma.subscription.findUnique({
+      const cached = await getCachedSub(redis, userId);
+      if (cached) return cached;
+      const sub = await prisma.subscription.findUnique({
         where: { userId },
         select: { status: true, trialExpiresAt: true, expiresAt: true },
       });
+      await setCachedSub(redis, userId, sub);
+      return sub;
     },
 
     /**

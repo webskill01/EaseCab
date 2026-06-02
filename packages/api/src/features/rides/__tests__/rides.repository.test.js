@@ -73,7 +73,9 @@ test('findRideContactTarget selects only id + phoneNumber', async () => {
 
 test('findSubscriptionByUserId selects the gate fields by userId', async () => {
   const prisma = fakePrisma();
-  const repo = createRidesRepository({ prisma });
+  // Cache miss → falls through to the DB read (§15 cache-first gate).
+  const redis = { async get() { return null; }, async set() { return 'OK'; } };
+  const repo = createRidesRepository({ prisma, redis });
   await repo.findSubscriptionByUserId('u1');
   assert.deepStrictEqual(prisma.calls.subFindUnique, {
     where: { userId: 'u1' },
