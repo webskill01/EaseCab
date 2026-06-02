@@ -1,0 +1,61 @@
+'use strict';
+
+const express = require('express');
+const { HTTP_STATUS, postedRideCreateSchema, postedRidesListQuerySchema, postedRideIdParamSchema } = require('@easecab/shared');
+const { validate } = require('../../middleware/validate');
+const { sendSuccess } = require('../../http/respond');
+
+/**
+ * Authed posted-rides routes: /api/v1/posted-rides. Create is verification-gated,
+ * contact is subscription-gated (both enforced in the service). Express 5 forwards
+ * async rejections to the global error handler — no wrapper needed.
+ *
+ * @param {object} deps
+ * @param {ReturnType<import('./postedRides.service').createPostedRidesService>} deps.service
+ * @param {import('express').RequestHandler} deps.requireAuth
+ * @returns {import('express').Router}
+ */
+function createPostedRidesRouter({ service, requireAuth }) {
+  const router = express.Router();
+  router.use(requireAuth);
+
+  // POST /api/v1/posted-rides — create a 24h post (verification-gated).
+  router.post('/', validate(postedRideCreateSchema), async (req, res) => {
+    const data = await service.createPost(req.user.id, req.valid.body);
+    sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
+  });
+
+  // GET /api/v1/posted-rides — public masked feed, cursor-paginated.
+  router.get('/', validate(postedRidesListQuerySchema, 'query'), async (req, res) => {
+    const { posts, nextCursor } = await service.listFeed(req.valid.query);
+    sendSuccess(res, { data: { posts }, meta: { nextCursor } });
+  });
+
+  // GET /api/v1/posted-rides/mine — the caller's own posts. Literal path before params.
+  router.get('/mine', async (req, res) => {
+    const { posts } = await service.listMine(req.user.id);
+    sendSuccess(res, { data: { posts } });
+  });
+
+  // POST /api/v1/posted-rides/:id/close — owner marks done.
+  router.post('/:id/close', validate(postedRideIdParamSchema, 'params'), async (req, res) => {
+    const data = await service.closePost({ userId: req.user.id, postedRideId: req.valid.params.id });
+    sendSuccess(res, { data });
+  });
+
+  // DELETE /api/v1/posted-rides/:id — owner soft-deletes.
+  router.delete('/:id', validate(postedRideIdParamSchema, 'params'), async (req, res) => {
+    const data = await service.removePost({ userId: req.user.id, postedRideId: req.valid.params.id });
+    sendSuccess(res, { data });
+  });
+
+  // POST /api/v1/posted-rides/:id/contact — subscription-gated phone reveal.
+  router.post('/:id/contact', validate(postedRideIdParamSchema, 'params'), async (req, res) => {
+    const data = await service.contactPost({ userId: req.user.id, postedRideId: req.valid.params.id });
+    sendSuccess(res, { data });
+  });
+
+  return router;
+}
+
+module.exports = { createPostedRidesRouter };

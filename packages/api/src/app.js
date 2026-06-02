@@ -25,6 +25,12 @@ const { createSubscriptionRouter, createWebhookHandler } = require('./features/s
 const { createVerificationRepository } = require('./features/verification/verification.repository');
 const { createVerificationService } = require('./features/verification/verification.service');
 const { createVerificationRouter } = require('./features/verification/verification.route');
+const { createCitiesRepository } = require('./features/cities/cities.repository');
+const { createCitiesService } = require('./features/cities/cities.service');
+const { createCitiesRouter } = require('./features/cities/cities.route');
+const { createPostedRidesRepository } = require('./features/posted-rides/postedRides.repository');
+const { createPostedRidesService } = require('./features/posted-rides/postedRides.service');
+const { createPostedRidesRouter } = require('./features/posted-rides/postedRides.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -132,6 +138,17 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const verificationRepo = createVerificationRepository({ prisma, redis });
   const verificationService = createVerificationService({ repo: verificationRepo, surepass });
   v1.use('/verification', createVerificationRouter({ service: verificationService, requireAuth }));
+
+  // Cities (Step 13) — authed typeahead for the post form + Step-18 filter bar.
+  const citiesRepo = createCitiesRepository({ prisma });
+  const citiesService = createCitiesService({ repo: citiesRepo });
+  v1.use('/cities', createCitiesRouter({ service: citiesService, requireAuth }));
+
+  // Posted rides (Step 13) — authed app-native posts (24h TTL); KYC-gated create,
+  // subscription-gated contact.
+  const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
+  const postedRidesService = createPostedRidesService({ repo: postedRidesRepo });
+  v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, requireAuth }));
 
   app.use('/api/v1', v1);
 
