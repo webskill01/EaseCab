@@ -1,6 +1,6 @@
 'use strict';
 
-const { POSTED_RIDE_STATUS, redisKey } = require('@easecab/shared');
+const { POSTED_RIDE_STATUS, POSTED_RIDES_NEW_CHANNEL, redisKey } = require('@easecab/shared');
 const { fixedWindowIncr } = require('../../lib/rateLimit');
 const { getCachedSub, setCachedSub } = require('../../lib/subscriptionCache');
 
@@ -73,6 +73,15 @@ function createPostedRidesRepository({ prisma, redis }) {
         },
         select: POSTED_PUBLIC_SELECT,
       });
+    },
+
+    /**
+     * Notify the push dispatcher of a new post so it can fire a city-targeted FCM
+     * push (Step 15 — the posted-ride analogue of the bot's RIDES_NEW publish).
+     * Non-fatal: a publish failure must never fail the create.
+     */
+    async publishCreated({ id, fromCityId, toCityId }) {
+      await redis.publish(POSTED_RIDES_NEW_CHANNEL, JSON.stringify({ id, fromCityId, toCityId }));
     },
 
     /**

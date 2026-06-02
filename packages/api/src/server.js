@@ -9,6 +9,7 @@ const pino = require('pino');
 const { buildApp } = require('./app');
 const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
 const { createChatStore } = require('./lib/firestoreChat');
+const { createPushSender } = require('./lib/fcm');
 const { createRazorpayClient } = require('./lib/razorpay');
 const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
 
@@ -25,6 +26,9 @@ async function main() {
   // Dedicated connection for the rides SSE fan-out — once it enters subscriber mode
   // it can't run normal commands, so it must be separate from the main `redis`.
   const subscriber = redis.duplicate();
+  // A second dedicated subscriber for the Step-15 push dispatcher (separate from the
+  // SSE one so each owns its own channel set cleanly).
+  const pushSubscriber = redis.duplicate();
 
   const config = {
     corsOrigins: serverEnv.CORS_ORIGINS,
@@ -55,6 +59,13 @@ async function main() {
     privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
   });
 
+  // FCM push sender (Step 15) — same Firebase project, separate named app.
+  const pushSender = createPushSender({
+    projectId: serverEnv.FIREBASE_PROJECT_ID,
+    clientEmail: serverEnv.FIREBASE_CLIENT_EMAIL,
+    privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
+  });
+
   const razorpay = createRazorpayClient({
     keyId: serverEnv.RAZORPAY_KEY_ID,
     keySecret: serverEnv.RAZORPAY_KEY_SECRET,
@@ -66,7 +77,7 @@ async function main() {
     ? createStubSurepassClient()
     : createSurepassClient({ token: serverEnv.SUREPASS_TOKEN, baseUrl: serverEnv.SUREPASS_BASE_URL });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore });
+  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });
@@ -75,8 +86,10 @@ async function main() {
     logger.info({ signal }, 'shutting down api server');
     server.close(async () => {
       await app.locals.rideFeed?.close().catch(() => {});
+      await app.locals.pushDispatcher?.close().catch(() => {});
       await prisma.$disconnect().catch(() => {});
       subscriber.disconnect();
+      pushSubscriber.disconnect();
       redis.disconnect();
       process.exit(0);
     });

@@ -40,8 +40,10 @@ function toPublicPostedRide(p) {
  *
  * @param {object} deps
  * @param {ReturnType<import('./postedRides.repository').createPostedRidesRepository>} deps.repo
+ * @param {import('pino').Logger} [deps.logger] - used only to log a best-effort
+ *   push-publish failure on create; test harnesses may omit it.
  */
-function createPostedRidesService({ repo }) {
+function createPostedRidesService({ repo, logger }) {
   return {
     /** Create a 24h post behind the KYC soft gate, validating any picked cityIds. */
     async createPost(userId, input) {
@@ -58,6 +60,15 @@ function createPostedRidesService({ repo }) {
       }
       const expiresAt = new Date(Date.now() + TTL_MS);
       const row = await repo.createPost({ postedBy: userId, ...input, expiresAt });
+      // Fire-and-forget: tell the push dispatcher a new post landed so it can notify
+      // users who opted into these cities. A publish failure must not fail the create.
+      try {
+        await repo.publishCreated({ id: row.id, fromCityId: row.fromCityId, toCityId: row.toCityId });
+      } catch (err) {
+        // The post is persisted; the live push is best-effort and must not fail the
+        // user's create. Log it (CLAUDE.md §4 — never swallow silently).
+        logger?.warn({ err: err.message, postedRideId: row.id }, 'posted ride created but push publish failed');
+      }
       return toPublicPostedRide(row);
     },
 

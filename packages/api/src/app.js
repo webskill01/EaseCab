@@ -34,6 +34,10 @@ const { createPostedRidesRouter } = require('./features/posted-rides/postedRides
 const { createChatRepository } = require('./features/chat/chat.repository');
 const { createChatService } = require('./features/chat/chat.service');
 const { createChatRouter } = require('./features/chat/chat.route');
+const { createPushRepository } = require('./features/push/push.repository');
+const { createPushService } = require('./features/push/push.service');
+const { createPushRouter } = require('./features/push/push.route');
+const { createPushDispatcher } = require('./features/push/pushDispatcher');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -64,9 +68,14 @@ const { createChatRouter } = require('./features/chat/chat.route');
  * @param {{ createChatDoc, appendMessage }} [deps.chatStore] - injected Firestore
  *   chat boundary (Step 14); the API is the sole writer to Firestore. Only the chat
  *   routes touch it, so other deploy/test harnesses may omit it.
+ * @param {{ sendToTokens }} [deps.pushSender] - injected FCM boundary (Step 15).
+ *   Only the push dispatcher uses it; harnesses that don't exercise dispatch omit it.
+ * @param {import('ioredis').Redis} [deps.pushSubscriber] - dedicated subscriber
+ *   (a second `redis.duplicate()`) backing the live city-targeted push fan-out. The
+ *   dispatcher starts only when BOTH pushSubscriber and pushSender are provided.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore }) {
+function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -153,7 +162,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   // Posted rides (Step 13) — authed app-native posts (24h TTL); KYC-gated create,
   // subscription-gated contact.
   const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
-  const postedRidesService = createPostedRidesService({ repo: postedRidesRepo });
+  const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger });
   v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, requireAuth }));
 
   // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole
@@ -161,6 +170,19 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const chatRepo = createChatRepository({ prisma });
   const chatService = createChatService({ repo: chatRepo, chatStore });
   v1.use('/chats', createChatRouter({ service: chatService, requireAuth }));
+
+  // Push (Step 15) — authed FCM token registration + per-source notification
+  // preferences. The live city-targeted fan-out runs via a dedicated subscriber,
+  // started only when BOTH it and the FCM sender are provided (other harnesses omit
+  // them, exactly like chatStore — the routes themselves never touch pushSender).
+  const pushRepo = createPushRepository({ prisma });
+  const pushService = createPushService({ repo: pushRepo, pushSender });
+  v1.use('/push', createPushRouter({ service: pushService, requireAuth }));
+  if (pushSubscriber && pushSender) {
+    const pushDispatcher = createPushDispatcher({ subscriber: pushSubscriber, service: pushService, logger });
+    pushDispatcher.start().catch((err) => logger.error({ err: err.message }, 'push dispatcher subscribe failed'));
+    app.locals.pushDispatcher = pushDispatcher;
+  }
 
   app.use('/api/v1', v1);
 
