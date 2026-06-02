@@ -66,6 +66,7 @@ function appWith(prisma) {
     identity: { verifyOtpToken: async () => ({ phone: '+919876543210' }) },
     subscriber: inertSubscriber,
     razorpay: { async createOrder() { return { id: 'order_new' }; } },
+    surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } },
   });
 }
 

@@ -17,6 +17,7 @@ function makeApp() {
     redis: {},
     subscriber: inertSubscriber,
     razorpay: { async createOrder() { return { id: 'order_test' }; } },
+    surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } },
     logger: pino({ level: 'silent' }),
     config: {
       corsOrigins: ['https://easecab.com'],

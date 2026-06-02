@@ -33,7 +33,8 @@ if (!result.success) {
  *   JWT_ACCESS_TTL: string, JWT_REFRESH_TTL: string,
  *   CORS_ORIGINS: string[],
  *   RAZORPAY_KEY_ID: string, RAZORPAY_KEY_SECRET: string,
- *   RAZORPAY_WEBHOOK_SECRET: string
+ *   RAZORPAY_WEBHOOK_SECRET: string,
+ *   SUREPASS_TOKEN: string, SUREPASS_BASE_URL: string, SUREPASS_STUB: boolean
  * }>}
  */
 const serverEnv = result.data;

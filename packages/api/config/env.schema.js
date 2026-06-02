@@ -57,6 +57,12 @@ const serverEnvSchema = envSchema.extend({
   RAZORPAY_KEY_ID: z.string().min(1),
   RAZORPAY_KEY_SECRET: z.string().min(16),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(16),
+  // Surepass KYC (Step 12). Backend only (§11) — token never reaches the frontend.
+  // STUB until incorporation: set SUREPASS_STUB=true to inject the deterministic
+  // client (server.js); swap to a real token at go-live with zero code change.
+  SUREPASS_TOKEN: z.string().min(16),
+  SUREPASS_BASE_URL: z.string().url().default('https://kyc-api.surepass.io'),
+  SUREPASS_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
 });
 
 /**

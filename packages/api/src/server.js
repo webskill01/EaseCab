@@ -9,6 +9,7 @@ const pino = require('pino');
 const { buildApp } = require('./app');
 const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
 const { createRazorpayClient } = require('./lib/razorpay');
+const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
 
 /**
  * Express server entry point (PM2 `easecab-api`, port 4000). Validates env, builds
@@ -51,7 +52,13 @@ async function main() {
     keySecret: serverEnv.RAZORPAY_KEY_SECRET,
   });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay });
+  // Surepass: deterministic stub until incorporation (SUREPASS_STUB=true), real
+  // client at go-live — swapping is an env change, zero code change (Step 12).
+  const surepass = serverEnv.SUREPASS_STUB
+    ? createStubSurepassClient()
+    : createSurepassClient({ token: serverEnv.SUREPASS_TOKEN, baseUrl: serverEnv.SUREPASS_BASE_URL });
+
+  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });

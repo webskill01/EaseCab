@@ -22,6 +22,9 @@ const { createRidesRouter } = require('./features/rides/rides.route');
 const { createSubscriptionRepository } = require('./features/subscription/subscription.repository');
 const { createSubscriptionService } = require('./features/subscription/subscription.service');
 const { createSubscriptionRouter, createWebhookHandler } = require('./features/subscription/subscription.route');
+const { createVerificationRepository } = require('./features/verification/verification.repository');
+const { createVerificationService } = require('./features/verification/verification.service');
+const { createVerificationRouter } = require('./features/verification/verification.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -47,9 +50,11 @@ const { createSubscriptionRouter, createWebhookHandler } = require('./features/s
  * @param {{ createOrder(args): Promise<{ id: string }> }} deps.razorpay - injected
  *   Razorpay vendor boundary (Step 11); the subscription service depends only on
  *   this interface, never on the SDK.
+ * @param {{ generateAadhaarOtp, submitAadhaarOtp, verifyDl, verifyRc }} deps.surepass
+ *   - injected Surepass KYC vendor boundary (Step 12); stub until incorporation.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay }) {
+function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -122,6 +127,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
 
   // Subscriptions (Step 11) — authed checkout/verify/me (webhook mounted above).
   v1.use('/subscriptions', createSubscriptionRouter({ service: subscriptionService, requireAuth }));
+
+  // Verification (Step 12) — authed Surepass KYC flows (aadhaar otp/verify, dl, rc, me).
+  const verificationRepo = createVerificationRepository({ prisma, redis });
+  const verificationService = createVerificationService({ repo: verificationRepo, surepass });
+  v1.use('/verification', createVerificationRouter({ service: verificationService, requireAuth }));
 
   app.use('/api/v1', v1);
 

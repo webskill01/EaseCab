@@ -102,7 +102,7 @@ function fakeRedis() {
 function makeApp(seed = {}, subscriber) {
   const sub = subscriber || { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
   const prisma = fakePrisma(seed);
-  const app = buildApp({ prisma, redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity: {}, subscriber: sub, razorpay: { async createOrder() { return { id: 'order_test' }; } } });
+  const app = buildApp({ prisma, redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity: {}, subscriber: sub, razorpay: { async createOrder() { return { id: 'order_test' }; } }, surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } } });
   return { app, prisma };
 }
 

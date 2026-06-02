@@ -56,7 +56,7 @@ function fakePrisma() {
 const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
 
 function appWith(identity) {
-  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'order_test' }; } } });
+  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'order_test' }; } }, surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } } });
 }
 
 const okIdentity = { verifyOtpToken: async () => ({ phone: '+919876543210' }) };
