@@ -13,4 +13,6 @@ module.exports = {
   ...require('./auth'),
   ...require('./subscription'),
   ...require('./verification'),
+  ...require('./postedRides'),
+  ...require('./cities'),
 };

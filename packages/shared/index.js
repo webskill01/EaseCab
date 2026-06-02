@@ -15,4 +15,5 @@ module.exports = {
   ...require('./errors/AppError'),
   ...require('./services'),
   ...require('./lib/subscriptionWindow'),
+  ...require('./lib/verificationGate'),
 };
