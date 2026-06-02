@@ -12,4 +12,5 @@ module.exports = {
   ...require('./bot'),
   ...require('./auth'),
   ...require('./subscription'),
+  ...require('./verification'),
 };

@@ -6,4 +6,5 @@ module.exports = {
   ...require('./auth.schema'),
   ...require('./rides.schema'),
   ...require('./subscription.schema'),
+  ...require('./verification.schema'),
 };
