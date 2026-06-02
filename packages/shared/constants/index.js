@@ -15,4 +15,6 @@ module.exports = {
   ...require('./verification'),
   ...require('./postedRides'),
   ...require('./cities'),
+  ...require('./chat'),
+  ...require('./firestore'),
 };

@@ -9,4 +9,5 @@ module.exports = {
   ...require('./verification.schema'),
   ...require('./postedRides.schema'),
   ...require('./cities.schema'),
+  ...require('./chat.schema'),
 };
