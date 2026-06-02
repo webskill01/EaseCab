@@ -5,4 +5,5 @@ module.exports = {
   ...require('./env.schema'),
   ...require('./auth.schema'),
   ...require('./rides.schema'),
+  ...require('./subscription.schema'),
 };

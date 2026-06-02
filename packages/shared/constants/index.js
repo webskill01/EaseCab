@@ -11,4 +11,5 @@ module.exports = {
   ...require('./rides'),
   ...require('./bot'),
   ...require('./auth'),
+  ...require('./subscription'),
 };
