@@ -7,4 +7,6 @@ module.exports = {
   ...require('./rides.schema'),
   ...require('./subscription.schema'),
   ...require('./verification.schema'),
+  ...require('./postedRides.schema'),
+  ...require('./cities.schema'),
 };
