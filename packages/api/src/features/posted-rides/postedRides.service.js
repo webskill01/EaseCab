@@ -22,7 +22,7 @@ function toPublicPostedRide(p) {
     fromCityRaw: p.fromCityRaw ?? null,
     toCityRaw: p.toCityRaw ?? null,
     vehicleType: p.vehicleType ?? null,
-    fare: p.fare != null ? Number(p.fare) : null,
+    fare: p.fare === null || p.fare === undefined ? null : Number(p.fare),
     rideDate: p.rideDate ?? null,
     rideTime: p.rideTime ?? null,
     notes: p.notes ?? null,
