@@ -2,6 +2,7 @@
 
 const { redisKey, RAZORPAY, PAYMENT_STATUS, SUBSCRIPTION_STATUS } = require('@easecab/shared');
 const { getCachedSub, setCachedSub, delCachedSub } = require('../../lib/subscriptionCache');
+const { fixedWindowIncr } = require('../../lib/rateLimit');
 
 /**
  * Subscription/payment data access (CLAUDE.md §4 — DB + cache only, no business
@@ -25,6 +26,11 @@ function createSubscriptionRepository({ prisma, redis }) {
     async acquirePaymentLock(paymentId) {
       const res = await redis.set(lockKey(paymentId), '1', 'EX', RAZORPAY.PAYMENT_LOCK_TTL_SEC, 'NX');
       return res === 'OK';
+    },
+
+    /** Atomic fixed-window /checkout counter for a user; returns the new count (H2). */
+    async incrCheckoutAttempts(userId, windowSec) {
+      return fixedWindowIncr(redis, redisKey('checkout', userId), windowSec);
     },
 
     /** Newest unpaid (`created`) order for a user, or null — the reusable open order. */

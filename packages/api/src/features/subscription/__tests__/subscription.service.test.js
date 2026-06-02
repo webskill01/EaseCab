@@ -10,6 +10,7 @@ const DAY = 86_400_000;
 
 function baseRepo(over = {}) {
   return {
+    async incrCheckoutAttempts() { return over.checkoutCount ?? 1; },
     async findOpenOrder() { return null; },
     async createOrderRecord() {},
     async findOrderRecord() { return { userId: 'u1', amount: 14900 }; },
@@ -43,6 +44,15 @@ test('checkout creates a new order when none open', async () => {
   assert.strictEqual(out.orderId, 'order_new');
   assert.strictEqual(out.amount, 14900);
   assert.strictEqual(out.keyId, 'rzp_test_x');
+});
+
+test('checkout over the per-user window cap → RATE_LIMITED (no order created)', async () => {
+  let created = 0;
+  const repo = baseRepo({ checkoutCount: 6, async createOrderRecord() { created += 1; } });
+  const razorpay = { async createOrder() { throw new Error('should not be called'); } };
+  const svc = createSubscriptionService({ repo, razorpay, config: CONFIG });
+  await assert.rejects(() => svc.createCheckout('u1'), (e) => e.code === 'RATE_LIMITED');
+  assert.strictEqual(created, 0);
 });
 
 test('verifyPayment rejects a forged signature with VALIDATION_ERROR', async () => {

@@ -8,6 +8,7 @@ function fakeRepo(overrides = {}) {
   return {
     _calls: calls,
     async incrAadhaarOtpAttempts() { return overrides.count ?? 1; },
+    async incrDocVerifyAttempts() { return overrides.docCount ?? 1; },
     async recordVerification(args) { calls.record.push(args); return { recorded: true }; },
     async getVerificationStatus() { return { aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false, verificationStatus: 'submitted' }; },
   };
@@ -49,6 +50,20 @@ test('verifyDl + verifyRc record their doc types on success', async () => {
   await svc.verifyDl('u1', { dlNumber: 'PB1020200012345', dob: '1990-05-20' });
   await svc.verifyRc('u1', { rcNumber: 'PB10AB1234' });
   assert.deepStrictEqual(repo._calls.record.map((r) => r.docType), ['dl', 'rc']);
+});
+
+test('verifyDl / verifyRc over the per-user cap → RATE_LIMITED (no Surepass call)', async () => {
+  let dlCalled = false;
+  const svc = createVerificationService({
+    repo: fakeRepo({ docCount: 4 }),
+    surepass: {
+      async verifyDl() { dlCalled = true; return { success: true, name: 'A', ref: 'r' }; },
+      async verifyRc() { return { success: true, name: 'A', ref: 'r' }; },
+    },
+  });
+  await assert.rejects(() => svc.verifyDl('u1', { dlNumber: 'PB1020200012345', dob: '1990-05-20' }), (e) => e.code === 'RATE_LIMITED');
+  await assert.rejects(() => svc.verifyRc('u1', { rcNumber: 'PB10AB1234' }), (e) => e.code === 'RATE_LIMITED');
+  assert.strictEqual(dlCalled, false); // gated before the (charged) Surepass call
 });
 
 test('getStatus passes the repo snapshot through', async () => {

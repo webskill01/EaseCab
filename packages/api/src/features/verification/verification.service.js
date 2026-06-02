@@ -34,8 +34,12 @@ function createVerificationService({ repo, surepass }) {
       return { docType: VERIFICATION_DOC_TYPE.AADHAAR, verified: true };
     },
 
-    /** DL verification (single Surepass call). */
+    /** DL verification (single Surepass call), rate-limited per user (H1). */
     async verifyDl(userId, { dlNumber, dob }) {
+      const attempts = await repo.incrDocVerifyAttempts(userId, VERIFICATION_DOC_TYPE.DL);
+      if (attempts > VERIFICATION.DOC_VERIFY_MAX_PER_HOUR) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
       const result = await surepass.verifyDl({ dlNumber, dob });
       if (!result.success) throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       await repo.recordVerification({
@@ -44,8 +48,12 @@ function createVerificationService({ repo, surepass }) {
       return { docType: VERIFICATION_DOC_TYPE.DL, verified: true };
     },
 
-    /** RC verification (single Surepass call). */
+    /** RC verification (single Surepass call), rate-limited per user (H1). */
     async verifyRc(userId, { rcNumber }) {
+      const attempts = await repo.incrDocVerifyAttempts(userId, VERIFICATION_DOC_TYPE.RC);
+      if (attempts > VERIFICATION.DOC_VERIFY_MAX_PER_HOUR) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
       const result = await surepass.verifyRc({ rcNumber });
       if (!result.success) throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       await repo.recordVerification({

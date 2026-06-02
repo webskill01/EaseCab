@@ -21,6 +21,13 @@ const { createSurepassClient, createStubSurepassClient } = require('./lib/surepa
  */
 async function main() {
   const logger = pino({ level: serverEnv.NODE_ENV === 'production' ? 'info' : 'debug' });
+
+  // Refuse to boot a production server with the Surepass stub on — it would silently
+  // pass every KYC verification and bypass the posting gate (security-review M3).
+  if (serverEnv.SUREPASS_STUB && serverEnv.NODE_ENV === 'production') {
+    logger.error('FATAL: SUREPASS_STUB=true in production — refusing to start (KYC would be bypassed)');
+    process.exit(1);
+  }
   const prisma = new PrismaClient({ datasources: { db: { url: serverEnv.DATABASE_URL } } });
   const redis = new Redis(serverEnv.REDIS_URL);
   // Dedicated connection for the rides SSE fan-out — once it enters subscriber mode

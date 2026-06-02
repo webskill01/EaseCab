@@ -5,6 +5,7 @@ const {
   ERROR_CODES,
   SUBSCRIPTION_PLAN,
   RAZORPAY,
+  CHECKOUT_RATE_LIMIT,
   isSubscriptionActive,
   computeRenewal,
 } = require('@easecab/shared');
@@ -50,6 +51,10 @@ function createSubscriptionService({ repo, razorpay, config }) {
   return {
     /** Idempotent checkout — reuse the user's open order, else create one (anti double-charge). */
     async createCheckout(userId) {
+      const attempts = await repo.incrCheckoutAttempts(userId, CHECKOUT_RATE_LIMIT.WINDOW_SEC);
+      if (attempts > CHECKOUT_RATE_LIMIT.MAX_PER_WINDOW) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
       const open = await repo.findOpenOrder(userId);
       if (open) {
         return { orderId: open.razorpayOrderId, amount: open.amount, currency: SUBSCRIPTION_PLAN.CURRENCY, keyId };

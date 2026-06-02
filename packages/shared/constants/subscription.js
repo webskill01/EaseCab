@@ -27,4 +27,11 @@ const RAZORPAY = Object.freeze({
   SUB_CACHE_TTL_SEC: 300,
 });
 
-module.exports = { SUBSCRIPTION_PLAN, PAYMENT_STATUS, RAZORPAY };
+/**
+ * /checkout abuse cap (security-review H2, 2026-06-02). The idempotent open-order
+ * reuse stops duplicate orders, but not a tight loop hammering Razorpay's
+ * create-order API; this fixed window bounds it per authed user.
+ */
+const CHECKOUT_RATE_LIMIT = Object.freeze({ MAX_PER_WINDOW: 5, WINDOW_SEC: 60 });
+
+module.exports = { SUBSCRIPTION_PLAN, PAYMENT_STATUS, RAZORPAY, CHECKOUT_RATE_LIMIT };

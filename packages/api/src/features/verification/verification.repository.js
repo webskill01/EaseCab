@@ -22,6 +22,11 @@ function createVerificationRepository({ prisma, redis }) {
       return fixedWindowIncr(redis, redisKey('verifyotp', userId), VERIFICATION.AADHAAR_OTP_WINDOW_SEC);
     },
 
+    /** Atomic fixed-window DL/RC verify counter (Surepass is charged per call; H1). */
+    async incrDocVerifyAttempts(userId, docType) {
+      return fixedWindowIncr(redis, redisKey('verifydoc', docType, userId), VERIFICATION.DOC_VERIFY_WINDOW_SEC);
+    },
+
     /**
      * One tx: insert the submission row (status submitted), flip the per-doc User
      * flag, and promote verificationStatus none→submitted (never downgrades an
