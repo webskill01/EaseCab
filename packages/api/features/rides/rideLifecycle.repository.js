@@ -78,17 +78,33 @@ function createRideLifecycleRepository({ prisma }) {
 
   /**
    * Flip active posted rides whose 24h window has passed to expired (and closed),
-   * so the status column stays truthful for the Phase-7 admin queue. The feed query
-   * already hides them by expiresAt; this just reconciles state. Set-based + idempotent.
+   * then deactivate their chats (read-only on ride expiry — CLAUDE.md §12). The
+   * status column stays truthful for the Phase-7 admin queue; the feed query already
+   * hides the posts by expiresAt and the chat send-gate already derives writability
+   * from live post status, so this reconciles the `chats.is_active` mirror clients
+   * read. Ids are fetched first because updateMany can't filter chats by relation.
+   * Set-based + idempotent.
    * @param {Date} now
-   * @returns {Promise<number>} posts expired
+   * @returns {Promise<{ postedExpired: number, chatsClosed: number }>}
    */
   async function expirePostedRides(now) {
-    const { count } = await prisma.postedRide.updateMany({
+    const expiring = await prisma.postedRide.findMany({
       where: { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { lte: now } },
+      select: { id: true },
+    });
+    if (expiring.length === 0) {
+      return { postedExpired: 0, chatsClosed: 0 };
+    }
+    const ids = expiring.map((p) => p.id);
+    await prisma.postedRide.updateMany({
+      where: { id: { in: ids } },
       data: { status: POSTED_RIDE_STATUS.EXPIRED, isClosed: true },
     });
-    return count;
+    const { count: chatsClosed } = await prisma.chat.updateMany({
+      where: { postedRideId: { in: ids }, isActive: true },
+      data: { isActive: false },
+    });
+    return { postedExpired: ids.length, chatsClosed };
   }
 
   return { markBooked, markHidden, hardDelete, purgeFingerprints, expirePostedRides };

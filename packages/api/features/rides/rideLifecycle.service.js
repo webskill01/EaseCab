@@ -16,7 +16,7 @@ const MS_PER_MIN = 60 * 1000;
  * @param {import('./rideLifecycle.repository').createRideLifecycleRepository} deps.repository
  * @param {() => Date} [deps.clock] - injectable wall clock (tests pin it)
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
- * @returns {{ runTransitions(): Promise<?{booked:number, hidden:number, deleted:number, fingerprintsPurged:number, postedExpired:number}> }}
+ * @returns {{ runTransitions(): Promise<?{booked:number, hidden:number, deleted:number, fingerprintsPurged:number, postedExpired:number, chatsClosed:number}> }}
  */
 function createRideLifecycleService({ repository, clock, logger }) {
   const now = clock || (() => new Date());
@@ -25,7 +25,7 @@ function createRideLifecycleService({ repository, clock, logger }) {
   /**
    * Run one full aging cycle. Returns the per-job counts, or null if the cycle
    * failed (already logged).
-   * @returns {Promise<?{booked:number, hidden:number, deleted:number, fingerprintsPurged:number, postedExpired:number}>}
+   * @returns {Promise<?{booked:number, hidden:number, deleted:number, fingerprintsPurged:number, postedExpired:number, chatsClosed:number}>}
    */
   async function runTransitions() {
     try {
@@ -36,9 +36,9 @@ function createRideLifecycleService({ repository, clock, logger }) {
       const hidden = await repository.markHidden(at);
       const deleted = await repository.hardDelete(at);
       const fingerprintsPurged = await repository.purgeFingerprints(at);
-      const postedExpired = await repository.expirePostedRides(at);
+      const { postedExpired, chatsClosed } = await repository.expirePostedRides(at);
 
-      const summary = { booked, hidden, deleted, fingerprintsPurged, postedExpired };
+      const summary = { booked, hidden, deleted, fingerprintsPurged, postedExpired, chatsClosed };
       log.info(summary, 'ride lifecycle cycle complete');
       return summary;
     } catch (err) {
