@@ -273,7 +273,9 @@ model User {
   verificationStatus VerificationStatus @default(none) @map("verification_status")
   licenseUrl         String?            @map("license_url")
   rcUrl              String?            @map("rc_url")
-  notificationCities String[]           @map("notification_cities")
+  notificationCities String[]           @map("notification_cities") // City UUIDs the user opted into (Step 15 push targeting key)
+  notifyBotRides     Boolean            @default(true) @map("notify_bot_rides")    // per-source push toggle: bot-feed rides
+  notifyPostedRides  Boolean            @default(true) @map("notify_posted_rides") // per-source push toggle: app-posted verified rides
   lastKnownCity      String?            @map("last_known_city")
   isDeleted          Boolean            @default(false) @map("is_deleted")
   deletedAt          DateTime?          @map("deleted_at") @db.Timestamptz(6)
@@ -292,6 +294,11 @@ model User {
 
   @@index([isDeleted])
   @@index([createdAt])
+  // Push targeting (Step 15) does notification_cities && ARRAY[rideCityIds] on every
+  // new-ride event — B-tree can't serve array-overlap, so GIN is required. Plain
+  // CREATE INDEX here (MVP table is tiny, near-zero lock); switch to CONCURRENTLY in
+  // a standalone migration if this is ever re-created on a large live table.
+  @@index([notificationCities], type: Gin)
   @@map("users")
 }
 
