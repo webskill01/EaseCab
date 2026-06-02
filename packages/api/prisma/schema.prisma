@@ -62,6 +62,12 @@ enum SubscriptionStatus {
   cancelled
 }
 
+enum PaymentStatus {
+  created
+  captured
+  failed
+}
+
 enum ReportReason {
   fake
   spam
@@ -267,6 +273,7 @@ model User {
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
 
   subscription      Subscription?
+  payments          Payment[]
   postedRides       PostedRide[]
   contacts          RideContact[]
   reports           RideReport[]
@@ -303,6 +310,34 @@ model Subscription {
   @@index([expiresAt])
   @@index([trialExpiresAt])
   @@map("subscriptions")
+}
+
+// ---------------------------------------------------------------------------
+// PAYMENTS (Razorpay one-time order ledger + webhook idempotency key)
+// ---------------------------------------------------------------------------
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  // One row per Razorpay order — UNIQUE guards the create-order idempotency path
+  // (db-review C2). The @unique auto-creates the lookup index.
+  razorpayOrderId   String        @unique @map("razorpay_order_id")
+  // Set when the payment is captured; UNIQUE is the hard capture-idempotency guarantee.
+  // Nullable so a freshly-created (unpaid) order row can exist — Postgres allows
+  // many NULLs under a UNIQUE constraint.
+  razorpayPaymentId String?       @unique @map("razorpay_payment_id")
+  amount            Int // paise — multiply rupees by 100 before inserting; ₹149 = 14900
+  status            PaymentStatus @default(created)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Restrict (db-review H2): retain the financial audit trail — the hard-delete
+  // cron must archive/anonymize payments before a user row can be removed.
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  // Open-order lookup = newest `created` row for a user.
+  @@index([userId, status])
+  @@map("payments")
 }
 
 // ---------------------------------------------------------------------------
