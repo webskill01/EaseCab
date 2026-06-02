@@ -16,6 +16,7 @@ function makeApp() {
     prisma: {},
     redis: {},
     subscriber: inertSubscriber,
+    razorpay: { async createOrder() { return { id: 'order_test' }; } },
     logger: pino({ level: 'silent' }),
     config: {
       corsOrigins: ['https://easecab.com'],
@@ -26,6 +27,7 @@ function makeApp() {
         accessTtl: '15m',
         refreshTtl: '30d',
       },
+      razorpay: { keyId: 'rzp_test_x', keySecret: 'x'.repeat(16), webhookSecret: 'w'.repeat(16) },
     },
   });
 }

@@ -31,7 +31,9 @@ if (!result.success) {
  *   NODE_ENV: 'development'|'test'|'production', PORT: number,
  *   JWT_ACCESS_SECRET: string, JWT_REFRESH_SECRET: string,
  *   JWT_ACCESS_TTL: string, JWT_REFRESH_TTL: string,
- *   CORS_ORIGINS: string[]
+ *   CORS_ORIGINS: string[],
+ *   RAZORPAY_KEY_ID: string, RAZORPAY_KEY_SECRET: string,
+ *   RAZORPAY_WEBHOOK_SECRET: string
  * }>}
  */
 const serverEnv = result.data;

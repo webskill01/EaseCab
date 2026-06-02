@@ -10,6 +10,7 @@ const CONFIG = {
   corsOrigins: ['http://localhost:3000'],
   cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
+  razorpay: { keyId: 'rzp_test_x', keySecret: 'x'.repeat(16), webhookSecret: 'w'.repeat(16) },
 };
 
 // Minimal in-memory fakes so the test exercises route→service→repo wiring + cookies.
@@ -25,6 +26,8 @@ function fakeRedis() {
       return c.value;
     },
     async set(k, v, _m, s) { store.set(k, { value: v, ttl: s }); return 'OK'; },
+    async get(k) { return store.has(k) ? store.get(k).value : null; },
+    async del(k) { return store.delete(k) ? 1 : 0; },
   };
 }
 function fakePrisma() {
@@ -53,7 +56,7 @@ function fakePrisma() {
 const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
 
 function appWith(identity) {
-  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber });
+  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'order_test' }; } } });
 }
 
 const okIdentity = { verifyOtpToken: async () => ({ phone: '+919876543210' }) };

@@ -8,6 +8,7 @@ const Redis = require('ioredis');
 const pino = require('pino');
 const { buildApp } = require('./app');
 const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
+const { createRazorpayClient } = require('./lib/razorpay');
 
 /**
  * Express server entry point (PM2 `easecab-api`, port 4000). Validates env, builds
@@ -32,6 +33,11 @@ async function main() {
       accessTtl: serverEnv.JWT_ACCESS_TTL,
       refreshTtl: serverEnv.JWT_REFRESH_TTL,
     },
+    razorpay: {
+      keyId: serverEnv.RAZORPAY_KEY_ID,
+      keySecret: serverEnv.RAZORPAY_KEY_SECRET,
+      webhookSecret: serverEnv.RAZORPAY_WEBHOOK_SECRET,
+    },
   };
 
   const identity = createFirebaseIdentity({
@@ -40,7 +46,12 @@ async function main() {
     privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
   });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, subscriber });
+  const razorpay = createRazorpayClient({
+    keyId: serverEnv.RAZORPAY_KEY_ID,
+    keySecret: serverEnv.RAZORPAY_KEY_SECRET,
+  });
+
+  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });

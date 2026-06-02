@@ -18,6 +18,9 @@ const BASE = Object.freeze({
   FIREBASE_PROJECT_ID: 'easecab-test',
   FIREBASE_CLIENT_EMAIL: 'svc@easecab-test.iam.gserviceaccount.com',
   FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n',
+  RAZORPAY_KEY_ID: 'rzp_test_abc123',
+  RAZORPAY_KEY_SECRET: 'x'.repeat(16),
+  RAZORPAY_WEBHOOK_SECRET: 'w'.repeat(16),
 });
 
 test('accepts valid server env and freezes the result', () => {
@@ -94,6 +97,9 @@ test('serverEnvSchema requires the FIREBASE_* credentials', () => {
     FIREBASE_PROJECT_ID: 'easecab',
     FIREBASE_CLIENT_EMAIL: 'svc@easecab.iam.gserviceaccount.com',
     FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n',
+    RAZORPAY_KEY_ID: BASE.RAZORPAY_KEY_ID,
+    RAZORPAY_KEY_SECRET: BASE.RAZORPAY_KEY_SECRET,
+    RAZORPAY_WEBHOOK_SECRET: BASE.RAZORPAY_WEBHOOK_SECRET,
   });
   assert.equal(ok.success, true);
   assert.equal(ok.data.FIREBASE_PROJECT_ID, 'easecab');

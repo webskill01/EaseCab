@@ -19,6 +19,9 @@ const { createRidesRepository } = require('./features/rides/rides.repository');
 const { createRidesService } = require('./features/rides/rides.service');
 const { createRideFeed } = require('./features/rides/rideFeed');
 const { createRidesRouter } = require('./features/rides/rides.route');
+const { createSubscriptionRepository } = require('./features/subscription/subscription.repository');
+const { createSubscriptionService } = require('./features/subscription/subscription.service');
+const { createSubscriptionRouter, createWebhookHandler } = require('./features/subscription/subscription.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -41,9 +44,12 @@ const { createRidesRouter } = require('./features/rides/rides.route');
  * @param {import('ioredis').Redis} deps.subscriber - dedicated redis subscriber
  *   (a `redis.duplicate()`) backing the rides SSE fan-out; a subscriber-mode
  *   connection can't run normal commands, so it must be separate from `redis`.
+ * @param {{ createOrder(args): Promise<{ id: string }> }} deps.razorpay - injected
+ *   Razorpay vendor boundary (Step 11); the subscription service depends only on
+ *   this interface, never on the SDK.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, subscriber }) {
+function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -77,6 +83,17 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber }) {
   );
   app.use(helmet());
   app.use(cors({ origin: config.corsOrigins, credentials: true }));
+
+  // Subscription service (Step 11). The webhook must read the RAW body for HMAC, so
+  // it is mounted with express.raw() BEFORE the global express.json() below.
+  const subscriptionRepo = createSubscriptionRepository({ prisma, redis });
+  const subscriptionService = createSubscriptionService({ repo: subscriptionRepo, razorpay, config });
+  app.use(
+    '/api/v1/subscriptions/webhook',
+    express.raw({ type: '*/*', limit: '100kb' }),
+    createWebhookHandler({ service: subscriptionService }),
+  );
+
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
@@ -102,6 +119,9 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber }) {
   rideFeed.start().catch((err) => logger.error({ err: err.message }, 'rides SSE subscribe failed'));
   app.locals.rideFeed = rideFeed;
   v1.use('/rides', createRidesRouter({ service: ridesService, feed: rideFeed, requireAuth }));
+
+  // Subscriptions (Step 11) — authed checkout/verify/me (webhook mounted above).
+  v1.use('/subscriptions', createSubscriptionRouter({ service: subscriptionService, requireAuth }));
 
   app.use('/api/v1', v1);
 

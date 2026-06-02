@@ -52,6 +52,11 @@ const serverEnvSchema = envSchema.extend({
   FIREBASE_PROJECT_ID: z.string().min(1),
   FIREBASE_CLIENT_EMAIL: z.string().email(),
   FIREBASE_PRIVATE_KEY: z.string().min(1),
+  // Razorpay (Step 11). Backend only — KEY_SECRET + WEBHOOK_SECRET never reach the
+  // frontend bundle (§11). KEY_ID is the public checkout key. Secrets floored at 16.
+  RAZORPAY_KEY_ID: z.string().min(1),
+  RAZORPAY_KEY_SECRET: z.string().min(16),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(16),
 });
 
 /**

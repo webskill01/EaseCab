@@ -14,6 +14,7 @@ const CONFIG = {
   corsOrigins: ['http://localhost:3000'],
   cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
+  razorpay: { keyId: 'rzp_test_x', keySecret: 'x'.repeat(16), webhookSecret: 'w'.repeat(16) },
 };
 const jwt = createJwt(CONFIG.jwt);
 const USER_ID = 'u1';
@@ -101,7 +102,7 @@ function fakeRedis() {
 function makeApp(seed = {}, subscriber) {
   const sub = subscriber || { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
   const prisma = fakePrisma(seed);
-  const app = buildApp({ prisma, redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity: {}, subscriber: sub });
+  const app = buildApp({ prisma, redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity: {}, subscriber: sub, razorpay: { async createOrder() { return { id: 'order_test' }; } } });
   return { app, prisma };
 }
 
