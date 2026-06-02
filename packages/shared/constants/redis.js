@@ -29,4 +29,9 @@ function redisKey(...parts) {
 // the Phase-3 SSE endpoint subscribes and fans the ride out to clients.
 const RIDES_NEW_CHANNEL = redisKey('rides', 'new');
 
-module.exports = { REDIS_PREFIX, redisKey, RIDES_NEW_CHANNEL };
+// Pub/sub channel: the API publishes here after an app-posted ride is created
+// (Step 15) so the push dispatcher can fire a city-targeted notification — the
+// posted-ride analogue of RIDES_NEW_CHANNEL (which carries bot rides).
+const POSTED_RIDES_NEW_CHANNEL = redisKey('posted-rides', 'new');
+
+module.exports = { REDIS_PREFIX, redisKey, RIDES_NEW_CHANNEL, POSTED_RIDES_NEW_CHANNEL };

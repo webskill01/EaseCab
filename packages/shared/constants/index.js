@@ -17,4 +17,5 @@ module.exports = {
   ...require('./cities'),
   ...require('./chat'),
   ...require('./firestore'),
+  ...require('./push'),
 };

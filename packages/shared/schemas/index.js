@@ -10,4 +10,5 @@ module.exports = {
   ...require('./postedRides.schema'),
   ...require('./cities.schema'),
   ...require('./chat.schema'),
+  ...require('./push.schema'),
 };
