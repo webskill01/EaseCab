@@ -14,4 +14,5 @@ module.exports = {
   ...require('./schemas'),
   ...require('./errors/AppError'),
   ...require('./services'),
+  ...require('./lib/subscriptionWindow'),
 };

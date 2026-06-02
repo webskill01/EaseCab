@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, SUBSCRIPTION_STATUS, CONTACT_RATE_LIMIT } = require('@easecab/shared');
+const { AppError, ERROR_CODES, CONTACT_RATE_LIMIT, isSubscriptionActive } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
 /**
@@ -23,23 +23,6 @@ function toPublicRide(r) {
     receivedAt: r.receivedAt,
     expiresAt: r.expiresAt,
   };
-}
-
-/**
- * The soft gate's eligibility rule (CLAUDE.md soft-gate philosophy; DECISIONS
- * 2026-05-30 "Gate model CONFIRMED" — contact reveal needs an active trial or paid
- * subscription, NO KYC). A subscription is "active" iff it is in trial with an
- * unexpired trial window, OR paid-active with an unexpired paid window.
- *
- * @param {{ status: string, trialExpiresAt: Date, expiresAt: ?Date }|null} sub
- * @param {Date} [now]
- * @returns {boolean}
- */
-function isSubscriptionActive(sub, now = new Date()) {
-  if (!sub) return false;
-  if (sub.status === SUBSCRIPTION_STATUS.ACTIVE) return Boolean(sub.expiresAt) && sub.expiresAt > now;
-  if (sub.status === SUBSCRIPTION_STATUS.TRIAL) return Boolean(sub.trialExpiresAt) && sub.trialExpiresAt > now;
-  return false; // expired / halted / cancelled
 }
 
 /**
