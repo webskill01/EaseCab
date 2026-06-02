@@ -8,6 +8,7 @@ const Redis = require('ioredis');
 const pino = require('pino');
 const { buildApp } = require('./app');
 const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
+const { createChatStore } = require('./lib/firestoreChat');
 const { createRazorpayClient } = require('./lib/razorpay');
 const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
 
@@ -47,6 +48,13 @@ async function main() {
     privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
   });
 
+  // Firestore chat boundary (Step 14) — same Firebase project, separate named app.
+  const chatStore = createChatStore({
+    projectId: serverEnv.FIREBASE_PROJECT_ID,
+    clientEmail: serverEnv.FIREBASE_CLIENT_EMAIL,
+    privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
+  });
+
   const razorpay = createRazorpayClient({
     keyId: serverEnv.RAZORPAY_KEY_ID,
     keySecret: serverEnv.RAZORPAY_KEY_SECRET,
@@ -58,7 +66,7 @@ async function main() {
     ? createStubSurepassClient()
     : createSurepassClient({ token: serverEnv.SUREPASS_TOKEN, baseUrl: serverEnv.SUREPASS_BASE_URL });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass });
+  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });

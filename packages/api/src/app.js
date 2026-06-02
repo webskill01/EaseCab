@@ -31,6 +31,9 @@ const { createCitiesRouter } = require('./features/cities/cities.route');
 const { createPostedRidesRepository } = require('./features/posted-rides/postedRides.repository');
 const { createPostedRidesService } = require('./features/posted-rides/postedRides.service');
 const { createPostedRidesRouter } = require('./features/posted-rides/postedRides.route');
+const { createChatRepository } = require('./features/chat/chat.repository');
+const { createChatService } = require('./features/chat/chat.service');
+const { createChatRouter } = require('./features/chat/chat.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -58,9 +61,12 @@ const { createPostedRidesRouter } = require('./features/posted-rides/postedRides
  *   this interface, never on the SDK.
  * @param {{ generateAadhaarOtp, submitAadhaarOtp, verifyDl, verifyRc }} deps.surepass
  *   - injected Surepass KYC vendor boundary (Step 12); stub until incorporation.
+ * @param {{ createChatDoc, appendMessage }} [deps.chatStore] - injected Firestore
+ *   chat boundary (Step 14); the API is the sole writer to Firestore. Only the chat
+ *   routes touch it, so other deploy/test harnesses may omit it.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass }) {
+function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -149,6 +155,12 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
   const postedRidesService = createPostedRidesService({ repo: postedRidesRepo });
   v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, requireAuth }));
+
+  // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole
+  // writer to both Postgres (durable) and Firestore (realtime, via chatStore).
+  const chatRepo = createChatRepository({ prisma });
+  const chatService = createChatService({ repo: chatRepo, chatStore });
+  v1.use('/chats', createChatRouter({ service: chatService, requireAuth }));
 
   app.use('/api/v1', v1);
 
