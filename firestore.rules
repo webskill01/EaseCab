@@ -1,0 +1,50 @@
+rules_version = '2';
+
+// EaseCab chat security rules (Build step 14).
+//
+// Model: the Express API is the SOLE WRITER to Firestore (Firebase Admin SDK,
+// which bypasses these rules). Clients only ever SUBSCRIBE — they read their own
+// chat docs/messages for realtime and never write. This makes "chat is read-only
+// once the ride expires" trivially enforced on the client side: clients can never
+// write at all, and the API send-gate (derived from the posted ride's live status)
+// is the authoritative write check. The chat doc still carries `isActive` so the
+// UI can disable its composer the moment a ride expires.
+//
+// AUTH ASSUMPTION (wired in the frontend auth step, Phase 5/6): the client signs in
+// to Firebase with a custom token whose `uid` equals our internal Postgres user id,
+// so `request.auth.uid` can be matched against the chat's `initiatorId` / `posterId`
+// (which are our user UUIDs, written by the API). Until that token mint lands, no
+// client reads Firestore directly and these rules are dormant but correct.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /chats/{chatId} {
+      function isParticipant() {
+        return request.auth != null
+          && (request.auth.uid == resource.data.initiatorId
+           || request.auth.uid == resource.data.posterId);
+      }
+
+      // A participant may read their own chat metadata. Server-only writes.
+      allow read: if isParticipant();
+      allow write: if false;
+
+      match /messages/{messageId} {
+        function parentChat() {
+          return get(/databases/$(database)/documents/chats/$(chatId)).data;
+        }
+        // A participant of the parent chat may read its messages. Server-only writes.
+        allow read: if request.auth != null
+          && (request.auth.uid == parentChat().initiatorId
+           || request.auth.uid == parentChat().posterId);
+        allow write: if false;
+      }
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
