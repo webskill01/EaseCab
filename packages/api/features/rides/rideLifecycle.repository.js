@@ -1,6 +1,6 @@
 'use strict';
 
-const { RIDE_STATUS } = require('@easecab/shared');
+const { RIDE_STATUS, POSTED_RIDE_STATUS } = require('@easecab/shared');
 
 /**
  * Repository for the ride lifecycle cron — the ONLY DB path for aging rides.
@@ -76,7 +76,22 @@ function createRideLifecycleRepository({ prisma }) {
     return count;
   }
 
-  return { markBooked, markHidden, hardDelete, purgeFingerprints };
+  /**
+   * Flip active posted rides whose 24h window has passed to expired (and closed),
+   * so the status column stays truthful for the Phase-7 admin queue. The feed query
+   * already hides them by expiresAt; this just reconciles state. Set-based + idempotent.
+   * @param {Date} now
+   * @returns {Promise<number>} posts expired
+   */
+  async function expirePostedRides(now) {
+    const { count } = await prisma.postedRide.updateMany({
+      where: { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { lte: now } },
+      data: { status: POSTED_RIDE_STATUS.EXPIRED, isClosed: true },
+    });
+    return count;
+  }
+
+  return { markBooked, markHidden, hardDelete, purgeFingerprints, expirePostedRides };
 }
 
 module.exports = { createRideLifecycleRepository };

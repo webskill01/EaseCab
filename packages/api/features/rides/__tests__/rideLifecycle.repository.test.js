@@ -24,6 +24,9 @@ function mockPrisma(counts = {}) {
     rideFingerprint: {
       deleteMany: record('fp.deleteMany', counts.fpDelete ?? 0),
     },
+    postedRide: {
+      updateMany: record('postedRide.updateMany', counts.postedUpdate ?? 0),
+    },
   };
 }
 
@@ -82,4 +85,19 @@ test('purgeFingerprints deletes only expired fingerprints, never via ride', asyn
   assert.deepEqual(args.where.expiresAt, { lte: NOW });
   // fingerprint lifetime is independent of the ride row (survives ride deletion)
   assert.equal('rideId' in args.where, false);
+});
+
+test('expirePostedRides flips active posts past expiresAt to expired + isClosed', async () => {
+  const prisma = mockPrisma({ postedUpdate: 2 });
+  const repo = createRideLifecycleRepository({ prisma });
+
+  const count = await repo.expirePostedRides(NOW);
+
+  assert.equal(count, 2);
+  const { name, args } = prisma.calls[0];
+  assert.equal(name, 'postedRide.updateMany');
+  assert.equal(args.where.status, 'active');
+  assert.deepEqual(args.where.expiresAt, { lte: NOW });
+  assert.equal(args.data.status, 'expired');
+  assert.equal(args.data.isClosed, true);
 });

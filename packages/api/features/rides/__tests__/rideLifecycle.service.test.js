@@ -22,6 +22,7 @@ function spyRepo(overrides = {}) {
     markHidden: overrides.markHidden || make('markHidden', 2),
     hardDelete: overrides.hardDelete || make('hardDelete', 3),
     purgeFingerprints: overrides.purgeFingerprints || make('purgeFingerprints', 4),
+    expirePostedRides: overrides.expirePostedRides || make('expirePostedRides', 5),
   };
 }
 
@@ -33,8 +34,8 @@ test('runTransitions runs all four jobs in order and returns the counts', async 
 
   const result = await svc.runTransitions();
 
-  assert.deepEqual(result, { booked: 1, hidden: 2, deleted: 3, fingerprintsPurged: 4 });
-  assert.deepEqual(repository.order, ['markBooked', 'markHidden', 'hardDelete', 'purgeFingerprints']);
+  assert.deepEqual(result, { booked: 1, hidden: 2, deleted: 3, fingerprintsPurged: 4, postedExpired: 5 });
+  assert.deepEqual(repository.order, ['markBooked', 'markHidden', 'hardDelete', 'purgeFingerprints', 'expirePostedRides']);
 });
 
 test('booked cutoff is now minus BOOKED_AFTER_MIN (5 min); others get now', async () => {
