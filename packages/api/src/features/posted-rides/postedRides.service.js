@@ -1,0 +1,126 @@
+'use strict';
+
+const {
+  AppError, ERROR_CODES, POSTED_RIDES, POSTED_RIDE_STATUS, CONTACT_RATE_LIMIT,
+  hasSubmittedKyc, isSubscriptionActive,
+} = require('@easecab/shared');
+const { encodeCursor, decodeCursor } = require('../../lib/cursor');
+
+const TTL_MS = POSTED_RIDES.TTL_HOURS * 3600_000;
+
+/**
+ * Client-safe projection of a posted ride. Defence-in-depth: the repo select
+ * already omits `phone`, but this whitelist guarantees it. `fare` (Prisma Decimal)
+ * is coerced to a number for JSON. §3.10.
+ * @param {object} p
+ */
+function toPublicPostedRide(p) {
+  return {
+    id: p.id,
+    fromCityId: p.fromCityId ?? null,
+    toCityId: p.toCityId ?? null,
+    fromCityRaw: p.fromCityRaw ?? null,
+    toCityRaw: p.toCityRaw ?? null,
+    vehicleType: p.vehicleType ?? null,
+    fare: p.fare != null ? Number(p.fare) : null,
+    rideDate: p.rideDate ?? null,
+    rideTime: p.rideTime ?? null,
+    notes: p.notes ?? null,
+    status: p.status,
+    isClosed: p.isClosed,
+    createdAt: p.createdAt,
+    expiresAt: p.expiresAt,
+  };
+}
+
+/**
+ * Posted-rides business logic (CLAUDE.md §4). Create is verification-gated (≥1 KYC
+ * doc); contact is subscription-gated (mirrors bot-rides reveal). The opaque cursor
+ * codec is shared with bot rides — its `receivedAt` field carries our createdAt key.
+ *
+ * @param {object} deps
+ * @param {ReturnType<import('./postedRides.repository').createPostedRidesRepository>} deps.repo
+ */
+function createPostedRidesService({ repo }) {
+  return {
+    /** Create a 24h post behind the KYC soft gate, validating any picked cityIds. */
+    async createPost(userId, input) {
+      const flags = await repo.getUserKycFlags(userId);
+      if (!hasSubmittedKyc(flags)) {
+        throw AppError.fromCode(ERROR_CODES.VERIFICATION_REQUIRED);
+      }
+      const ids = [input.fromCityId, input.toCityId].filter(Boolean);
+      if (ids.length > 0) {
+        const existing = await repo.findExistingCityIds(ids);
+        if (ids.some((id) => !existing.has(id))) {
+          throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
+        }
+      }
+      const expiresAt = new Date(Date.now() + TTL_MS);
+      const row = await repo.createPost({ postedBy: userId, ...input, expiresAt });
+      return toPublicPostedRide(row);
+    },
+
+    /** One page of the public posted-rides feed, newest first. */
+    async listFeed({ limit, cursor }) {
+      const key = cursor ? decodeCursor(cursor) : {};
+      const rows = await repo.listActivePosts({ createdAt: key.receivedAt, id: key.id, limit });
+      const hasMore = rows.length > limit;
+      const page = hasMore ? rows.slice(0, limit) : rows;
+      const last = page[page.length - 1];
+      const nextCursor = hasMore ? encodeCursor({ receivedAt: last.createdAt, id: last.id }) : null;
+      return { posts: page.map(toPublicPostedRide), nextCursor };
+    },
+
+    /** The caller's own posts (My Rides → posted tab). */
+    async listMine(userId) {
+      const rows = await repo.listMyPosts({ userId, limit: POSTED_RIDES.MINE_LIMIT });
+      return { posts: rows.map(toPublicPostedRide) };
+    },
+
+    /**
+     * Reveal a poster's phone at the contact action point. Order: 404 if no active
+     * target → own-post shortcut (no gate/record) → subscription gate → rate limit
+     * → idempotent record + reveal.
+     */
+    async contactPost({ userId, postedRideId }) {
+      const post = await repo.findContactTarget(postedRideId);
+      if (!post) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      if (post.postedBy === userId) {
+        return { phoneNumber: post.phone, contactedAt: null };
+      }
+      const sub = await repo.findSubscriptionByUserId(userId);
+      if (!isSubscriptionActive(sub)) {
+        throw AppError.fromCode(ERROR_CODES.SUBSCRIPTION_EXPIRED);
+      }
+      const count = await repo.incrementContactCount(userId, CONTACT_RATE_LIMIT.WINDOW_SEC);
+      if (count > CONTACT_RATE_LIMIT.MAX_PER_WINDOW) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
+      const { contactedAt } = await repo.recordContact(userId, postedRideId);
+      return { phoneNumber: post.phone, contactedAt };
+    },
+
+    /** Owner marks a post done. NOT_FOUND if they don't own it / it isn't active. */
+    async closePost({ userId, postedRideId }) {
+      const count = await repo.closePost(postedRideId, userId);
+      if (count === 0) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      return { id: postedRideId, status: POSTED_RIDE_STATUS.DONE };
+    },
+
+    /** Owner soft-deletes a post. NOT_FOUND if they don't own it. */
+    async removePost({ userId, postedRideId }) {
+      const count = await repo.softDeletePost(postedRideId, userId);
+      if (count === 0) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      return { id: postedRideId, status: POSTED_RIDE_STATUS.DELETED };
+    },
+  };
+}
+
+module.exports = { createPostedRidesService, toPublicPostedRide };
