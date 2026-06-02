@@ -54,6 +54,13 @@ enum VerificationStatus {
   rejected
 }
 
+// aadhaar = national ID | dl = driving licence | rc = registration certificate
+enum VerificationDocType {
+  aadhaar
+  dl
+  rc
+}
+
 enum SubscriptionStatus {
   trial
   active
@@ -274,6 +281,7 @@ model User {
 
   subscription      Subscription?
   payments          Payment[]
+  verificationSubmissions VerificationSubmission[]
   postedRides       PostedRide[]
   contacts          RideContact[]
   reports           RideReport[]
@@ -338,6 +346,40 @@ model Payment {
   // Open-order lookup = newest `created` row for a user.
   @@index([userId, status])
   @@map("payments")
+}
+
+// ---------------------------------------------------------------------------
+// VERIFICATION SUBMISSIONS (Surepass KYC audit trail — Step 12)
+// ---------------------------------------------------------------------------
+
+model VerificationSubmission {
+  id           String              @id @default(uuid()) @db.Uuid
+  userId       String              @map("user_id") @db.Uuid
+  docType      VerificationDocType @map("doc_type")
+  // Step 12 only ever writes `submitted`; the Step-24 admin flow moves it to
+  // approved/rejected (review columns added by that step's forward migration).
+  status       VerificationStatus  @default(submitted)
+  // Surepass client/transaction id for audit + dispute. The raw Aadhaar/DL/RC
+  // NUMBER is never stored (CLAUDE.md §10 PII) — only the vendor reference + the
+  // verified holder name for the admin to match against.
+  surepassRef  String?             @map("surepass_ref")
+  verifiedName String?             @map("verified_name")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Cascade (db-review GATE, user sign-off 2026-06-02): KYC PII should not outlive
+  // the user — the 30-day hard-delete cron purges submissions with the user. Differs
+  // from payments' Restrict (no financial/GST retention duty on KYC). The service
+  // never calls user.delete() directly — only the soft-delete path (db-review H2).
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status, createdAt]) // admin verifications queue: (status, newest-first)
+  @@index([docType])
+  // NOTE: a partial-unique index UNIQUE(user_id, doc_type) WHERE status='submitted'
+  // and a CHECK(status <> 'none') are added in the migration SQL — Prisma cannot
+  // express WHERE-filtered indexes or CHECK constraints (db-review H3 + M2).
+  @@map("verification_submissions")
 }
 
 // ---------------------------------------------------------------------------
