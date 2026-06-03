@@ -1,0 +1,9 @@
+{
+  "appName": "EaseCab",
+  "tagline": "Taxi ride leads for drivers and vendors",
+  "actions": {
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "retry": "Retry"
+  }
+}

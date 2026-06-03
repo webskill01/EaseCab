@@ -1,0 +1,9 @@
+{
+  "appName": "EaseCab",
+  "tagline": "Drivers aur vendors ke liye taxi ride leads",
+  "actions": {
+    "continue": "Continue karein",
+    "cancel": "Cancel karein",
+    "retry": "Dobara try karein"
+  }
+}
