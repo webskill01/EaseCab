@@ -1,7 +1,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { LOCALES, LOCALE_COOKIE } from './locale'
+import { LOCALES, LOCALE_COOKIE } from './config'
 
 /**
  * Persists the chosen locale in a cookie. Rejects unsupported values.

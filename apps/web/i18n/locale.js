@@ -1,9 +1,7 @@
 import { cookies } from 'next/headers'
+import { LOCALES, DEFAULT_LOCALE, LOCALE_COOKIE } from './config'
 
-/** Supported locales. Punjabi = Gurmukhi script only (CLAUDE.md §14). */
-export const LOCALES = ['en', 'pa', 'hi', 'hinglish']
-export const DEFAULT_LOCALE = 'en'
-export const LOCALE_COOKIE = 'locale'
+export { LOCALES, DEFAULT_LOCALE, LOCALE_COOKIE }
 
 /**
  * Reads the active locale from the cookie, falling back to DEFAULT_LOCALE for a

@@ -10,8 +10,9 @@ import { getUserLocale } from './locale'
 export default getRequestConfig(async () => {
   const locale = getUserLocale()
   const common = (await import(`../public/locales/${locale}/common.json`)).default
+  const auth = (await import(`../public/locales/${locale}/auth.json`)).default
   return {
     locale,
-    messages: { common },
+    messages: { common, auth },
   }
 })

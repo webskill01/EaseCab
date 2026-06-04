@@ -5,5 +5,7 @@
     "continue": "Continue karein",
     "cancel": "Cancel karein",
     "retry": "Dobara try karein"
-  }
+  },
+  "shell": { "support": "Support", "logout": "Log out", "language": "Bhasha" },
+  "feed": { "title": "Live duties", "comingSoon": "Aapki live ride feed yahan dikhegi." }
 }

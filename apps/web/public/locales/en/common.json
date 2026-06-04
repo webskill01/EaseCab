@@ -5,5 +5,7 @@
     "continue": "Continue",
     "cancel": "Cancel",
     "retry": "Retry"
-  }
+  },
+  "shell": { "support": "Support", "logout": "Log out", "language": "Language" },
+  "feed": { "title": "Live duties", "comingSoon": "Your live ride feed will appear here." }
 }
