@@ -23,6 +23,8 @@ dist/
 service-account*.json
 firebase-adminsdk*.json
 *.pem
+# Local Firebase SDK init scratch file (root) — keep out of git
+/firebase.js
 
 # Prisma
 prisma/dev.db
