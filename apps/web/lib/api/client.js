@@ -8,7 +8,7 @@ const BASE_URL = `${env.NEXT_PUBLIC_API_URL}/api/v1`
  * standard `{ success, data, error, meta }` envelope.
  * @param {string} path - path beginning with `/`, relative to /api/v1
  * @param {RequestInit} [options] - fetch options (method, body, headers, signal)
- * @returns {Promise<{ data: unknown, meta?: unknown }>}
+ * @returns {Promise<{ data: unknown, meta?: unknown, status: number }>}
  * @throws {ApiError} on transport failure or a non-success envelope
  */
 export async function apiFetch(path, options = {}) {
@@ -36,5 +36,5 @@ export async function apiFetch(path, options = {}) {
     throw new ApiError(code, message, res.status)
   }
 
-  return { data: body.data, meta: body.meta }
+  return { data: body.data, meta: body.meta, status: res.status }
 }

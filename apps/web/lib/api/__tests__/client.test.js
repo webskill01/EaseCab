@@ -24,12 +24,12 @@ describe('apiFetch', () => {
     )
   })
 
-  it('unwraps the envelope and returns { data, meta }', async () => {
+  it('unwraps the envelope and returns { data, meta, status }', async () => {
     fetch.mockResolvedValue(
-      jsonResponse({ success: true, data: [{ id: 1 }], meta: { total: 1 } }),
+      jsonResponse({ success: true, data: [{ id: 1 }], meta: { total: 1 } }, { status: 201 }),
     )
     const result = await apiFetch('/rides')
-    expect(result).toEqual({ data: [{ id: 1 }], meta: { total: 1 } })
+    expect(result).toEqual({ data: [{ id: 1 }], meta: { total: 1 }, status: 201 })
   })
 
   it('throws ApiError carrying code + status when success is false', async () => {
