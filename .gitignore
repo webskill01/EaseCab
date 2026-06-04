@@ -52,6 +52,11 @@ packages/bot/.wa-session/
 coverage/
 .eslintcache
 
+# Playwright
+test-results/
+playwright-report/
+.playwright/
+
 # Code-review tooling (local state)
 .last-db-reviewed-commit
 .code-review-graph/
