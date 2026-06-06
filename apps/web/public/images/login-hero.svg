@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 240" fill="none" role="img" aria-label="EaseCab">
-  <rect width="412" height="240" fill="#EFF4FF"/>
-  <circle cx="206" cy="120" r="64" fill="#2563EB"/>
+  <rect width="412" height="240" fill="#EFF6FF"/>
+  <circle cx="206" cy="120" r="64" fill="#4D8DF6"/>
   <circle cx="206" cy="120" r="26" fill="#FFFFFF"/>
-  <circle cx="206" cy="120" r="10" fill="#2563EB"/>
+  <circle cx="206" cy="120" r="10" fill="#4D8DF6"/>
   <rect x="200" y="56" width="12" height="36" rx="6" fill="#FFFFFF"/>
   <rect x="200" y="148" width="12" height="36" rx="6" fill="#FFFFFF"/>
   <rect x="142" y="114" width="36" height="12" rx="6" fill="#FFFFFF"/>

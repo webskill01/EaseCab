@@ -48,10 +48,12 @@ module.exports = {
           foreground: 'hsl(var(--card-foreground))',
         },
         ec: {
-          blue: '#2563EB',
-          blueDeep: '#1E40AF',
-          blueInk: '#1E3A8A',
-          sky: '#EFF4FF',
+          // Brand blue LOCKED to lightened prototype values (docs/design/DESIGN-SYSTEM.md §1).
+          blue: '#4D8DF6',
+          blueDeep: '#3674E8',
+          blueInk: '#2C5BD8',
+          sky: '#EFF6FF',
+          skyDeep: '#DCEAFE',
           bg: '#F8FAFC',
           line: '#E2E8F0',
           ink: '#0F172A',
