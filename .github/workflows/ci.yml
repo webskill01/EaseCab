@@ -7,8 +7,11 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  # Push-triggered runs are scoped to main only — the full gate fires on PRs into
+  # main (above). Day-to-day feature/** pushes no longer spin CI (saves minutes and
+  # avoids per-push failure emails); open a PR to run the gate.
   push:
-    branches: [main, 'feature/**', 'fix/**', 'chore/**']
+    branches: [main]
 
 # Cancel superseded runs on the same ref to save CI minutes.
 concurrency:
@@ -19,6 +22,15 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Public-by-design Firebase web config (CLAUDE.md §3 note in apps/web/config/env.js):
+    # these only satisfy the build-time NEXT_PUBLIC_* schema for the verification build.
+    # NOT secrets — the real values inject at deploy on the VPS. Keep in sync if the
+    # web env schema gains required keys.
+    env:
+      NEXT_PUBLIC_API_URL: https://api.easecab.com/api/v1
+      NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder-key
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: easecab.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: easecab-ci
     steps:
       - name: Checkout
         uses: actions/checkout@v4
