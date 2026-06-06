@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Steer, ChevR } from '@/components/ui/icons'
 
@@ -56,8 +57,8 @@ export function PhoneForm({ onSubmit, loading, error }) {
               valid ? 'border-ec-blue' : 'border-ec-line'
             }`}
           >
-            <span className="flex items-center gap-1.5 border-r border-ec-line bg-ec-bg px-3 text-[16px] font-bold text-ec-ink">
-              🇮🇳 +91
+            <span className="flex items-center border-r border-ec-line bg-ec-bg px-3.5 text-[16px] font-bold text-ec-ink">
+              +91
             </span>
             <input
               id="phone"
@@ -83,7 +84,21 @@ export function PhoneForm({ onSubmit, loading, error }) {
           {t('phone.continue')}
           <ChevR size={18} />
         </button>
-        <p className="mt-3.5 text-center text-[11.5px] leading-relaxed text-ec-ink40">{t('phone.terms')}</p>
+        <p className="mt-3.5 text-center text-[11.5px] leading-relaxed text-ec-ink40">
+          {t.rich('phone.terms', {
+            break: () => <br />,
+            terms: (chunks) => (
+              <Link href="/terms" className="font-semibold text-ec-blue">
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link href="/privacy-policy" className="font-semibold text-ec-blue">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
       </form>
     </div>
   )

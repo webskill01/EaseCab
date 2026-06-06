@@ -84,6 +84,22 @@ module.exports = {
         'ec-card': '16px',
         'ec-chip': '999px',
       },
+      keyframes: {
+        // Success badge: circle pops in with a slight overshoot, then the tick draws.
+        'ec-pop': {
+          '0%': { transform: 'scale(0)', opacity: '0' },
+          '60%': { transform: 'scale(1.1)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'ec-draw': {
+          '0%': { strokeDashoffset: '1' },
+          '100%': { strokeDashoffset: '0' },
+        },
+      },
+      animation: {
+        'ec-pop': 'ec-pop 0.45s cubic-bezier(0.16,1,0.3,1) both',
+        'ec-draw': 'ec-draw 0.4s ease-out 0.28s both',
+      },
     },
   },
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],

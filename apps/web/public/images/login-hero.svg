@@ -1,10 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 288" fill="none" role="img" aria-label="EaseCab" preserveAspectRatio="xMidYMid slice">
-  <!-- PLACEHOLDER hero — swap this file with a real cab/driver photo (same path) later. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 288" fill="none" role="img" aria-label="Taxi" preserveAspectRatio="xMidYMid slice">
+  <!-- PLACEHOLDER taxi hero — swap this file with a real cab/driver photo (same path) later. -->
   <rect width="412" height="288" fill="#2C5BD8"/>
-  <rect width="412" height="288" fill="#1E3A8A" opacity="0.35"/>
-  <g opacity="0.12" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="206" cy="120" r="70"/>
-    <circle cx="206" cy="120" r="18"/>
-    <path d="M206 138v60M188 112 140 88M224 112 272 88"/>
+  <rect width="412" height="288" fill="#1E3A8A" opacity="0.30"/>
+
+  <!-- road -->
+  <rect x="0" y="232" width="412" height="56" fill="#0F1F4D" opacity="0.55"/>
+  <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.35" stroke-dasharray="22 20">
+    <line x1="8" y1="262" x2="404" y2="262"/>
+  </g>
+
+  <!-- taxi -->
+  <g>
+    <!-- body -->
+    <path d="M96 196 L112 150 Q116 138 130 138 L210 138 L246 110 Q252 106 262 106 L292 106 Q304 106 310 118 L326 150 L344 156 Q356 160 356 174 L356 196 Z" fill="#F7B500"/>
+    <path d="M96 196 L356 196 L356 206 Q356 212 350 212 L102 212 Q96 212 96 206 Z" fill="#E0A100"/>
+    <!-- roof sign -->
+    <rect x="196" y="92" width="44" height="16" rx="3" fill="#FFFFFF"/>
+    <text x="218" y="105" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#1E293B" text-anchor="middle">TAXI</text>
+    <!-- windows -->
+    <path d="M134 150 L154 150 L154 138 L138 138 Q132 138 132 144 Z" fill="#BFE0FF"/>
+    <path d="M162 150 L206 150 L206 138 L162 138 Z" fill="#BFE0FF"/>
+    <path d="M214 150 L300 150 L290 120 Q286 114 278 114 L250 114 L214 138 Z" fill="#BFE0FF"/>
+    <!-- checker stripe -->
+    <g fill="#1E293B">
+      <rect x="96" y="178" width="14" height="9"/><rect x="124" y="178" width="14" height="9"/>
+      <rect x="152" y="178" width="14" height="9"/><rect x="180" y="178" width="14" height="9"/>
+      <rect x="208" y="178" width="14" height="9"/><rect x="236" y="178" width="14" height="9"/>
+      <rect x="264" y="178" width="14" height="9"/><rect x="292" y="178" width="14" height="9"/>
+      <rect x="320" y="178" width="14" height="9"/>
+      <rect x="110" y="187" width="14" height="9"/><rect x="138" y="187" width="14" height="9"/>
+      <rect x="166" y="187" width="14" height="9"/><rect x="194" y="187" width="14" height="9"/>
+      <rect x="222" y="187" width="14" height="9"/><rect x="250" y="187" width="14" height="9"/>
+      <rect x="278" y="187" width="14" height="9"/><rect x="306" y="187" width="14" height="9"/>
+    </g>
+    <!-- wheels -->
+    <circle cx="150" cy="212" r="22" fill="#1E293B"/><circle cx="150" cy="212" r="9" fill="#94A3B8"/>
+    <circle cx="304" cy="212" r="22" fill="#1E293B"/><circle cx="304" cy="212" r="9" fill="#94A3B8"/>
+    <!-- headlight -->
+    <circle cx="350" cy="184" r="5" fill="#FFF6D6"/>
   </g>
 </svg>
