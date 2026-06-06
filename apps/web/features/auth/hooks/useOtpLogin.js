@@ -7,8 +7,8 @@ import { sendOtp, confirm } from '../services/otpClient'
 import { errorKey } from '../lib/errorKey'
 
 /**
- * Login state machine: 'phone' → 'otp' → ('done' for new users | redirect to
- * /feed for returning users). Holds the phone (E.164), an i18n error sub-key, a
+ * Login state machine: 'phone' → 'otp' → ('perms' → 'done' for new users | redirect
+ * to /feed for returning users). Holds the phone (E.164), an i18n error sub-key, a
  * loading flag, and the Firebase confirmationResult (ref — survives renders).
  * Never logs phone or token (§10).
  */
@@ -42,7 +42,7 @@ export function useOtpLogin() {
     try {
       const idToken = await confirm(confirmationRef.current, code)
       const { isNewUser } = await verifyOtp(idToken)
-      if (isNewUser) setPhase('done')
+      if (isNewUser) setPhase('perms')
       else router.replace('/feed')
     } catch (err) {
       setError(errorKey(err))
@@ -57,7 +57,9 @@ export function useOtpLogin() {
     setPhase('phone')
   }, [])
 
+  const finishPermissions = useCallback(() => setPhase('done'), [])
+
   const goToFeed = useCallback(() => router.replace('/feed'), [router])
 
-  return { phase, phone, error, loading, submitPhone, submitOtp, changeNumber, goToFeed }
+  return { phase, phone, error, loading, submitPhone, submitOtp, changeNumber, finishPermissions, goToFeed }
 }

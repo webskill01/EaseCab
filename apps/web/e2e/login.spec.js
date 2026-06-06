@@ -22,6 +22,10 @@ test('phone → OTP → trial screen → feed (new user)', async ({ page }) => {
   await page.getByLabel(/verification code/i).fill('123456')
   await page.getByRole('button', { name: /verify/i }).click()
 
+  // new-user onboarding now includes the permissions step
+  await expect(page.getByRole('heading', { name: /allow a few permissions/i })).toBeVisible()
+  await page.getByRole('button', { name: /not now/i }).click()
+
   await expect(page.getByText(/you're all set/i)).toBeVisible()
   await page.getByRole('button', { name: /enter easecab/i }).click()
   await expect(page).toHaveURL(/\/feed$/)

@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import { Steer, ChevR } from '@/components/ui/icons'
 
 /**
- * Phone entry (DESIGN.md §7.1 step 1 + §6.10 prefix group). Accepts exactly 10
- * digits after the fixed +91 prefix; Continue enables only when valid. The parent
- * (login page) owns the OTP flow via useOtpLogin.
+ * Onboarding step 1 — phone (docs/design/SCREENS.md §1, prototype login.jsx PhoneStep).
+ * A curved-bottom photo hero with the brand overlaid, then "Login or sign up", a
+ * +91-prefixed 10-digit field, and Continue pinned to the bottom. The hero image is a
+ * placeholder (public/images/login-hero.svg) — swap the file for a real cab photo later.
  * @param {{ onSubmit: (digits: string) => void, loading: boolean, error: string|null }} props
  */
 export function PhoneForm({ onSubmit, loading, error }) {
@@ -20,33 +23,68 @@ export function PhoneForm({ onSubmit, loading, error }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <h1 className="text-[21px] font-extrabold tracking-tight text-ec-ink">{t('phone.title')}</h1>
-      <label className="text-[13px] font-bold text-ec-ink60" htmlFor="phone">
-        {t('phone.label')}
-      </label>
-      <div className="flex items-stretch overflow-hidden rounded-xl border-[1.5px] border-ec-line focus-within:border-ec-blue">
-        <span className="flex items-center bg-ec-bg px-3 text-[15px] font-bold text-ec-ink">🇮🇳 +91</span>
-        <input
-          id="phone"
-          inputMode="numeric"
-          autoComplete="tel-national"
-          aria-label={t('phone.label')}
-          placeholder={t('phone.placeholder')}
-          value={digits}
-          onChange={(e) => setDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
-          className="h-14 flex-1 px-3 text-[16px] font-semibold text-ec-ink outline-none"
-        />
-      </div>
-      {error && <p className="text-[13px] font-semibold text-ec-danger">{t(error)}</p>}
-      <button
-        type="submit"
-        disabled={!valid || loading}
-        className="h-13 rounded-xl bg-ec-blue py-3.5 text-[15px] font-extrabold text-white shadow-ec-blue disabled:bg-[#CBD5E1] disabled:shadow-none"
+    <div className="flex flex-1 flex-col overflow-hidden bg-white">
+      {/* curved-bottom hero with brand overlay */}
+      <div
+        className="relative h-72 shrink-0 overflow-hidden bg-ec-blueInk"
+        style={{ borderRadius: '0 0 50% 50% / 0 0 44px 44px' }}
       >
-        {t('phone.continue')}
-      </button>
-      <p className="text-center text-[11.5px] leading-relaxed text-ec-ink40">{t('phone.terms')}</p>
-    </form>
+        <Image src="/images/login-hero.svg" alt="" fill priority unoptimized className="object-cover" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/70" />
+        <div className="pointer-events-none absolute inset-x-[22px] bottom-[30px] flex items-center gap-3">
+          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[15px] bg-ec-blue text-white shadow-ec-float">
+            <Steer size={32} />
+          </div>
+          <div>
+            <p className="text-[26px] font-extrabold leading-none tracking-tight text-white">{t('brand.name')}</p>
+            <p className="mt-1 text-[13px] font-medium text-white/90">{t('brand.tagline')}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* form */}
+      <form onSubmit={handleSubmit} className="flex flex-1 flex-col px-[22px] py-[22px]">
+        <h1 className="text-[21px] font-extrabold tracking-tight text-ec-ink">{t('phone.title')}</h1>
+        <p className="mt-1.5 text-[14px] leading-relaxed text-ec-ink60">{t('phone.subtitle')}</p>
+
+        <div className="mt-6">
+          <label className="mb-2 block text-[13px] font-bold text-ec-ink" htmlFor="phone">
+            {t('phone.label')}
+          </label>
+          <div
+            className={`flex h-14 items-stretch overflow-hidden rounded-xl border-[1.5px] bg-white ${
+              valid ? 'border-ec-blue' : 'border-ec-line'
+            }`}
+          >
+            <span className="flex items-center gap-1.5 border-r border-ec-line bg-ec-bg px-3 text-[16px] font-bold text-ec-ink">
+              🇮🇳 +91
+            </span>
+            <input
+              id="phone"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              aria-label={t('phone.label')}
+              placeholder={t('phone.placeholder')}
+              value={digits}
+              onChange={(e) => setDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className="h-full flex-1 px-3.5 text-[17px] font-bold tracking-wide text-ec-ink outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1" />
+
+        {error && <p className="mb-3 text-[13px] font-semibold text-ec-danger">{t(error)}</p>}
+        <button
+          type="submit"
+          disabled={!valid || loading}
+          className="flex h-[54px] items-center justify-center gap-2 rounded-xl bg-ec-blue text-[16px] font-extrabold text-white shadow-ec-blue disabled:bg-[#CBD5E1] disabled:shadow-none"
+        >
+          {t('phone.continue')}
+          <ChevR size={18} />
+        </button>
+        <p className="mt-3.5 text-center text-[11.5px] leading-relaxed text-ec-ink40">{t('phone.terms')}</p>
+      </form>
+    </div>
   )
 }

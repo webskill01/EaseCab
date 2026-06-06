@@ -33,7 +33,7 @@ describe('useOtpLogin', () => {
     expect(sendOtp).not.toHaveBeenCalled()
   })
 
-  it('otp → done for a new user', async () => {
+  it('otp → perms → done for a new user', async () => {
     requestOtp.mockResolvedValue({})
     const cr = { confirm: vi.fn() }
     sendOtp.mockResolvedValue(cr)
@@ -44,8 +44,10 @@ describe('useOtpLogin', () => {
     await act(async () => { await result.current.submitOtp('123456') })
     expect(confirm).toHaveBeenCalledWith(cr, '123456')
     expect(verifyOtp).toHaveBeenCalledWith('id-token')
-    expect(result.current.phase).toBe('done')
+    expect(result.current.phase).toBe('perms')
     expect(replace).not.toHaveBeenCalled()
+    act(() => { result.current.finishPermissions() })
+    expect(result.current.phase).toBe('done')
   })
 
   it('otp → redirect to /feed for a returning user', async () => {
