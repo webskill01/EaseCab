@@ -11,6 +11,10 @@ const POSTED_PUBLIC_SELECT = Object.freeze({
   toCityId: true,
   fromCityRaw: true,
   toCityRaw: true,
+  // Joined clean names for the feed (mirrors the bot-rides projection, T1). Null
+  // when the picked free-text never resolved — the raw fragment is the fallback.
+  fromCity: { select: { canonicalName: true } },
+  toCity: { select: { canonicalName: true } },
   vehicleType: true,
   fare: true,
   rideDate: true,
@@ -89,10 +93,20 @@ function createPostedRidesRepository({ prisma, redis }) {
      * the service can detect a further page. Cursor excludes everything at/before
      * (createdAt, id) in (createdAt DESC, id DESC) order.
      */
-    async listActivePosts({ createdAt, id, limit }) {
+    async listActivePosts({ createdAt, id, cityId, limit }) {
       const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() } };
-      if (createdAt && id) {
-        where.OR = [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }];
+      const cursorClause = createdAt && id
+        ? { OR: [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }] }
+        : null;
+      const cityClause = cityId
+        ? { OR: [{ fromCityId: cityId }, { toCityId: cityId }] }
+        : null;
+      if (cursorClause && cityClause) {
+        where.AND = [cursorClause, cityClause];
+      } else if (cursorClause) {
+        where.OR = cursorClause.OR;
+      } else if (cityClause) {
+        where.OR = cityClause.OR;
       }
       return prisma.postedRide.findMany({
         where,

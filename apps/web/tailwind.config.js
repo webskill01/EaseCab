@@ -70,6 +70,8 @@ module.exports = {
           dangerBg: '#FEF2F2',
           wa: '#25D366',
           waDeep: '#1FA855',
+          amberTx: '#B45309', // trial-banner subtitle (DESIGN-SYSTEM §1)
+          disabled: '#CBD5E1', // disabled primary-button fill (slate-300, no shadow)
         },
       },
       boxShadow: {

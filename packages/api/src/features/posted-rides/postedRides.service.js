@@ -21,6 +21,8 @@ function toPublicPostedRide(p) {
     toCityId: p.toCityId ?? null,
     fromCityRaw: p.fromCityRaw ?? null,
     toCityRaw: p.toCityRaw ?? null,
+    fromCityName: p.fromCity?.canonicalName ?? null,
+    toCityName: p.toCity?.canonicalName ?? null,
     vehicleType: p.vehicleType ?? null,
     fare: p.fare === null || p.fare === undefined ? null : Number(p.fare),
     rideDate: p.rideDate ?? null,
@@ -73,9 +75,9 @@ function createPostedRidesService({ repo, logger }) {
     },
 
     /** One page of the public posted-rides feed, newest first. */
-    async listFeed({ limit, cursor }) {
+    async listFeed({ limit, cursor, cityId }) {
       const key = cursor ? decodeCursor(cursor) : {};
-      const rows = await repo.listActivePosts({ createdAt: key.receivedAt, id: key.id, limit });
+      const rows = await repo.listActivePosts({ createdAt: key.receivedAt, id: key.id, cityId, limit });
       const hasMore = rows.length > limit;
       const page = hasMore ? rows.slice(0, limit) : rows;
       const last = page[page.length - 1];

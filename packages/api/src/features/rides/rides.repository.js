@@ -16,6 +16,11 @@ const PUBLIC_RIDE_SELECT = Object.freeze({
   dropCityId: true,
   pickupRaw: true,
   dropRaw: true,
+  // Join just the canonical name of each resolved city so the feed can render a
+  // clean "Ludhiana → Delhi" instead of the messy raw fragment. Null when the
+  // string never resolved (SetNull relation) — the raw fragment is the fallback.
+  pickupCity: { select: { canonicalName: true } },
+  dropCity: { select: { canonicalName: true } },
   vehicleType: true,
   status: true,
   receivedAt: true,
@@ -53,17 +58,31 @@ function createRidesRepository({ prisma, redis }) {
      * @param {object} args
      * @param {Date} [args.receivedAt] - cursor key (omit for the first page)
      * @param {string} [args.id] - cursor key (omit for the first page)
+     * @param {string} [args.cityId] - live city-filter lock; keep only rides whose
+     *   pickup OR drop touches this city (SCREENS §2). Omit for the unfiltered feed.
      * @param {number} args.limit - page size (the +1 is added here)
      * @returns {Promise<object[]>} up to limit+1 public ride rows
      */
-    async listVisibleRides({ receivedAt, id, limit }) {
+    async listVisibleRides({ receivedAt, id, cityId, limit }) {
       const where = {
         status: { in: VISIBLE_STATUSES },
         expiresAt: { gt: new Date() },
       };
-      if (receivedAt && id) {
-        // Strict "older than the cursor" in (receivedAt DESC, id DESC) order.
-        where.OR = [{ receivedAt: { lt: receivedAt } }, { receivedAt, id: { lt: id } }];
+      // Strict "older than the cursor" in (receivedAt DESC, id DESC) order.
+      const cursorClause = receivedAt && id
+        ? { OR: [{ receivedAt: { lt: receivedAt } }, { receivedAt, id: { lt: id } }] }
+        : null;
+      // "Touching the locked city" = pickup OR drop equals it.
+      const cityClause = cityId
+        ? { OR: [{ pickupCityId: cityId }, { dropCityId: cityId }] }
+        : null;
+      if (cursorClause && cityClause) {
+        // Two independent OR groups must both hold → AND them so neither widens the other.
+        where.AND = [cursorClause, cityClause];
+      } else if (cursorClause) {
+        where.OR = cursorClause.OR;
+      } else if (cityClause) {
+        where.OR = cityClause.OR;
       }
       return prisma.ride.findMany({
         where,

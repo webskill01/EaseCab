@@ -18,6 +18,9 @@ const ridesListQuerySchema = z.object({
     .max(RIDES_FEED.MAX_LIMIT)
     .default(RIDES_FEED.DEFAULT_LIMIT),
   cursor: z.string().min(1).optional(),
+  // Live city-filter lock (Step 18): keep only rides touching this city. A City UUID
+  // from the /cities typeahead; omitted = unfiltered feed.
+  cityId: z.string().uuid().optional(),
 });
 
 /** Ride id path param — must be a UUID (matches Ride.id @db.Uuid). */

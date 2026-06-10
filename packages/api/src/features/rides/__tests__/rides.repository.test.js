@@ -28,6 +28,11 @@ test('PUBLIC_RIDE_SELECT never exposes phoneNumber or rawText', () => {
   assert.strictEqual(PUBLIC_RIDE_SELECT.displayText, true);
 });
 
+test('PUBLIC_RIDE_SELECT joins only the canonical name of each city relation', () => {
+  assert.deepStrictEqual(PUBLIC_RIDE_SELECT.pickupCity, { select: { canonicalName: true } });
+  assert.deepStrictEqual(PUBLIC_RIDE_SELECT.dropCity, { select: { canonicalName: true } });
+});
+
 test('listVisibleRides filters to visible+unexpired, orders newest-first, fetches limit+1', async () => {
   const prisma = fakePrisma();
   const repo = createRidesRepository({ prisma });
@@ -51,6 +56,30 @@ test('listVisibleRides adds the keyset OR clause only when a cursor is given', a
     { receivedAt, id: { lt: 'r1' } },
   ]);
   assert.strictEqual(prisma.calls.findMany.take, 6);
+});
+
+test('listVisibleRides with cityId only filters pickup OR drop touching the city (no cursor)', async () => {
+  const prisma = fakePrisma();
+  const repo = createRidesRepository({ prisma });
+  await repo.listVisibleRides({ cityId: 'c-uuid', limit: 10 });
+  assert.deepStrictEqual(prisma.calls.findMany.where.OR, [
+    { pickupCityId: 'c-uuid' },
+    { dropCityId: 'c-uuid' },
+  ]);
+  assert.strictEqual('AND' in prisma.calls.findMany.where, false);
+});
+
+test('listVisibleRides with BOTH cursor + cityId AND-combines the two OR clauses', async () => {
+  const prisma = fakePrisma();
+  const repo = createRidesRepository({ prisma });
+  const receivedAt = new Date('2026-06-01T10:00:00.000Z');
+  await repo.listVisibleRides({ receivedAt, id: 'r1', cityId: 'c-uuid', limit: 5 });
+  const w = prisma.calls.findMany.where;
+  assert.strictEqual('OR' in w, false); // collapsed into AND so neither clause leaks the other
+  assert.deepStrictEqual(w.AND, [
+    { OR: [{ receivedAt: { lt: receivedAt } }, { receivedAt, id: { lt: 'r1' } }] },
+    { OR: [{ pickupCityId: 'c-uuid' }, { dropCityId: 'c-uuid' }] },
+  ]);
 });
 
 test('findPublicRideById uses the public select', async () => {

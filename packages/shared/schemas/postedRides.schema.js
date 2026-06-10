@@ -34,6 +34,8 @@ const postedRideCreateSchema = z
 const postedRidesListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(POSTED_RIDES.FEED.MAX_LIMIT).default(POSTED_RIDES.FEED.DEFAULT_LIMIT),
   cursor: z.string().min(1).optional(),
+  // Live city-filter lock (Step 18): keep only posts touching this City UUID.
+  cityId: z.string().uuid().optional(),
 });
 
 /** Posted-ride id path param — must be a UUID (matches PostedRide.id @db.Uuid). */

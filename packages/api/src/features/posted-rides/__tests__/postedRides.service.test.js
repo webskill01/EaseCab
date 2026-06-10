@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { createPostedRidesService } = require('../postedRides.service');
+const { createPostedRidesService, toPublicPostedRide } = require('../postedRides.service');
 
 /** assert.rejects validator: the thrown AppError carries the expected `.code`. */
 const code = (expected) => (err) => {
@@ -46,6 +46,33 @@ test('createPost: sets a ~24h expiresAt and returns the masked shape (no phone)'
   assert.equal('phone' in out, false);
   const ms = out.expiresAt.getTime() - Date.now();
   assert.ok(ms > 23 * 3600_000 && ms <= 24 * 3600_000 + 1000);
+});
+
+test('toPublicPostedRide: surfaces joined canonical city names, null when absent, no phone', () => {
+  const named = toPublicPostedRide({
+    id: 'p1', fromCityId: 'c1', toCityId: 'c2', fromCityRaw: 'patiala', toCityRaw: 'delhi',
+    fromCity: { canonicalName: 'Patiala' }, toCity: { canonicalName: 'Delhi' },
+    status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date(), phone: '+919876543210',
+  });
+  assert.equal(named.fromCityName, 'Patiala');
+  assert.equal(named.toCityName, 'Delhi');
+  assert.equal('phone' in named, false);
+  const bare = toPublicPostedRide({ id: 'p2', fromCity: null, status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date() });
+  assert.equal(bare.fromCityName, null);
+  assert.equal(bare.toCityName, null);
+});
+
+test('listFeed: forwards the optional cityId filter and maps city names', async () => {
+  let seen;
+  const repo = baseRepo();
+  repo.listActivePosts = async (args) => {
+    seen = args;
+    return [{ id: 'p1', fromCity: { canonicalName: 'Patiala' }, toCity: { canonicalName: 'Delhi' }, status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date() }];
+  };
+  const out = await createPostedRidesService({ repo }).listFeed({ limit: 10, cityId: 'c-uuid' });
+  assert.equal(seen.cityId, 'c-uuid');
+  assert.equal(out.posts[0].fromCityName, 'Patiala');
+  assert.equal(out.posts[0].toCityName, 'Delhi');
 });
 
 test('contactPost: NOT_FOUND when no active target', async () => {

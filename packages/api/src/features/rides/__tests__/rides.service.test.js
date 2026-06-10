@@ -16,6 +16,9 @@ function ride(id, over = {}) {
     dropCityId: 'c2',
     pickupRaw: 'amritsar',
     dropRaw: 'delhi',
+    // relations the repo select joins for clean city names (T1):
+    pickupCity: { canonicalName: 'Amritsar' },
+    dropCity: { canonicalName: 'Delhi' },
     vehicleType: 'sedan',
     status: 'fresh',
     receivedAt: new Date('2026-06-01T10:00:00.000Z'),
@@ -32,9 +35,20 @@ test('toPublicRide whitelists public fields and drops phoneNumber/rawText', () =
   assert.strictEqual('phoneNumber' in pub, false);
   assert.strictEqual('rawText' in pub, false);
   assert.deepStrictEqual(Object.keys(pub).sort(), [
-    'displayText', 'dropCityId', 'dropRaw', 'expiresAt', 'id',
-    'pickupCityId', 'pickupRaw', 'receivedAt', 'status', 'vehicleType',
+    'displayText', 'dropCityId', 'dropCityName', 'dropRaw', 'expiresAt', 'id',
+    'pickupCityId', 'pickupCityName', 'pickupRaw', 'receivedAt', 'status', 'vehicleType',
   ]);
+});
+
+test('toPublicRide surfaces joined canonical city names, null when the relation is absent', () => {
+  const named = toPublicRide(ride('r1'));
+  assert.strictEqual(named.pickupCityName, 'Amritsar');
+  assert.strictEqual(named.dropCityName, 'Delhi');
+  // unresolved city (no relation row) → name is null, raw still carries the fragment
+  const bare = toPublicRide(ride('r2', { pickupCity: null, dropCity: undefined }));
+  assert.strictEqual(bare.pickupCityName, null);
+  assert.strictEqual(bare.dropCityName, null);
+  assert.strictEqual(bare.pickupRaw, 'amritsar');
 });
 
 test('isSubscriptionActive — gate truth table', () => {
@@ -79,6 +93,14 @@ test('listFeed passes the decoded cursor key through to the repo', async () => {
   await svc.listFeed({ limit: 5, cursor });
   assert.strictEqual(seen.id, 'r9');
   assert.strictEqual(seen.receivedAt.toISOString(), '2026-06-01T09:00:00.000Z');
+});
+
+test('listFeed forwards the optional cityId filter to the repo', async () => {
+  let seen;
+  const repo = { listVisibleRides: async (args) => { seen = args; return []; } };
+  const svc = createRidesService({ repo });
+  await svc.listFeed({ limit: 5, cityId: 'city-uuid-1' });
+  assert.strictEqual(seen.cityId, 'city-uuid-1');
 });
 
 test('listFeed throws VALIDATION_ERROR on a bad cursor', async () => {

@@ -1,0 +1,48 @@
+{
+  "tabs": { "rides": "Rides", "verified": "Verified Rides" },
+  "card": {
+    "pickup": "Pickup",
+    "drop": "Drop",
+    "vehicle": "Gaadi",
+    "postedAt": "Posted",
+    "viewProfile": "Profile dekho",
+    "verifiedDriver": "Verified driver",
+    "unknownCity": "—"
+  },
+  "status": { "fresh": "Fresh", "booked": "Shayad book", "verified": "Verified" },
+  "time": { "justNow": "abhi", "minAgo": "{count} min pehle", "hourAgo": "{count} ghante pehle" },
+  "actions": { "whatsapp": "WhatsApp", "call": "Call", "report": "Report" },
+  "filter": {
+    "notifications": "Alerts",
+    "allCities": "Saare shehar",
+    "filterByCity": "Shehar filter",
+    "allLocations": "Saare shehar",
+    "searchCity": "Shehar dhoondo…",
+    "noResults": "Koi shehar nahi mila"
+  },
+  "banner": {
+    "freeTrial": "Free trial",
+    "daysLeft": "din baaki",
+    "trialEnding": "Trial jaldi khatam",
+    "trialSub": "Driver se contact jaari rakhne ke liye upgrade karein.",
+    "upgrade": "Upgrade",
+    "expiredTitle": "Trial khatam ho gaya",
+    "expiredSub": "Driver se baat karne ke liye renew karein.",
+    "renew": "Renew"
+  },
+  "pill": { "newRides": "nayi rides" },
+  "states": {
+    "empty": "Abhi koi ride nahi",
+    "emptySub": "Nayi duties yahan live aayengi.",
+    "catchingUp": "Feed update ho rahi hai…",
+    "catchingUpSub": "Nayi duties yahan live aayengi.",
+    "reconnecting": "Dobara connect ho raha hai…"
+  },
+  "gate": {
+    "contactTitle": "Contact ke liye subscribe karein",
+    "contactSub": "Trial ke baad ₹149/month mein unlimited contact.",
+    "subscribe": "Subscribe",
+    "renew": "Abhi renew karein"
+  },
+  "reveal": { "title": "Driver se contact", "callBtn": "Call", "waBtn": "WhatsApp" }
+}

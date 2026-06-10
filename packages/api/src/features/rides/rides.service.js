@@ -18,6 +18,9 @@ function toPublicRide(r) {
     dropCityId: r.dropCityId ?? null,
     pickupRaw: r.pickupRaw ?? null,
     dropRaw: r.dropRaw ?? null,
+    // Clean resolved name (joined relation); null when the fragment never resolved.
+    pickupCityName: r.pickupCity?.canonicalName ?? null,
+    dropCityName: r.dropCity?.canonicalName ?? null,
     vehicleType: r.vehicleType ?? null,
     status: r.status,
     receivedAt: r.receivedAt,
@@ -37,12 +40,12 @@ function createRidesService({ repo }) {
      * throws VALIDATION_ERROR), fetches limit+1 to learn whether more remain, and
      * emits the next cursor only when there is a further page.
      *
-     * @param {{ limit: number, cursor?: string }} query
+     * @param {{ limit: number, cursor?: string, cityId?: string }} query
      * @returns {Promise<{ rides: object[], nextCursor: ?string }>}
      */
-    async listFeed({ limit, cursor }) {
+    async listFeed({ limit, cursor, cityId }) {
       const key = cursor ? decodeCursor(cursor) : {};
-      const rows = await repo.listVisibleRides({ ...key, limit });
+      const rows = await repo.listVisibleRides({ ...key, cityId, limit });
       const hasMore = rows.length > limit;
       const page = hasMore ? rows.slice(0, limit) : rows;
       const last = page[page.length - 1];

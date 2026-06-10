@@ -1,0 +1,48 @@
+{
+  "tabs": { "rides": "राइड्स", "verified": "वेरिफाइड राइड्स" },
+  "card": {
+    "pickup": "पिकअप",
+    "drop": "ड्रॉप",
+    "vehicle": "गाड़ी",
+    "postedAt": "पोस्ट",
+    "viewProfile": "प्रोफ़ाइल",
+    "verifiedDriver": "वेरिफाइड ड्राइवर",
+    "unknownCity": "—"
+  },
+  "status": { "fresh": "नई", "booked": "शायद बुक", "verified": "वेरिफाइड" },
+  "time": { "justNow": "अभी", "minAgo": "{count} मिनट पहले", "hourAgo": "{count} घंटे पहले" },
+  "actions": { "whatsapp": "WhatsApp", "call": "कॉल", "report": "रिपोर्ट" },
+  "filter": {
+    "notifications": "अलर्ट",
+    "allCities": "सभी शहर",
+    "filterByCity": "शहर फ़िल्टर",
+    "allLocations": "सभी शहर",
+    "searchCity": "शहर खोजें…",
+    "noResults": "कोई शहर नहीं मिला"
+  },
+  "banner": {
+    "freeTrial": "फ्री ट्रायल",
+    "daysLeft": "दिन बाकी",
+    "trialEnding": "ट्रायल जल्दी खत्म",
+    "trialSub": "ड्राइवर से संपर्क जारी रखने के लिए अपग्रेड करें।",
+    "upgrade": "अपग्रेड",
+    "expiredTitle": "ट्रायल खत्म हो गया",
+    "expiredSub": "ड्राइवर से संपर्क के लिए रिन्यू करें।",
+    "renew": "रिन्यू"
+  },
+  "pill": { "newRides": "नई राइड्स" },
+  "states": {
+    "empty": "अभी कोई राइड नहीं",
+    "emptySub": "नई ड्यूटी यहाँ लाइव आएँगी।",
+    "catchingUp": "फीड अपडेट हो रही है…",
+    "catchingUpSub": "नई ड्यूटी यहाँ लाइव आएँगी।",
+    "reconnecting": "फिर से जुड़ रहा है…"
+  },
+  "gate": {
+    "contactTitle": "संपर्क के लिए सब्सक्राइब करें",
+    "contactSub": "ट्रायल के बाद ₹149/माह में अनलिमिटेड संपर्क।",
+    "subscribe": "सब्सक्राइब",
+    "renew": "अभी रिन्यू करें"
+  },
+  "reveal": { "title": "ड्राइवर से संपर्क", "callBtn": "कॉल", "waBtn": "WhatsApp" }
+}
