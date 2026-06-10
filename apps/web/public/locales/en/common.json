@@ -6,6 +6,8 @@
     "cancel": "Cancel",
     "retry": "Retry"
   },
-  "shell": { "support": "Support", "logout": "Log out", "language": "Language" },
+  "shell": { "support": "Support", "logout": "Log out", "language": "Language", "chats": "Chats" },
+  "nav": { "rides": "Rides", "post": "Post duty", "mine": "My Rides", "profile": "Profile" },
+  "placeholder": { "soon": "Coming in a later step" },
   "feed": { "title": "Live duties", "comingSoon": "Your live ride feed will appear here." }
 }

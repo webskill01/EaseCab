@@ -6,6 +6,8 @@
     "cancel": "Cancel karein",
     "retry": "Dobara try karein"
   },
-  "shell": { "support": "Support", "logout": "Log out", "language": "Bhasha" },
+  "shell": { "support": "Support", "logout": "Log out", "language": "Bhasha", "chats": "Chats" },
+  "nav": { "rides": "Rides", "post": "Post duty", "mine": "My Rides", "profile": "Profile" },
+  "placeholder": { "soon": "Jaldi aa raha hai — agle step mein" },
   "feed": { "title": "Live duties", "comingSoon": "Aapki live ride feed yahan dikhegi." }
 }

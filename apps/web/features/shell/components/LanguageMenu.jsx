@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { Globe, ChevR } from '@/components/ui/icons'
 import { LOCALES, LOCALE_LABELS } from '@/i18n/config'
 import { setLocale } from '@/i18n/actions'
 
@@ -28,9 +29,11 @@ export function LanguageMenu({ current }) {
         type="button"
         aria-label={t('shell.language')}
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 rounded-md bg-ec-sky px-2 py-1 text-sm font-bold text-ec-blue"
+        className="flex h-[38px] shrink-0 items-center gap-1 rounded-[10px] bg-ec-sky px-2 text-[13px] font-extrabold text-ec-blue"
       >
+        <Globe size={16} />
         {LOCALE_LABELS[current] ?? current}
+        <span className={`inline-flex transition-transform ${open ? 'rotate-180' : ''} text-ec-blue`}><ChevR size={13} /></span>
       </button>
       {open && (
         <ul role="menu" className="absolute right-0 z-30 mt-1 w-28 rounded-md bg-white p-1 shadow-ec-float">

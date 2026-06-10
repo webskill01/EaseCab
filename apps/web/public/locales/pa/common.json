@@ -6,6 +6,8 @@
     "cancel": "ਰੱਦ ਕਰੋ",
     "retry": "ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ"
   },
-  "shell": { "support": "ਸਹਾਇਤਾ", "logout": "ਲੌਗ ਆਊਟ", "language": "ਭਾਸ਼ਾ" },
+  "shell": { "support": "ਸਹਾਇਤਾ", "logout": "ਲੌਗ ਆਊਟ", "language": "ਭਾਸ਼ਾ", "chats": "ਚੈਟ" },
+  "nav": { "rides": "ਰਾਈਡਾਂ", "post": "ਡਿਊਟੀ ਪਾਓ", "mine": "ਮੇਰੀਆਂ", "profile": "ਪ੍ਰੋਫਾਈਲ" },
+  "placeholder": { "soon": "ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ — ਅਗਲੇ ਸਟੈੱਪ ਵਿੱਚ" },
   "feed": { "title": "ਲਾਈਵ ਡਿਊਟੀਆਂ", "comingSoon": "ਤੁਹਾਡੀ ਲਾਈਵ ਰਾਈਡ ਫੀਡ ਇੱਥੇ ਦਿਖੇਗੀ।" }
 }

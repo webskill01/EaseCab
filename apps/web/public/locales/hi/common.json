@@ -6,6 +6,8 @@
     "cancel": "रद्द करें",
     "retry": "पुनः प्रयास करें"
   },
-  "shell": { "support": "सहायता", "logout": "लॉग आउट", "language": "भाषा" },
+  "shell": { "support": "सहायता", "logout": "लॉग आउट", "language": "भाषा", "chats": "चैट" },
+  "nav": { "rides": "राइड्स", "post": "ड्यूटी पोस्ट", "mine": "मेरी", "profile": "प्रोफ़ाइल" },
+  "placeholder": { "soon": "जल्द आ रहा है — अगले स्टेप में" },
   "feed": { "title": "लाइव ड्यूटी", "comingSoon": "आपकी लाइव राइड फ़ीड यहाँ दिखेगी।" }
 }

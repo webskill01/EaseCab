@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
+import { BellEdit } from '@/components/ui/icons'
 import { useRidesFeed, FEED_SUB } from '../hooks/useRidesFeed'
 import { readCityLock, writeCityLock } from '../lib/cityLock'
 import { getMembership } from '@/features/subscription/services/subscriptionApi'
@@ -23,6 +25,7 @@ import { ContactSheet } from './ContactSheet'
  */
 export function FeedScreen() {
   const router = useRouter()
+  const t = useTranslations('rides')
   const [sub, setSub] = useState(FEED_SUB.RIDES)
   const [lockedCity, setLockedCity] = useState(null)
   const [contactRideVM, setContactRideVM] = useState(null)
@@ -40,8 +43,18 @@ export function FeedScreen() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
-      <div className="bg-ec-bg px-4 pb-1 pt-2.5">
-        <CityFilter locked={lockedCity} onPick={pickCity} />
+      {/* Location buttons row (SCREENS §2): Duty Alerts + the city-filter lock.
+          The Duty-Alerts overlay is Step 23 — the button is present per the chrome. */}
+      <div className="flex gap-3 bg-ec-bg px-4 pb-1 pt-2.5">
+        <button
+          type="button"
+          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-bold text-ec-blueInk shadow-ec-card"
+        >
+          <span className="inline-flex text-ec-blue"><BellEdit size={18} /></span>{t('filter.notifications')}
+        </button>
+        <div className="flex-1">
+          <CityFilter locked={lockedCity} onPick={pickCity} />
+        </div>
       </div>
       <SubTabs sub={sub} onChange={setSub} />
       <FeedBanner membership={membership} onUpgrade={goMembership} />
