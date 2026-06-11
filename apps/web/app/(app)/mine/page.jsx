@@ -1,6 +1,6 @@
-import { PlaceholderScreen } from '@/features/shell/components/PlaceholderScreen'
+import { MyRidesScreen } from '@/features/rides/components/MyRidesScreen'
 
-/** My Rides — placeholder until Step 19 (posted + contacted tabs). */
+/** My Rides — Posted + Contacted (Step 19). */
 export default function MyRidesPage() {
-  return <PlaceholderScreen titleKey="nav.mine" />
+  return <MyRidesScreen />
 }

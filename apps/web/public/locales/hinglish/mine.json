@@ -1,0 +1,20 @@
+{
+  "tabs": { "posted": "Posted", "contacted": "Contacted" },
+  "posted": {
+    "active": "Active", "done": "Complete", "vehicle": "Vehicle", "any": "Koi bhi",
+    "markDone": "Mark done", "delete": "Delete", "repost": "Repost", "viewChats": "Chat dekho"
+  },
+  "contacted": {
+    "label": "Contacted", "vehicle": "Vehicle", "any": "Koi bhi",
+    "whatsapp": "WhatsApp", "call": "Call", "chat": "Chat"
+  },
+  "confirm": {
+    "cancel": "Cancel",
+    "doneTitle": "Is ride ko done mark karein?", "doneBody": "Ye aapki complete posts mein chali jayegi.", "doneCta": "Haan, mark done",
+    "deleteTitle": "Is post ko delete karein?", "deleteBody": "Ye wapas nahi ho sakta.", "deleteCta": "Haan, delete"
+  },
+  "empty": {
+    "posted": { "title": "Abhi koi posted ride nahi", "sub": "Driver dhoondhne ke liye ride post karein.", "cta": "Ride post karein" },
+    "contacted": { "title": "Abhi koi contacted ride nahi", "sub": "Yahan dekhne ke liye kisi ride par contact dabayein.", "cta": "Rides dekho" }
+  }
+}
