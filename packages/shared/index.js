@@ -12,6 +12,7 @@
 module.exports = {
   ...require('./constants'),
   ...require('./schemas'),
+  ...require('./parsing'),
   ...require('./errors/AppError'),
   ...require('./services'),
   ...require('./lib/subscriptionWindow'),
