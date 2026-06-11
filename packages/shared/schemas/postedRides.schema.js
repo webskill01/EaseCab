@@ -30,6 +30,11 @@ const postedRideCreateSchema = z
   .refine((d) => Boolean(d.fromCityId || d.fromCityRaw), { path: ['fromCityId'], message: 'fromCityId or fromCityRaw is required' })
   .refine((d) => Boolean(d.toCityId || d.toCityRaw), { path: ['toCityId'], message: 'toCityId or toCityRaw is required' });
 
+/** Free-text parse-preview body (Step 20). Read-only — server extracts a draft. */
+const postedRideParseSchema = z
+  .object({ text: z.string().trim().min(1).max(POSTED_RIDES.PARSE_TEXT_MAX) })
+  .strict();
+
 /** Posted-rides feed query — cursor keyset pagination (same shape as ridesListQuerySchema). */
 const postedRidesListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(POSTED_RIDES.FEED.MAX_LIMIT).default(POSTED_RIDES.FEED.DEFAULT_LIMIT),
@@ -41,4 +46,4 @@ const postedRidesListQuerySchema = z.object({
 /** Posted-ride id path param — must be a UUID (matches PostedRide.id @db.Uuid). */
 const postedRideIdParamSchema = z.object({ id: z.string().uuid() });
 
-module.exports = { postedRideCreateSchema, postedRidesListQuerySchema, postedRideIdParamSchema };
+module.exports = { postedRideCreateSchema, postedRideParseSchema, postedRidesListQuerySchema, postedRideIdParamSchema };

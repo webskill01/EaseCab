@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { postedRideCreateSchema, postedRidesListQuerySchema, postedRideIdParamSchema } = require('../postedRides.schema');
+const { postedRideCreateSchema, postedRideParseSchema, postedRidesListQuerySchema, postedRideIdParamSchema } = require('../postedRides.schema');
 
 const UUID = '11111111-1111-4111-8111-111111111111';
 
@@ -31,6 +31,14 @@ test('create: accepts optional fare/rideDate/rideTime/notes', () => {
     vehicleType: 'Innova', fare: 4500, rideDate: '2026-06-10', rideTime: '09:30', notes: 'AC only',
   });
   assert.equal(r.success, true);
+});
+
+test('parse: accepts a non-empty text, trims, rejects empty + over-max + unknown keys', () => {
+  assert.equal(postedRideParseSchema.safeParse({ text: 'Delhi to Chandigarh 9876543210' }).success, true);
+  assert.equal(postedRideParseSchema.parse({ text: '  hi  ' }).text, 'hi');
+  assert.equal(postedRideParseSchema.safeParse({ text: '' }).success, false);
+  assert.equal(postedRideParseSchema.safeParse({ text: 'x'.repeat(2001) }).success, false);
+  assert.equal(postedRideParseSchema.safeParse({ text: 'ok', extra: 1 }).success, false);
 });
 
 test('list query: coerces limit, defaults applied, rejects out-of-range (mirrors rides)', () => {
