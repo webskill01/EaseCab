@@ -1,6 +1,6 @@
-import { PlaceholderScreen } from '@/features/shell/components/PlaceholderScreen'
+import { PostScreen } from '@/features/rides/components/PostScreen'
 
-/** Post a Ride — placeholder until Step 20 (form + WhatsApp-paste preview). */
+/** Post a Ride (Step 20) — structured form + WhatsApp-paste preview. */
 export default function PostPage() {
-  return <PlaceholderScreen titleKey="nav.post" />
+  return <PostScreen />
 }
