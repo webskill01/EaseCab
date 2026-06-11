@@ -11,4 +11,5 @@ module.exports = {
   ...require('./cities.schema'),
   ...require('./chat.schema'),
   ...require('./push.schema'),
+  ...require('./contacts.schema'),
 };

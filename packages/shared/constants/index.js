@@ -18,4 +18,5 @@ module.exports = {
   ...require('./chat'),
   ...require('./firestore'),
   ...require('./push'),
+  ...require('./contacts'),
 };
