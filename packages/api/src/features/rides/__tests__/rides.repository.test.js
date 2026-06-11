@@ -90,13 +90,18 @@ test('findPublicRideById uses the public select', async () => {
   assert.strictEqual(r.id, 'r1');
 });
 
-test('findRideContactTarget selects only id + phoneNumber', async () => {
+test('findRideContactTarget selects phone + the snapshot fields (route, vehicle)', async () => {
   const prisma = fakePrisma();
   const repo = createRidesRepository({ prisma });
   await repo.findRideContactTarget('r1');
   assert.deepStrictEqual(prisma.calls.rideFindUnique, {
     where: { id: 'r1' },
-    select: { id: true, phoneNumber: true },
+    select: {
+      id: true, phoneNumber: true, vehicleType: true,
+      pickupRaw: true, dropRaw: true,
+      pickupCity: { select: { canonicalName: true } },
+      dropCity: { select: { canonicalName: true } },
+    },
   });
 });
 
@@ -132,14 +137,15 @@ test('incrementContactCount namespaces under easecab:contact: with a fixed-windo
   assert.strictEqual(store.get(key).ttl, 60);
 });
 
-test('recordContact upserts on the composite unique (idempotent)', async () => {
+test('recordContact upserts on the composite unique with the snapshot (idempotent)', async () => {
   const prisma = fakePrisma({ upsert: { contactedAt: new Date('2026-06-01T00:00:00.000Z') } });
   const repo = createRidesRepository({ prisma });
-  const out = await repo.recordContact('u1', 'r1');
+  const snapshot = { source: 'bot', fromCityName: 'Ludhiana', toCityName: 'Delhi', vehicleType: 'Sedan', revealedPhone: '+919876500000' };
+  const out = await repo.recordContact('u1', 'r1', snapshot);
   assert.deepStrictEqual(prisma.calls.upsert, {
     where: { userId_rideId: { userId: 'u1', rideId: 'r1' } },
-    create: { userId: 'u1', rideId: 'r1' },
-    update: {},
+    create: { userId: 'u1', rideId: 'r1', ...snapshot },
+    update: { ...snapshot },
     select: { contactedAt: true },
   });
   assert.strictEqual(out.contactedAt.toISOString(), '2026-06-01T00:00:00.000Z');

@@ -98,11 +98,19 @@ function createRidesRepository({ prisma, redis }) {
     },
 
     /**
-     * Existence + the unmasked phone for a contact reveal. Returns only what the
-     * reveal needs (id + phoneNumber); null if the ride row is gone (hard-deleted).
+     * Existence + the data a reveal needs: unmasked phone PLUS the snapshot fields
+     * (route names, vehicle) persisted onto the contact row (Step 19). null if gone.
      */
     async findRideContactTarget(id) {
-      return prisma.ride.findUnique({ where: { id }, select: { id: true, phoneNumber: true } });
+      return prisma.ride.findUnique({
+        where: { id },
+        select: {
+          id: true, phoneNumber: true, vehicleType: true,
+          pickupRaw: true, dropRaw: true,
+          pickupCity: { select: { canonicalName: true } },
+          dropCity: { select: { canonicalName: true } },
+        },
+      });
     },
 
     /** The caller's subscription window for the soft gate — cache-first (§15). null if none. */
@@ -118,15 +126,15 @@ function createRidesRepository({ prisma, redis }) {
     },
 
     /**
-     * Idempotently record that a user contacted a ride. The (userId, rideId) unique
-     * constraint makes a re-tap a no-op update (so the phone can be re-revealed
-     * without a duplicate-key 500). Returns the contact's timestamp.
+     * Idempotently record (or refresh) a contact on (userId, rideId), writing the
+     * Step-19 snapshot so the row renders after the ride hard-deletes. contactedAt is
+     * NOT in `update`, so a re-tap preserves the original first-contact time.
      */
-    async recordContact(userId, rideId) {
+    async recordContact(userId, rideId, snapshot) {
       return prisma.rideContact.upsert({
         where: { userId_rideId: { userId, rideId } },
-        create: { userId, rideId },
-        update: {},
+        create: { userId, rideId, ...snapshot },
+        update: { ...snapshot },
         select: { contactedAt: true },
       });
     },

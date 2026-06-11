@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, CONTACT_RATE_LIMIT, isSubscriptionActive } = require('@easecab/shared');
+const { AppError, ERROR_CODES, CONTACT_RATE_LIMIT, isSubscriptionActive, CONTACT_SOURCE } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
 /**
@@ -77,7 +77,14 @@ function createRidesService({ repo }) {
       if (count > CONTACT_RATE_LIMIT.MAX_PER_WINDOW) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
-      const { contactedAt } = await repo.recordContact(userId, rideId);
+      const snapshot = {
+        source: CONTACT_SOURCE.BOT,
+        fromCityName: ride.pickupCity?.canonicalName ?? ride.pickupRaw ?? null,
+        toCityName: ride.dropCity?.canonicalName ?? ride.dropRaw ?? null,
+        vehicleType: ride.vehicleType ?? null,
+        revealedPhone: ride.phoneNumber,
+      };
+      const { contactedAt } = await repo.recordContact(userId, rideId, snapshot);
       return { phoneNumber: ride.phoneNumber, contactedAt };
     },
   };

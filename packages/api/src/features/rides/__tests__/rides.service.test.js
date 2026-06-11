@@ -157,3 +157,23 @@ test('contactRide throws RATE_LIMITED past the per-user reveal cap (no record/re
     (e) => e.code === ERROR_CODES.RATE_LIMITED,
   );
 });
+
+test('contactRide records a bot-source snapshot (route, vehicle, revealed phone)', async () => {
+  const recorded = [];
+  const repo = {
+    findRideContactTarget: async () => ({
+      id: 'r1', phoneNumber: '+919876500000', vehicleType: 'Sedan',
+      pickupRaw: 'ldh', dropRaw: null,
+      pickupCity: { canonicalName: 'Ludhiana' }, dropCity: null,
+    }),
+    findSubscriptionByUserId: async () => ({ status: 'active', expiresAt: FUTURE, trialExpiresAt: null }),
+    incrementContactCount: async () => 1,
+    recordContact: async (userId, rideId, snapshot) => { recorded.push({ userId, rideId, snapshot }); return { contactedAt: new Date() }; },
+  };
+  const out = await createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' });
+  assert.strictEqual(out.phoneNumber, '+919876500000');
+  assert.deepStrictEqual(recorded[0].snapshot, {
+    source: 'bot', fromCityName: 'Ludhiana', toCityName: null,
+    vehicleType: 'Sedan', revealedPhone: '+919876500000',
+  });
+});
