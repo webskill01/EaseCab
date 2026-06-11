@@ -51,6 +51,29 @@ export function Check({ size = 14, className }) {
   )
 }
 
+/** Trash — delete. */
+export function Trash({ size = 16, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={2}>
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  )
+}
+
+/** Repeat — repost. */
+export function Repeat({ size = 16, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={2}>
+      <path d="m17 2 4 4-4 4" />
+      <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+      <path d="m7 22-4-4 4-4" />
+      <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+    </svg>
+  )
+}
+
 /** Map pin — location. */
 export function Pin({ size = 18, className }) {
   return (
