@@ -34,6 +34,34 @@ export function matchesCity(vm, cityId) {
   return vm.cityIds.includes(cityId)
 }
 
+/** @param {object} p - a public posted-ride row from /posted-rides/mine (My Rides → Posted) */
+export function toMyPostVM(p) {
+  return {
+    id: p.id,
+    from: cityLabel(p.fromCityName, p.fromCityRaw),
+    to: cityLabel(p.toCityName, p.toCityRaw),
+    vehicleType: p.vehicleType ?? null,
+    fare: p.fare ?? null,
+    date: p.rideDate ?? null,
+    status: p.status, // 'active' | 'done'
+    isClosed: p.isClosed,
+    createdAt: p.createdAt,
+  }
+}
+
+/** @param {object} c - a /me/contacted item (My Rides → Contacted) */
+export function toContactedVM(c) {
+  return {
+    kind: c.source === 'posted' ? RIDE_KIND.VERIFIED : RIDE_KIND.BOT,
+    id: c.id,
+    from: cityLabel(c.fromCityName, null),
+    to: cityLabel(c.toCityName, null),
+    vehicleType: c.vehicleType ?? null,
+    phone: c.phoneNumber ?? null,
+    contactedAt: c.contactedAt,
+  }
+}
+
 /** @param {object} p - a public posted (verified) ride row */
 export function toVerifiedVM(p) {
   return {

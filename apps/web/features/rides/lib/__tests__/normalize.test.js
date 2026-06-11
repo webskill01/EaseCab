@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { toBotVM, toVerifiedVM, matchesCity } from '../normalize'
+import { toBotVM, toVerifiedVM, matchesCity, toMyPostVM, toContactedVM } from '../normalize'
+
+describe('My Rides view-models', () => {
+  it('toMyPostVM keeps the real status + isClosed for the Posted tab', () => {
+    const vm = toMyPostVM({ id: 'p1', fromCityName: 'Mohali', fromCityRaw: null, toCityName: null, toCityRaw: 'manali', vehicleType: 'Innova', fare: 4200, rideDate: null, status: 'active', isClosed: false, createdAt: '2026-06-11T00:00:00Z' })
+    expect(vm).toMatchObject({ id: 'p1', from: 'Mohali', to: 'Manali', status: 'active', isClosed: false, fare: 4200 })
+  })
+
+  it('toContactedVM maps posted source to the verified kind and keeps the phone', () => {
+    const vm = toContactedVM({ id: 'k1', source: 'posted', fromCityName: 'Ludhiana', toCityName: 'Delhi', vehicleType: 'Sedan', phoneNumber: '+919876500000', contactedAt: '2026-06-11T00:00:00Z' })
+    expect(vm).toMatchObject({ id: 'k1', kind: 'verified', from: 'Ludhiana', to: 'Delhi', phone: '+919876500000' })
+  })
+})
 
 describe('matchesCity', () => {
   const vm = { cityIds: ['c1', 'c2'] }
