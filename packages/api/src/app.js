@@ -31,6 +31,9 @@ const { createCitiesRouter } = require('./features/cities/cities.route');
 const { createPostedRidesRepository } = require('./features/posted-rides/postedRides.repository');
 const { createPostedRidesService } = require('./features/posted-rides/postedRides.service');
 const { createPostedRidesRouter } = require('./features/posted-rides/postedRides.route');
+const { createMeRepository } = require('./features/me/me.repository');
+const { createMeService } = require('./features/me/me.service');
+const { createMeRouter } = require('./features/me/me.route');
 const { createChatRepository } = require('./features/chat/chat.repository');
 const { createChatService } = require('./features/chat/chat.service');
 const { createChatRouter } = require('./features/chat/chat.route');
@@ -164,6 +167,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
   const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger });
   v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, requireAuth }));
+
+  // My Rides → Contacted (Step 19) — the caller's snapshotted contacts.
+  const meRepo = createMeRepository({ prisma });
+  const meService = createMeService({ repo: meRepo });
+  v1.use('/me', createMeRouter({ service: meService, requireAuth }));
 
   // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole
   // writer to both Postgres (durable) and Firestore (realtime, via chatStore).
