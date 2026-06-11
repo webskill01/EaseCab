@@ -2,7 +2,7 @@
 
 const {
   AppError, ERROR_CODES, POSTED_RIDES, POSTED_RIDE_STATUS, CONTACT_RATE_LIMIT,
-  hasSubmittedKyc, isSubscriptionActive,
+  hasSubmittedKyc, isSubscriptionActive, CONTACT_SOURCE,
 } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
@@ -112,7 +112,14 @@ function createPostedRidesService({ repo, logger }) {
       if (count > CONTACT_RATE_LIMIT.MAX_PER_WINDOW) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
-      const { contactedAt } = await repo.recordContact(userId, postedRideId);
+      const snapshot = {
+        source: CONTACT_SOURCE.POSTED,
+        fromCityName: post.fromCity?.canonicalName ?? post.fromCityRaw ?? null,
+        toCityName: post.toCity?.canonicalName ?? post.toCityRaw ?? null,
+        vehicleType: post.vehicleType ?? null,
+        revealedPhone: post.phone,
+      };
+      const { contactedAt } = await repo.recordContact(userId, postedRideId, snapshot);
       return { phoneNumber: post.phone, contactedAt };
     },
 

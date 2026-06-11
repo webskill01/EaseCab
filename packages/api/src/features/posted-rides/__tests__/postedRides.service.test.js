@@ -104,6 +104,24 @@ test('contactPost: reveals phone + records when subscribed and under cap', async
   assert.ok(out.contactedAt);
 });
 
+test('contactPost records a posted-source snapshot for a subscribed contacter', async () => {
+  const recorded = [];
+  const repo = baseRepo({ sub: ACTIVE_SUB, count: 1 });
+  repo.findContactTarget = async () => ({
+    id: 'p1', phone: '+919811111111', postedBy: 'owner', vehicleType: 'Innova',
+    fromCityRaw: null, toCityRaw: 'manali',
+    fromCity: { canonicalName: 'Mohali' }, toCity: null,
+  });
+  repo.recordContact = async (userId, postedRideId, snapshot) => { recorded.push(snapshot); return { contactedAt: new Date() }; };
+  const out = await createPostedRidesService({ repo }).contactPost({ userId: 'u1', postedRideId: 'p1' });
+  assert.equal(out.phoneNumber, '+919811111111');
+  // toCityName is the raw 'manali' — no resolved name, mirrors fromCity.canonicalName ?? fromCityRaw.
+  assert.deepEqual(recorded[0], {
+    source: 'posted', fromCityName: 'Mohali', toCityName: 'manali',
+    vehicleType: 'Innova', revealedPhone: '+919811111111',
+  });
+});
+
 test('closePost / removePost: NOT_FOUND when nothing was updated (non-owner)', async () => {
   const close0 = createPostedRidesService({ repo: baseRepo({ closeCount: 0 }) });
   await assert.rejects(() => close0.closePost({ userId: 'u1', postedRideId: 'p1' }), code('NOT_FOUND'));

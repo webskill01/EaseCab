@@ -126,11 +126,16 @@ function createPostedRidesRepository({ prisma, redis }) {
       });
     },
 
-    /** Existence + unmasked phone + owner for a contact reveal; null if gone/closed/expired. */
+    /** Existence + unmasked phone + owner + snapshot fields for a reveal; null if gone/closed/expired. */
     async findContactTarget(id) {
       return prisma.postedRide.findFirst({
         where: { id, status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() } },
-        select: { id: true, phone: true, postedBy: true },
+        select: {
+          id: true, phone: true, postedBy: true, vehicleType: true,
+          fromCityRaw: true, toCityRaw: true,
+          fromCity: { select: { canonicalName: true } },
+          toCity: { select: { canonicalName: true } },
+        },
       });
     },
 
@@ -151,12 +156,12 @@ function createPostedRidesRepository({ prisma, redis }) {
       return fixedWindowIncr(redis, contactCountKey(userId), windowSec);
     },
 
-    /** Idempotently record a contact on (userId, postedRideId). Re-tap = no-op update. */
-    async recordContact(userId, postedRideId) {
+    /** Idempotently record (or refresh) a contact on (userId, postedRideId) with the Step-19 snapshot. */
+    async recordContact(userId, postedRideId, snapshot) {
       return prisma.rideContact.upsert({
         where: { userId_postedRideId: { userId, postedRideId } },
-        create: { userId, postedRideId },
-        update: {},
+        create: { userId, postedRideId, ...snapshot },
+        update: { ...snapshot },
         select: { contactedAt: true },
       });
     },
