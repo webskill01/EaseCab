@@ -40,6 +40,13 @@ enum RideStatus {
   hidden
 }
 
+// Which feed a recorded contact came from — persisted on RideContact so the
+// "Contacted" list survives the source ride's hard-delete (Step 19 snapshot).
+enum ContactSource {
+  bot
+  posted
+}
+
 enum PostedRideStatus {
   active
   done
@@ -396,17 +403,27 @@ model VerificationSubmission {
 model RideContact {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
-  rideId       String?  @map("ride_id") @db.Uuid          // bot ride
-  postedRideId String?  @map("posted_ride_id") @db.Uuid   // verified ride
+  rideId       String?  @map("ride_id") @db.Uuid          // bot ride (SetNull on hard-delete)
+  postedRideId String?  @map("posted_ride_id") @db.Uuid   // verified ride (SetNull on hard-delete)
   contactedAt  DateTime @default(now()) @map("contacted_at") @db.Timestamptz(6)
 
+  // Snapshot captured at reveal time so the "Contacted" list survives the source
+  // ride's 12h hard-delete (Step 19). `source` distinguishes which feed it came from
+  // once rideId/postedRideId are nulled by SetNull. Nullable: pre-Step-19 rows have none.
+  source        ContactSource? @map("source")
+  fromCityName  String?        @map("from_city_name")
+  toCityName    String?        @map("to_city_name")
+  vehicleType   String?        @map("vehicle_type")
+  revealedPhone String?        @map("revealed_phone")
+
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ride       Ride?       @relation(fields: [rideId], references: [id], onDelete: Cascade)
-  postedRide PostedRide? @relation(fields: [postedRideId], references: [id], onDelete: Cascade)
+  ride       Ride?       @relation(fields: [rideId], references: [id], onDelete: SetNull)
+  postedRide PostedRide? @relation(fields: [postedRideId], references: [id], onDelete: SetNull)
 
   @@unique([userId, rideId])
   @@unique([userId, postedRideId])
   @@index([userId])
+  @@index([userId, contactedAt])
   @@index([rideId])
   @@index([postedRideId])
   @@map("ride_contacts")
