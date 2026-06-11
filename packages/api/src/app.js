@@ -30,7 +30,9 @@ const { createCitiesService } = require('./features/cities/cities.service');
 const { createCitiesRouter } = require('./features/cities/cities.route');
 const { createPostedRidesRepository } = require('./features/posted-rides/postedRides.repository');
 const { createPostedRidesService } = require('./features/posted-rides/postedRides.service');
+const { createPostParser } = require('./features/posted-rides/postedRides.parse');
 const { createPostedRidesRouter } = require('./features/posted-rides/postedRides.route');
+const { createCityResolver } = require('@easecab/shared');
 const { createMeRepository } = require('./features/me/me.repository');
 const { createMeService } = require('./features/me/me.service');
 const { createMeRouter } = require('./features/me/me.route');
@@ -163,10 +165,16 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   v1.use('/cities', createCitiesRouter({ service: citiesService, requireAuth }));
 
   // Posted rides (Step 13) — authed app-native posts (24h TTL); KYC-gated create,
-  // subscription-gated contact.
+  // subscription-gated contact. The free-text parser (Step 20) reuses the shared
+  // CityResolver + extractors to turn a pasted message into a draft preview.
   const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
   const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger });
-  v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, requireAuth }));
+  const postParser = createPostParser({
+    repo: postedRidesRepo,
+    resolver: createCityResolver({ prisma, redis, logger }),
+    logger,
+  });
+  v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, parser: postParser, requireAuth }));
 
   // My Rides → Contacted (Step 19) — the caller's snapshotted contacts.
   const meRepo = createMeRepository({ prisma });

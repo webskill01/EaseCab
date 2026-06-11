@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { HTTP_STATUS, postedRideCreateSchema, postedRidesListQuerySchema, postedRideIdParamSchema } = require('@easecab/shared');
+const { HTTP_STATUS, postedRideCreateSchema, postedRideParseSchema, postedRidesListQuerySchema, postedRideIdParamSchema } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
@@ -12,10 +12,11 @@ const { sendSuccess } = require('../../http/respond');
  *
  * @param {object} deps
  * @param {ReturnType<import('./postedRides.service').createPostedRidesService>} deps.service
+ * @param {ReturnType<import('./postedRides.parse').createPostParser>} deps.parser
  * @param {import('express').RequestHandler} deps.requireAuth
  * @returns {import('express').Router}
  */
-function createPostedRidesRouter({ service, requireAuth }) {
+function createPostedRidesRouter({ service, parser, requireAuth }) {
   const router = express.Router();
   router.use(requireAuth);
 
@@ -23,6 +24,13 @@ function createPostedRidesRouter({ service, requireAuth }) {
   router.post('/', validate(postedRideCreateSchema), async (req, res) => {
     const data = await service.createPost(req.user.id, req.valid.body);
     sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
+  });
+
+  // POST /api/v1/posted-rides/parse — read-only free-text → draft preview (Step 20).
+  // Auth only; NOT verification-gated — the soft gate fires at create.
+  router.post('/parse', validate(postedRideParseSchema), async (req, res) => {
+    const data = await parser.parse(req.valid.body.text);
+    sendSuccess(res, { data });
   });
 
   // GET /api/v1/posted-rides — public masked feed, cursor-paginated.

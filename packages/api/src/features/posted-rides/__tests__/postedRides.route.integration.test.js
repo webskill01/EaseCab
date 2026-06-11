@@ -27,7 +27,19 @@ function fakePrisma(seed = {}) {
   return {
     _posts: posts, _contacts: contacts,
     user: { async findUnique({ where }) { return (seed.users || {})[where.id] || null; } },
-    city: { async findMany({ where }) { return (seed.cities || []).filter((c) => where.id.in.includes(c.id)); } },
+    city: {
+      async findMany({ where }) {
+        // Step-20 parse vocab query (where.isActive, no id filter): return city
+        // names (each with no aliases) so extractCities has a vocabulary.
+        if (!where.id) return (seed.vocab || []).map((name) => ({ canonicalName: name, aliases: [] }));
+        return (seed.cities || []).filter((c) => where.id.in.includes(c.id));
+      },
+      // CityResolver exact-match layer — null keeps the fragment unresolved (raw fallback).
+      async findFirst() { return null; },
+    },
+    // CityResolver exact-alias layer + unresolved-queue upsert (Step-20 parse path).
+    cityAlias: { async findFirst() { return null; } },
+    unresolvedCityString: { async upsert() { return {}; } },
     subscription: { async findUnique({ where }) { return (seed.subs || {})[where.userId] || null; } },
     async $queryRaw() { return seed.cityRows || []; },
     postedRide: {
@@ -146,4 +158,29 @@ test('unauthenticated → 401 on the feed', async () => {
   const app = makeApp({});
   const res = await request(app).get('/api/v1/posted-rides');
   assert.equal(res.status, 401);
+});
+
+test('POST /posted-rides/parse → 401 when unauthenticated', async () => {
+  const app = makeApp({});
+  const res = await request(app).post('/api/v1/posted-rides/parse').send({ text: 'Delhi to Chandigarh 9876543210' });
+  assert.equal(res.status, 401);
+});
+
+test('POST /posted-rides/parse → 422 on empty text (NOT verification-gated)', async () => {
+  const app = makeApp({});
+  const res = await request(app).post('/api/v1/posted-rides/parse').set('Cookie', cookieFor('u1')).send({ text: '' });
+  assert.equal(res.status, 422);
+  assert.equal(res.body.error.code, 'VALIDATION_ERROR');
+});
+
+test('POST /posted-rides/parse → 200 draft (route fragments + phone, no gate)', async () => {
+  const app = makeApp({ vocab: ['Delhi', 'Chandigarh'] });
+  const res = await request(app).post('/api/v1/posted-rides/parse').set('Cookie', cookieFor('u1')).send({ text: 'Innova chahiye Delhi to Chandigarh call 9876543210' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.success, true);
+  assert.equal(res.body.data.phone, '+919876543210');
+  assert.equal(res.body.data.vehicleType, 'Innova');
+  // Resolver finds no exact/fuzzy match in the fake DB → raw fragment preserved.
+  assert.equal(res.body.data.fromCityRaw, 'Delhi');
+  assert.equal(res.body.data.toCityRaw, 'Chandigarh');
 });

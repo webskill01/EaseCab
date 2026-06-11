@@ -52,6 +52,26 @@ function createPostedRidesRepository({ prisma, redis }) {
       });
     },
 
+    /**
+     * Extraction vocabulary for the free-text parser (Step 20): every active
+     * city's canonical name plus all of its alias spellings, so extractCities can
+     * DETECT alias forms; the CityResolver then maps the fragment to a canonical
+     * id. Mirrors the bot's loadCityVocab.
+     * @returns {Promise<string[]>}
+     */
+    async listCityVocabulary() {
+      const cities = await prisma.city.findMany({
+        where: { isActive: true },
+        select: { canonicalName: true, aliases: { select: { aliasText: true } } },
+      });
+      const vocab = [];
+      for (const c of cities) {
+        vocab.push(c.canonicalName);
+        for (const a of c.aliases) vocab.push(a.aliasText);
+      }
+      return vocab;
+    },
+
     /** Which of the given city ids exist + are active. Returns a Set for O(1) checks. */
     async findExistingCityIds(ids) {
       const rows = await prisma.city.findMany({ where: { id: { in: ids }, isActive: true }, select: { id: true } });
