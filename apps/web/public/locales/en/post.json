@@ -1,0 +1,36 @@
+{
+  "tabs": { "form": "Fill the form", "paste": "Paste a message" },
+  "post": {
+    "from": "Pickup city",
+    "to": "Drop city",
+    "vehicle": "Vehicle type",
+    "date": "Date",
+    "time": "Time",
+    "fare": "Fare (optional)",
+    "contact": "Contact number",
+    "notes": "Special note (optional)",
+    "searchCity": "Search city",
+    "noResults": "No matches",
+    "swap": "Swap pickup and drop",
+    "verifiedNote": "Aadhaar-verified members' duties post instantly",
+    "submit": "Post Ride"
+  },
+  "paste": {
+    "boxLabel": "Paste the ride message",
+    "placeholder": "Paste a WhatsApp ride message here…",
+    "read": "Read message",
+    "previewTitle": "Here's what we read",
+    "noDate": "— add in form",
+    "edit": "Edit fields",
+    "looksGood": "Looks good — post",
+    "failed": "Couldn't read that message",
+    "useForm": "Use the form instead"
+  },
+  "gate": {
+    "title": "Get verified to post",
+    "body": "Complete Aadhaar verification to post duties to the feed.",
+    "cta": "Verify now"
+  },
+  "success": { "title": "Duty posted", "viewMine": "View my rides" },
+  "error": { "generic": "Couldn't post your ride. Please try again." }
+}
