@@ -93,8 +93,11 @@ function makeApp(seed) {
   });
 }
 
-const VERIFIED = { aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false };
-const UNVERIFIED = { aadhaarVerified: false, dlSubmitted: false, rcSubmitted: false };
+const VERIFIED = {
+  aadhaarVerified: true, name: 'Gur', bio: 'driver', baseCity: 'Ludhiana',
+  vehicleType: 'Innova', profilePicUrl: 'https://r2/dp.jpg', languagesSpoken: ['pa'],
+};
+const UNVERIFIED = { ...VERIFIED, aadhaarVerified: false };
 const ACTIVE_SUB = { status: 'active', expiresAt: FUTURE, trialExpiresAt: null };
 
 test('POST /posted-rides → 403 VERIFICATION_REQUIRED when no KYC doc', async () => {

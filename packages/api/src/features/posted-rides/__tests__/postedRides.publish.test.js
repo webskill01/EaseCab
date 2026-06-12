@@ -23,7 +23,9 @@ function fakeRepo(over = {}) {
   const calls = { published: [] };
   return {
     calls,
-    async getUserKycFlags() { return { aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false }; },
+    async getUserKycFlags() {
+      return { aadhaarVerified: true, name: 'Gur', bio: 'driver', baseCity: 'Ludhiana', vehicleType: 'Innova', profilePicUrl: 'https://r2/dp.jpg', languagesSpoken: ['pa'] };
+    },
     async findExistingCityIds(ids) { return new Set(ids); },
     async createPost(data) { return { id: 'p9', fromCityId: data.fromCityId ?? null, toCityId: data.toCityId ?? null, fromCityRaw: null, toCityRaw: null, vehicleType: null, fare: null, rideDate: null, rideTime: null, notes: null, status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date() }; },
     async publishCreated(arg) { calls.published.push(arg); if (over.publishThrows) throw new Error('redis down'); },

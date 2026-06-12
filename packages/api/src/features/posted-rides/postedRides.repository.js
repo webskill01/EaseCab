@@ -44,11 +44,16 @@ function createPostedRidesRepository({ prisma, redis }) {
   const contactCountKey = (userId) => redisKey('contact', userId);
 
   return {
-    /** The poster's KYC flags for the create soft gate. null if the user is gone. */
+    /** The poster's L1 gate inputs (aadhaar + profile-completeness fields) for the
+     * create soft gate. null if the user is gone. dl/rc flags belong to the L2 admin
+     * badge, not the posting gate (Step 21b). */
     async getUserKycFlags(userId) {
       return prisma.user.findUnique({
         where: { id: userId },
-        select: { aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true },
+        select: {
+          aadhaarVerified: true, name: true, bio: true, baseCity: true,
+          vehicleType: true, profilePicUrl: true, languagesSpoken: true,
+        },
       });
     },
 

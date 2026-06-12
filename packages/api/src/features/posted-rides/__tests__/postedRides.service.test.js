@@ -11,9 +11,15 @@ const code = (expected) => (err) => {
 
 const ACTIVE_SUB = { status: 'active', expiresAt: new Date(Date.now() + 86_400_000), trialExpiresAt: null };
 
+/** L1-complete posting profile (Step 21b): aadhaar verified + every profile field present. */
+const L1_OK = Object.freeze({
+  aadhaarVerified: true, name: 'Gur', bio: 'driver', baseCity: 'Ludhiana',
+  vehicleType: 'Innova', profilePicUrl: 'https://r2/dp.jpg', languagesSpoken: ['pa'],
+});
+
 function baseRepo(over = {}) {
   return {
-    async getUserKycFlags() { return over.flags ?? { aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false }; },
+    async getUserKycFlags() { return over.flags ?? L1_OK; },
     async findExistingCityIds(ids) { return new Set(over.existing ?? ids); },
     async createPost(input) { return { id: 'p1', status: 'active', isClosed: false, createdAt: new Date(), ...input, phone: undefined }; },
     async listActivePosts() { return over.active ?? []; },
@@ -27,8 +33,13 @@ function baseRepo(over = {}) {
   };
 }
 
-test('createPost: throws VERIFICATION_REQUIRED when the user has no KYC doc', async () => {
-  const svc = createPostedRidesService({ repo: baseRepo({ flags: { aadhaarVerified: false, dlSubmitted: false, rcSubmitted: false } }) });
+test('createPost: throws VERIFICATION_REQUIRED when aadhaar is not verified', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ flags: { ...L1_OK, aadhaarVerified: false } }) });
+  await assert.rejects(() => svc.createPost('u1', { fromCityRaw: 'a', toCityRaw: 'b', phone: '+919876543210' }), code('VERIFICATION_REQUIRED'));
+});
+
+test('createPost: throws VERIFICATION_REQUIRED when aadhaar verified but profile incomplete', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ flags: { ...L1_OK, profilePicUrl: null } }) });
   await assert.rejects(() => svc.createPost('u1', { fromCityRaw: 'a', toCityRaw: 'b', phone: '+919876543210' }), code('VERIFICATION_REQUIRED'));
 });
 
