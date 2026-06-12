@@ -1,5 +1,5 @@
 {
   "check-coverage": true,
   "lines": 70, "statements": 70, "functions": 70, "branches": 70,
-  "exclude": ["**/__tests__/**", "**/index.js", "config/env.js", "config/serverEnv.js", "src/cron/worker.js", "src/server.js", "src/lib/firebaseAdmin.js", "src/lib/firestoreChat.js", "src/lib/fcm.js", "src/lib/razorpay.js", "src/lib/surepass.js", "prisma/**", "scripts/**", "coverage/**"]
+  "exclude": ["**/__tests__/**", "**/index.js", "config/env.js", "config/serverEnv.js", "src/cron/worker.js", "src/server.js", "src/lib/firebaseAdmin.js", "src/lib/firestoreChat.js", "src/lib/fcm.js", "src/lib/razorpay.js", "src/lib/surepass.js", "src/lib/r2.js", "prisma/**", "scripts/**", "coverage/**"]
 }
