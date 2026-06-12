@@ -43,6 +43,8 @@ const { createPushRepository } = require('./features/push/push.repository');
 const { createPushService } = require('./features/push/push.service');
 const { createPushRouter } = require('./features/push/push.route');
 const { createPushDispatcher } = require('./features/push/pushDispatcher');
+const { createUploadsService } = require('./features/uploads/uploads.service');
+const { createUploadsRouter } = require('./features/uploads/uploads.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -78,9 +80,12 @@ const { createPushDispatcher } = require('./features/push/pushDispatcher');
  * @param {import('ioredis').Redis} [deps.pushSubscriber] - dedicated subscriber
  *   (a second `redis.duplicate()`) backing the live city-targeted push fan-out. The
  *   dispatcher starts only when BOTH pushSubscriber and pushSender are provided.
+ * @param {{ presignPost, presignGet, headObject, publicUrl }} [deps.uploads] - injected
+ *   Cloudflare R2 boundary (Step 21a). Optional like chatStore/pushSender — only the
+ *   uploads routes touch it, so harnesses that don't exercise uploads may omit it.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber }) {
+function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber, uploads }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -199,6 +204,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     pushDispatcher.start().catch((err) => logger.error({ err: err.message }, 'push dispatcher subscribe failed'));
     app.locals.pushDispatcher = pushDispatcher;
   }
+
+  // Uploads (Step 21a) — authed presigned-POST issuance for DP/car/KYC images.
+  // R2 boundary injected as `uploads` (optional); bytes go direct to R2, never here.
+  const uploadsService = createUploadsService({ r2: uploads });
+  v1.use('/uploads', createUploadsRouter({ service: uploadsService, requireAuth }));
 
   app.use('/api/v1', v1);
 
