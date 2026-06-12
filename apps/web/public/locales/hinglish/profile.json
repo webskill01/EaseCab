@@ -42,6 +42,6 @@
     "verified": "Verified",
     "underReview": "Review mein"
   },
-  "soon": "Membership, notifications aur settings jald aa rahe hain.",
+  "nav": { "membership": "Membership", "settings": "Settings" },
   "error": { "load": "Aapki profile load nahi ho saki.", "save": "Save nahi ho saka. Phir try karo." }
 }

@@ -7,11 +7,13 @@ import mineEn from '../public/locales/en/mine.json'
 import postEn from '../public/locales/en/post.json'
 import profileEn from '../public/locales/en/profile.json'
 import verificationEn from '../public/locales/en/verification.json'
+import membershipEn from '../public/locales/en/membership.json'
+import settingsEn from '../public/locales/en/settings.json'
 
 /** Render a component inside the next-intl provider with the English messages. */
 export function renderWithIntl(ui) {
   return render(
-    <NextIntlClientProvider locale="en" messages={{ common: en, auth: authEn, rides: ridesEn, mine: mineEn, post: postEn, profile: profileEn, verification: verificationEn }}>
+    <NextIntlClientProvider locale="en" messages={{ common: en, auth: authEn, rides: ridesEn, mine: mineEn, post: postEn, profile: profileEn, verification: verificationEn, membership: membershipEn, settings: settingsEn }}>
       {ui}
     </NextIntlClientProvider>,
   )

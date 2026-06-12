@@ -1,0 +1,24 @@
+{
+  "title": "Settings",
+  "notifications": {
+    "title": "Ride alerts",
+    "botRides": "Bot-feed ride alerts",
+    "botRidesHint": "New leads from the WhatsApp feed",
+    "postedRides": "Verified ride alerts",
+    "postedRidesHint": "Duties posted by verified drivers",
+    "cities": {
+      "title": "Alert cities",
+      "add": "Add a city",
+      "empty": "No cities yet — add one to get alerts.",
+      "max": "You can add up to {max} cities.",
+      "remove": "Remove {city}"
+    }
+  },
+  "language": { "title": "Language" },
+  "support": { "title": "Support", "cta": "Get help" },
+  "logout": "Log out",
+  "error": {
+    "load": "Couldn't load your settings.",
+    "save": "Couldn't save. Please try again."
+  }
+}

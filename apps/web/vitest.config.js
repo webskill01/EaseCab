@@ -28,6 +28,7 @@ export default defineConfig({
       exclude: [
         'features/auth/lib/firebaseClient.js',
         'features/auth/services/otpClient.js',
+        'features/subscription/services/razorpayClient.js',
         '**/__tests__/**',
       ],
     },

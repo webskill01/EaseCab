@@ -75,3 +75,26 @@ test('recordCaptureAndExtend: first credit flips created→captured + updates su
   assert.strictEqual(r2.duplicate, true);
   assert.strictEqual(subUpdates.length, 1); // NOT extended again
 });
+
+test('listCapturedPayments: keyset captured-only query, newest-first, take limit+1', async () => {
+  let captured;
+  const prisma = {
+    payment: {
+      async findMany(args) { captured = args; return [{ id: 'p2', amount: 14900, status: 'captured', razorpayPaymentId: 'pay_2', updatedAt: new Date('2026-06-10') }]; },
+    },
+  };
+  const repo = createSubscriptionRepository({ prisma, redis: fakeRedis() });
+
+  // No cursor → no OR clause.
+  await repo.listCapturedPayments({ userId: 'u1', updatedAt: undefined, id: undefined, limit: 20 });
+  assert.strictEqual(captured.where.userId, 'u1');
+  assert.strictEqual(captured.where.status, 'captured');
+  assert.strictEqual(captured.where.OR, undefined);
+  assert.strictEqual(captured.take, 21);
+  assert.deepStrictEqual(captured.orderBy, [{ updatedAt: 'desc' }, { id: 'desc' }]);
+
+  // With cursor → keyset OR.
+  const at = new Date('2026-06-09');
+  await repo.listCapturedPayments({ userId: 'u1', updatedAt: at, id: 'p9', limit: 20 });
+  assert.deepStrictEqual(captured.where.OR, [{ updatedAt: { lt: at } }, { updatedAt: at, id: { lt: 'p9' } }]);
+});

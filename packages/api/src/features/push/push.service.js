@@ -32,13 +32,19 @@ function createPushService({ repo, pushSender }) {
       return { removed };
     },
 
-    /** Read the caller's notification preferences. NOT_FOUND if the user is gone. */
+    /**
+     * Read the caller's notification preferences. NOT_FOUND if the user is gone.
+     * Also resolves the stored city UUIDs to `cities:[{id,name}]` so the settings UI
+     * can render saved alert cities by name (Step 21d).
+     */
     async getPreferences(userId) {
       const prefs = await repo.getPreferences(userId);
       if (!prefs) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
-      return prefs;
+      const ids = prefs.notificationCities ?? [];
+      const cities = ids.length ? await repo.listCitiesByIds(ids) : [];
+      return { ...prefs, cities };
     },
 
     /** Update preferences; any picked city ids must exist + be active (else VALIDATION_ERROR). */

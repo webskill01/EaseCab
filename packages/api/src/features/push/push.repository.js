@@ -41,6 +41,12 @@ function createPushRepository({ prisma }) {
       return new Set(rows.map((r) => r.id));
     },
 
+    /** Resolve stored city ids to `{id,name}` for the settings UI (Step 21d). */
+    async listCitiesByIds(ids) {
+      const rows = await prisma.city.findMany({ where: { id: { in: ids } }, select: { id: true, canonicalName: true } });
+      return rows.map((r) => ({ id: r.id, name: r.canonicalName }));
+    },
+
     /** The user's notification preferences. null if the user is gone. */
     async getPreferences(userId) {
       return prisma.user.findUnique({

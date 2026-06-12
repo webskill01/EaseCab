@@ -34,4 +34,7 @@ const RAZORPAY = Object.freeze({
  */
 const CHECKOUT_RATE_LIMIT = Object.freeze({ MAX_PER_WINDOW: 5, WINDOW_SEC: 60 });
 
-module.exports = { SUBSCRIPTION_PLAN, PAYMENT_STATUS, RAZORPAY, CHECKOUT_RATE_LIMIT };
+/** Payment-history list pagination bounds (GET /subscription/payments, Step 21d). */
+const PAYMENTS = Object.freeze({ PAGE_LIMIT_DEFAULT: 20, PAGE_LIMIT_MAX: 50 });
+
+module.exports = { SUBSCRIPTION_PLAN, PAYMENT_STATUS, RAZORPAY, CHECKOUT_RATE_LIMIT, PAYMENTS };

@@ -1,6 +1,11 @@
 'use strict';
 
 const { redisKey, RAZORPAY, PAYMENT_STATUS, SUBSCRIPTION_STATUS } = require('@easecab/shared');
+
+/** Columns that render a payment-history row (never the order/internal ids beyond payment id). */
+const PAYMENT_HISTORY_SELECT = Object.freeze({
+  id: true, amount: true, status: true, razorpayPaymentId: true, updatedAt: true,
+});
 const { getCachedSub, setCachedSub, delCachedSub } = require('../../lib/subscriptionCache');
 const { fixedWindowIncr } = require('../../lib/rateLimit');
 
@@ -114,6 +119,23 @@ function createSubscriptionRepository({ prisma, redis }) {
     /** Invalidate the cached snapshot (called after every credit). */
     async invalidateSubCache(userId) {
       await delCachedSub(redis, userId);
+    },
+
+    /**
+     * One keyset page of the user's CAPTURED payments, newest-first. Covered by
+     * @@index([userId, status]); `updatedAt` is the capture time (Step 21d).
+     */
+    async listCapturedPayments({ userId, updatedAt, id, limit }) {
+      const where = { userId, status: PAYMENT_STATUS.CAPTURED };
+      if (updatedAt && id) {
+        where.OR = [{ updatedAt: { lt: updatedAt } }, { updatedAt, id: { lt: id } }];
+      }
+      return prisma.payment.findMany({
+        where,
+        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+        select: PAYMENT_HISTORY_SELECT,
+      });
     },
   };
 }

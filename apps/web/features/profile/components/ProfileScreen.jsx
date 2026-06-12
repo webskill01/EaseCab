@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { User } from '@/components/ui/icons'
+import { User, Crown, BellEdit, ChevR } from '@/components/ui/icons'
 import { LogoutButton } from '@/features/shell/components/LogoutButton'
 import { useProfile } from '../hooks/useProfile'
 import { useUpdateProfile } from '../hooks/useUpdateProfile'
@@ -58,7 +58,18 @@ export function ProfileScreen() {
         onStartL2={() => router.push('/verify?intent=driver')}
       />
 
-      <p className="px-1 text-center text-[12px] font-medium text-ec-ink40">{t('soon')}</p>
+      <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white">
+        <button type="button" onClick={() => router.push('/membership')} className="flex w-full items-center gap-3 border-b border-ec-line px-4 py-3.5 text-left">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><Crown size={18} /></span>
+          <span className="flex-1 text-[14px] font-bold text-ec-ink">{t('nav.membership')}</span>
+          <ChevR size={16} className="text-ec-ink40" />
+        </button>
+        <button type="button" onClick={() => router.push('/settings')} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><BellEdit size={18} /></span>
+          <span className="flex-1 text-[14px] font-bold text-ec-ink">{t('nav.settings')}</span>
+          <ChevR size={16} className="text-ec-ink40" />
+        </button>
+      </nav>
       <LogoutButton />
     </div>
   )

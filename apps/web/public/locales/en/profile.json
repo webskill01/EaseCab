@@ -42,6 +42,6 @@
     "verified": "Verified",
     "underReview": "Under review"
   },
-  "soon": "Membership, notifications and settings are coming soon.",
+  "nav": { "membership": "Membership", "settings": "Settings" },
   "error": { "load": "Couldn't load your profile.", "save": "Couldn't save. Please try again." }
 }

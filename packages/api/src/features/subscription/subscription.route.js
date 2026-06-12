@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { verifyPaymentSchema } = require('@easecab/shared');
+const { verifyPaymentSchema, paymentsListQuerySchema } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
@@ -33,6 +33,12 @@ function createSubscriptionRouter({ service, requireAuth }) {
   router.get('/me', requireAuth, async (req, res) => {
     const data = await service.getStatus(req.user.id);
     sendSuccess(res, { data });
+  });
+
+  // Captured-payment history for the membership screen (Step 21d) — cursor-paginated.
+  router.get('/payments', requireAuth, validate(paymentsListQuerySchema, 'query'), async (req, res) => {
+    const { payments, nextCursor } = await service.listPayments({ userId: req.user.id, ...req.valid.query });
+    sendSuccess(res, { data: { payments }, meta: { nextCursor } });
   });
 
   return router;

@@ -1,0 +1,24 @@
+{
+  "title": "Settings",
+  "notifications": {
+    "title": "Ride alerts",
+    "botRides": "Bot-feed ride alerts",
+    "botRidesHint": "WhatsApp feed se nayi leads",
+    "postedRides": "Verified ride alerts",
+    "postedRidesHint": "Verified drivers ki posted duties",
+    "cities": {
+      "title": "Alert cities",
+      "add": "City add karo",
+      "empty": "Abhi koi city nahi — alert ke liye ek add karo.",
+      "max": "Aap max {max} cities add kar sakte ho.",
+      "remove": "{city} hatao"
+    }
+  },
+  "language": { "title": "Language" },
+  "support": { "title": "Support", "cta": "Help lo" },
+  "logout": "Log out",
+  "error": {
+    "load": "Aapki settings load nahi ho saki.",
+    "save": "Save nahi ho saka. Phir try karo."
+  }
+}

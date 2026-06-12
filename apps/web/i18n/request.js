@@ -16,8 +16,10 @@ export default getRequestConfig(async () => {
   const post = (await import(`../public/locales/${locale}/post.json`)).default
   const profile = (await import(`../public/locales/${locale}/profile.json`)).default
   const verification = (await import(`../public/locales/${locale}/verification.json`)).default
+  const membership = (await import(`../public/locales/${locale}/membership.json`)).default
+  const settings = (await import(`../public/locales/${locale}/settings.json`)).default
   return {
     locale,
-    messages: { common, auth, rides, mine, post, profile, verification },
+    messages: { common, auth, rides, mine, post, profile, verification, membership, settings },
   }
 })

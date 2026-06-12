@@ -51,6 +51,13 @@ function fakePrisma() {
         }
         return { count: n };
       },
+      async findMany({ where, take }) {
+        const rows = payments
+          .filter((p) => p.userId === where.userId && p.status === where.status)
+          .map((p) => ({ id: p.id, amount: p.amount, status: p.status, razorpayPaymentId: p.razorpayPaymentId, updatedAt: p.updatedAt || new Date() }))
+          .reverse();
+        return rows.slice(0, take);
+      },
     },
     subscription: {
       async findUnique() { return { status: sub.status, trialExpiresAt: sub.trialExpiresAt, expiresAt: sub.expiresAt, paidStartedAt: sub.paidStartedAt }; },
@@ -110,4 +117,26 @@ test('GET /me returns the cached snapshot with isActive', async () => {
   const res = await request(appWith(fakePrisma())).get('/api/v1/subscriptions/me').set('Cookie', authCookie);
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.body.data.isActive, true); // trial still in-window
+});
+
+test('GET /payments requires auth', async () => {
+  const res = await request(appWith(fakePrisma())).get('/api/v1/subscriptions/payments');
+  assert.strictEqual(res.status, 401);
+});
+
+test('GET /payments returns the captured-payment history after a webhook credit', async () => {
+  const prisma = fakePrisma();
+  const app = appWith(prisma);
+  await request(app).post('/api/v1/subscriptions/checkout').set('Cookie', authCookie);
+  const body = { event: 'payment.captured', payload: { payment: { entity: { id: 'pay_1', order_id: 'order_new', amount: 14900 } } } };
+  const raw = JSON.stringify(body);
+  const sig = crypto.createHmac('sha256', CONFIG.razorpay.webhookSecret).update(raw).digest('hex');
+  await request(app).post('/api/v1/subscriptions/webhook').set('X-Razorpay-Signature', sig).set('Content-Type', 'application/json').send(raw);
+
+  const res = await request(app).get('/api/v1/subscriptions/payments').set('Cookie', authCookie);
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.data.payments.length, 1);
+  assert.strictEqual(res.body.data.payments[0].amount, 14900);
+  assert.strictEqual(res.body.data.payments[0].status, 'captured');
+  assert.strictEqual(res.body.meta.nextCursor, null);
 });

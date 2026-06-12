@@ -14,6 +14,7 @@ function fakeRepo(over = {}) {
     async registerToken(a) { calls.register.push(a); return { id: 'ps1', platform: a.platform, createdAt: new Date('2026-01-01') }; },
     async removeToken(a) { calls.remove.push(a); return over.removed ?? 1; },
     async findExistingCityIds(ids) { calls.cities.push(ids); return over.existing ?? new Set(ids); },
+    async listCitiesByIds(ids) { calls.listCities = ids; return (over.cityNames ?? ids.map((id) => ({ id, name: `City-${id.slice(0, 4)}` }))); },
     async getPreferences(id) { calls.getPrefs = id; return over.prefs === undefined ? { notificationCities: [], notifyBotRides: true, notifyPostedRides: true } : over.prefs; },
     async updatePreferences(id, data) { calls.update.push([id, data]); return { notificationCities: data.notificationCities ?? [], notifyBotRides: true, notifyPostedRides: true }; },
     async findTargetTokens(a) { calls.find.push(a); return over.tokens ?? []; },
@@ -38,6 +39,24 @@ test('unregisterToken reports the removed count', async () => {
 test('getPreferences throws NOT_FOUND when the user is gone', async () => {
   const svc = createPushService({ repo: fakeRepo({ prefs: null }) });
   await assert.rejects(svc.getPreferences('ghost'), (e) => e.code === 'NOT_FOUND');
+});
+
+test('getPreferences resolves stored city ids to {id,name} for the settings UI', async () => {
+  const repo = fakeRepo({
+    prefs: { notificationCities: [CITY], notifyBotRides: true, notifyPostedRides: false },
+    cityNames: [{ id: CITY, name: 'Ludhiana' }],
+  });
+  const out = await createPushService({ repo }).getPreferences('u1');
+  assert.deepEqual(out.notificationCities, [CITY]);
+  assert.deepEqual(out.cities, [{ id: CITY, name: 'Ludhiana' }]);
+  assert.equal(out.notifyPostedRides, false);
+});
+
+test('getPreferences returns an empty cities list without hitting the city lookup', async () => {
+  const repo = fakeRepo({ prefs: { notificationCities: [], notifyBotRides: true, notifyPostedRides: true } });
+  const out = await createPushService({ repo }).getPreferences('u1');
+  assert.deepEqual(out.cities, []);
+  assert.equal(repo.calls.listCities, undefined);
 });
 
 test('updatePreferences rejects an unknown city id with VALIDATION_ERROR', async () => {

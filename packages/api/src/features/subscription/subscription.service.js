@@ -10,6 +10,12 @@ const {
   computeRenewal,
 } = require('@easecab/shared');
 const { verifyPaymentSignature, verifyWebhookSignature } = require('../../lib/razorpaySignature');
+const { encodeCursor, decodeCursor } = require('../../lib/cursor');
+
+/** Client-safe payment-history row. `paidAt` = capture time (updatedAt). */
+function toPublicPayment(p) {
+  return { id: p.id, amount: p.amount, status: p.status, paymentId: p.razorpayPaymentId ?? null, paidAt: p.updatedAt };
+}
 
 /**
  * Subscription business logic (CLAUDE.md §4). Razorpay is injected (vendor boundary);
@@ -107,7 +113,21 @@ function createSubscriptionService({ repo, razorpay, config }) {
         isActive: isSubscriptionActive(sub),
       };
     },
+
+    /**
+     * Payment-history page for the membership screen (Step 21d). The shared cursor
+     * codec's `receivedAt` slot carries our `updatedAt` keyset (me/contacted does the same).
+     */
+    async listPayments({ userId, limit, cursor }) {
+      const key = cursor ? decodeCursor(cursor) : {};
+      const rows = await repo.listCapturedPayments({ userId, updatedAt: key.receivedAt, id: key.id, limit });
+      const hasMore = rows.length > limit;
+      const page = hasMore ? rows.slice(0, limit) : rows;
+      const last = page[page.length - 1];
+      const nextCursor = hasMore ? encodeCursor({ receivedAt: last.updatedAt, id: last.id }) : null;
+      return { payments: page.map(toPublicPayment), nextCursor };
+    },
   };
 }
 
-module.exports = { createSubscriptionService };
+module.exports = { createSubscriptionService, toPublicPayment };

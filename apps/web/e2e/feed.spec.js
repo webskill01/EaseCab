@@ -11,7 +11,7 @@ const nowIso = () => new Date().toISOString()
 
 async function mockFeed(page) {
   await page.route('**/api/v1/auth/refresh', (r) => r.fulfill(ok({ refreshed: true })))
-  await page.route('**/api/v1/subscription/me', (r) =>
+  await page.route('**/api/v1/subscriptions/me', (r) =>
     r.fulfill(ok({ status: 'trial', isActive: true, trialExpiresAt: new Date(Date.now() + 5 * 86400000).toISOString(), expiresAt: null })),
   )
   await page.route('**/api/v1/posted-rides**', (r) =>

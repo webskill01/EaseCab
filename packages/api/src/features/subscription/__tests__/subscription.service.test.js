@@ -119,3 +119,27 @@ test('getStatus returns the snapshot with isActive', async () => {
   assert.strictEqual(out.status, 'active');
   assert.strictEqual(out.isActive, true);
 });
+
+test('listPayments maps rows to the public shape and yields no cursor when not full', async () => {
+  const at = new Date('2026-06-10T00:00:00Z');
+  const repo = baseRepo({
+    async listCapturedPayments({ limit }) {
+      assert.strictEqual(limit, 20);
+      return [{ id: 'p1', amount: 14900, status: 'captured', razorpayPaymentId: 'pay_1', updatedAt: at }];
+    },
+  });
+  const svc = createSubscriptionService({ repo, razorpay: {}, config: CONFIG });
+  const out = await svc.listPayments({ userId: 'u1', limit: 20, cursor: undefined });
+  assert.strictEqual(out.nextCursor, null);
+  assert.deepStrictEqual(out.payments, [{ id: 'p1', amount: 14900, status: 'captured', paymentId: 'pay_1', paidAt: at }]);
+});
+
+test('listPayments returns a nextCursor when the page is full (limit+1 fetched)', async () => {
+  const at = new Date('2026-06-10T00:00:00Z');
+  const rows = Array.from({ length: 3 }, (_, i) => ({ id: `p${i}`, amount: 14900, status: 'captured', razorpayPaymentId: `pay_${i}`, updatedAt: at }));
+  const repo = baseRepo({ async listCapturedPayments() { return rows; } });
+  const svc = createSubscriptionService({ repo, razorpay: {}, config: CONFIG });
+  const out = await svc.listPayments({ userId: 'u1', limit: 2, cursor: undefined });
+  assert.strictEqual(out.payments.length, 2);
+  assert.ok(typeof out.nextCursor === 'string' && out.nextCursor.length > 0);
+});
