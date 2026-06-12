@@ -280,6 +280,13 @@ model User {
   verificationStatus VerificationStatus @default(none) @map("verification_status")
   licenseUrl         String?            @map("license_url")
   rcUrl              String?            @map("rc_url")
+  bio                String?            @map("bio")                       // L1 profile-completeness blurb (Step 21b)
+  carMake            String?            @map("car_make")                  // from RC verify (Step 21b)
+  carModel           String?            @map("car_model")
+  carRegNo           String?            @map("car_reg_no")
+  carFrontUrl        String?            @map("car_front_url")             // public-tier car image (Step 21b)
+  carBackUrl         String?            @map("car_back_url")
+  aadhaarLast4       String?            @map("aadhaar_last4")             // masked display only — full number never stored (§10)
   notificationCities String[]           @map("notification_cities") // City UUIDs the user opted into (Step 15 push targeting key)
   notifyBotRides     Boolean            @default(true) @map("notify_bot_rides")    // per-source push toggle: bot-feed rides
   notifyPostedRides  Boolean            @default(true) @map("notify_posted_rides") // per-source push toggle: app-posted verified rides
