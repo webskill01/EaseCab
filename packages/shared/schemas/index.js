@@ -13,4 +13,5 @@ module.exports = {
   ...require('./push.schema'),
   ...require('./contacts.schema'),
   ...require('./uploads.schema'),
+  ...require('./profile.schema'),
 };

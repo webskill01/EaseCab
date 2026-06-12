@@ -1,16 +1,26 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { hasSubmittedKyc } = require('../verificationGate');
+const { isProfileComplete, hasSubmittedKyc } = require('../verificationGate');
 
-test('hasSubmittedKyc: true when any per-doc flag is set', () => {
-  assert.equal(hasSubmittedKyc({ aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false }), true);
-  assert.equal(hasSubmittedKyc({ aadhaarVerified: false, dlSubmitted: true, rcSubmitted: false }), true);
-  assert.equal(hasSubmittedKyc({ aadhaarVerified: false, dlSubmitted: false, rcSubmitted: true }), true);
+const full = {
+  name: 'Gurpreet', bio: 'Punjab driver, 8 yrs', baseCity: 'Ludhiana',
+  vehicleType: 'Innova', profilePicUrl: 'https://r2/dp/u/x.jpg',
+  languagesSpoken: ['pa', 'hi'], aadhaarVerified: true,
+};
+
+test('isProfileComplete: true only when every required field is present', () => {
+  assert.strictEqual(isProfileComplete(full), true);
+  assert.strictEqual(isProfileComplete(null), false);
+  assert.strictEqual(isProfileComplete({ ...full, bio: '   ' }), false);
+  assert.strictEqual(isProfileComplete({ ...full, profilePicUrl: null }), false);
+  assert.strictEqual(isProfileComplete({ ...full, languagesSpoken: [] }), false);
 });
 
-test('hasSubmittedKyc: false when no flag is set, null, or undefined', () => {
-  assert.equal(hasSubmittedKyc({ aadhaarVerified: false, dlSubmitted: false, rcSubmitted: false }), false);
-  assert.equal(hasSubmittedKyc(null), false);
-  assert.equal(hasSubmittedKyc(undefined), false);
+test('hasSubmittedKyc: L1 = aadhaarVerified AND profileComplete', () => {
+  assert.strictEqual(hasSubmittedKyc(full), true);
+  assert.strictEqual(hasSubmittedKyc({ ...full, aadhaarVerified: false }), false);
+  assert.strictEqual(hasSubmittedKyc({ ...full, name: '' }), false);
+  assert.strictEqual(hasSubmittedKyc(null), false);
+  assert.strictEqual(hasSubmittedKyc(undefined), false);
 });
