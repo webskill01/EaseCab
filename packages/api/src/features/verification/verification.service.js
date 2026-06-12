@@ -24,14 +24,19 @@ function createVerificationService({ repo, surepass }) {
       return { clientId };
     },
 
-    /** Step 2 of Aadhaar — submit OTP; on success flip aadhaarVerified + queue. */
+    /** Step 2 of Aadhaar — submit OTP; on success flip aadhaarVerified + store last4. */
     async verifyAadhaar(userId, { clientId, otp }) {
       const result = await surepass.submitAadhaarOtp({ clientId, otp });
       if (!result.success) throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       await repo.recordVerification({
         userId, docType: VERIFICATION_DOC_TYPE.AADHAAR, surepassRef: clientId, verifiedName: result.name,
+        userFields: { aadhaarLast4: result.last4 },
       });
-      return { docType: VERIFICATION_DOC_TYPE.AADHAAR, verified: true };
+      // Demographics are returned for editable profile PREFILL only — never persisted here (§10).
+      return {
+        docType: VERIFICATION_DOC_TYPE.AADHAAR, verified: true,
+        name: result.name, dob: result.dob, gender: result.gender, address: result.address,
+      };
     },
 
     /** DL verification (single Surepass call), rate-limited per user (H1). */
@@ -45,7 +50,8 @@ function createVerificationService({ repo, surepass }) {
       await repo.recordVerification({
         userId, docType: VERIFICATION_DOC_TYPE.DL, surepassRef: result.ref, verifiedName: result.name,
       });
-      return { docType: VERIFICATION_DOC_TYPE.DL, verified: true };
+      // Official DL details surfaced for display; not persisted (only the flag + masked ref are).
+      return { docType: VERIFICATION_DOC_TYPE.DL, verified: true, name: result.name, validUpto: result.validUpto, cov: result.cov };
     },
 
     /** RC verification (single Surepass call), rate-limited per user (H1). */
@@ -58,8 +64,9 @@ function createVerificationService({ repo, surepass }) {
       if (!result.success) throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       await repo.recordVerification({
         userId, docType: VERIFICATION_DOC_TYPE.RC, surepassRef: result.ref, verifiedName: result.name,
+        userFields: { carMake: result.make, carModel: result.model, carRegNo: result.regNo },
       });
-      return { docType: VERIFICATION_DOC_TYPE.RC, verified: true };
+      return { docType: VERIFICATION_DOC_TYPE.RC, verified: true, owner: result.name, make: result.make, model: result.model, regNo: result.regNo };
     },
 
     /** Verification snapshot for the profile UI. */

@@ -70,3 +70,31 @@ test('getStatus passes the repo snapshot through', async () => {
   const svc = createVerificationService({ repo: fakeRepo(), surepass: {} });
   assert.deepStrictEqual(await svc.getStatus('u1'), { aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false, verificationStatus: 'submitted' });
 });
+
+test('verifyAadhaar persists aadhaarLast4 and returns demographics for prefill', async () => {
+  const recorded = [];
+  const repo = {
+    incrAadhaarOtpAttempts: async () => 1,
+    recordVerification: async (a) => { recorded.push(a); return { recorded: true }; },
+  };
+  const surepass = {
+    submitAadhaarOtp: async () => ({ success: true, name: 'Gur', dob: '1990-01-01', gender: 'M', address: 'Ldh', last4: '1234' }),
+  };
+  const svc = createVerificationService({ repo, surepass });
+  const out = await svc.verifyAadhaar('u1', { clientId: 'c1', otp: '111111' });
+  assert.deepStrictEqual(recorded[0].userFields, { aadhaarLast4: '1234' });
+  assert.strictEqual(out.name, 'Gur');
+  assert.strictEqual(out.dob, '1990-01-01');
+});
+
+test('verifyRc persists car make/model/regNo', async () => {
+  const recorded = [];
+  const repo = {
+    incrDocVerifyAttempts: async () => 1,
+    recordVerification: async (a) => { recorded.push(a); return { recorded: true }; },
+  };
+  const surepass = { verifyRc: async () => ({ success: true, name: 'Own', ref: 'r1', make: 'Toyota', model: 'Innova', regNo: 'PB10AB1234' }) };
+  const svc = createVerificationService({ repo, surepass });
+  await svc.verifyRc('u1', { rcNumber: 'PB10AB1234' });
+  assert.deepStrictEqual(recorded[0].userFields, { carMake: 'Toyota', carModel: 'Innova', carRegNo: 'PB10AB1234' });
+});

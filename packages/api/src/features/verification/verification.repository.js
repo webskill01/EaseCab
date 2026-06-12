@@ -38,13 +38,13 @@ function createVerificationRepository({ prisma, redis }) {
      * set from the first submission). Re-submission after rejection is allowed.
      * @returns {Promise<{ recorded: boolean, reason?: string }>}
      */
-    async recordVerification({ userId, docType, surepassRef, verifiedName }) {
+    async recordVerification({ userId, docType, surepassRef, verifiedName, userFields = {} }) {
       try {
         await prisma.$transaction(async (tx) => {
           await tx.verificationSubmission.create({
             data: { userId, docType, status: VERIFICATION_STATUS.SUBMITTED, surepassRef, verifiedName },
           });
-          await tx.user.update({ where: { id: userId }, data: { [DOC_FLAG[docType]]: true } });
+          await tx.user.update({ where: { id: userId }, data: { [DOC_FLAG[docType]]: true, ...userFields } });
           await tx.user.updateMany({
             where: { id: userId, verificationStatus: VERIFICATION_STATUS.NONE },
             data: { verificationStatus: VERIFICATION_STATUS.SUBMITTED },
@@ -61,7 +61,10 @@ function createVerificationRepository({ prisma, redis }) {
     async getVerificationStatus(userId) {
       return prisma.user.findUnique({
         where: { id: userId },
-        select: { aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true, verificationStatus: true },
+        select: {
+          aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true, verificationStatus: true,
+          aadhaarLast4: true, carMake: true, carModel: true, carRegNo: true,
+        },
       });
     },
   };

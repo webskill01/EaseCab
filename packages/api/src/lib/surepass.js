@@ -33,17 +33,34 @@ function createSurepassClient({ token, baseUrl }) {
     async submitAadhaarOtp({ clientId, otp }) {
       const { ok, json } = await post('/api/v1/aadhaar-v2/submit-otp', { client_id: clientId, otp });
       const data = (json && json.data) || {};
-      return { success: ok && data.status === 'success_aadhaar', name: data.full_name || null };
+      const masked = data.aadhaar_number || ''; // Surepass returns a MASKED number — never the full one
+      return {
+        success: ok && data.status === 'success_aadhaar',
+        name: data.full_name || null,
+        dob: data.dob || null,
+        gender: data.gender || null,
+        address: (data.address && (data.address.combined_address || null)) || data.full_address || null,
+        last4: masked ? masked.replace(/\D/g, '').slice(-4) : null,
+      };
     },
     async verifyDl({ dlNumber, dob }) {
       const { ok, json } = await post('/api/v1/driving-license/driving-license', { id_number: dlNumber, dob });
       const data = (json && json.data) || {};
-      return { success: ok && !!data.client_id, name: data.name || null, ref: data.client_id || null };
+      return {
+        success: ok && !!data.client_id, name: data.name || null, ref: data.client_id || null,
+        validUpto: data.doe || data.valid_upto || null,
+        cov: Array.isArray(data.cov_details) ? data.cov_details.map((c) => c.cov).join(', ') : (data.cov || null),
+      };
     },
     async verifyRc({ rcNumber }) {
       const { ok, json } = await post('/api/v1/rc/rc-full', { id_number: rcNumber });
       const data = (json && json.data) || {};
-      return { success: ok && !!data.client_id, name: data.owner_name || null, ref: data.client_id || null };
+      return {
+        success: ok && !!data.client_id, name: data.owner_name || null, ref: data.client_id || null,
+        make: data.maker_description || data.maker_model || null,
+        model: data.maker_model || data.vehicle_model || null,
+        regNo: rcNumber,
+      };
     },
   };
 }
@@ -57,9 +74,15 @@ function createSurepassClient({ token, baseUrl }) {
 function createStubSurepassClient() {
   return {
     async generateAadhaarOtp() { return { clientId: `stub_${crypto.randomUUID()}` }; },
-    async submitAadhaarOtp() { return { success: true, name: 'STUB AADHAAR USER' }; },
-    async verifyDl() { return { success: true, name: 'STUB DL USER', ref: `stub_${crypto.randomUUID()}` }; },
-    async verifyRc() { return { success: true, name: 'STUB RC USER', ref: `stub_${crypto.randomUUID()}` }; },
+    async submitAadhaarOtp() {
+      return { success: true, name: 'STUB AADHAAR USER', dob: '1990-01-01', gender: 'M', address: 'Ludhiana, Punjab', last4: '1234' };
+    },
+    async verifyDl() {
+      return { success: true, name: 'STUB DL USER', ref: `stub_${crypto.randomUUID()}`, validUpto: '2030-01-01', cov: 'LMV' };
+    },
+    async verifyRc({ rcNumber } = {}) {
+      return { success: true, name: 'STUB RC USER', ref: `stub_${crypto.randomUUID()}`, make: 'Toyota', model: 'Innova Crysta', regNo: rcNumber || 'PB10AB1234' };
+    },
   };
 }
 
