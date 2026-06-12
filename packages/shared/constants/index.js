@@ -19,4 +19,5 @@ module.exports = {
   ...require('./firestore'),
   ...require('./push'),
   ...require('./contacts'),
+  ...require('./uploads'),
 };

@@ -12,4 +12,5 @@ module.exports = {
   ...require('./chat.schema'),
   ...require('./push.schema'),
   ...require('./contacts.schema'),
+  ...require('./uploads.schema'),
 };
