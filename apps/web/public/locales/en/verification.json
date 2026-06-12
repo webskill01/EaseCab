@@ -1,0 +1,48 @@
+{
+  "l1": {
+    "title": "Verify your identity",
+    "aadhaarLabel": "Aadhaar number",
+    "aadhaarHint": "12 digits. We send an OTP to your Aadhaar-linked mobile (may differ from your EaseCab number).",
+    "continue": "Continue",
+    "otpTitle": "Enter the OTP",
+    "otpSentTo": "Sent to your Aadhaar-linked mobile",
+    "verify": "Verify",
+    "resendIn": "Resend in {seconds}s",
+    "resend": "Resend OTP",
+    "back": "Back",
+    "successTitle": "Aadhaar verified",
+    "successBody": "Now complete your profile to start posting.",
+    "completeTitle": "Complete your profile",
+    "verifiedAs": "Verified as {name}",
+    "grantedTitle": "You're all set to post",
+    "goProfile": "Go to profile"
+  },
+  "fallback": {
+    "title": "No Aadhaar-linked mobile?",
+    "body": "You can get verified manually — our team will review your details. (Available soon.)"
+  },
+  "driver": {
+    "title": "Driver credentials",
+    "subtitle": "Add your licence and vehicle to earn the verified-driver badge.",
+    "dlTitle": "Driving licence",
+    "dlNumber": "DL number",
+    "dob": "Date of birth",
+    "rcTitle": "Vehicle RC",
+    "rcNumber": "RC number",
+    "submit": "Verify",
+    "submitting": "Verifying…",
+    "dlValid": "Valid up to {date}",
+    "dlCov": "Class: {cov}",
+    "rcVehicle": "{make} {model}",
+    "rcReg": "Reg: {reg}",
+    "badgePending": "Submitted — the verified-driver badge is granted after admin review."
+  },
+  "errors": {
+    "invalidAadhaar": "Enter a valid 12-digit Aadhaar number",
+    "rateLimited": "Too many attempts. Please try again later.",
+    "invalidOtp": "Couldn't verify that code. Check it and try again.",
+    "verifyFailed": "Couldn't verify these details. Please check and retry.",
+    "network": "Network problem. Please try again.",
+    "generic": "Something went wrong. Please try again."
+  }
+}

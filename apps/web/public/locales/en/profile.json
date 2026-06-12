@@ -1,0 +1,47 @@
+{
+  "title": "Profile",
+  "phoneLabel": "Phone",
+  "edit": "Edit profile",
+  "save": "Save profile",
+  "saving": "Saving…",
+  "cancel": "Cancel",
+  "fields": {
+    "name": "Full name",
+    "bio": "About me",
+    "baseCity": "Base city",
+    "vehicle": "Vehicle type",
+    "languages": "Languages you speak",
+    "photo": "Profile photo"
+  },
+  "dp": {
+    "add": "Add photo",
+    "change": "Change photo",
+    "uploading": "Uploading…",
+    "required": "A profile photo is required to post",
+    "tooBig": "Photo must be under 5 MB",
+    "badType": "Use a JPG, PNG or WebP image",
+    "failed": "Upload failed — try again"
+  },
+  "completeness": {
+    "title": "Complete your profile to unlock posting",
+    "body": "Add your photo and details so drivers trust your posts.",
+    "cta": "Complete profile"
+  },
+  "verifyCard": {
+    "l1Title": "Identity (Aadhaar)",
+    "l1Unlocks": "Unlocks posting duties",
+    "l2Title": "Driver credentials",
+    "l2Unlocks": "Earns the verified-driver badge",
+    "start": "Get verified",
+    "manage": "Manage",
+    "carLabel": "Vehicle"
+  },
+  "status": {
+    "notStarted": "Not started",
+    "submitted": "Submitted",
+    "verified": "Verified",
+    "underReview": "Under review"
+  },
+  "soon": "Membership, notifications and settings are coming soon.",
+  "error": { "load": "Couldn't load your profile.", "save": "Couldn't save. Please try again." }
+}
