@@ -1,0 +1,47 @@
+{
+  "title": "Profile",
+  "phoneLabel": "Phone",
+  "edit": "Profile edit karo",
+  "save": "Profile save karo",
+  "saving": "Save ho raha hai…",
+  "cancel": "Cancel",
+  "fields": {
+    "name": "Poora naam",
+    "bio": "Mere baare mein",
+    "baseCity": "Base city",
+    "vehicle": "Vehicle type",
+    "languages": "Aap kaunsi languages bolte ho",
+    "photo": "Profile photo"
+  },
+  "dp": {
+    "add": "Photo add karo",
+    "change": "Photo badlo",
+    "uploading": "Upload ho rahi hai…",
+    "required": "Duty post karne ke liye profile photo zaroori hai",
+    "tooBig": "Photo 5 MB se kam honi chahiye",
+    "badType": "JPG, PNG ya WebP image use karo",
+    "failed": "Upload fail — phir try karo"
+  },
+  "completeness": {
+    "title": "Duty post karne ke liye apni profile poori karo",
+    "body": "Apni photo aur details add karo taaki drivers aapki posts par bharosa karein.",
+    "cta": "Profile poori karo"
+  },
+  "verifyCard": {
+    "l1Title": "Identity (Aadhaar)",
+    "l1Unlocks": "Duty posting unlock karta hai",
+    "l2Title": "Driver documents",
+    "l2Unlocks": "Verified-driver badge dilata hai",
+    "start": "Verify karwao",
+    "manage": "Manage karo",
+    "carLabel": "Vehicle"
+  },
+  "status": {
+    "notStarted": "Shuru nahi hua",
+    "submitted": "Submit kiya",
+    "verified": "Verified",
+    "underReview": "Review mein"
+  },
+  "soon": "Membership, notifications aur settings jald aa rahe hain.",
+  "error": { "load": "Aapki profile load nahi ho saki.", "save": "Save nahi ho saka. Phir try karo." }
+}

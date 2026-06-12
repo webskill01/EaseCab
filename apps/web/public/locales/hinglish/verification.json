@@ -1,0 +1,48 @@
+{
+  "l1": {
+    "title": "Apni identity verify karo",
+    "aadhaarLabel": "Aadhaar number",
+    "aadhaarHint": "12 digits. Hum aapke Aadhaar-linked mobile par OTP bhejte hain (yeh aapke EaseCab number se alag ho sakta hai).",
+    "continue": "Aage badho",
+    "otpTitle": "OTP daalo",
+    "otpSentTo": "Aapke Aadhaar-linked mobile par bheja gaya",
+    "verify": "Verify karo",
+    "resendIn": "{seconds}s mein dobara bhejo",
+    "resend": "OTP dobara bhejo",
+    "back": "Wapas",
+    "successTitle": "Aadhaar verified",
+    "successBody": "Ab duty post karna shuru karne ke liye apni profile poori karo.",
+    "completeTitle": "Apni profile poori karo",
+    "verifiedAs": "{name} ke roop mein verified",
+    "grantedTitle": "Aap duty post karne ke liye taiyaar ho",
+    "goProfile": "Profile par jao"
+  },
+  "fallback": {
+    "title": "Aadhaar-linked mobile nahi hai?",
+    "body": "Aap manually verify karwa sakte ho — hamari team aapki details review karegi. (Jald available)"
+  },
+  "driver": {
+    "title": "Driver documents",
+    "subtitle": "Verified-driver badge paane ke liye apna licence aur vehicle add karo.",
+    "dlTitle": "Driving licence",
+    "dlNumber": "DL number",
+    "dob": "Date of birth",
+    "rcTitle": "Vehicle RC",
+    "rcNumber": "RC number",
+    "submit": "Verify karo",
+    "submitting": "Verify ho raha hai…",
+    "dlValid": "{date} tak valid",
+    "dlCov": "Class: {cov}",
+    "rcVehicle": "{make} {model}",
+    "rcReg": "Reg: {reg}",
+    "badgePending": "Submit kiya — verified-driver badge admin review ke baad milta hai."
+  },
+  "errors": {
+    "invalidAadhaar": "Sahi 12-digit Aadhaar number daalo",
+    "rateLimited": "Bahut zyada attempts. Thodi der baad try karo.",
+    "invalidOtp": "Yeh code verify nahi hua. Check karke phir try karo.",
+    "verifyFailed": "Yeh details verify nahi huin. Check karke phir try karo.",
+    "network": "Network problem. Phir try karo.",
+    "generic": "Kuch galat ho gaya. Phir try karo."
+  }
+}

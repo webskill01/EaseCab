@@ -76,7 +76,7 @@ export function PostScreen() {
       </div>
 
       {post.gated && (
-        <VerifyGateSheet onClose={post.closeGate} onVerify={() => router.push('/profile')} />
+        <VerifyGateSheet onClose={post.closeGate} onVerify={() => router.push('/verify?intent=l1')} />
       )}
     </div>
   )

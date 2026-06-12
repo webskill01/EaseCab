@@ -1,17 +1,6 @@
-import { PlaceholderScreen } from '@/features/shell/components/PlaceholderScreen'
-import { LogoutButton } from '@/features/shell/components/LogoutButton'
+import { ProfileScreen } from '@/features/profile/components/ProfileScreen'
 
-/**
- * Profile — placeholder until Step 21 (profile / verification / membership / settings).
- * Logout lives here per the locked design (moved out of the top bar); the full
- * profile screen replaces this stub at Step 21.
- */
+/** Profile tab (Step 21c) — hub + verification center. Membership/settings → 21d. */
 export default function ProfilePage() {
-  return (
-    <PlaceholderScreen titleKey="nav.profile">
-      <div className="mt-6">
-        <LogoutButton />
-      </div>
-    </PlaceholderScreen>
-  )
+  return <ProfileScreen />
 }
