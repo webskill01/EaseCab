@@ -7,6 +7,15 @@ const CONTACTED_SELECT = Object.freeze({
   rideId: true, postedRideId: true,
 });
 
+/** Profile + verification-display columns for GET/PATCH /me/profile (Step 21b). */
+const PROFILE_SELECT = Object.freeze({
+  id: true, phone: true, name: true, bio: true, baseCity: true, vehicleType: true,
+  profilePicUrl: true, languagesSpoken: true,
+  aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true, verificationStatus: true,
+  aadhaarLast4: true, carMake: true, carModel: true, carRegNo: true,
+  carFrontUrl: true, carBackUrl: true,
+});
+
 /**
  * "My contacted rides" data access (CLAUDE.md §4 — DB only). Reads the durable
  * RideContact snapshot, so rows survive the source ride's hard-delete.
@@ -31,7 +40,22 @@ function createMeRepository({ prisma }) {
         select: CONTACTED_SELECT,
       });
     },
+
+    /** Full profile + verification snapshot for the profile screen (Step 21b). */
+    async getProfile(userId) {
+      return prisma.user.findUnique({ where: { id: userId }, select: PROFILE_SELECT });
+    },
+
+    /** Apply a validated profile patch; returns the refreshed profile snapshot. */
+    async updateProfile(userId, data) {
+      return prisma.user.update({ where: { id: userId }, data, select: PROFILE_SELECT });
+    },
+
+    /** Attach a single verified image URL/key to its User column (Step 21b). */
+    async attachImage(userId, data) {
+      return prisma.user.update({ where: { id: userId }, data, select: { id: true } });
+    },
   };
 }
 
-module.exports = { createMeRepository, CONTACTED_SELECT };
+module.exports = { createMeRepository, CONTACTED_SELECT, PROFILE_SELECT };

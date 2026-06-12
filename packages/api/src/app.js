@@ -181,9 +181,16 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   });
   v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, parser: postParser, requireAuth }));
 
-  // My Rides → Contacted (Step 19) — the caller's snapshotted contacts.
+  // Uploads (Step 21a) — authed presigned-POST issuance for DP/car/KYC images.
+  // R2 boundary injected as `uploads` (optional); bytes go direct to R2, never here.
+  // Created before `me` because the profile-DP + image-attach paths consume its
+  // verifyUpload gate (Step 21b).
+  const uploadsService = createUploadsService({ r2: uploads });
+  v1.use('/uploads', createUploadsRouter({ service: uploadsService, requireAuth }));
+
+  // My Rides → Contacted (Step 19) + profile read/update + image-attach (Step 21b).
   const meRepo = createMeRepository({ prisma });
-  const meService = createMeService({ repo: meRepo });
+  const meService = createMeService({ repo: meRepo, uploads: uploadsService });
   v1.use('/me', createMeRouter({ service: meService, requireAuth }));
 
   // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole
@@ -204,11 +211,6 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     pushDispatcher.start().catch((err) => logger.error({ err: err.message }, 'push dispatcher subscribe failed'));
     app.locals.pushDispatcher = pushDispatcher;
   }
-
-  // Uploads (Step 21a) — authed presigned-POST issuance for DP/car/KYC images.
-  // R2 boundary injected as `uploads` (optional); bytes go direct to R2, never here.
-  const uploadsService = createUploadsService({ r2: uploads });
-  v1.use('/uploads', createUploadsRouter({ service: uploadsService, requireAuth }));
 
   app.use('/api/v1', v1);
 

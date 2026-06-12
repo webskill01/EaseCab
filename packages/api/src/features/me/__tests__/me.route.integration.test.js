@@ -16,11 +16,17 @@ const CONFIG = {
 const jwt = createJwt(CONFIG.jwt);
 const cookieFor = (id) => `${AUTH_COOKIES.ACCESS_TOKEN}=${jwt.signAccess({ sub: id, role: 'user' })}`;
 
-/** In-memory prisma exposing the rideContact.findMany the /me/contacted read needs. */
-function fakePrisma(rows = []) {
-  function project(row, select) { if (!select) return row; const o = {}; for (const k of Object.keys(select)) o[k] = row[k] ?? null; return o; }
+function project(row, select) { if (!select) return row; const o = {}; for (const k of Object.keys(select)) o[k] = row[k] ?? null; return o; }
+
+/** In-memory prisma for /me reads + profile read/update (Step 21b). `userRow` is the
+ * caller's mutable User row; `rows` are RideContact snapshots. */
+function fakePrisma(rows = [], userRow = null) {
+  const user = userRow ? { ...userRow } : null;
   return {
-    user: { async findUnique() { return null; } },
+    user: {
+      async findUnique({ select }) { return user ? project(user, select) : null; },
+      async update({ data, select }) { Object.assign(user, data); return project(user, select); },
+    },
     subscription: { async findUnique() { return null; } },
     rideContact: {
       async findMany({ where, take, select }) {
@@ -44,15 +50,31 @@ function fakeRedis() {
   return { async eval() { return 1; }, async get() { return null; }, async set() { return 'OK'; }, async del() { return 1; } };
 }
 
-function makeApp(rows) {
+/** R2 boundary stub — head returns a small in-policy image so verifyUpload passes. */
+const uploadsStub = {
+  presignPost: async () => ({ url: 'https://r2.example/post', fields: {} }),
+  presignGet: async () => 'https://r2.example/get',
+  headObject: async () => ({ exists: true, size: 1024, contentType: 'image/jpeg' }),
+  publicUrl: (k) => `https://r2.example/${k}`,
+};
+
+function makeApp(rows, userRow = null) {
   return buildApp({
-    prisma: fakePrisma(rows), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
+    prisma: fakePrisma(rows, userRow), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { async verifyOtpToken() { return { phone: '+910000000000' }; } },
     subscriber: { on() {}, subscribe: async () => {}, duplicate() { return this; }, disconnect() {} },
     razorpay: { async createOrder() { return { id: 'order_x' }; } },
     surepass: { async generateAadhaarOtp() { return {}; }, async submitAadhaarOtp() { return {}; }, async verifyDl() { return {}; }, async verifyRc() { return {}; } },
+    uploads: uploadsStub,
   });
 }
+
+const PROFILE_ROW = {
+  id: 'u1', phone: '+910000000000', name: 'Gurpreet', bio: 'Punjab driver', baseCity: 'Ludhiana',
+  vehicleType: 'Innova', profilePicUrl: 'https://r2.example/dp/u1/x.jpg', languagesSpoken: ['pa', 'hi'],
+  aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false, verificationStatus: 'submitted',
+  aadhaarLast4: '1234', carMake: null, carModel: null, carRegNo: null, carFrontUrl: null, carBackUrl: null,
+};
 
 test("GET /me/contacted → the caller's snapshotted contacts (phone included)", async () => {
   const app = makeApp([
@@ -74,4 +96,42 @@ test('GET /me/contacted → 401 unauthenticated', async () => {
 test('GET /me/contacted?cursor=bad → 422', async () => {
   const res = await request(makeApp([])).get('/api/v1/me/contacted?cursor=%%%').set('Cookie', cookieFor('u1'));
   assert.equal(res.status, 422);
+});
+
+test('GET /me/profile returns profileComplete + verification block', async () => {
+  const res = await request(makeApp([], PROFILE_ROW)).get('/api/v1/me/profile').set('Cookie', cookieFor('u1'));
+  assert.equal(res.status, 200);
+  assert.equal(res.body.success, true);
+  assert.equal(res.body.data.profileComplete, true);
+  assert.equal(res.body.data.verification.aadhaarLast4, '1234');
+});
+
+test('PATCH /me/profile validates + persists editable fields', async () => {
+  const res = await request(makeApp([], PROFILE_ROW)).patch('/api/v1/me/profile').set('Cookie', cookieFor('u1')).send({
+    name: 'Gurpreet Singh', bio: 'Punjab driver, 8 yrs', baseCity: 'Ludhiana',
+    vehicleType: 'Innova', languagesSpoken: ['pa', 'hi'],
+  });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.name, 'Gurpreet Singh');
+});
+
+test('PATCH /me/profile rejects an unknown vehicleType (422)', async () => {
+  const res = await request(makeApp([], PROFILE_ROW)).patch('/api/v1/me/profile').set('Cookie', cookieFor('u1')).send({
+    name: 'Gurpreet', bio: 'x', baseCity: 'Ludhiana', vehicleType: 'Spaceship', languagesSpoken: ['pa'],
+  });
+  assert.equal(res.status, 422);
+});
+
+test('POST /me/uploads rejects a key outside the caller prefix (422)', async () => {
+  const res = await request(makeApp([], PROFILE_ROW)).post('/api/v1/me/uploads').set('Cookie', cookieFor('u1'))
+    .send({ purpose: 'dp', key: 'dp/SOMEONE_ELSE/x.jpg' });
+  assert.equal(res.status, 422);
+});
+
+test('POST /me/uploads attaches a verified car image → its URL field', async () => {
+  const res = await request(makeApp([], PROFILE_ROW)).post('/api/v1/me/uploads').set('Cookie', cookieFor('u1'))
+    .send({ purpose: 'car_front', key: 'car/u1/front.jpg' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.field, 'carFrontUrl');
+  assert.equal(res.body.data.value, 'https://r2.example/car/u1/front.jpg');
 });
