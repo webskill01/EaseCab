@@ -22,6 +22,11 @@ const BASE = Object.freeze({
   RAZORPAY_KEY_SECRET: 'x'.repeat(16),
   RAZORPAY_WEBHOOK_SECRET: 'w'.repeat(16),
   SUREPASS_TOKEN: 't'.repeat(16),
+  R2_ACCOUNT_ID: 'acc_test',
+  R2_ACCESS_KEY_ID: 'akid_test',
+  R2_SECRET_ACCESS_KEY: 's'.repeat(16),
+  R2_BUCKET: 'easecab-test',
+  R2_PUBLIC_BASE_URL: 'https://cdn.easecab.com',
 });
 
 test('accepts valid server env and freezes the result', () => {
@@ -102,7 +107,18 @@ test('serverEnvSchema requires the FIREBASE_* credentials', () => {
     RAZORPAY_KEY_SECRET: BASE.RAZORPAY_KEY_SECRET,
     RAZORPAY_WEBHOOK_SECRET: BASE.RAZORPAY_WEBHOOK_SECRET,
     SUREPASS_TOKEN: BASE.SUREPASS_TOKEN,
+    R2_ACCOUNT_ID: BASE.R2_ACCOUNT_ID,
+    R2_ACCESS_KEY_ID: BASE.R2_ACCESS_KEY_ID,
+    R2_SECRET_ACCESS_KEY: BASE.R2_SECRET_ACCESS_KEY,
+    R2_BUCKET: BASE.R2_BUCKET,
+    R2_PUBLIC_BASE_URL: BASE.R2_PUBLIC_BASE_URL,
   });
   assert.equal(ok.success, true);
   assert.equal(ok.data.FIREBASE_PROJECT_ID, 'easecab');
+});
+
+test('serverEnvSchema requires the R2 upload credentials', () => {
+  const r = parseServerEnv({ ...BASE, R2_ACCOUNT_ID: undefined });
+  assert.equal(r.success, false);
+  assert.ok(r.errors.some((e) => e.startsWith('R2_ACCOUNT_ID')));
 });

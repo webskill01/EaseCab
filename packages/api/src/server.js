@@ -12,6 +12,7 @@ const { createChatStore } = require('./lib/firestoreChat');
 const { createPushSender } = require('./lib/fcm');
 const { createRazorpayClient } = require('./lib/razorpay');
 const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
+const { createR2Client, createStubR2Client } = require('./lib/r2.js');
 
 /**
  * Express server entry point (PM2 `easecab-api`, port 4000). Validates env, builds
@@ -84,7 +85,23 @@ async function main() {
     ? createStubSurepassClient()
     : createSurepassClient({ token: serverEnv.SUREPASS_TOKEN, baseUrl: serverEnv.SUREPASS_BASE_URL });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber });
+  // R2: deterministic stub until the bucket exists (R2_STUB=true), real client at
+  // go-live — swapping is an env change, zero code change (Step 21a).
+  if (serverEnv.R2_STUB && serverEnv.NODE_ENV === 'production') {
+    logger.error('FATAL: R2_STUB=true in production — refusing to start (uploads would be broken)');
+    process.exit(1);
+  }
+  const uploads = serverEnv.R2_STUB
+    ? createStubR2Client({ bucket: serverEnv.R2_BUCKET, publicBaseUrl: serverEnv.R2_PUBLIC_BASE_URL })
+    : createR2Client({
+        accountId: serverEnv.R2_ACCOUNT_ID,
+        accessKeyId: serverEnv.R2_ACCESS_KEY_ID,
+        secretAccessKey: serverEnv.R2_SECRET_ACCESS_KEY,
+        bucket: serverEnv.R2_BUCKET,
+        publicBaseUrl: serverEnv.R2_PUBLIC_BASE_URL,
+      });
+
+  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber, uploads });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });

@@ -34,7 +34,9 @@ if (!result.success) {
  *   CORS_ORIGINS: string[],
  *   RAZORPAY_KEY_ID: string, RAZORPAY_KEY_SECRET: string,
  *   RAZORPAY_WEBHOOK_SECRET: string,
- *   SUREPASS_TOKEN: string, SUREPASS_BASE_URL: string, SUREPASS_STUB: boolean
+ *   SUREPASS_TOKEN: string, SUREPASS_BASE_URL: string, SUREPASS_STUB: boolean,
+ *   R2_ACCOUNT_ID: string, R2_ACCESS_KEY_ID: string, R2_SECRET_ACCESS_KEY: string,
+ *   R2_BUCKET: string, R2_PUBLIC_BASE_URL: string, R2_STUB: boolean
  * }>}
  */
 const serverEnv = result.data;

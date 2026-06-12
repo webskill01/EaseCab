@@ -63,6 +63,16 @@ const serverEnvSchema = envSchema.extend({
   SUREPASS_TOKEN: z.string().min(16),
   SUREPASS_BASE_URL: z.string().url().default('https://kyc-api.surepass.io'),
   SUREPASS_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+  // Cloudflare R2 (Step 21a) — presigned uploads for DP/car/KYC images. Backend
+  // only (§11/§12); the secret access key never reaches the frontend bundle. STUB
+  // until the bucket exists: R2_STUB=true injects the deterministic client
+  // (server.js); swap to real creds at go-live with zero code change.
+  R2_ACCOUNT_ID: z.string().min(1),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(16),
+  R2_BUCKET: z.string().min(1),
+  R2_PUBLIC_BASE_URL: z.string().url(),
+  R2_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
 });
 
 /**
