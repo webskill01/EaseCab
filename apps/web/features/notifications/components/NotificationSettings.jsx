@@ -4,6 +4,9 @@ import { useTranslations } from 'next-intl'
 import { BellEdit, Pin, Trash } from '@/components/ui/icons'
 import { CityPicker } from '@/features/rides/components/CityPicker'
 import { usePushPreferences } from '../hooks/usePushPreferences'
+import { useEnableAlerts } from '../hooks/useEnableAlerts'
+import { useNearestCity } from '../hooks/useNearestCity'
+import { permissionState } from '../lib/pushFlow'
 
 // SCREENS §6 "up to 5 city slots" (visual SoT). Always ≤ the server cap (25), so valid.
 const ALERT_CITIES_MAX = 5
@@ -25,7 +28,10 @@ function Toggle({ on, onChange, label, hint }) {
 /** Ride-alert preferences: per-source toggles + alert-city manager (Step 21d). */
 export function NotificationSettings() {
   const t = useTranslations('settings')
+  const tn = useTranslations('notifications')
   const { prefs, isLoading, isError, update } = usePushPreferences()
+  const alerts = useEnableAlerts()
+  const nearest = useNearestCity()
 
   if (isLoading) return <div className="text-ec-ink40">…</div>
   if (isError || !prefs) return <p className="text-[13px] font-semibold text-ec-danger">{t('error.load')}</p>
@@ -36,6 +42,10 @@ export function NotificationSettings() {
 
   const addCity = (city) => { if (!ids.includes(city.id) && !atMax) update({ notificationCities: [...ids, city.id] }) }
   const removeCity = (id) => update({ notificationCities: ids.filter((c) => c !== id) })
+  const useMyLocation = async () => {
+    const city = await nearest.locate()
+    if (city) addCity({ id: city.id, name: city.canonicalName })
+  }
 
   return (
     <section className="rounded-2xl border border-ec-line bg-white p-4">
@@ -44,6 +54,17 @@ export function NotificationSettings() {
         <Toggle on={!!prefs.notifyBotRides} onChange={(v) => update({ notifyBotRides: v })} label={t('notifications.botRides')} hint={t('notifications.botRidesHint')} />
         <Toggle on={!!prefs.notifyPostedRides} onChange={(v) => update({ notifyPostedRides: v })} label={t('notifications.postedRides')} hint={t('notifications.postedRidesHint')} />
       </div>
+
+      {permissionState() !== 'granted' && (
+        <button
+          type="button"
+          onClick={() => alerts.enable()}
+          disabled={alerts.isEnabling}
+          className="mt-3 h-11 w-full rounded-xl bg-ec-blue text-[14px] font-extrabold text-white shadow-ec-blue disabled:opacity-60"
+        >
+          {tn('enable')}
+        </button>
+      )}
 
       <div className="mt-3">
         <p className="text-[13px] font-extrabold text-ec-ink">{t('notifications.cities.title')}</p>
@@ -62,7 +83,17 @@ export function NotificationSettings() {
         {atMax ? (
           <p className="mt-2 text-[12px] font-medium text-ec-ink40">{t('notifications.cities.max', { max: ALERT_CITIES_MAX })}</p>
         ) : (
-          <div className="mt-3"><CityPicker label={t('notifications.cities.add')} value={null} onPick={addCity} /></div>
+          <div className="mt-3">
+            <CityPicker label={t('notifications.cities.add')} value={null} onPick={addCity} />
+            <button
+              type="button"
+              onClick={useMyLocation}
+              disabled={nearest.isLocating}
+              className="mt-2 flex items-center gap-1.5 text-[12px] font-bold text-ec-blue disabled:opacity-60"
+            >
+              <Pin size={12} /> {tn('useMyLocation')}
+            </button>
+          </div>
         )}
       </div>
     </section>
