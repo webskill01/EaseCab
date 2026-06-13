@@ -51,6 +51,35 @@ export function Check({ size = 14, className }) {
   )
 }
 
+/** CheckCheck — double tick (message read). */
+export function CheckCheck({ size = 16, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={2.4}>
+      <path d="M1 13l4 4L15 7" />
+      <path d="M9 13l4 4L23 7" />
+    </svg>
+  )
+}
+
+/** ChevronLeft — back navigation. */
+export function ChevronLeft({ size = 22, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={2.4}>
+      <path d="M15 18 9 12l6-6" />
+    </svg>
+  )
+}
+
+/** Send — paper-plane composer action. */
+export function Send({ size = 18, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={2.2}>
+      <path d="M22 2 11 13" />
+      <path d="M22 2 15 22l-4-9-9-4 20-7z" />
+    </svg>
+  )
+}
+
 /** Trash — delete. */
 export function Trash({ size = 16, className }) {
   return (

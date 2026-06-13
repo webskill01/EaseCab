@@ -1,0 +1,23 @@
+{
+  "list": {
+    "title": "Messages",
+    "empty": "Abhi koi baat-cheet nahi",
+    "emptyHint": "Jab aap kisi verified ride se contact karenge to chats yahan dikhengi.",
+    "loading": "Chats load ho rahi hain…"
+  },
+  "row": {
+    "you": "Aap: ",
+    "noMessages": "Abhi koi message nahi"
+  },
+  "thread": {
+    "back": "Wapas",
+    "empty": "Abhi koi message nahi — hello bolo 👋",
+    "composerPlaceholder": "Message",
+    "readOnly": "Yeh ride khatam ho gayi hai — chat sirf padhne ke liye hai",
+    "send": "Bhejo"
+  },
+  "tick": {
+    "sent": "Bheja",
+    "read": "Padha"
+  }
+}

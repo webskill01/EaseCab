@@ -1,0 +1,23 @@
+{
+  "list": {
+    "title": "Messages",
+    "empty": "No conversations yet",
+    "emptyHint": "Chats appear here when you contact a verified ride.",
+    "loading": "Loading chats…"
+  },
+  "row": {
+    "you": "You: ",
+    "noMessages": "No messages yet"
+  },
+  "thread": {
+    "back": "Back",
+    "empty": "No messages yet — say hello 👋",
+    "composerPlaceholder": "Message",
+    "readOnly": "This ride has expired — chat is read-only",
+    "send": "Send"
+  },
+  "tick": {
+    "sent": "Sent",
+    "read": "Read"
+  }
+}
