@@ -15,3 +15,14 @@ export async function searchCities(q, { limit, signal } = {}) {
   const { data } = await apiFetch(`/cities?${p.toString()}`, { signal })
   return data.cities
 }
+
+/**
+ * Suggested alert city for a device location (Step 23). Returns the nearest
+ * `{ id, canonicalName, distanceKm }` or `null` when none is within range.
+ * @param {{ lat: number, lng: number }} coords
+ */
+export async function nearestCity({ lat, lng }) {
+  const p = new URLSearchParams({ lat: String(lat), lng: String(lng) })
+  const { data } = await apiFetch(`/cities/nearest?${p.toString()}`)
+  return data.city
+}
