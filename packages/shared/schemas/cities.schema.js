@@ -9,4 +9,10 @@ const citySearchQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(CITY_SEARCH.MAX_LIMIT).default(CITY_SEARCH.DEFAULT_LIMIT),
 });
 
-module.exports = { citySearchQuerySchema };
+/** Geo → nearest city (Step 23). Bounded WGS84 lat/lng; coerced from query strings. */
+const citiesNearestQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+});
+
+module.exports = { citySearchQuerySchema, citiesNearestQuerySchema };
