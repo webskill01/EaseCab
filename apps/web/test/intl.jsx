@@ -11,13 +11,14 @@ import verificationEn from '../public/locales/en/verification.json'
 import membershipEn from '../public/locales/en/membership.json'
 import settingsEn from '../public/locales/en/settings.json'
 import chatEn from '../public/locales/en/chat.json'
+import notificationsEn from '../public/locales/en/notifications.json'
 
 /** Render a component inside the next-intl + TanStack Query providers (English messages). */
 export function renderWithIntl(ui) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <NextIntlClientProvider locale="en" messages={{ common: en, auth: authEn, rides: ridesEn, mine: mineEn, post: postEn, profile: profileEn, verification: verificationEn, membership: membershipEn, settings: settingsEn, chat: chatEn }}>
+      <NextIntlClientProvider locale="en" messages={{ common: en, auth: authEn, rides: ridesEn, mine: mineEn, post: postEn, profile: profileEn, verification: verificationEn, membership: membershipEn, settings: settingsEn, chat: chatEn, notifications: notificationsEn }}>
         {ui}
       </NextIntlClientProvider>
     </QueryClientProvider>,

@@ -1,0 +1,11 @@
+{
+  "prePrompt": {
+    "title": "Turant duty alerts pao",
+    "body": "Notifications on karo taaki aapke cities se match karti ride turant pata chale.",
+    "enable": "Alerts on karo",
+    "notNow": "Abhi nahi"
+  },
+  "enable": "Notifications on karo",
+  "useMyLocation": "Meri location use karo",
+  "error": { "geo": "Aapki location nahi mili.", "noCity": "Paas koi city nahi mili." }
+}

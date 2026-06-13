@@ -1,0 +1,11 @@
+{
+  "prePrompt": {
+    "title": "Get instant duty alerts",
+    "body": "Turn on notifications to know the moment a ride matches your cities.",
+    "enable": "Enable alerts",
+    "notNow": "Not now"
+  },
+  "enable": "Enable notifications",
+  "useMyLocation": "Use my location",
+  "error": { "geo": "Couldn't get your location.", "noCity": "No nearby city found." }
+}
