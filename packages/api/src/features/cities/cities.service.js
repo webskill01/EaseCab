@@ -1,6 +1,6 @@
 'use strict';
 
-const { CITY_SEARCH } = require('@easecab/shared');
+const { CITY_SEARCH, CITY_NEAREST } = require('@easecab/shared');
 
 /**
  * Sanitize a typeahead query: lowercase, drop LIKE wildcards/escape chars so a
@@ -31,6 +31,17 @@ function createCitiesService({ repo }) {
       if (clean.length < CITY_SEARCH.MIN_QUERY_LEN) return { cities: [] };
       const cities = await repo.searchCities({ q: clean, limit, floor: CITY_SEARCH.SIMILARITY_FLOOR });
       return { cities };
+    },
+
+    /**
+     * Nearest active city to a device location (Step 23). Thin: delegate to the
+     * repo with the configured radius cap; returns `{ city: null }` past the cap.
+     * @param {{ lat: number, lng: number }} coords
+     * @returns {Promise<{ city: { id: string, canonicalName: string, distanceKm: number } | null }>}
+     */
+    async nearestCity({ lat, lng }) {
+      const city = await repo.findNearest({ lat, lng, maxRadiusKm: CITY_NEAREST.MAX_RADIUS_KM });
+      return { city };
     },
   };
 }
