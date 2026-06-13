@@ -54,6 +54,7 @@ export function toContactedVM(c) {
   return {
     kind: c.source === 'posted' ? RIDE_KIND.VERIFIED : RIDE_KIND.BOT,
     id: c.id,
+    postedRideId: c.postedRideId ?? null,
     from: cityLabel(c.fromCityName, null),
     to: cityLabel(c.toCityName, null),
     vehicleType: c.vehicleType ?? null,

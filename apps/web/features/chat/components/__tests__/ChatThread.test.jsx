@@ -3,7 +3,6 @@ import { screen } from '@testing-library/react'
 import { renderWithIntl } from '@/test/intl'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
-vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ getQueryData: () => [] }) }))
 vi.mock('@/features/profile/hooks/useProfile', () => ({ useProfile: () => ({ data: { id: 'me' } }) }))
 vi.mock('../../hooks/useChatThread', () => ({ useChatThread: vi.fn() }))
 

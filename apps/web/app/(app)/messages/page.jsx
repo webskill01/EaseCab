@@ -1,6 +1,6 @@
-import { PlaceholderScreen } from '@/features/shell/components/PlaceholderScreen'
+import { ChatList } from '@/features/chat/components/ChatList'
 
-/** Messages / chat list — placeholder until Step 22 (chat UI). */
+/** Messages tab (Step 22) — the caller's chat list. */
 export default function MessagesPage() {
-  return <PlaceholderScreen titleKey="shell.chats" />
+  return <ChatList />
 }

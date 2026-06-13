@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/test/intl'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 import { MyPostedCard } from '../MyPostedCard'
 
 const VM = { id: 'p1', from: 'Mohali', to: 'Manali', vehicleType: 'Innova', fare: 4200, date: null, status: 'active', isClosed: false }

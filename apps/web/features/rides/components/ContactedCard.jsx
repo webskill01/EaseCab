@@ -1,7 +1,10 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Whatsapp, Phone, Chat } from '@/components/ui/icons'
+import { openChat } from '@/features/chat/services/chatApi'
 import { RouteRow, StatusBadge } from './RideCard'
 
 /** wa.me wants digits only. */
@@ -9,12 +12,25 @@ function waLink(phone) { return `https://wa.me/${String(phone).replace(/[^\d]/g,
 
 /**
  * My Rides → Contacted card. Phone is already revealed (snapshot), so Call/WhatsApp
- * are direct deep links — no re-gate. Verified contacts show an inert Chat stub (Step 22).
+ * are direct deep links — no re-gate. Verified contacts open the 1:1 chat (Step 22).
  * @param {{ contact: object }} props
  */
 export function ContactedCard({ contact }) {
   const t = useTranslations('mine')
+  const router = useRouter()
+  const [opening, setOpening] = useState(false)
   const verified = contact.kind === 'verified'
+
+  const handleChat = async () => {
+    if (!contact.postedRideId || opening) return
+    setOpening(true)
+    try {
+      const chat = await openChat(contact.postedRideId)
+      router.push(`/messages/${chat.id}`)
+    } catch {
+      setOpening(false)
+    }
+  }
   return (
     <article className="rounded-ec-card border border-ec-line bg-white p-3.5 shadow-ec-card">
       <div className="mb-2.5 flex items-center justify-between">
@@ -33,7 +49,7 @@ export function ContactedCard({ contact }) {
           <Phone size={16} />{t('contacted.call')}
         </a>
         {verified && (
-          <button type="button" disabled aria-label={t('contacted.chat')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-bg text-ec-ink40">
+          <button type="button" onClick={handleChat} disabled={opening || !contact.postedRideId} aria-label={t('contacted.chat')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-sky text-ec-blue disabled:opacity-50">
             <Chat size={16} />
           </button>
         )}

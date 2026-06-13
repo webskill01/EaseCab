@@ -1,16 +1,18 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Check, Trash, Repeat, Chat } from '@/components/ui/icons'
 import { RouteRow } from './RideCard'
 
 /**
- * My Rides → Posted card. Shows the user's own post + lifecycle actions. Repost +
- * View-chats are deferred (Step 20-adjacent / Step 22) → rendered disabled.
+ * My Rides → Posted card. Shows the user's own post + lifecycle actions. View-chats
+ * opens the Messages list (Step 22; per-post filtering deferred). Repost stays deferred.
  * @param {{ post: object, onMarkDone: (p)=>void, onDelete: (p)=>void }} props
  */
 export function MyPostedCard({ post, onMarkDone, onDelete }) {
   const t = useTranslations('mine')
+  const router = useRouter()
   const active = post.status === 'active'
   return (
     <article className="rounded-ec-card border border-ec-line bg-white p-3.5 shadow-ec-card">
@@ -32,7 +34,7 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
           <button type="button" disabled aria-label={t('posted.repost')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-bg text-ec-ink40">
             <Repeat size={16} />
           </button>
-          <button type="button" disabled aria-label={t('posted.viewChats')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-bg text-ec-ink40">
+          <button type="button" onClick={() => router.push('/messages')} aria-label={t('posted.viewChats')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-sky text-ec-blue">
             <Chat size={16} />
           </button>
           <button type="button" onClick={() => onDelete(post)} aria-label={t('posted.delete')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-dangerBg text-ec-danger">
