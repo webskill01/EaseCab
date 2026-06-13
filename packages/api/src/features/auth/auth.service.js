@@ -34,7 +34,7 @@ function toPublicUser(user) {
  * @param {object} deps
  * @param {ReturnType<import('./auth.repository').createAuthRepository>} deps.repo
  * @param {{ signAccess, signRefresh, verifyRefresh }} deps.jwt - from lib/jwt
- * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }} deps.identity
+ * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }>, mintCustomToken(uid: string): Promise<string> }} deps.identity
  */
 function createAuthService({ repo, jwt, identity }) {
   function issueTokens(user) {
@@ -99,6 +99,15 @@ function createAuthService({ repo, jwt, identity }) {
         throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
       }
       return issueTokens(user);
+    },
+
+    /**
+     * Issue a Firebase custom token for the caller so the client can sign in to
+     * Firebase and SUBSCRIBE to its chat docs read-only (Step 22). The uid carried
+     * by the token is our user id, which the firestore.rules match on.
+     */
+    async mintFirebaseToken(userId) {
+      return { token: await identity.mintCustomToken(userId) };
     },
   };
 }

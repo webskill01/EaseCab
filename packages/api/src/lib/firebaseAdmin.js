@@ -15,7 +15,7 @@ const admin = require('firebase-admin');
  * Live I/O — coverage-excluded (.c8rc), exercised by integration on the VPS.
  *
  * @param {{ projectId: string, clientEmail: string, privateKey: string }} creds
- * @returns {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }}
+ * @returns {{ verifyOtpToken(idToken: string): Promise<{ phone: string }>, mintCustomToken(uid: string): Promise<string> }}
  */
 function createFirebaseIdentity({ projectId, clientEmail, privateKey }) {
   // Named (non-default) app so a future second init — e.g. Step 15 FCM messaging —
@@ -37,6 +37,15 @@ function createFirebaseIdentity({ projectId, clientEmail, privateKey }) {
         throw new Error('firebase id token has no phone_number claim');
       }
       return { phone: decoded.phone_number };
+    },
+
+    /**
+     * Mint a Firebase custom token whose uid == our Postgres user id, so the client
+     * can sign in to Firebase and read its own chat docs/messages (Step 22). The
+     * `firestore.rules` match request.auth.uid against the chat's participant ids.
+     */
+    async mintCustomToken(uid) {
+      return auth.createCustomToken(uid);
     },
   };
 }

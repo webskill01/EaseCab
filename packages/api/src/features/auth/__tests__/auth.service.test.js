@@ -96,6 +96,12 @@ test('refresh rejects missing / invalid / unknown-user tokens as AUTH_REQUIRED',
   await assert.rejects(svc2.refresh('good'), (e) => e.code === ERROR_CODES.AUTH_REQUIRED);
 });
 
+test('mintFirebaseToken returns a custom token for the user id', async () => {
+  const identity = { mintCustomToken: async (uid) => `ct:${uid}` };
+  const svc = make(baseRepo(), identity);
+  assert.deepStrictEqual(await svc.mintFirebaseToken('user-123'), { token: 'ct:user-123' });
+});
+
 test('toPublicUser exposes only safe fields', () => {
   const pub = toPublicUser({
     id: 'u1', phone: '+91x', name: 'A', verificationStatus: 'none', isDeleted: false,
