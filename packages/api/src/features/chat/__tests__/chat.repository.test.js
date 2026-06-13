@@ -69,6 +69,29 @@ test('listMyChats: orders by lastMessageAt desc nulls-last then createdAt', asyn
   assert.equal(prisma.chat._fm.take, 50);
 });
 
+test('listMyChats: enriches with participant names, route cities and the last message', async () => {
+  const prisma = fakePrisma({ chats: [{ id: 'ch1' }] });
+  await createChatRepository({ prisma }).listMyChats('u1', 50);
+  const sel = prisma.chat._fm.select;
+  assert.equal(sel.initiator.select.name, true);
+  assert.equal(sel.poster.select.name, true);
+  assert.equal(sel.postedRide.select.fromCity.select.canonicalName, true);
+  assert.equal(sel.postedRide.select.toCityRaw, true);
+  assert.equal(sel.messages.take, 1);
+  assert.deepEqual(sel.messages.orderBy, { sentAt: 'desc' });
+});
+
+test('unreadCountsByChat: groups inbound unread messages by chat into a { id: count } map', async () => {
+  const prisma = fakePrisma({ unread: [{ chatId: 'ch1', _count: { _all: 3 } }] });
+  const res = await createChatRepository({ prisma }).unreadCountsByChat({ userId: 'u1', chatIds: ['ch1', 'ch2'] });
+  assert.deepEqual(res, { ch1: 3 });
+  assert.deepEqual(prisma.chatMessage._mg.where, { chatId: { in: ['ch1', 'ch2'] }, senderId: { not: 'u1' }, readAt: null });
+});
+
+test('unreadCountsByChat: short-circuits to {} for an empty chat set', async () => {
+  assert.deepEqual(await createChatRepository({ prisma: fakePrisma() }).unreadCountsByChat({ userId: 'u1', chatIds: [] }), {});
+});
+
 test('insertMessage: creates a text message and bumps lastMessageAt in one tx', async () => {
   const prisma = fakePrisma();
   const msg = await createChatRepository({ prisma }).insertMessage({ chatId: 'ch1', senderId: 'u1', messageText: 'hi' });

@@ -13,6 +13,27 @@ const CHAT_SELECT = Object.freeze({
   createdAt: true,
 });
 
+/**
+ * Enriched columns for the chat-list screen (Step 22): bare chat fields + each
+ * participant's display name, the posted ride's route cities, and the single most
+ * recent message (for the preview). The service composes the other-party view from
+ * this per the caller. No PII beyond the name the user set on their own profile.
+ */
+const CHAT_LIST_SELECT = Object.freeze({
+  id: true, postedRideId: true, posterId: true, initiatorId: true,
+  isActive: true, lastMessageAt: true, createdAt: true,
+  initiator: { select: { name: true } },
+  poster: { select: { name: true } },
+  postedRide: {
+    select: {
+      fromCityRaw: true, toCityRaw: true,
+      fromCity: { select: { canonicalName: true } },
+      toCity: { select: { canonicalName: true } },
+    },
+  },
+  messages: { orderBy: { sentAt: 'desc' }, take: 1, select: { messageText: true, senderId: true, sentAt: true } },
+});
+
 /** Message columns that may reach a client. attachmentUrl/readAt deferred (Step 22). */
 const MESSAGE_SELECT = Object.freeze({
   id: true,
@@ -75,8 +96,23 @@ function createChatRepository({ prisma }) {
         where: { OR: [{ initiatorId: userId }, { posterId: userId }] },
         orderBy: [{ lastMessageAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
         take: limit,
-        select: CHAT_SELECT,
+        select: CHAT_LIST_SELECT,
       });
+    },
+
+    /**
+     * Inbound-unread counts for a set of chats, as a `{ [chatId]: count }` map (Step
+     * 22). One groupBy over the caller's unread inbound messages avoids an N+1 per
+     * chat row. Empty input short-circuits (Prisma rejects an empty `in`).
+     */
+    async unreadCountsByChat({ userId, chatIds }) {
+      if (chatIds.length === 0) return {};
+      const rows = await prisma.chatMessage.groupBy({
+        by: ['chatId'],
+        where: { chatId: { in: chatIds }, senderId: { not: userId }, readAt: null },
+        _count: { _all: true },
+      });
+      return Object.fromEntries(rows.map((r) => [r.chatId, r._count._all]));
     },
 
     /**
