@@ -59,7 +59,7 @@ function appWith(identity) {
   return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'order_test' }; } }, surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } } });
 }
 
-const okIdentity = { verifyOtpToken: async () => ({ phone: '+919876543210' }) };
+const okIdentity = { verifyOtpToken: async () => ({ phone: '+919876543210' }), mintCustomToken: async (uid) => `ct:${uid}` };
 
 test('POST /api/v1/auth/send-otp returns the success envelope', async () => {
   const res = await request(appWith(okIdentity)).post('/api/v1/auth/send-otp').send({ phone: '+919876543210' });
@@ -108,6 +108,20 @@ test('refresh with no cookie → 401; logout clears cookies → 200', async () =
   assert.strictEqual(out.status, 200);
   assert.deepStrictEqual(out.body, { success: true, data: { loggedOut: true } });
   assert.match(out.headers['set-cookie'].join(';'), /ec_at=;/); // cleared
+});
+
+test('POST /api/v1/auth/firebase-token requires auth (401 without a cookie)', async () => {
+  const res = await request(appWith(okIdentity)).post('/api/v1/auth/firebase-token').send();
+  assert.strictEqual(res.status, 401);
+  assert.strictEqual(res.body.error.code, 'AUTH_REQUIRED');
+});
+
+test('POST /api/v1/auth/firebase-token returns a custom token for the caller', async () => {
+  const app = appWith(okIdentity);
+  const verified = await request(app).post('/api/v1/auth/verify-otp').send({ idToken: 'x'.repeat(20) });
+  const res = await request(app).post('/api/v1/auth/firebase-token').set('Cookie', verified.headers['set-cookie']).send();
+  assert.strictEqual(res.status, 201);
+  assert.strictEqual(res.body.data.token, 'ct:u1');
 });
 
 test('full round-trip: verify-otp → reuse refresh cookie → refresh issues new tokens', async () => {

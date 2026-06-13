@@ -16,9 +16,11 @@ const { toPublicUser } = require('./auth.service');
  * @param {object} deps
  * @param {ReturnType<import('./auth.service').createAuthService>} deps.service
  * @param {{ cookie: { secure: boolean }, jwt: { accessTtl: string, refreshTtl: string } }} deps.config
+ * @param {import('express').RequestHandler} deps.requireAuth - gate for the authed
+ *   firebase-token route (the OTP routes stay public).
  * @returns {import('express').Router}
  */
-function createAuthRouter({ service, config }) {
+function createAuthRouter({ service, config, requireAuth }) {
   const router = express.Router();
   const cookieCfg = {
     secure: config.cookie.secure,
@@ -54,6 +56,13 @@ function createAuthRouter({ service, config }) {
   router.post('/logout', (_req, res) => {
     clearAuthCookies(res, { secure: config.cookie.secure });
     sendSuccess(res, { data: { loggedOut: true } });
+  });
+
+  // Firebase custom token for client-side Firestore chat reads (Step 22) — authed;
+  // uid == our user id so the firestore.rules participant match applies.
+  router.post('/firebase-token', requireAuth, async (req, res) => {
+    const data = await service.mintFirebaseToken(req.user.id);
+    sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
   });
 
   return router;

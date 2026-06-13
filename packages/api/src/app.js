@@ -145,7 +145,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   // Auth (Step 9) — public.
   const authRepo = createAuthRepository({ prisma, redis });
   const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, config });
-  v1.use('/auth', createAuthRouter({ service: authService, config }));
+  v1.use('/auth', createAuthRouter({ service: authService, config, requireAuth }));
 
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all
   // stream clients; start the subscription now and stash it for graceful shutdown.
