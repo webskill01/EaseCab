@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/api/client', () => ({ apiFetch: vi.fn() }))
 import { apiFetch } from '@/lib/api/client'
-import { getPreferences, updatePreferences } from '../pushApi'
+import { getPreferences, updatePreferences, registerToken, unregisterToken } from '../pushApi'
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -22,5 +22,23 @@ describe('updatePreferences', () => {
     const out = await updatePreferences({ notifyBotRides: false })
     expect(apiFetch).toHaveBeenCalledWith('/push/preferences', { method: 'PATCH', body: JSON.stringify({ notifyBotRides: false }) })
     expect(out.notifyBotRides).toBe(false)
+  })
+})
+
+describe('token registration', () => {
+  it('registerToken POSTs the device token', async () => {
+    apiFetch.mockResolvedValue({ data: { registered: true } })
+    await registerToken({ deviceToken: 'tok-1', platform: 'web' })
+    expect(apiFetch).toHaveBeenCalledWith('/push/subscriptions', {
+      method: 'POST', body: JSON.stringify({ deviceToken: 'tok-1', platform: 'web' }),
+    })
+  })
+
+  it('unregisterToken DELETEs the device token', async () => {
+    apiFetch.mockResolvedValue({ data: { removed: true } })
+    await unregisterToken({ deviceToken: 'tok-1' })
+    expect(apiFetch).toHaveBeenCalledWith('/push/subscriptions', {
+      method: 'DELETE', body: JSON.stringify({ deviceToken: 'tok-1' }),
+    })
   })
 })

@@ -1,8 +1,8 @@
 import { apiFetch } from '@/lib/api/client'
 
 /**
- * Notification-preferences API (mounted at /api/v1/push). The OS-permission prompt +
- * FCM token registration land in Step 23; this is the settings surface only.
+ * Push API (mounted at /api/v1/push): notification preferences (settings surface)
+ * + FCM device-token register/unregister (Step 23 permission flow + logout).
  */
 
 /**
@@ -20,5 +20,27 @@ export async function getPreferences() {
  */
 export async function updatePreferences(body) {
   const { data } = await apiFetch('/push/preferences', { method: 'PATCH', body: JSON.stringify(body) })
+  return data
+}
+
+/**
+ * Register (upsert) this device's FCM token (Step 23).
+ * @param {{ deviceToken: string, platform: string }} body
+ */
+export async function registerToken({ deviceToken, platform }) {
+  const { data } = await apiFetch('/push/subscriptions', {
+    method: 'POST', body: JSON.stringify({ deviceToken, platform }),
+  })
+  return data
+}
+
+/**
+ * Unregister a device token (logout / rotation).
+ * @param {{ deviceToken: string }} body
+ */
+export async function unregisterToken({ deviceToken }) {
+  const { data } = await apiFetch('/push/subscriptions', {
+    method: 'DELETE', body: JSON.stringify({ deviceToken }),
+  })
   return data
 }
