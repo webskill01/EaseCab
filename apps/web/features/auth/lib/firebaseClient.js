@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
 import { env } from '@/config/env'
 
 /**
@@ -18,4 +19,9 @@ function getFirebaseApp() {
 
 export function getFirebaseAuth() {
   return getAuth(getFirebaseApp())
+}
+
+/** Firestore handle on the same app — chat threads subscribe to it read-only (Step 22). */
+export function getFirebaseFirestore() {
+  return getFirestore(getFirebaseApp())
 }
