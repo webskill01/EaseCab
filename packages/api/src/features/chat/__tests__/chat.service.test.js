@@ -17,17 +17,20 @@ function baseRepo(over = {}) {
     async getParticipantChat() { return 'chat' in over ? over.chat : { id: 'ch1' }; },
     async getWritableChat() { return 'writable' in over ? over.writable : { id: 'ch1' }; },
     async listMyChats() { return over.chats ?? []; },
+    async unreadCountsByChat() { return over.unread ?? {}; },
+    async markMessagesRead() { return over.markResult ?? { count: 0 }; },
     async insertMessage(args) { return { id: 'm1', messageType: 'text', sentAt: new Date('2026-06-02T10:00:00.000Z'), ...args, messageText: args.messageText }; },
     async listMessages() { return over.messages ?? []; },
   };
 }
 
 function spyStore() {
-  const calls = { doc: [], msg: [] };
+  const calls = { doc: [], msg: [], read: [] };
   return {
     calls,
     async createChatDoc(a) { calls.doc.push(a); },
     async appendMessage(a) { calls.msg.push(a); },
+    async setLastRead(a) { calls.read.push(a); },
   };
 }
 
@@ -68,6 +71,63 @@ test('listMessages: returns a page + nextCursor when there is a further page', a
   const out = await svc.listMessages('u1', 'ch1', { limit: 2 });
   assert.equal(out.messages.length, 2);
   assert.ok(out.nextCursor);
+});
+
+test('listChats: composes other-party name, route, last-message preview and unread count', async () => {
+  const chats = [{
+    id: 'ch1', postedRideId: 'p1', posterId: 'poster', initiatorId: 'u1',
+    isActive: true, lastMessageAt: new Date('2026-06-13T01:00:00.000Z'), createdAt: new Date('2026-06-12T00:00:00.000Z'),
+    initiator: { name: 'Me' }, poster: { name: 'Driver Singh' },
+    postedRide: { fromCityRaw: null, toCityRaw: null, fromCity: { canonicalName: 'Ludhiana' }, toCity: { canonicalName: 'Delhi' } },
+    messages: [{ messageText: 'on my way', senderId: 'poster', sentAt: new Date('2026-06-13T01:00:00.000Z') }],
+  }];
+  const svc = createChatService({ repo: baseRepo({ chats, unread: { ch1: 2 } }), chatStore: spyStore() });
+  const { chats: out } = await svc.listChats('u1');
+  assert.equal(out[0].otherName, 'Driver Singh');
+  assert.equal(out[0].fromCityName, 'Ludhiana');
+  assert.equal(out[0].toCityName, 'Delhi');
+  assert.equal(out[0].lastMessageText, 'on my way');
+  assert.equal(out[0].unreadCount, 2);
+  assert.equal(out[0].postedRideId, 'p1');
+  assert.equal('phone' in out[0], false);
+});
+
+test('listChats: falls back to raw city + null preview, and shows the initiator name to the poster', async () => {
+  const chats = [{
+    id: 'ch2', postedRideId: 'p2', posterId: 'u1', initiatorId: 'rider',
+    isActive: true, lastMessageAt: null, createdAt: new Date('2026-06-12T00:00:00.000Z'),
+    initiator: { name: 'Rider Kaur' }, poster: { name: 'Me' },
+    postedRide: { fromCityRaw: 'Mohali', toCityRaw: 'Panchkula', fromCity: null, toCity: null },
+    messages: [],
+  }];
+  const svc = createChatService({ repo: baseRepo({ chats }), chatStore: spyStore() });
+  const { chats: out } = await svc.listChats('u1');
+  assert.equal(out[0].otherName, 'Rider Kaur');
+  assert.equal(out[0].fromCityName, 'Mohali');
+  assert.equal(out[0].lastMessageText, null);
+  assert.equal(out[0].unreadCount, 0);
+});
+
+test('markRead: marks inbound read and mirrors the caller-role lastReadAt to Firestore', async () => {
+  const store = spyStore();
+  const svc = createChatService({ repo: baseRepo({ chat: { id: 'ch1', posterId: 'poster', initiatorId: 'u1' } }), chatStore: store });
+  const res = await svc.markRead('u1', 'ch1');
+  assert.ok(res.readAt instanceof Date);
+  assert.equal(store.calls.read.length, 1);
+  assert.equal(store.calls.read[0].role, 'initiator');
+  assert.equal(store.calls.read[0].chatId, 'ch1');
+});
+
+test('markRead: resolves the poster role when the caller is the poster', async () => {
+  const store = spyStore();
+  const svc = createChatService({ repo: baseRepo({ chat: { id: 'ch1', posterId: 'u1', initiatorId: 'other' } }), chatStore: store });
+  await svc.markRead('u1', 'ch1');
+  assert.equal(store.calls.read[0].role, 'poster');
+});
+
+test('markRead: NOT_FOUND when the caller is not a participant', async () => {
+  const svc = createChatService({ repo: baseRepo({ chat: null }), chatStore: spyStore() });
+  await assert.rejects(() => svc.markRead('u1', 'ch1'), code('NOT_FOUND'));
 });
 
 test('sendMessage: NOT_FOUND when the chat is read-only / not a participant', async () => {

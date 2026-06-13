@@ -16,6 +16,30 @@ function toPublicChat(c) {
   };
 }
 
+/** Resolved city display name: canonical (joined) wins, else the raw free-text. */
+const cityName = (c, raw) => (c && c.canonicalName) || raw || null;
+
+/**
+ * Compose the enriched chat-list row a client renders (Step 22): the OTHER party's
+ * name, the posted ride's route, the last-message preview, and the inbound-unread
+ * count. No PII beyond the name the participant set on their own profile.
+ */
+function toChatListItem(c, userId, unread) {
+  const amPoster = c.posterId === userId;
+  const last = c.messages && c.messages[0];
+  return {
+    id: c.id,
+    postedRideId: c.postedRideId,
+    isActive: c.isActive,
+    otherName: (amPoster ? c.initiator && c.initiator.name : c.poster && c.poster.name) ?? null,
+    fromCityName: cityName(c.postedRide && c.postedRide.fromCity, c.postedRide && c.postedRide.fromCityRaw),
+    toCityName: cityName(c.postedRide && c.postedRide.toCity, c.postedRide && c.postedRide.toCityRaw),
+    lastMessageText: (last && last.messageText) ?? null,
+    lastMessageAt: c.lastMessageAt ?? null,
+    unreadCount: unread ?? 0,
+  };
+}
+
 /** Client-safe message projection. */
 function toPublicMessage(m) {
   return {
@@ -65,10 +89,32 @@ function createChatService({ repo, chatStore }) {
       return toPublicChat(chat);
     },
 
-    /** The caller's chats (either role), most recent activity first. */
+    /**
+     * The caller's chats (either role), most recent activity first, each enriched
+     * with the other-party name, route, last-message preview and unread count. The
+     * unread counts are fetched in a single grouped query (no N+1).
+     */
     async listChats(userId) {
       const rows = await repo.listMyChats(userId, CHAT.MINE_LIMIT);
-      return { chats: rows.map(toPublicChat) };
+      const unread = await repo.unreadCountsByChat({ userId, chatIds: rows.map((r) => r.id) });
+      return { chats: rows.map((r) => toChatListItem(r, userId, unread[r.id])) };
+    },
+
+    /**
+     * Mark the caller's inbound messages in a chat read (read receipts), then mirror
+     * their role's lastReadAt onto the Firestore chat doc so the OTHER party's
+     * subscribed thread flips its ticks live. NOT_FOUND if not a participant.
+     */
+    async markRead(userId, chatId) {
+      const chat = await repo.getParticipantChat(chatId, userId);
+      if (!chat) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      const at = new Date();
+      await repo.markMessagesRead({ chatId, readerId: userId, at });
+      const role = chat.posterId === userId ? 'poster' : 'initiator';
+      await chatStore.setLastRead({ chatId, role, at });
+      return { readAt: at };
     },
 
     /** One page of a chat's message history. Participant-gated. */
@@ -110,4 +156,4 @@ function createChatService({ repo, chatStore }) {
   };
 }
 
-module.exports = { createChatService, toPublicChat, toPublicMessage };
+module.exports = { createChatService, toPublicChat, toPublicMessage, toChatListItem };
