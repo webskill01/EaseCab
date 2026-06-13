@@ -42,6 +42,33 @@ function createCitiesRepository({ prisma }) {
       `;
       return rows.map((r) => ({ id: r.city_id, canonicalName: r.canonical_name }));
     },
+
+    /**
+     * Closest active city to (lat,lng) with non-null coords, within maxRadiusKm.
+     * Haversine (great-circle, km) computed in SQL; all inputs are bound params.
+     * @param {{ lat: number, lng: number, maxRadiusKm: number }} args
+     * @returns {Promise<{ id: string, canonicalName: string, distanceKm: number } | null>}
+     */
+    async findNearest({ lat, lng, maxRadiusKm }) {
+      const rows = await prisma.$queryRaw`
+        SELECT id AS city_id, canonical_name, distance_km FROM (
+          SELECT c.id, c.canonical_name,
+            6371 * acos(LEAST(1, GREATEST(-1,
+              cos(radians(${lat})) * cos(radians(c.lat::float8)) *
+              cos(radians(c.lng::float8) - radians(${lng})) +
+              sin(radians(${lat})) * sin(radians(c.lat::float8))
+            ))) AS distance_km
+          FROM cities c
+          WHERE c.is_active = true AND c.lat IS NOT NULL AND c.lng IS NOT NULL
+        ) d
+        WHERE d.distance_km <= ${maxRadiusKm}
+        ORDER BY d.distance_km ASC
+        LIMIT 1
+      `;
+      if (rows.length === 0) return null;
+      const r = rows[0];
+      return { id: r.city_id, canonicalName: r.canonical_name, distanceKm: Number(r.distance_km) };
+    },
   };
 }
 

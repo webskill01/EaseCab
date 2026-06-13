@@ -22,3 +22,25 @@ test('searchCities: passes q/floor/limit as params and maps rows to {id,canonica
   assert.ok(captured.includes(0.2));
   assert.ok(captured.includes(10));
 });
+
+test('findNearest: returns the closest active city within radius', async () => {
+  let captured;
+  const prisma = {
+    async $queryRaw(_strings, ...values) {
+      captured = values;
+      return [{ city_id: 'c1', canonical_name: 'Chandigarh', distance_km: 4.2 }];
+    },
+  };
+  const repo = createCitiesRepository({ prisma });
+  const out = await repo.findNearest({ lat: 30.73, lng: 76.78, maxRadiusKm: 150 });
+  assert.deepEqual(out, { id: 'c1', canonicalName: 'Chandigarh', distanceKm: 4.2 });
+  assert.ok(captured.includes(30.73));
+  assert.ok(captured.includes(76.78));
+  assert.ok(captured.includes(150));
+});
+
+test('findNearest: returns null when no city is in range', async () => {
+  const prisma = { async $queryRaw() { return []; } };
+  const repo = createCitiesRepository({ prisma });
+  assert.equal(await repo.findNearest({ lat: 0, lng: 0, maxRadiusKm: 150 }), null);
+});
