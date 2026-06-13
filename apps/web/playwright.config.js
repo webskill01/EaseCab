@@ -20,6 +20,9 @@ export default defineConfig({
       NEXT_PUBLIC_FIREBASE_API_KEY: 'e2e',
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'e2e.firebaseapp.com',
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'e2e',
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: 'e2e',
+      NEXT_PUBLIC_FIREBASE_APP_ID: 'e2e',
+      NEXT_PUBLIC_FIREBASE_VAPID_KEY: 'e2e',
     },
   },
 })

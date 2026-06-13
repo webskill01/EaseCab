@@ -14,6 +14,9 @@ export default defineConfig({
       NEXT_PUBLIC_FIREBASE_API_KEY: 'test-api-key',
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'test.firebaseapp.com',
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'test-project',
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '1234567890',
+      NEXT_PUBLIC_FIREBASE_APP_ID: '1:1234567890:web:abc',
+      NEXT_PUBLIC_FIREBASE_VAPID_KEY: 'test-vapid-key',
     },
     exclude: ['e2e/**', 'node_modules/**'],
     coverage: {
