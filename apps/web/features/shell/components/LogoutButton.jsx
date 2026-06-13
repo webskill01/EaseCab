@@ -3,14 +3,18 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { logout } from '@/features/auth/services/authApi'
+import { unregisterToken } from '@/features/notifications/services/pushApi'
+import { getStoredToken, clearStoredToken } from '@/features/notifications/lib/pushStorage'
 
-/** Clears the session then sends the user to /login. */
+/** Clears the session (and this device's push token) then sends the user to /login. */
 export function LogoutButton() {
   const router = useRouter()
   const t = useTranslations('common')
 
   async function onLogout() {
     try {
+      const tok = getStoredToken()
+      if (tok) { await unregisterToken({ deviceToken: tok }).catch(() => {}); clearStoredToken() }
       await logout()
     } finally {
       router.replace('/login')
