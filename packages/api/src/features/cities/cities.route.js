@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { citySearchQuerySchema } = require('@easecab/shared');
+const { citySearchQuerySchema, citiesNearestQuerySchema } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
@@ -17,6 +17,11 @@ const { sendSuccess } = require('../../http/respond');
  */
 function createCitiesRouter({ service, requireAuth }) {
   const router = express.Router();
+  // GET /api/v1/cities/nearest?lat=&lng= — geo → suggested alert city (Step 23).
+  router.get('/nearest', requireAuth, validate(citiesNearestQuerySchema, 'query'), async (req, res) => {
+    const data = await service.nearestCity(req.valid.query);
+    sendSuccess(res, { data });
+  });
   router.get('/', requireAuth, validate(citySearchQuerySchema, 'query'), async (req, res) => {
     const data = await service.searchCities(req.valid.query);
     sendSuccess(res, { data });
