@@ -12,4 +12,11 @@ const CITY_SEARCH = Object.freeze({
   SIMILARITY_FLOOR: 0.2,
 });
 
-module.exports = { CITY_SEARCH };
+/**
+ * Nearest-city suggestion (Step 23). The geo→city lookup ignores cities beyond
+ * MAX_RADIUS_KM so a user outside the PB/HR/NCR footprint gets `null` (manual pick)
+ * rather than a meaningless far suggestion.
+ */
+const CITY_NEAREST = Object.freeze({ MAX_RADIUS_KM: 150 });
+
+module.exports = { CITY_SEARCH, CITY_NEAREST };
