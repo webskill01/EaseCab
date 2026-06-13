@@ -16,6 +16,11 @@ import { RideCard } from './RideCard'
 import { RideCardSkeleton, CatchingUp, EmptyFeed } from './FeedStates'
 import { NewRidesPill } from './NewRidesPill'
 import { ContactSheet } from './ContactSheet'
+import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
+import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
+import { NotificationPrePrompt } from '@/features/notifications/components/NotificationPrePrompt'
+import { permissionState, shouldShowPrePrompt } from '@/features/notifications/lib/pushFlow'
+import { isPrePromptDismissed, dismissPrePrompt } from '@/features/notifications/lib/pushStorage'
 
 /**
  * Rides feed — the hero surface (SCREENS §2). Composes the sub-tabs, the live
@@ -41,6 +46,17 @@ export function FeedScreen() {
   const pickCity = (city) => { writeCityLock(city); setLockedCity(city) }
   const goMembership = () => router.push('/membership')
 
+  // Push pre-prompt (Step 23): count viewed cards; once enough are seen and the OS
+  // permission is still undecided, surface the soft pre-prompt. Either action closes it.
+  const [prePromptOpen, setPrePromptOpen] = useState(true)
+  const alerts = useEnableAlerts()
+  const tracker = useRideViewTracker({ enabled: prePromptOpen })
+  const showPrePrompt =
+    prePromptOpen &&
+    shouldShowPrePrompt({ viewedCount: tracker.viewedCount, dismissed: isPrePromptDismissed(), permission: permissionState() })
+  const dismissPre = () => { dismissPrePrompt(); setPrePromptOpen(false) }
+  const enableAlerts = async () => { await alerts.enable(); setPrePromptOpen(false) }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
       {/* Location buttons row (SCREENS §2): Duty Alerts + the city-filter lock.
@@ -48,7 +64,9 @@ export function FeedScreen() {
       <div className="flex gap-3 bg-ec-bg px-4 pb-1 pt-2.5">
         <button
           type="button"
-          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-bold text-ec-blueInk shadow-ec-card"
+          onClick={enableAlerts}
+          disabled={alerts.isEnabling}
+          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-bold text-ec-blueInk shadow-ec-card disabled:opacity-60"
         >
           <span className="inline-flex text-ec-blue"><BellEdit size={18} /></span>{t('filter.notifications')}
         </button>
@@ -67,6 +85,10 @@ export function FeedScreen() {
         <NewRidesPill count={feed.atTop ? 0 : feed.pendingCount} onClick={feed.flushPending} />
         <div className="h-1.5 shrink-0" />
 
+        {showPrePrompt && (
+          <NotificationPrePrompt onEnable={enableAlerts} onDismiss={dismissPre} enabling={alerts.isEnabling} />
+        )}
+
         {feed.isLoading ? (
           [0, 1, 2, 3].map((i) => <RideCardSkeleton key={i} />)
         ) : feed.isError ? (
@@ -77,13 +99,14 @@ export function FeedScreen() {
           <>
             {feed.isReconnecting && <CatchingUp />}
             {feed.rides.map((ride) => (
-              <RideCard
-                key={ride.id}
-                ride={ride}
-                now={feed.now}
-                onContact={(r) => setContactRideVM(r)}
-                onReport={() => { /* report sheet + API deferred (admin Step 24) */ }}
-              />
+              <div key={ride.id} ref={(el) => tracker.observe(el, ride.id)}>
+                <RideCard
+                  ride={ride}
+                  now={feed.now}
+                  onContact={(r) => setContactRideVM(r)}
+                  onReport={() => { /* report sheet + API deferred (admin Step 24) */ }}
+                />
+              </div>
             ))}
           </>
         )}
