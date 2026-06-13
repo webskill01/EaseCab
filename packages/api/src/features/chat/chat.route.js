@@ -43,6 +43,12 @@ function createChatRouter({ service, requireAuth }) {
     sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
   });
 
+  // POST /api/v1/chats/:id/read — mark the caller's inbound messages read (receipts).
+  router.post('/:id/read', validate(chatIdParamSchema, 'params'), async (req, res) => {
+    const data = await service.markRead(req.user.id, req.valid.params.id);
+    sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
+  });
+
   return router;
 }
 

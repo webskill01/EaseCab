@@ -68,11 +68,27 @@ function fakePrisma(seed = {}) {
       async update({ where, data }) { Object.assign(chats.get(where.id), data); return {}; },
     },
     chatMessage: {
-      async create({ data, select }) { const m = { id: `m${seq += 1}`, sentAt: new Date(), ...data }; messages.push(m); return project(m, select); },
+      async create({ data, select }) { const m = { id: `m${seq += 1}`, readAt: null, sentAt: new Date(), ...data }; messages.push(m); return project(m, select); },
       async findMany({ where, take, select }) {
         let rows = messages.filter((m) => m.chatId === where.chatId);
         rows.sort((a, b) => b.sentAt - a.sentAt || (a.id < b.id ? 1 : -1));
         return rows.slice(0, take).map((r) => project(r, select));
+      },
+      async updateMany({ where, data }) {
+        let count = 0;
+        for (const m of messages) {
+          if (m.chatId === where.chatId && m.senderId !== where.senderId.not && !m.readAt) { Object.assign(m, data); count += 1; }
+        }
+        return { count };
+      },
+      async groupBy({ where }) {
+        const counts = {};
+        for (const m of messages) {
+          if (where.chatId.in.includes(m.chatId) && m.senderId !== where.senderId.not && !m.readAt) {
+            counts[m.chatId] = (counts[m.chatId] || 0) + 1;
+          }
+        }
+        return Object.entries(counts).map(([chatId, n]) => ({ chatId, _count: { _all: n } }));
       },
     },
     async $transaction(fn) { return fn(this); },
@@ -84,7 +100,7 @@ function fakeRedis() {
 }
 
 function makeApp(seed) {
-  const store = { docs: [], msgs: [], async createChatDoc(a) { this.docs.push(a); }, async appendMessage(a) { this.msgs.push(a); } };
+  const store = { docs: [], msgs: [], reads: [], async createChatDoc(a) { this.docs.push(a); }, async appendMessage(a) { this.msgs.push(a); }, async setLastRead(a) { this.reads.push(a); } };
   const app = buildApp({
     prisma: fakePrisma(seed), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { async verifyOtpToken() { return { phone: '+910000000000' }; } },
@@ -161,6 +177,26 @@ test('GET /chats → lists the caller chats; messages history returns sent messa
   const hist = await request(app).get(`/api/v1/chats/${UUID('e')}/messages`).set('Cookie', cookieFor('u9'));
   assert.equal(hist.status, 200);
   assert.equal(hist.body.data.messages[0].messageText, 'hi there');
+});
+
+test('POST /chats/:id/read → 201 clears the caller unread count + mirrors lastReadAt', async () => {
+  const app = makeApp({ posts: [activePost(UUID(9), 'u9')], chats: [{ id: UUID('f'), postedRideId: UUID(9), posterId: 'u9', initiatorId: 'u1' }] });
+  // poster u9 sends → initiator u1 now has 1 inbound unread.
+  await request(app).post(`/api/v1/chats/${UUID('f')}/messages`).set('Cookie', cookieFor('u9')).send({ messageText: 'yo' });
+  let list = await request(app).get('/api/v1/chats').set('Cookie', cookieFor('u1'));
+  assert.equal(list.body.data.chats[0].unreadCount, 1);
+  // u1 marks the thread read.
+  const read = await request(app).post(`/api/v1/chats/${UUID('f')}/read`).set('Cookie', cookieFor('u1'));
+  assert.equal(read.status, 201);
+  assert.equal(app.locals._store.reads[0].role, 'initiator');
+  list = await request(app).get('/api/v1/chats').set('Cookie', cookieFor('u1'));
+  assert.equal(list.body.data.chats[0].unreadCount, 0);
+});
+
+test('POST /chats/:id/read → 404 for a non-participant', async () => {
+  const app = makeApp({ chats: [{ id: UUID(2), postedRideId: UUID(7), posterId: 'u9', initiatorId: 'u2' }] });
+  const res = await request(app).post(`/api/v1/chats/${UUID(2)}/read`).set('Cookie', cookieFor('u1'));
+  assert.equal(res.status, 404);
 });
 
 test('unauthenticated → 401 on the chat list', async () => {
