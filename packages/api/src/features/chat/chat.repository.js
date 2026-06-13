@@ -95,6 +95,18 @@ function createChatRepository({ prisma }) {
       });
     },
 
+    /**
+     * Mark the other party's unread messages in a chat as read at `at` (read
+     * receipts, Step 22). Only inbound rows (senderId ≠ reader) that are still
+     * unread are touched. Returns Prisma's `{ count }`.
+     */
+    async markMessagesRead({ chatId, readerId, at }) {
+      return prisma.chatMessage.updateMany({
+        where: { chatId, senderId: { not: readerId }, readAt: null },
+        data: { readAt: at },
+      });
+    },
+
     /** Insert a text message + bump the chat's lastMessageAt, atomically. */
     async insertMessage({ chatId, senderId, messageText }) {
       return prisma.$transaction(async (tx) => {

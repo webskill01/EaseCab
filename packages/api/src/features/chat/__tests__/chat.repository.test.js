@@ -20,6 +20,8 @@ function fakePrisma(over = {}) {
     chatMessage: {
       async create(args) { this._mc = args; return { id: 'm1', sentAt: new Date('2026-06-02T10:00:00.000Z'), ...args.data }; },
       async findMany(args) { this._mf = args; return over.messages ?? []; },
+      async updateMany(args) { this._mu = args; return over.unreadUpdate ?? { count: 0 }; },
+      async groupBy(args) { this._mg = args; return over.unread ?? []; },
     },
     async $transaction(fn) { return fn(this); },
   };
@@ -73,6 +75,16 @@ test('insertMessage: creates a text message and bumps lastMessageAt in one tx', 
   assert.equal(msg.id, 'm1');
   assert.equal(prisma.chatMessage._mc.data.messageType, 'text');
   assert.equal(prisma.chat._cu.data.lastMessageAt, msg.sentAt);
+});
+
+test('markMessagesRead: marks the OTHER party inbound unread messages read at `at`', async () => {
+  const prisma = fakePrisma({ unreadUpdate: { count: 2 } });
+  const repo = createChatRepository({ prisma });
+  const at = new Date('2026-06-13T00:00:00.000Z');
+  const res = await repo.markMessagesRead({ chatId: 'ch1', readerId: 'u1', at });
+  assert.deepEqual(res, { count: 2 });
+  assert.deepEqual(prisma.chatMessage._mu.where, { chatId: 'ch1', senderId: { not: 'u1' }, readAt: null });
+  assert.deepEqual(prisma.chatMessage._mu.data, { readAt: at });
 });
 
 test('listMessages: keyset DESC, fetches limit+1, applies cursor OR clause', async () => {

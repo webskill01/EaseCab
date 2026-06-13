@@ -18,7 +18,8 @@ const { FIRESTORE_PATHS } = require('@easecab/shared');
  * @param {{ projectId: string, clientEmail: string, privateKey: string }} creds
  * @returns {{
  *   createChatDoc(args: { chatId: string, postedRideId: string, posterId: string, initiatorId: string }): Promise<void>,
- *   appendMessage(args: { chatId: string, messageId: string, senderId: string, type: string, text: string, sentAt: Date }): Promise<void>
+ *   appendMessage(args: { chatId: string, messageId: string, senderId: string, type: string, text: string, sentAt: Date }): Promise<void>,
+ *   setLastRead(args: { chatId: string, role: 'initiator' | 'poster', at: Date }): Promise<void>
  * }}
  */
 function createChatStore({ projectId, clientEmail, privateKey }) {
@@ -49,6 +50,16 @@ function createChatStore({ projectId, clientEmail, privateKey }) {
         text,
         sentAt,
       });
+    },
+
+    /**
+     * Stamp a participant's last-read time on the chat doc (Step 22 read receipts)
+     * so the OTHER party's subscribed thread can flip its sent→read ticks live. One
+     * field per role keeps it a single merge write.
+     */
+    async setLastRead({ chatId, role, at }) {
+      const field = role === 'poster' ? 'posterLastReadAt' : 'initiatorLastReadAt';
+      await db.doc(FIRESTORE_PATHS.chatDoc(chatId)).set({ [field]: at }, { merge: true });
     },
   };
 }
