@@ -12,7 +12,9 @@ export function getCurrentPosition() {
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => reject(err),
-      { timeout: 10000, maximumAge: 300000 },
+      // One-shot alert-city setup: keep the fix fresh (≤1 min) so a stale cached
+      // position from a previous city can't silently save the wrong alert city.
+      { timeout: 10000, maximumAge: 60000 },
     )
   })
 }
