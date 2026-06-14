@@ -1,6 +1,6 @@
 'use strict';
 
-const { AUTH_COOKIES } = require('@easecab/shared');
+const { AUTH_COOKIES, ADMIN_AUTH_COOKIES } = require('@easecab/shared');
 const { durationToMs } = require('../lib/duration');
 
 /**
@@ -37,4 +37,27 @@ function clearAuthCookies(res, { secure }) {
   res.clearCookie(AUTH_COOKIES.REFRESH_TOKEN, baseOpts(secure));
 }
 
-module.exports = { setAuthCookies, clearAuthCookies };
+/**
+ * Admin variants of setAuthCookies/clearAuthCookies (Step 24a) — identical
+ * attributes, but the ADMIN cookie names (CLAUDE.md §6). Kept as separate functions
+ * so neither auth flow can touch the other's cookies by accident.
+ * @param {import('express').Response} res
+ * @param {{ accessToken: string, refreshToken: string }} tokens
+ * @param {{ secure: boolean, accessTtl: string, refreshTtl: string }} cfg
+ */
+function setAdminAuthCookies(res, { accessToken, refreshToken }, { secure, accessTtl, refreshTtl }) {
+  res.cookie(ADMIN_AUTH_COOKIES.ACCESS_TOKEN, accessToken, { ...baseOpts(secure), maxAge: durationToMs(accessTtl) });
+  res.cookie(ADMIN_AUTH_COOKIES.REFRESH_TOKEN, refreshToken, { ...baseOpts(secure), maxAge: durationToMs(refreshTtl) });
+}
+
+/**
+ * Clear both admin auth cookies (attributes must match those used to set them).
+ * @param {import('express').Response} res
+ * @param {{ secure: boolean }} cfg
+ */
+function clearAdminAuthCookies(res, { secure }) {
+  res.clearCookie(ADMIN_AUTH_COOKIES.ACCESS_TOKEN, baseOpts(secure));
+  res.clearCookie(ADMIN_AUTH_COOKIES.REFRESH_TOKEN, baseOpts(secure));
+}
+
+module.exports = { setAuthCookies, clearAuthCookies, setAdminAuthCookies, clearAdminAuthCookies };
