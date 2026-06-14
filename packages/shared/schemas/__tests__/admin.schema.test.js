@@ -11,6 +11,10 @@ const {
   adminReportsQuerySchema,
   adminReportActionSchema,
   adminReportIdParamSchema,
+  USER_ACTION,
+  ADMIN_USERS,
+  adminUsersQuerySchema,
+  adminUserActionSchema,
 } = require('../../index');
 
 test('review reject requires a reason', () => {
@@ -62,4 +66,36 @@ test('adminReportActionSchema accepts dismiss/remove and rejects others', () => 
 
 test('adminReportIdParamSchema requires a uuid', () => {
   assert.equal(adminReportIdParamSchema.safeParse({ id: 'nope' }).success, false);
+});
+
+test('USER_ACTION is the frozen {delete, restore} verb set', () => {
+  assert.ok(Object.isFrozen(USER_ACTION));
+  assert.deepEqual(Object.values(USER_ACTION).sort(), ['delete', 'restore']);
+});
+
+test('ADMIN_USERS exposes frozen offset-pagination tuning', () => {
+  assert.ok(Object.isFrozen(ADMIN_USERS));
+  assert.equal(ADMIN_USERS.PAGE_SIZE, 20);
+  assert.equal(ADMIN_USERS.MAX_PAGE_SIZE, 50);
+});
+
+test('adminUsersQuerySchema defaults status=active and page/limit', () => {
+  assert.deepEqual(adminUsersQuerySchema.parse({}), { page: 1, limit: 20, status: 'active' });
+});
+
+test('adminUsersQuerySchema trims q and accepts the status filter', () => {
+  const out = adminUsersQuerySchema.parse({ q: '  98765 ', status: 'deleted', page: '2' });
+  assert.equal(out.q, '98765');
+  assert.equal(out.status, 'deleted');
+  assert.equal(out.page, 2);
+});
+
+test('adminUsersQuerySchema rejects a bad status', () => {
+  assert.equal(adminUsersQuerySchema.safeParse({ status: 'gone' }).success, false);
+});
+
+test('adminUserActionSchema accepts delete/restore and rejects others', () => {
+  assert.equal(adminUserActionSchema.safeParse({ action: 'delete' }).success, true);
+  assert.equal(adminUserActionSchema.safeParse({ action: 'restore' }).success, true);
+  assert.equal(adminUserActionSchema.safeParse({ action: 'nuke' }).success, false);
 });

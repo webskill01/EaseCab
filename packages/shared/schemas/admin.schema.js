@@ -1,7 +1,7 @@
 'use strict';
 
 const { z } = require('zod');
-const { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS } = require('../constants/admin');
+const { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS, USER_ACTION, ADMIN_USERS } = require('../constants/admin');
 const { VERIFICATION_STATUS } = require('../constants/enums');
 
 /**
@@ -54,6 +54,19 @@ const adminReportActionSchema = z.object({
 
 const adminReportIdParamSchema = z.object({ id: z.string().uuid() });
 
+/** Offset pagination + free-text + status filter for the user directory (Step 24d). */
+const adminUsersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_USERS.MAX_PAGE_SIZE).default(ADMIN_USERS.PAGE_SIZE),
+  q: z.string().trim().min(1).max(100).optional(),
+  status: z.enum(['active', 'deleted', 'all']).default('active'),
+});
+
+/** Soft-delete or restore a user (flag only). */
+const adminUserActionSchema = z.object({
+  action: z.enum([USER_ACTION.DELETE, USER_ACTION.RESTORE]),
+});
+
 module.exports = {
   adminLoginSchema,
   adminVerificationsQuerySchema,
@@ -64,4 +77,6 @@ module.exports = {
   adminReportsQuerySchema,
   adminReportActionSchema,
   adminReportIdParamSchema,
+  adminUsersQuerySchema,
+  adminUserActionSchema,
 };

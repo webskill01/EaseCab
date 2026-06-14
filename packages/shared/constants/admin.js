@@ -21,4 +21,10 @@ const REPORT_ACTION = Object.freeze({ DISMISS: 'dismiss', REMOVE: 'remove' });
 /** Ride-reports queue tuning. Offset pagination is acceptable for admin (§8). */
 const ADMIN_REPORTS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 
-module.exports = { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS };
+/** Soft-delete verbs the user-management queue exposes (Step 24d). Flag only. */
+const USER_ACTION = Object.freeze({ DELETE: 'delete', RESTORE: 'restore' });
+
+/** User-directory queue tuning. Offset pagination is acceptable for admin (§8). */
+const ADMIN_USERS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
+
+module.exports = { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS, USER_ACTION, ADMIN_USERS };

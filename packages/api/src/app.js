@@ -55,6 +55,9 @@ const { createAdminVerificationsRouter } = require('./features/admin/adminVerifi
 const { createAdminReportsRepository } = require('./features/admin/adminReports.repository');
 const { createAdminReportsService } = require('./features/admin/adminReports.service');
 const { createAdminReportsRouter } = require('./features/admin/adminReports.route');
+const { createAdminUsersRepository } = require('./features/admin/adminUsers.repository');
+const { createAdminUsersService } = require('./features/admin/adminUsers.service');
+const { createAdminUsersRouter } = require('./features/admin/adminUsers.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
 
 /**
@@ -188,6 +191,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     const adminReportsRepo = createAdminReportsRepository({ prisma });
     const adminReportsService = createAdminReportsService({ repo: adminReportsRepo });
     v1.use('/admin/reports', createAdminReportsRouter({ service: adminReportsService, requireAdmin }));
+
+    // User management (Step 24d) — searchable directory + flag-only soft-delete/restore.
+    const adminUsersRepo = createAdminUsersRepository({ prisma });
+    const adminUsersService = createAdminUsersService({ repo: adminUsersRepo });
+    v1.use('/admin/users', createAdminUsersRouter({ service: adminUsersService, requireAdmin }));
   }
 
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all
