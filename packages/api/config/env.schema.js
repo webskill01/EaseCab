@@ -42,6 +42,14 @@ const serverEnvSchema = envSchema.extend({
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('30d'),
+  // Admin JWT (CLAUDE.md §6, Step 24a) — SEPARATE secrets from the user JWT above so
+  // the two token families are cryptographically isolated (a user token can never be
+  // verified as admin). Admin sessions are shorter-lived (8h refresh vs the 30d user
+  // refresh) — admins re-auth daily. These MUST differ from the JWT_* secrets.
+  ADMIN_JWT_ACCESS_SECRET: z.string().min(32),
+  ADMIN_JWT_REFRESH_SECRET: z.string().min(32),
+  ADMIN_JWT_ACCESS_TTL: z.string().default('15m'),
+  ADMIN_JWT_REFRESH_TTL: z.string().default('8h'),
   CORS_ORIGINS: z
     .string()
     .default(DEFAULT_CORS_ORIGINS)

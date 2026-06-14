@@ -7,6 +7,9 @@ const { parseServerEnv } = require('../env.schema');
 // 32+ char secrets (schema floor — short secrets are trivially brute-forced).
 const SECRET_A = 'a'.repeat(32);
 const SECRET_B = 'b'.repeat(40);
+// Admin JWT secrets — separate from the user ones (CLAUDE.md §6).
+const ADMIN_SECRET_A = 'c'.repeat(32);
+const ADMIN_SECRET_B = 'd'.repeat(40);
 
 // BASE includes the full required server env (Phase 3 Step 9 added FIREBASE_* fields).
 // Tests that exercise "missing required field" spread BASE and delete/override the target.
@@ -15,6 +18,8 @@ const BASE = Object.freeze({
   REDIS_URL: 'redis://127.0.0.1:6379',
   JWT_ACCESS_SECRET: SECRET_A,
   JWT_REFRESH_SECRET: SECRET_B,
+  ADMIN_JWT_ACCESS_SECRET: ADMIN_SECRET_A,
+  ADMIN_JWT_REFRESH_SECRET: ADMIN_SECRET_B,
   FIREBASE_PROJECT_ID: 'easecab-test',
   FIREBASE_CLIENT_EMAIL: 'svc@easecab-test.iam.gserviceaccount.com',
   FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n',
@@ -94,6 +99,8 @@ test('serverEnvSchema requires the FIREBASE_* credentials', () => {
     REDIS_URL: BASE.REDIS_URL,
     JWT_ACCESS_SECRET: BASE.JWT_ACCESS_SECRET,
     JWT_REFRESH_SECRET: BASE.JWT_REFRESH_SECRET,
+    ADMIN_JWT_ACCESS_SECRET: BASE.ADMIN_JWT_ACCESS_SECRET,
+    ADMIN_JWT_REFRESH_SECRET: BASE.ADMIN_JWT_REFRESH_SECRET,
   };
   // Missing all FIREBASE_* → fail
   assert.equal(parseServerEnv(baseNoFirebase).success, false);
@@ -121,4 +128,21 @@ test('serverEnvSchema requires the R2 upload credentials', () => {
   const r = parseServerEnv({ ...BASE, R2_ACCOUNT_ID: undefined });
   assert.equal(r.success, false);
   assert.ok(r.errors.some((e) => e.startsWith('R2_ACCOUNT_ID')));
+});
+
+test('serverEnvSchema requires ADMIN_JWT secrets ≥32 chars and defaults the TTLs', () => {
+  const ok = parseServerEnv(BASE);
+  assert.equal(ok.success, true);
+  assert.equal(ok.data.ADMIN_JWT_ACCESS_SECRET, ADMIN_SECRET_A);
+  assert.equal(ok.data.ADMIN_JWT_ACCESS_TTL, '15m');
+  assert.equal(ok.data.ADMIN_JWT_REFRESH_TTL, '8h');
+
+  const bad = parseServerEnv({ ...BASE, ADMIN_JWT_ACCESS_SECRET: 'short' });
+  assert.equal(bad.success, false);
+  assert.ok(bad.errors.some((e) => e.startsWith('ADMIN_JWT_ACCESS_SECRET')));
+  assert.ok(!bad.errors.some((e) => e.includes('short')));
+
+  const missing = parseServerEnv({ ...BASE, ADMIN_JWT_REFRESH_SECRET: undefined });
+  assert.equal(missing.success, false);
+  assert.ok(missing.errors.some((e) => e.startsWith('ADMIN_JWT_REFRESH_SECRET')));
 });
