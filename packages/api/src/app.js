@@ -58,6 +58,9 @@ const { createAdminReportsRouter } = require('./features/admin/adminReports.rout
 const { createAdminUsersRepository } = require('./features/admin/adminUsers.repository');
 const { createAdminUsersService } = require('./features/admin/adminUsers.service');
 const { createAdminUsersRouter } = require('./features/admin/adminUsers.route');
+const { createAdminCityStringsRepository } = require('./features/admin/adminCityStrings.repository');
+const { createAdminCityStringsService } = require('./features/admin/adminCityStrings.service');
+const { createAdminCityStringsRouter } = require('./features/admin/adminCityStrings.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
 
 /**
@@ -170,6 +173,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, config });
   v1.use('/auth', createAuthRouter({ service: authService, config, requireAuth }));
 
+  // Cities (Step 13) — authed typeahead for the post form + Step-18 filter bar.
+  // Built before the admin block so Step-24e can reuse citiesService behind requireAdmin.
+  const citiesRepo = createCitiesRepository({ prisma });
+  const citiesService = createCitiesService({ repo: citiesRepo });
+
   // Admin auth (Step 24a) — fully isolated: own JWT secret, own cookies, checks the
   // admin_users table only (CLAUDE.md §6). requireAdmin gates the 24b–24e admin
   // feature routers. Password hashing via the bcryptjs boundary. Mounted only when
@@ -196,6 +204,13 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     const adminUsersRepo = createAdminUsersRepository({ prisma });
     const adminUsersService = createAdminUsersService({ repo: adminUsersRepo });
     v1.use('/admin/users', createAdminUsersRouter({ service: adminUsersService, requireAdmin }));
+
+    // City-string resolution (Step 24e) — admin clears unresolved_city_strings by
+    // writing manual aliases (feeds CityResolverService) or dismissing junk; the
+    // /cities sub-route reuses citiesService behind requireAdmin for the picker.
+    const adminCityStringsRepo = createAdminCityStringsRepository({ prisma });
+    const adminCityStringsService = createAdminCityStringsService({ repo: adminCityStringsRepo });
+    v1.use('/admin/city-strings', createAdminCityStringsRouter({ service: adminCityStringsService, citiesService, requireAdmin }));
   }
 
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all
@@ -215,9 +230,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const verificationService = createVerificationService({ repo: verificationRepo, surepass });
   v1.use('/verification', createVerificationRouter({ service: verificationService, requireAuth }));
 
-  // Cities (Step 13) — authed typeahead for the post form + Step-18 filter bar.
-  const citiesRepo = createCitiesRepository({ prisma });
-  const citiesService = createCitiesService({ repo: citiesRepo });
+  // Cities (Step 13) — mount the authed typeahead (citiesService built above).
   v1.use('/cities', createCitiesRouter({ service: citiesService, requireAuth }));
 
   // Posted rides (Step 13) — authed app-native posts (24h TTL); KYC-gated create,

@@ -1,7 +1,10 @@
 'use strict';
 
 const { z } = require('zod');
-const { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS, USER_ACTION, ADMIN_USERS } = require('../constants/admin');
+const {
+  REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
+  USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
+} = require('../constants/admin');
 const { VERIFICATION_STATUS } = require('../constants/enums');
 
 /**
@@ -67,6 +70,26 @@ const adminUserActionSchema = z.object({
   action: z.enum([USER_ACTION.DELETE, USER_ACTION.RESTORE]),
 });
 
+/** Offset pagination for the unresolved city-string queue (Step 24e). */
+const adminCityStringsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_CITY_STRINGS.MAX_PAGE_SIZE).default(ADMIN_CITY_STRINGS.PAGE_SIZE),
+});
+
+/** Resolve (alias to a city) or dismiss; a cityId is mandatory when resolving. */
+const adminCityStringActionSchema = z
+  .object({
+    action: z.enum([CITY_STRING_ACTION.RESOLVE, CITY_STRING_ACTION.DISMISS]),
+    cityId: z.string().uuid().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.action === CITY_STRING_ACTION.RESOLVE && !v.cityId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cityId'], message: 'cityId required when resolving' });
+    }
+  });
+
+const adminCityStringIdParamSchema = z.object({ id: z.string().uuid() });
+
 module.exports = {
   adminLoginSchema,
   adminVerificationsQuerySchema,
@@ -79,4 +102,7 @@ module.exports = {
   adminReportIdParamSchema,
   adminUsersQuerySchema,
   adminUserActionSchema,
+  adminCityStringsQuerySchema,
+  adminCityStringActionSchema,
+  adminCityStringIdParamSchema,
 };

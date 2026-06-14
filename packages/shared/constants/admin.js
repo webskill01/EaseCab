@@ -27,4 +27,14 @@ const USER_ACTION = Object.freeze({ DELETE: 'delete', RESTORE: 'restore' });
 /** User-directory queue tuning. Offset pagination is acceptable for admin (§8). */
 const ADMIN_USERS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 
-module.exports = { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS, USER_ACTION, ADMIN_USERS };
+/** City-string queue verbs (Step 24e). `resolve` writes a city_aliases row (feeds
+ * CityResolverService exact match); `dismiss` marks the row reviewed without aliasing. */
+const CITY_STRING_ACTION = Object.freeze({ RESOLVE: 'resolve', DISMISS: 'dismiss' });
+
+/** City-string queue tuning. Offset pagination is acceptable for admin (§8). */
+const ADMIN_CITY_STRINGS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
+
+module.exports = {
+  REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
+  USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
+};

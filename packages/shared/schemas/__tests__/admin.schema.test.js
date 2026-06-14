@@ -15,7 +15,14 @@ const {
   ADMIN_USERS,
   adminUsersQuerySchema,
   adminUserActionSchema,
+  CITY_STRING_ACTION,
+  ADMIN_CITY_STRINGS,
+  adminCityStringsQuerySchema,
+  adminCityStringActionSchema,
+  adminCityStringIdParamSchema,
 } = require('../../index');
+
+const UUID = '11111111-1111-1111-1111-111111111111';
 
 test('review reject requires a reason', () => {
   assert.equal(adminReviewActionSchema.safeParse({ action: 'reject' }).success, false);
@@ -98,4 +105,40 @@ test('adminUserActionSchema accepts delete/restore and rejects others', () => {
   assert.equal(adminUserActionSchema.safeParse({ action: 'delete' }).success, true);
   assert.equal(adminUserActionSchema.safeParse({ action: 'restore' }).success, true);
   assert.equal(adminUserActionSchema.safeParse({ action: 'nuke' }).success, false);
+});
+
+test('CITY_STRING_ACTION is the frozen {resolve, dismiss} verb set', () => {
+  assert.ok(Object.isFrozen(CITY_STRING_ACTION));
+  assert.deepEqual(Object.values(CITY_STRING_ACTION).sort(), ['dismiss', 'resolve']);
+});
+
+test('ADMIN_CITY_STRINGS exposes frozen offset-pagination tuning', () => {
+  assert.ok(Object.isFrozen(ADMIN_CITY_STRINGS));
+  assert.equal(ADMIN_CITY_STRINGS.PAGE_SIZE, 20);
+  assert.equal(ADMIN_CITY_STRINGS.MAX_PAGE_SIZE, 50);
+});
+
+test('adminCityStringsQuerySchema coerces page/limit with defaults', () => {
+  assert.deepEqual(adminCityStringsQuerySchema.parse({ page: '3', limit: '5' }), { page: 3, limit: 5 });
+  assert.deepEqual(adminCityStringsQuerySchema.parse({}), { page: 1, limit: 20 });
+});
+
+test('adminCityStringsQuerySchema rejects an over-cap limit', () => {
+  assert.equal(adminCityStringsQuerySchema.safeParse({ limit: 999 }).success, false);
+});
+
+test('adminCityStringActionSchema requires a uuid cityId when resolving', () => {
+  assert.equal(adminCityStringActionSchema.safeParse({ action: 'resolve' }).success, false);
+  assert.equal(adminCityStringActionSchema.safeParse({ action: 'resolve', cityId: 'nope' }).success, false);
+  assert.equal(adminCityStringActionSchema.safeParse({ action: 'resolve', cityId: UUID }).success, true);
+});
+
+test('adminCityStringActionSchema accepts dismiss without a cityId and rejects junk actions', () => {
+  assert.equal(adminCityStringActionSchema.safeParse({ action: 'dismiss' }).success, true);
+  assert.equal(adminCityStringActionSchema.safeParse({ action: 'delete' }).success, false);
+});
+
+test('adminCityStringIdParamSchema requires a uuid', () => {
+  assert.equal(adminCityStringIdParamSchema.safeParse({ id: 'nope' }).success, false);
+  assert.equal(adminCityStringIdParamSchema.safeParse({ id: UUID }).success, true);
 });
