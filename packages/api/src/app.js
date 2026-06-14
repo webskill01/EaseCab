@@ -49,6 +49,9 @@ const { createRequireAdmin } = require('./middleware/requireAdmin');
 const { createAdminAuthRepository } = require('./features/admin/adminAuth.repository');
 const { createAdminAuthService } = require('./features/admin/adminAuth.service');
 const { createAdminAuthRouter } = require('./features/admin/adminAuth.route');
+const { createAdminVerificationsRepository } = require('./features/admin/adminVerifications.repository');
+const { createAdminVerificationsService } = require('./features/admin/adminVerifications.service');
+const { createAdminVerificationsRouter } = require('./features/admin/adminVerifications.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
 
 /**
@@ -170,6 +173,13 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     const adminAuthRepo = createAdminAuthRepository({ prisma, redis });
     const adminAuthService = createAdminAuthService({ repo: adminAuthRepo, jwt: app.locals.adminJwt, hasher: createPasswordHasher() });
     v1.use('/admin/auth', createAdminAuthRouter({ service: adminAuthService, config, requireAdmin }));
+
+    // Verifications queue (Step 24b) — submitted DL/RC review + manual driver badge.
+    // `uploads` is the optional R2 client (presignGet for private KYC images); when
+    // absent (non-admin/test harnesses) image URLs resolve to null, never an error.
+    const adminVerificationsRepo = createAdminVerificationsRepository({ prisma });
+    const adminVerificationsService = createAdminVerificationsService({ repo: adminVerificationsRepo, r2: uploads });
+    v1.use('/admin/verifications', createAdminVerificationsRouter({ service: adminVerificationsService, requireAdmin }));
   }
 
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all

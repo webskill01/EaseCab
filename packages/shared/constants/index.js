@@ -20,4 +20,5 @@ module.exports = {
   ...require('./push'),
   ...require('./contacts'),
   ...require('./uploads'),
+  ...require('./admin'),
 };

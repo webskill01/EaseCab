@@ -385,6 +385,11 @@ model VerificationSubmission {
   // verified holder name for the admin to match against.
   surepassRef  String?             @map("surepass_ref")
   verifiedName String?             @map("verified_name")
+  // Admin review audit (Step 24b). Step 12 writes null; the admin queue stamps these
+  // on approve/reject. reviewedBy → admin_users.id (never users — §6).
+  reviewedBy      String?          @map("reviewed_by") @db.Uuid
+  reviewedAt      DateTime?        @map("reviewed_at") @db.Timestamptz(6)
+  rejectionReason String?          @map("rejection_reason")
   createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -393,10 +398,13 @@ model VerificationSubmission {
   // from payments' Restrict (no financial/GST retention duty on KYC). The service
   // never calls user.delete() directly — only the soft-delete path (db-review H2).
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // SetNull (Step 24b): retain the audit row if the reviewing admin is later removed.
+  reviewer AdminUser? @relation(fields: [reviewedBy], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([status, createdAt]) // admin verifications queue: (status, newest-first)
   @@index([docType])
+  @@index([reviewedBy]) // FK index (§7) — admin's reviewed-submissions lookup
   // NOTE: a partial-unique index UNIQUE(user_id, doc_type) WHERE status='submitted'
   // and a CHECK(status <> 'none') are added in the migration SQL — Prisma cannot
   // express WHERE-filtered indexes or CHECK constraints (db-review H3 + M2).
@@ -539,6 +547,8 @@ model AdminUser {
   passwordHash String    @map("password_hash")
   role         AdminRole @default(reviewer)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  reviewedSubmissions VerificationSubmission[]
 
   @@map("admin_users")
 }
