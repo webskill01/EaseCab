@@ -47,6 +47,12 @@ async function main() {
       accessTtl: serverEnv.JWT_ACCESS_TTL,
       refreshTtl: serverEnv.JWT_REFRESH_TTL,
     },
+    adminJwt: {
+      accessSecret: serverEnv.ADMIN_JWT_ACCESS_SECRET,
+      refreshSecret: serverEnv.ADMIN_JWT_REFRESH_SECRET,
+      accessTtl: serverEnv.ADMIN_JWT_ACCESS_TTL,
+      refreshTtl: serverEnv.ADMIN_JWT_REFRESH_TTL,
+    },
     razorpay: {
       keyId: serverEnv.RAZORPAY_KEY_ID,
       keySecret: serverEnv.RAZORPAY_KEY_SECRET,

@@ -45,6 +45,11 @@ const { createPushRouter } = require('./features/push/push.route');
 const { createPushDispatcher } = require('./features/push/pushDispatcher');
 const { createUploadsService } = require('./features/uploads/uploads.service');
 const { createUploadsRouter } = require('./features/uploads/uploads.route');
+const { createRequireAdmin } = require('./middleware/requireAdmin');
+const { createAdminAuthRepository } = require('./features/admin/adminAuth.repository');
+const { createAdminAuthService } = require('./features/admin/adminAuth.service');
+const { createAdminAuthRouter } = require('./features/admin/adminAuth.route');
+const { createPasswordHasher } = require('./lib/passwordHasher');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -63,6 +68,8 @@ const { createUploadsRouter } = require('./features/uploads/uploads.route');
  * @param {string[]} deps.config.corsOrigins
  * @param {{ secure: boolean }} deps.config.cookie
  * @param {{ accessSecret, refreshSecret, accessTtl, refreshTtl }} deps.config.jwt
+ * @param {{ accessSecret, refreshSecret, accessTtl, refreshTtl }} deps.config.adminJwt
+ *   - SEPARATE admin JWT secrets/TTLs (Step 24a, §6); a second createJwt instance.
  * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }} deps.identity
  * @param {import('ioredis').Redis} deps.subscriber - dedicated redis subscriber
  *   (a `redis.duplicate()`) backing the rides SSE fan-out; a subscriber-mode
@@ -95,6 +102,13 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   app.locals.prisma = prisma;
   app.locals.redis = redis;
   app.locals.jwt = createJwt(config.jwt);
+  // Admin JWT (Step 24a) — a SECOND createJwt with separate secrets (§6). Optional in
+  // buildApp wiring like chatStore/uploads: production ALWAYS supplies config.adminJwt
+  // (serverEnvSchema requires ADMIN_JWT_* and exits if absent), so the only callers
+  // that omit it are non-admin test harnesses, which simply don't mount /admin/auth.
+  if (config.adminJwt) {
+    app.locals.adminJwt = createJwt(config.adminJwt);
+  }
   app.locals.config = config;
 
   // requestId first so every log line + error envelope can carry it.
@@ -146,6 +160,17 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const authRepo = createAuthRepository({ prisma, redis });
   const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, config });
   v1.use('/auth', createAuthRouter({ service: authService, config, requireAuth }));
+
+  // Admin auth (Step 24a) — fully isolated: own JWT secret, own cookies, checks the
+  // admin_users table only (CLAUDE.md §6). requireAdmin gates the 24b–24e admin
+  // feature routers. Password hashing via the bcryptjs boundary. Mounted only when
+  // config.adminJwt is present (always true in production — see app.locals above).
+  if (app.locals.adminJwt) {
+    const requireAdmin = createRequireAdmin({ jwt: app.locals.adminJwt });
+    const adminAuthRepo = createAdminAuthRepository({ prisma, redis });
+    const adminAuthService = createAdminAuthService({ repo: adminAuthRepo, jwt: app.locals.adminJwt, hasher: createPasswordHasher() });
+    v1.use('/admin/auth', createAdminAuthRouter({ service: adminAuthService, config, requireAdmin }));
+  }
 
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all
   // stream clients; start the subscription now and stash it for graceful shutdown.
