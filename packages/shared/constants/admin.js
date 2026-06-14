@@ -14,4 +14,11 @@ const ADMIN_VERIFICATIONS = Object.freeze({
   DOC_TYPES: Object.freeze(['dl', 'rc']),
 });
 
-module.exports = { REVIEW_ACTION, ADMIN_VERIFICATIONS };
+/** Moderation verbs the ride-reports queue exposes (Step 24c). `remove` takes the
+ * reported ride down (RideStatus.hidden / PostedRideStatus.deleted). */
+const REPORT_ACTION = Object.freeze({ DISMISS: 'dismiss', REMOVE: 'remove' });
+
+/** Ride-reports queue tuning. Offset pagination is acceptable for admin (§8). */
+const ADMIN_REPORTS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
+
+module.exports = { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS };

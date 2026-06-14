@@ -1,7 +1,7 @@
 'use strict';
 
 const { z } = require('zod');
-const { REVIEW_ACTION, ADMIN_VERIFICATIONS } = require('../constants/admin');
+const { REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS } = require('../constants/admin');
 const { VERIFICATION_STATUS } = require('../constants/enums');
 
 /**
@@ -40,6 +40,20 @@ const adminBadgeSchema = z.object({
 const adminSubmissionIdParamSchema = z.object({ id: z.string().uuid() });
 const adminUserIdParamSchema = z.object({ userId: z.string().uuid() });
 
+/** Offset pagination + open/resolved filter for the ride-reports queue (Step 24c). */
+const adminReportsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_REPORTS.MAX_PAGE_SIZE).default(ADMIN_REPORTS.PAGE_SIZE),
+  status: z.enum(['open', 'resolved']).default('open'),
+});
+
+/** Dismiss the report, or remove (take down) the reported ride. */
+const adminReportActionSchema = z.object({
+  action: z.enum([REPORT_ACTION.DISMISS, REPORT_ACTION.REMOVE]),
+});
+
+const adminReportIdParamSchema = z.object({ id: z.string().uuid() });
+
 module.exports = {
   adminLoginSchema,
   adminVerificationsQuerySchema,
@@ -47,4 +61,7 @@ module.exports = {
   adminBadgeSchema,
   adminSubmissionIdParamSchema,
   adminUserIdParamSchema,
+  adminReportsQuerySchema,
+  adminReportActionSchema,
+  adminReportIdParamSchema,
 };

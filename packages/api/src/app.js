@@ -52,6 +52,9 @@ const { createAdminAuthRouter } = require('./features/admin/adminAuth.route');
 const { createAdminVerificationsRepository } = require('./features/admin/adminVerifications.repository');
 const { createAdminVerificationsService } = require('./features/admin/adminVerifications.service');
 const { createAdminVerificationsRouter } = require('./features/admin/adminVerifications.route');
+const { createAdminReportsRepository } = require('./features/admin/adminReports.repository');
+const { createAdminReportsService } = require('./features/admin/adminReports.service');
+const { createAdminReportsRouter } = require('./features/admin/adminReports.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
 
 /**
@@ -180,6 +183,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     const adminVerificationsRepo = createAdminVerificationsRepository({ prisma });
     const adminVerificationsService = createAdminVerificationsService({ repo: adminVerificationsRepo, r2: uploads });
     v1.use('/admin/verifications', createAdminVerificationsRouter({ service: adminVerificationsService, requireAdmin }));
+
+    // Ride reports moderation (Step 24c) — dismiss/remove on bot + posted-ride reports.
+    const adminReportsRepo = createAdminReportsRepository({ prisma });
+    const adminReportsService = createAdminReportsService({ repo: adminReportsRepo });
+    v1.use('/admin/reports', createAdminReportsRouter({ service: adminReportsService, requireAdmin }));
   }
 
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all

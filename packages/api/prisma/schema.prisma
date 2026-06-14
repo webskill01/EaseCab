@@ -90,6 +90,11 @@ enum ReportReason {
   other
 }
 
+enum ReportAction {
+  dismiss
+  remove
+}
+
 enum MessageType {
   text
   image
@@ -457,16 +462,21 @@ model RideReport {
   remarks      String?
   screenshotUrl String?     @map("screenshot_url")
   reviewedAt   DateTime?    @map("reviewed_at") @db.Timestamptz(6)
+  // Admin moderation verdict (Step 24c). reviewedBy → admin_users.id (never users — §6).
+  reviewedBy    String?       @map("reviewed_by") @db.Uuid
+  reviewAction  ReportAction? @map("review_action")
   createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
 
   reporter   User        @relation(fields: [reporterId], references: [id], onDelete: Cascade)
   ride       Ride?       @relation(fields: [rideId], references: [id], onDelete: Cascade)
   postedRide PostedRide? @relation(fields: [postedRideId], references: [id], onDelete: Cascade)
+  reviewer   AdminUser?  @relation(fields: [reviewedBy], references: [id], onDelete: SetNull)
 
   @@index([reporterId])
   @@index([rideId])
   @@index([postedRideId])
   @@index([reviewedAt])
+  @@index([reviewedBy])
   @@index([createdAt])
   @@map("ride_reports")
 }
@@ -549,6 +559,7 @@ model AdminUser {
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   reviewedSubmissions VerificationSubmission[]
+  reviewedReports     RideReport[]
 
   @@map("admin_users")
 }
