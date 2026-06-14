@@ -196,8 +196,9 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     v1.use('/admin/verifications', createAdminVerificationsRouter({ service: adminVerificationsService, requireAdmin }));
 
     // Ride reports moderation (Step 24c) — dismiss/remove on bot + posted-ride reports.
+    // r2=uploads presigns the user-supplied screenshot (§12); null when R2 absent.
     const adminReportsRepo = createAdminReportsRepository({ prisma });
-    const adminReportsService = createAdminReportsService({ repo: adminReportsRepo });
+    const adminReportsService = createAdminReportsService({ repo: adminReportsRepo, r2: uploads });
     v1.use('/admin/reports', createAdminReportsRouter({ service: adminReportsService, requireAdmin }));
 
     // User management (Step 24d) — searchable directory + flag-only soft-delete/restore.

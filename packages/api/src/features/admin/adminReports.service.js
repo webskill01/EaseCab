@@ -39,19 +39,32 @@ function toTarget(row) {
 
 /**
  * Admin ride-reports business logic (CLAUDE.md §4). Masks the reporter phone, shapes
- * the reported target, and applies dismiss/remove verdicts (cascade-resolving every
- * open report on the same target via the repository transaction).
+ * the reported target, presigns the user-supplied screenshot (CLAUDE.md §12 — never
+ * surface a raw R2 key/bucket URL), and applies dismiss/remove verdicts (cascade-
+ * resolving every open report on the same target via the repository transaction).
  *
  * @param {object} deps
  * @param {ReturnType<import('./adminReports.repository').createAdminReportsRepository>} deps.repo
+ * @param {{ presignGet(args: { key: string }): Promise<string> }} [deps.r2] - optional R2 client
  */
-function createAdminReportsService({ repo }) {
-  function toItem(row) {
+function createAdminReportsService({ repo, r2 }) {
+  // Best-effort presign for the report screenshot — a missing key or absent/erroring
+  // R2 boundary yields null, never an error (image serving must not break the queue).
+  async function presign(key) {
+    if (!key || !r2) return null;
+    try {
+      return await r2.presignGet({ key });
+    } catch {
+      return null;
+    }
+  }
+
+  async function toItem(row) {
     return {
       id: row.id,
       reason: row.reason,
       remarks: row.remarks,
-      screenshotUrl: row.screenshotUrl,
+      screenshotUrl: await presign(row.screenshotUrl),
       createdAt: row.createdAt,
       reviewedAt: row.reviewedAt,
       reporter: { id: row.reporter.id, name: row.reporter.name, phoneMasked: maskPhone(row.reporter.phone) },
@@ -60,10 +73,11 @@ function createAdminReportsService({ repo }) {
   }
 
   return {
-    /** Offset-paginated reports queue (open or resolved). */
+    /** Offset-paginated reports queue (open or resolved) with presigned screenshots. */
     async list({ page, limit, status }) {
       const { rows, total } = await repo.listReports({ page, limit, status });
-      return { items: rows.map(toItem), total, page, limit };
+      const items = await Promise.all(rows.map(toItem));
+      return { items, total, page, limit };
     },
 
     /** Dismiss or remove; cascade-resolves siblings. NOT_FOUND if the report is gone. */

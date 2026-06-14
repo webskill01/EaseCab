@@ -4,7 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert');
 const { createJwt } = require('../../lib/jwt');
 const { createRequireAdmin } = require('../requireAdmin');
-const { ADMIN_AUTH_COOKIES } = require('@easecab/shared');
+const { ADMIN_AUTH_COOKIES, ADMIN_ROLE } = require('@easecab/shared');
 
 const jwt = createJwt({ accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '8h' });
 
@@ -16,10 +16,22 @@ function run(cookies) {
 }
 
 test('valid admin access cookie → req.admin set, next() with no error', () => {
-  const token = jwt.signAccess({ sub: 'adm1', role: 'super', email: 'a@x.com' });
+  const token = jwt.signAccess({ sub: 'adm1', role: 'super', email: 'a@x.com', kind: ADMIN_ROLE });
   const { req, nextArg } = run({ [ADMIN_AUTH_COOKIES.ACCESS_TOKEN]: token });
   assert.strictEqual(nextArg, undefined);
   assert.deepStrictEqual(req.admin, { id: 'adm1', role: 'super', email: 'a@x.com' });
+});
+
+test('a token signed with the admin secret but WITHOUT kind:admin is rejected', () => {
+  const token = jwt.signAccess({ sub: 'svc1', role: 'super', email: 's@x.com' });
+  const { nextArg } = run({ [ADMIN_AUTH_COOKIES.ACCESS_TOKEN]: token });
+  assert.strictEqual(nextArg.code, 'AUTH_REQUIRED');
+});
+
+test('a token with a non-admin kind is rejected', () => {
+  const token = jwt.signAccess({ sub: 'u1', role: 'user', email: 'u@x.com', kind: 'user' });
+  const { nextArg } = run({ [ADMIN_AUTH_COOKIES.ACCESS_TOKEN]: token });
+  assert.strictEqual(nextArg.code, 'AUTH_REQUIRED');
 });
 
 test('missing cookie → AUTH_REQUIRED', () => {

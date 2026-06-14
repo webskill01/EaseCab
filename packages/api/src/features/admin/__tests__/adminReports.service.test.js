@@ -55,6 +55,25 @@ test('list shapes a posted-ride target (raw-city + poster-name fallbacks)', asyn
   assert.strictEqual(item.target.posterName, 'Driver');
 });
 
+test('list presigns the screenshotUrl via the r2 boundary (never returns a raw key)', async () => {
+  const repo = fakeRepo({
+    async listReports() { return { rows: [{ ...BOT_ROW, id: 'r3', screenshotUrl: 'reports/abc.jpg' }], total: 1 }; },
+  });
+  const r2 = { async presignGet({ key }) { return `https://signed/${key}`; } };
+  const svc = createAdminReportsService({ repo, r2 });
+  const item = (await svc.list({ page: 1, limit: 20, status: 'open' })).items[0];
+  assert.strictEqual(item.screenshotUrl, 'https://signed/reports/abc.jpg');
+});
+
+test('list yields null screenshotUrl when there is no key or no r2 boundary', async () => {
+  const repo = fakeRepo({
+    async listReports() { return { rows: [{ ...BOT_ROW, id: 'r4', screenshotUrl: 'reports/x.jpg' }], total: 1 }; },
+  });
+  const svc = createAdminReportsService({ repo }); // no r2 injected
+  const item = (await svc.list({ page: 1, limit: 20, status: 'open' })).items[0];
+  assert.strictEqual(item.screenshotUrl, null);
+});
+
 test('review on an unknown id throws NOT_FOUND', async () => {
   const svc = createAdminReportsService({ repo: fakeRepo() });
   await assert.rejects(() => svc.review('missing', { action: 'dismiss' }, 'adm1'), (err) => err.code === 'NOT_FOUND');
