@@ -38,6 +38,20 @@ const ADMIN_LOGIN_RATE_LIMIT = Object.freeze({
 });
 
 /**
+ * Admin login throttle, SECOND layer — keyed on client IP (security-review H3).
+ * The per-email cap above is trivially bypassed by spraying many emails from one
+ * host (each email allows 5 bcrypt attempts before locking). This caps TOTAL login
+ * attempts from a single IP per window regardless of which email is tried. The cap
+ * is higher than the per-email one so a few admins behind one office NAT can still
+ * retry, while a credential-spray bot is stopped. Read from req.ip (Express
+ * `trust proxy` is set → real client IP from X-Forwarded-For behind Nginx).
+ */
+const ADMIN_LOGIN_IP_RATE_LIMIT = Object.freeze({
+  MAX_PER_WINDOW: 30,
+  WINDOW_SEC: 900,
+});
+
+/**
  * OTP request limits enforced by OUR /send-otp gate in Redis (CLAUDE.md §6),
  * independent of Firebase's own throttling. MAX_PER_HOUR requests per phone per
  * rolling WINDOW_SEC; RESEND_COOLDOWN_SEC minimum gap between consecutive sends.
@@ -62,4 +76,5 @@ module.exports = {
   ADMIN_AUTH_COOKIES,
   ADMIN_ROLE,
   ADMIN_LOGIN_RATE_LIMIT,
+  ADMIN_LOGIN_IP_RATE_LIMIT,
 };

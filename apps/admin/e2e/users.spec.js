@@ -25,6 +25,7 @@ test('users directory lists a user and soft-deletes them', async ({ page }) => {
     })
   })
 
+  await page.context().addCookies([{ name: 'ec_admin_rt', value: 'test-session', url: 'http://localhost:3101' }])
   await page.goto('/users')
   await expect(page.getByText('••••3210')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Users/i })).toBeVisible()

@@ -40,7 +40,7 @@ async function main() {
 
   const config = {
     corsOrigins: serverEnv.CORS_ORIGINS,
-    cookie: { secure: serverEnv.NODE_ENV === 'production' },
+    cookie: { secure: serverEnv.NODE_ENV === 'production', adminDomain: serverEnv.ADMIN_COOKIE_DOMAIN },
     jwt: {
       accessSecret: serverEnv.JWT_ACCESS_SECRET,
       refreshSecret: serverEnv.JWT_REFRESH_SECRET,

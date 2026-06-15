@@ -7,6 +7,9 @@ test('login → dashboard, with the guarded route staying in', async ({ page }) 
     r.fulfill({
       status: 200,
       contentType: 'application/json',
+      // The real API sets httpOnly admin cookies here; mirror that so the M2
+      // middleware sees a session when the app navigates to the guarded shell.
+      headers: { 'set-cookie': 'ec_admin_rt=test-session; Path=/; SameSite=Lax' },
       body: JSON.stringify({ success: true, data: { admin: ADMIN } }),
     }))
   await page.route('**/api/v1/admin/auth/me', (r) =>

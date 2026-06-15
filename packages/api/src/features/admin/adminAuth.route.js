@@ -19,15 +19,19 @@ const { setAdminAuthCookies, clearAdminAuthCookies } = require('../../http/cooki
  */
 function createAdminAuthRouter({ service, config, requireAdmin }) {
   const router = express.Router();
+  // `adminDomain` is set only in production (e.g. `.easecab.com`) so the cookie
+  // reaches admin.easecab.com for the Next middleware route-gate (M2). Undefined in
+  // dev/test → host-only cookie.
   const cookieCfg = {
     secure: config.cookie.secure,
+    domain: config.cookie.adminDomain,
     accessTtl: config.adminJwt.accessTtl,
     refreshTtl: config.adminJwt.refreshTtl,
   };
 
   // Email+password → throttled bcrypt check → set both admin cookies.
   router.post('/login', validate(adminLoginSchema), async (req, res) => {
-    const { admin, accessToken, refreshToken } = await service.login(req.valid.body.email, req.valid.body.password);
+    const { admin, accessToken, refreshToken } = await service.login(req.valid.body.email, req.valid.body.password, req.ip);
     setAdminAuthCookies(res, { accessToken, refreshToken }, cookieCfg);
     sendSuccess(res, { data: { admin }, status: HTTP_STATUS.OK });
   });
@@ -42,7 +46,7 @@ function createAdminAuthRouter({ service, config, requireAdmin }) {
 
   // Stateless logout — clear both admin cookies.
   router.post('/logout', (_req, res) => {
-    clearAdminAuthCookies(res, { secure: config.cookie.secure });
+    clearAdminAuthCookies(res, { secure: config.cookie.secure, domain: config.cookie.adminDomain });
     sendSuccess(res, { data: { loggedOut: true } });
   });
 

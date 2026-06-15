@@ -24,6 +24,7 @@ test('verifications queue lists a submission and approves it', async ({ page }) 
     })
   })
 
+  await page.context().addCookies([{ name: 'ec_admin_rt', value: 'test-session', url: 'http://localhost:3101' }])
   await page.goto('/verifications')
   await expect(page.getByText('••••3210')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Verifications/i })).toBeVisible()

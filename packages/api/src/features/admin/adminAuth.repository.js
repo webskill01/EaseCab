@@ -14,6 +14,7 @@ const { fixedWindowIncr } = require('../../lib/rateLimit');
  */
 function createAdminAuthRepository({ prisma, redis }) {
   const loginKey = (email) => redisKey('admin', 'login', email);
+  const loginIpKey = (ip) => redisKey('admin', 'login', 'ip', ip);
 
   return {
     /** @returns {Promise<object|null>} admin row by email (login lookup). */
@@ -29,6 +30,12 @@ function createAdminAuthRepository({ prisma, redis }) {
     /** Atomic fixed-window login-attempt counter per email (brute-force defence). */
     async incrementLoginCount(email, windowSec) {
       return fixedWindowIncr(redis, loginKey(email), windowSec);
+    },
+
+    /** Atomic fixed-window login-attempt counter per client IP (security-review H3 —
+     *  stops one host spraying many emails to dodge the per-email cap). */
+    async incrementLoginCountByIp(ip, windowSec) {
+      return fixedWindowIncr(redis, loginIpKey(ip), windowSec);
     },
   };
 }

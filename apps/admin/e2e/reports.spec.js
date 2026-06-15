@@ -25,6 +25,7 @@ test('reports queue lists a report and removes the ride', async ({ page }) => {
     })
   })
 
+  await page.context().addCookies([{ name: 'ec_admin_rt', value: 'test-session', url: 'http://localhost:3101' }])
   await page.goto('/reports')
   await expect(page.getByText('••••3210')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Reports/i })).toBeVisible()

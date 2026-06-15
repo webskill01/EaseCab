@@ -1,6 +1,12 @@
 'use strict';
 
-const { AppError, ERROR_CODES, ADMIN_ROLE, ADMIN_LOGIN_RATE_LIMIT } = require('@easecab/shared');
+const {
+  AppError,
+  ERROR_CODES,
+  ADMIN_ROLE,
+  ADMIN_LOGIN_RATE_LIMIT,
+  ADMIN_LOGIN_IP_RATE_LIMIT,
+} = require('@easecab/shared');
 
 /**
  * Reduce an admin row to client-safe fields (never the passwordHash — §10).
@@ -28,8 +34,14 @@ function createAdminAuthService({ repo, jwt, hasher }) {
   }
 
   return {
-    /** Email+password → throttled bcrypt check → admin tokens. */
-    async login(email, password) {
+    /** Email+password → throttled bcrypt check → admin tokens. Two throttle layers
+     *  (both checked before any DB lookup or bcrypt): a broad per-IP cap (H3, stops
+     *  email-spray from one host) then the tighter per-email cap. */
+    async login(email, password, ip) {
+      const ipCount = await repo.incrementLoginCountByIp(ip, ADMIN_LOGIN_IP_RATE_LIMIT.WINDOW_SEC);
+      if (ipCount > ADMIN_LOGIN_IP_RATE_LIMIT.MAX_PER_WINDOW) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
       const count = await repo.incrementLoginCount(email, ADMIN_LOGIN_RATE_LIMIT.WINDOW_SEC);
       if (count > ADMIN_LOGIN_RATE_LIMIT.MAX_PER_WINDOW) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);

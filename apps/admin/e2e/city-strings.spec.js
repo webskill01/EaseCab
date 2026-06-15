@@ -24,6 +24,7 @@ test('city-strings queue lists a string and resolves it', async ({ page }) => {
     })
   })
 
+  await page.context().addCookies([{ name: 'ec_admin_rt', value: 'test-session', url: 'http://localhost:3101' }])
   await page.goto('/city-strings')
   await expect(page.getByText('amballa')).toBeVisible()
   await expect(page.getByRole('heading', { name: /City Strings/i })).toBeVisible()

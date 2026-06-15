@@ -11,6 +11,7 @@ const {
   ADMIN_AUTH_COOKIES,
   ADMIN_ROLE,
   ADMIN_LOGIN_RATE_LIMIT,
+  ADMIN_LOGIN_IP_RATE_LIMIT,
 } = require('../auth');
 
 test('AUTH_COOKIES unchanged', () => {
@@ -45,4 +46,13 @@ test('ADMIN_ROLE and login rate limit are frozen', () => {
   assert.strictEqual(ADMIN_LOGIN_RATE_LIMIT.MAX_PER_WINDOW, 5);
   assert.strictEqual(ADMIN_LOGIN_RATE_LIMIT.WINDOW_SEC, 900);
   assert.throws(() => { ADMIN_LOGIN_RATE_LIMIT.MAX_PER_WINDOW = 9; });
+});
+
+test('ADMIN_LOGIN_IP_RATE_LIMIT is a frozen, more-lenient IP-layer cap (H3)', () => {
+  assert.strictEqual(ADMIN_LOGIN_IP_RATE_LIMIT.MAX_PER_WINDOW, 30);
+  assert.strictEqual(ADMIN_LOGIN_IP_RATE_LIMIT.WINDOW_SEC, 900);
+  // The IP cap must be looser than the per-email cap (shared NAT) yet bounded.
+  assert.ok(ADMIN_LOGIN_IP_RATE_LIMIT.MAX_PER_WINDOW > ADMIN_LOGIN_RATE_LIMIT.MAX_PER_WINDOW);
+  assert.ok(Object.isFrozen(ADMIN_LOGIN_IP_RATE_LIMIT));
+  assert.throws(() => { ADMIN_LOGIN_IP_RATE_LIMIT.MAX_PER_WINDOW = 9; });
 });

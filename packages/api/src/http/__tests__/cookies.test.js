@@ -55,3 +55,23 @@ test('clearAdminAuthCookies clears both admin cookies', () => {
   clearAdminAuthCookies(res, { secure: false });
   assert.deepStrictEqual(res.cleared.map((c) => c.name), [ADMIN_AUTH_COOKIES.ACCESS_TOKEN, ADMIN_AUTH_COOKIES.REFRESH_TOKEN]);
 });
+
+test('setAdminAuthCookies applies the parent domain when given (M2)', () => {
+  const res = fakeRes();
+  setAdminAuthCookies(res, { accessToken: 'A', refreshToken: 'R' },
+    { secure: true, accessTtl: '15m', refreshTtl: '8h', domain: '.easecab.com' });
+  for (const c of res.set) assert.strictEqual(c.opts.domain, '.easecab.com');
+});
+
+test('clearAdminAuthCookies repeats the domain so the browser actually drops it (M2)', () => {
+  const res = fakeRes();
+  clearAdminAuthCookies(res, { secure: true, domain: '.easecab.com' });
+  for (const c of res.cleared) assert.strictEqual(c.opts.domain, '.easecab.com');
+});
+
+test('admin cookies stay host-only (no domain key) when domain is omitted', () => {
+  const res = fakeRes();
+  setAdminAuthCookies(res, { accessToken: 'A', refreshToken: 'R' },
+    { secure: false, accessTtl: '15m', refreshTtl: '8h' });
+  for (const c of res.set) assert.ok(!('domain' in c.opts));
+});

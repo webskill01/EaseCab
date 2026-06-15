@@ -33,3 +33,12 @@ test('incrementLoginCount uses a per-email fixed window', async () => {
   assert.strictEqual(await repo.incrementLoginCount('x@y.com', 900), 2);
   assert.strictEqual(await repo.incrementLoginCount('other@y.com', 900), 1);
 });
+
+test('incrementLoginCountByIp uses a separate per-IP fixed window (H3)', async () => {
+  const repo = createAdminAuthRepository({ prisma: fakePrisma([]), redis: fakeRedis() });
+  assert.strictEqual(await repo.incrementLoginCountByIp('1.2.3.4', 900), 1);
+  assert.strictEqual(await repo.incrementLoginCountByIp('1.2.3.4', 900), 2);
+  assert.strictEqual(await repo.incrementLoginCountByIp('5.6.7.8', 900), 1);
+  // The IP counter must not collide with the per-email counter for the same string.
+  assert.strictEqual(await repo.incrementLoginCount('1.2.3.4', 900), 1);
+});

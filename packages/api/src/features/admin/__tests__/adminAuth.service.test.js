@@ -11,11 +11,12 @@ const jwt = {
 };
 const adminRow = { id: 'a1', email: 'x@y.com', name: 'Admin', role: 'super', passwordHash: 'HASH' };
 
-function svc({ rows = [adminRow], count = 1, compare = async () => true } = {}) {
+function svc({ rows = [adminRow], count = 1, ipCount = 1, compare = async () => true, onLookup } = {}) {
   const repo = {
-    async findAdminByEmail(e) { return rows.find((r) => r.email === e) || null; },
+    async findAdminByEmail(e) { if (onLookup) onLookup(); return rows.find((r) => r.email === e) || null; },
     async findAdminById(id) { return rows.find((r) => r.id === id) || null; },
     async incrementLoginCount() { return count; },
+    async incrementLoginCountByIp() { return ipCount; },
   };
   return createAdminAuthService({ repo, jwt, hasher: { compare } });
 }
@@ -43,12 +44,27 @@ test('unknown email → AUTH_REQUIRED (same error as wrong password)', async () 
   await assert.rejects(svc({ rows: [] }).login('no@y.com', 'pw'), (e) => e.code === 'AUTH_REQUIRED');
 });
 
-test('over the rate limit → RATE_LIMITED before any password check', async () => {
+test('over the per-email rate limit → RATE_LIMITED before any password check', async () => {
   let compared = false;
   await assert.rejects(
-    svc({ count: 6, compare: async () => { compared = true; return true; } }).login('x@y.com', 'pw'),
+    svc({ count: 6, compare: async () => { compared = true; return true; } }).login('x@y.com', 'pw', '1.2.3.4'),
     (e) => e.code === 'RATE_LIMITED',
   );
+  assert.strictEqual(compared, false);
+});
+
+test('over the per-IP rate limit → RATE_LIMITED before email lookup or password check (H3)', async () => {
+  let compared = false;
+  let lookedUp = false;
+  await assert.rejects(
+    svc({
+      ipCount: 31,
+      onLookup: () => { lookedUp = true; },
+      compare: async () => { compared = true; return true; },
+    }).login('x@y.com', 'pw', '1.2.3.4'),
+    (e) => e.code === 'RATE_LIMITED',
+  );
+  assert.strictEqual(lookedUp, false);
   assert.strictEqual(compared, false);
 });
 
