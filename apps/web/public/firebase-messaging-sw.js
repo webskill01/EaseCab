@@ -18,7 +18,7 @@ firebase.messaging().onBackgroundMessage((payload) => {
   const n = payload.notification || {}
   self.registration.showNotification(n.title || 'EaseCab', {
     body: n.body || '',
-    icon: '/images/icon-192.png',
+    icon: '/icons/icon-192.png',
     data: payload.data || {},
   })
 })

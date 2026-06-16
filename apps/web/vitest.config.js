@@ -35,6 +35,7 @@ export default defineConfig({
         'features/chat/services/firestoreClient.js',
         'features/notifications/services/fcmClient.js',
         'features/notifications/services/geoClient.js',
+        'features/pwa/services/swClient.js',
         '**/__tests__/**',
       ],
     },

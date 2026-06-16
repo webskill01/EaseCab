@@ -25,7 +25,9 @@ export async function requestPermissionAndToken() {
   if (permission !== 'granted') return { permission, token: null }
   const messaging = await getFirebaseMessaging()
   if (!messaging) return { permission: 'unsupported', token: null }
-  const reg = await navigator.serviceWorker.register(swUrl())
+  const reg = await navigator.serviceWorker.register(swUrl(), {
+    scope: '/firebase-cloud-messaging-push-scope',
+  })
   const token = await getToken(messaging, {
     vapidKey: env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
     serviceWorkerRegistration: reg,

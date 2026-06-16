@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1",
@@ -38,6 +39,7 @@
     "eslint-config-next": "14",
     "jsdom": "^25.0",
     "postcss": "^8",
+    "sharp": "^0.33",
     "tailwindcss": "^3",
     "tailwindcss-animate": "^1.0",
     "vitest": "^2.1"
