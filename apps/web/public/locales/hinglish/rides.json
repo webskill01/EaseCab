@@ -1,5 +1,8 @@
 {
-  "tabs": { "rides": "Rides", "verified": "Verified Rides" },
+  "tabs": {
+    "rides": "Rides",
+    "verified": "Verified Rides"
+  },
   "card": {
     "pickup": "Pickup",
     "drop": "Drop",
@@ -9,9 +12,21 @@
     "verifiedDriver": "Verified driver",
     "unknownCity": "—"
   },
-  "status": { "fresh": "Fresh", "booked": "Shayad book", "verified": "Verified" },
-  "time": { "justNow": "abhi", "minAgo": "{count} min pehle", "hourAgo": "{count} ghante pehle" },
-  "actions": { "whatsapp": "WhatsApp", "call": "Call", "report": "Report" },
+  "status": {
+    "fresh": "Fresh",
+    "booked": "Shayad book",
+    "verified": "Verified"
+  },
+  "time": {
+    "justNow": "abhi",
+    "minAgo": "{count} min pehle",
+    "hourAgo": "{count} ghante pehle"
+  },
+  "actions": {
+    "whatsapp": "WhatsApp",
+    "call": "Call",
+    "report": "Report"
+  },
   "filter": {
     "notifications": "Alerts",
     "allCities": "Saare shehar",
@@ -32,7 +47,9 @@
     "expiredSub": "Driver se baat karne ke liye renew karein.",
     "renew": "Renew"
   },
-  "pill": { "newRides": "nayi rides" },
+  "pill": {
+    "newRides": "nayi rides"
+  },
   "states": {
     "empty": "Abhi koi ride nahi",
     "emptySub": "Nayi duties yahan live aayengi.",
@@ -44,9 +61,16 @@
     "contactTitle": "Contact ke liye subscribe karein",
     "contactSub": "Trial ke baad ₹149/month mein unlimited contact.",
     "subscribe": "Subscribe",
-    "renew": "Abhi renew karein"
+    "renew": "Abhi renew karein",
+    "notNow": "Abhi nahi",
+    "perMonth": "/month",
+    "planNote": "Har feature tak puri access."
   },
-  "reveal": { "title": "Driver se contact", "callBtn": "Call", "waBtn": "WhatsApp" },
+  "reveal": {
+    "title": "Driver se contact",
+    "callBtn": "Call",
+    "waBtn": "WhatsApp"
+  },
   "report": {
     "title": "Ride report karein",
     "reasonQ": "Kya problem hai?",

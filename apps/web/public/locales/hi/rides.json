@@ -1,5 +1,8 @@
 {
-  "tabs": { "rides": "राइड्स", "verified": "वेरिफाइड राइड्स" },
+  "tabs": {
+    "rides": "राइड्स",
+    "verified": "वेरिफाइड राइड्स"
+  },
   "card": {
     "pickup": "पिकअप",
     "drop": "ड्रॉप",
@@ -9,9 +12,21 @@
     "verifiedDriver": "वेरिफाइड ड्राइवर",
     "unknownCity": "—"
   },
-  "status": { "fresh": "नई", "booked": "शायद बुक", "verified": "वेरिफाइड" },
-  "time": { "justNow": "अभी", "minAgo": "{count} मिनट पहले", "hourAgo": "{count} घंटे पहले" },
-  "actions": { "whatsapp": "WhatsApp", "call": "कॉल", "report": "रिपोर्ट" },
+  "status": {
+    "fresh": "नई",
+    "booked": "शायद बुक",
+    "verified": "वेरिफाइड"
+  },
+  "time": {
+    "justNow": "अभी",
+    "minAgo": "{count} मिनट पहले",
+    "hourAgo": "{count} घंटे पहले"
+  },
+  "actions": {
+    "whatsapp": "WhatsApp",
+    "call": "कॉल",
+    "report": "रिपोर्ट"
+  },
   "filter": {
     "notifications": "अलर्ट",
     "allCities": "सभी शहर",
@@ -32,7 +47,9 @@
     "expiredSub": "ड्राइवर से संपर्क के लिए रिन्यू करें।",
     "renew": "रिन्यू"
   },
-  "pill": { "newRides": "नई राइड्स" },
+  "pill": {
+    "newRides": "नई राइड्स"
+  },
   "states": {
     "empty": "अभी कोई राइड नहीं",
     "emptySub": "नई ड्यूटी यहाँ लाइव आएँगी।",
@@ -44,9 +61,16 @@
     "contactTitle": "संपर्क के लिए सब्सक्राइब करें",
     "contactSub": "ट्रायल के बाद ₹149/माह में अनलिमिटेड संपर्क।",
     "subscribe": "सब्सक्राइब",
-    "renew": "अभी रिन्यू करें"
+    "renew": "अभी रिन्यू करें",
+    "notNow": "अभी नहीं",
+    "perMonth": "/माह",
+    "planNote": "हर फ़ीचर तक पूरी पहुँच।"
   },
-  "reveal": { "title": "ड्राइवर से संपर्क", "callBtn": "कॉल", "waBtn": "WhatsApp" },
+  "reveal": {
+    "title": "ड्राइवर से संपर्क",
+    "callBtn": "कॉल",
+    "waBtn": "WhatsApp"
+  },
   "report": {
     "title": "राइड रिपोर्ट करें",
     "reasonQ": "क्या समस्या है?",

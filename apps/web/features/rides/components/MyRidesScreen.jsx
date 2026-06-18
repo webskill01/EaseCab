@@ -33,6 +33,9 @@ export function MyRidesScreen() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
+      <div className="px-3.5 pb-2 pt-2.5">
+        <h1 className="text-[20px] font-extrabold tracking-tight text-ec-ink">{t('title')}</h1>
+      </div>
       <MineTabs sub={sub} onChange={setSub} />
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-4 pt-2">
         {sub === MINE_SUB.POSTED ? (

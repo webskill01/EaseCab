@@ -1,5 +1,8 @@
 {
-  "tabs": { "form": "Fill the form", "paste": "Paste a message" },
+  "tabs": {
+    "form": "Fill the form",
+    "paste": "Paste a message"
+  },
   "post": {
     "from": "Pickup city",
     "to": "Drop city",
@@ -30,8 +33,16 @@
   "gate": {
     "title": "Get verified to post",
     "body": "Complete Aadhaar verification to post duties to the feed.",
-    "cta": "Verify now"
+    "cta": "Verify now",
+    "notNow": "Not now"
   },
-  "success": { "title": "Duty posted", "viewMine": "View my rides" },
-  "error": { "generic": "Couldn't post your ride. Please try again." }
+  "success": {
+    "title": "Duty posted",
+    "viewMine": "View my rides"
+  },
+  "error": {
+    "generic": "Couldn't post your ride. Please try again."
+  },
+  "heading": "Post a Ride",
+  "subheading": "Share a duty with drivers near you."
 }

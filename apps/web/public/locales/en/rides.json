@@ -1,5 +1,8 @@
 {
-  "tabs": { "rides": "Rides", "verified": "Verified Rides" },
+  "tabs": {
+    "rides": "Rides",
+    "verified": "Verified Rides"
+  },
   "card": {
     "pickup": "Pickup",
     "drop": "Drop",
@@ -9,9 +12,21 @@
     "verifiedDriver": "Verified Driver",
     "unknownCity": "—"
   },
-  "status": { "fresh": "Fresh", "booked": "Likely booked", "verified": "Verified" },
-  "time": { "justNow": "just now", "minAgo": "{count} min ago", "hourAgo": "{count} h ago" },
-  "actions": { "whatsapp": "WhatsApp", "call": "Call", "report": "Report" },
+  "status": {
+    "fresh": "Fresh",
+    "booked": "Likely booked",
+    "verified": "Verified"
+  },
+  "time": {
+    "justNow": "just now",
+    "minAgo": "{count} min ago",
+    "hourAgo": "{count} h ago"
+  },
+  "actions": {
+    "whatsapp": "WhatsApp",
+    "call": "Call",
+    "report": "Report"
+  },
   "filter": {
     "notifications": "Notifications",
     "allCities": "All cities",
@@ -32,7 +47,9 @@
     "expiredSub": "Renew to contact drivers again.",
     "renew": "Renew"
   },
-  "pill": { "newRides": "new rides" },
+  "pill": {
+    "newRides": "new rides"
+  },
   "states": {
     "empty": "No rides right now",
     "emptySub": "New duties will appear here live.",
@@ -44,7 +61,10 @@
     "contactTitle": "Subscribe to contact",
     "contactSub": "Unlock unlimited contact for ₹149/month after your trial.",
     "subscribe": "Subscribe",
-    "renew": "Renew now"
+    "renew": "Renew now",
+    "notNow": "Not now",
+    "perMonth": "/month",
+    "planNote": "Full access to every feature."
   },
   "reveal": {
     "title": "Contact driver",

@@ -1,5 +1,8 @@
 {
-  "tabs": { "form": "Form bharein", "paste": "Message paste karein" },
+  "tabs": {
+    "form": "Form bharein",
+    "paste": "Message paste karein"
+  },
   "post": {
     "from": "Pickup sheher",
     "to": "Drop sheher",
@@ -30,8 +33,16 @@
   "gate": {
     "title": "Post karne ke liye verify karein",
     "body": "Feed mein duties post karne ke liye Aadhaar verification poora karein.",
-    "cta": "Abhi verify karein"
+    "cta": "Abhi verify karein",
+    "notNow": "Abhi nahi"
   },
-  "success": { "title": "Duty post ho gayi", "viewMine": "Meri rides dekhein" },
-  "error": { "generic": "Aapki ride post nahi ho saki. Kripya phir try karein." }
+  "success": {
+    "title": "Duty post ho gayi",
+    "viewMine": "Meri rides dekhein"
+  },
+  "error": {
+    "generic": "Aapki ride post nahi ho saki. Kripya phir try karein."
+  },
+  "heading": "Ride Post Karein",
+  "subheading": "Apne paas ke drivers ke saath duty share karein."
 }

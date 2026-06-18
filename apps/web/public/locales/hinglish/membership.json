@@ -32,5 +32,15 @@
   "error": {
     "checkout": "Payment complete nahi ho saka. Phir try karo.",
     "load": "Aapki membership load nahi ho saki."
+  },
+  "securedBy": "Razorpay se secure · UPI · Cards",
+  "plan": {
+    "title": "Monthly Plan",
+    "popular": "Popular",
+    "perMonth": "/month",
+    "tagline": "Har feature tak puri access",
+    "feat1": "Unlimited driver contacts",
+    "feat2": "Unlimited duties post karein",
+    "feat3": "Har 30 din mein renew · kabhi bhi cancel"
   }
 }

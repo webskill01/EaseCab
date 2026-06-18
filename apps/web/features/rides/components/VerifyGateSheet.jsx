@@ -22,6 +22,9 @@ export function VerifyGateSheet({ onClose, onVerify }) {
         <button type="button" onClick={onVerify} className="mt-1 h-[52px] w-full rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue">
           {t('gate.cta')}
         </button>
+        <button type="button" onClick={onClose} className="h-[46px] w-full rounded-xl bg-ec-bg text-[14.5px] font-bold text-ec-ink60">
+          {t('gate.notNow')}
+        </button>
       </div>
     </BottomSheet>
   )

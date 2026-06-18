@@ -1,5 +1,8 @@
 {
-  "tabs": { "rides": "ਰਾਈਡਾਂ", "verified": "ਵੈਰੀਫਾਈਡ ਰਾਈਡਾਂ" },
+  "tabs": {
+    "rides": "ਰਾਈਡਾਂ",
+    "verified": "ਵੈਰੀਫਾਈਡ ਰਾਈਡਾਂ"
+  },
   "card": {
     "pickup": "ਪਿਕਅਪ",
     "drop": "ਡ੍ਰੌਪ",
@@ -9,9 +12,21 @@
     "verifiedDriver": "ਵੈਰੀਫਾਈਡ ਡਰਾਈਵਰ",
     "unknownCity": "—"
   },
-  "status": { "fresh": "ਨਵੀਂ", "booked": "ਸ਼ਾਇਦ ਬੁੱਕ", "verified": "ਵੈਰੀਫਾਈਡ" },
-  "time": { "justNow": "ਹੁਣੇ", "minAgo": "{count} ਮਿੰਟ ਪਹਿਲਾਂ", "hourAgo": "{count} ਘੰਟੇ ਪਹਿਲਾਂ" },
-  "actions": { "whatsapp": "WhatsApp", "call": "ਕਾਲ", "report": "ਰਿਪੋਰਟ" },
+  "status": {
+    "fresh": "ਨਵੀਂ",
+    "booked": "ਸ਼ਾਇਦ ਬੁੱਕ",
+    "verified": "ਵੈਰੀਫਾਈਡ"
+  },
+  "time": {
+    "justNow": "ਹੁਣੇ",
+    "minAgo": "{count} ਮਿੰਟ ਪਹਿਲਾਂ",
+    "hourAgo": "{count} ਘੰਟੇ ਪਹਿਲਾਂ"
+  },
+  "actions": {
+    "whatsapp": "WhatsApp",
+    "call": "ਕਾਲ",
+    "report": "ਰਿਪੋਰਟ"
+  },
   "filter": {
     "notifications": "ਅਲਰਟ",
     "allCities": "ਸਾਰੇ ਸ਼ਹਿਰ",
@@ -32,7 +47,9 @@
     "expiredSub": "ਡਰਾਈਵਰ ਨਾਲ ਸੰਪਰਕ ਲਈ ਰੀਨਿਊ ਕਰੋ।",
     "renew": "ਰੀਨਿਊ"
   },
-  "pill": { "newRides": "ਨਵੀਆਂ ਰਾਈਡਾਂ" },
+  "pill": {
+    "newRides": "ਨਵੀਆਂ ਰਾਈਡਾਂ"
+  },
   "states": {
     "empty": "ਹੁਣੇ ਕੋਈ ਰਾਈਡ ਨਹੀਂ",
     "emptySub": "ਨਵੀਆਂ ਡਿਊਟੀਆਂ ਇੱਥੇ ਲਾਈਵ ਆਉਣਗੀਆਂ।",
@@ -44,9 +61,16 @@
     "contactTitle": "ਸੰਪਰਕ ਲਈ ਸਬਸਕ੍ਰਾਈਬ ਕਰੋ",
     "contactSub": "ਟ੍ਰਾਇਲ ਤੋਂ ਬਾਅਦ ₹149/ਮਹੀਨਾ ਵਿੱਚ ਅਨਲਿਮਟਿਡ ਸੰਪਰਕ।",
     "subscribe": "ਸਬਸਕ੍ਰਾਈਬ",
-    "renew": "ਹੁਣੇ ਰੀਨਿਊ ਕਰੋ"
+    "renew": "ਹੁਣੇ ਰੀਨਿਊ ਕਰੋ",
+    "notNow": "ਹੁਣੇ ਨਹੀਂ",
+    "perMonth": "/ਮਹੀਨਾ",
+    "planNote": "ਹਰ ਫੀਚਰ ਤੱਕ ਪੂਰੀ ਪਹੁੰਚ।"
   },
-  "reveal": { "title": "ਡਰਾਈਵਰ ਨਾਲ ਸੰਪਰਕ", "callBtn": "ਕਾਲ", "waBtn": "WhatsApp" },
+  "reveal": {
+    "title": "ਡਰਾਈਵਰ ਨਾਲ ਸੰਪਰਕ",
+    "callBtn": "ਕਾਲ",
+    "waBtn": "WhatsApp"
+  },
   "report": {
     "title": "ਰਾਈਡ ਦੀ ਰਿਪੋਰਟ ਕਰੋ",
     "reasonQ": "ਕੀ ਸਮੱਸਿਆ ਹੈ?",

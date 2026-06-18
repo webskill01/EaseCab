@@ -32,5 +32,15 @@
   "error": {
     "checkout": "Payment couldn't be completed. Please try again.",
     "load": "Couldn't load your membership."
+  },
+  "securedBy": "Secured by Razorpay · UPI · Cards",
+  "plan": {
+    "title": "Monthly Plan",
+    "popular": "Popular",
+    "perMonth": "/month",
+    "tagline": "Full access to every feature",
+    "feat1": "Unlimited driver contacts",
+    "feat2": "Post unlimited duties",
+    "feat3": "Renews every 30 days · cancel anytime"
   }
 }

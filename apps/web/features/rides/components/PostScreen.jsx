@@ -38,7 +38,11 @@ export function PostScreen() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
-      <div role="tablist" className="flex gap-2 px-4 pt-3">
+      <div className="px-4 pb-0.5 pt-3.5">
+        <h1 className="text-[19px] font-extrabold tracking-tight text-ec-ink">{t('heading')}</h1>
+        <p className="mt-0.5 text-[12.5px] text-ec-ink60">{t('subheading')}</p>
+      </div>
+      <div role="tablist" className="flex gap-2 px-4 pt-2.5">
         {[TAB.FORM, TAB.PASTE].map((key) => (
           <button
             key={key}

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
-import { Crown, Whatsapp, Phone } from '@/components/ui/icons'
+import { Crown, Whatsapp, Phone, Swap } from '@/components/ui/icons'
 import { contactRide, contactVerifiedRide } from '../services/ridesApi'
 import { MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { RIDE_KIND } from '../lib/rideView'
@@ -14,13 +14,27 @@ function waLink(phone) {
   return `https://wa.me/${String(phone).replace(/[^\d]/g, '')}`
 }
 
+/** Route summary line (sheets.jsx RouteLine) — pickup → drop · vehicle. */
+function RouteLine({ ride }) {
+  const t = useTranslations('rides')
+  if (!ride.from) return null
+  return (
+    <div className="flex items-center gap-2 rounded-ec-card bg-ec-bg px-3.5 py-3">
+      <span className="text-[15px] font-extrabold text-ec-ink">{ride.from}</span>
+      <span className="inline-flex text-ec-blue"><Swap size={18} /></span>
+      <span className="min-w-0 flex-1 truncate text-[15px] font-extrabold text-ec-ink">{ride.to || t('card.unknownCity')}</span>
+      {ride.vehicleType ? <span className="shrink-0 text-[12.5px] font-bold text-ec-ink60">{ride.vehicleType}</span> : null}
+    </div>
+  )
+}
+
 /**
  * Contact soft-gate sheet (SCREENS §11). Expired members see the subscribe gate;
  * otherwise the reveal runs the server-gated contact call and shows Call/WhatsApp
  * deep links (the server is the real gate — an expired error falls back to the gate).
  *
  * @param {object} props
- * @param {{ id: string, kind: string }} props.ride
+ * @param {{ id: string, kind: string, from?: string, to?: string, vehicleType?: string }} props.ride
  * @param {string} props.membershipState - MEMBERSHIP_STATE value
  * @param {() => void} props.onClose
  * @param {() => void} props.onUpgrade
@@ -43,12 +57,22 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
   if (gatedOut) {
     return (
       <BottomSheet onClose={onClose} label={t('gate.contactTitle')}>
-        <div className="flex flex-col items-center gap-3 pb-2 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ec-sky text-ec-blue"><Crown size={26} /></div>
-          <h2 className="text-[18px] font-extrabold text-ec-ink">{t('gate.contactTitle')}</h2>
-          <p className="max-w-[300px] text-[13.5px] font-medium text-ec-ink60">{t('gate.contactSub')}</p>
-          <button type="button" onClick={onUpgrade} className="mt-1 h-[52px] w-full rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue">
+        <div className="flex flex-col gap-3 pb-2">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ec-sky text-ec-blue"><Crown size={26} /></div>
+            <h2 className="text-[18px] font-extrabold text-ec-ink">{t('gate.contactTitle')}</h2>
+            <p className="max-w-[300px] text-[13.5px] font-medium text-ec-ink60">{t('gate.contactSub')}</p>
+          </div>
+          <RouteLine ride={ride} />
+          <div className="flex items-center gap-3 rounded-2xl bg-ec-sky px-4 py-3.5">
+            <span className="text-[30px] font-extrabold leading-none tracking-tight text-ec-blue">₹149<span className="text-[14px] font-bold text-ec-ink60">{t('gate.perMonth')}</span></span>
+            <p className="flex-1 text-[12.5px] font-semibold leading-snug text-ec-blueInk">{t('gate.planNote')}</p>
+          </div>
+          <button type="button" onClick={onUpgrade} className="h-[52px] w-full rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue">
             {t('gate.subscribe')}
+          </button>
+          <button type="button" onClick={onClose} className="h-[46px] w-full rounded-xl bg-ec-bg text-[14.5px] font-bold text-ec-ink60">
+            {t('gate.notNow')}
           </button>
         </div>
       </BottomSheet>
@@ -60,6 +84,7 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
     <BottomSheet onClose={onClose} label={t('reveal.title')}>
       <div className="flex flex-col gap-3 pb-2">
         <h2 className="text-center text-[18px] font-extrabold text-ec-ink">{t('reveal.title')}</h2>
+        <RouteLine ride={ride} />
         {!phone ? (
           <button
             type="button"

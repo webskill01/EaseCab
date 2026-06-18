@@ -19,9 +19,10 @@ describe('MembershipScreen', () => {
     useMembership.mockReturnValue({ data: { status: 'trial', isActive: true, trialExpiresAt: new Date(Date.now() + 5 * 86400000).toISOString() }, isLoading: false, isError: false })
     useCheckout.mockReturnValue(checkoutStub())
     renderWithIntl(<MembershipScreen />)
-    expect(screen.getByText('Free trial')).toBeInTheDocument()
+    expect(screen.getByText(/Free trial/)).toBeInTheDocument()
     expect(screen.getByText(/day(s)? left/)).toBeInTheDocument()
     expect(screen.getByText('Upgrade to EaseCab Plus')).toBeInTheDocument()
+    expect(screen.getByText('Monthly Plan')).toBeInTheDocument()
   })
 
   it('renders an expired state with the Subscribe CTA and fires checkout', () => {
