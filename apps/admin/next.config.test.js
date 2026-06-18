@@ -26,4 +26,29 @@ describe('admin security headers (M1)', () => {
     expect(csp).toContain("object-src 'none'")
     expect(csp).toContain('connect-src')
   })
+
+  it("allows 'unsafe-eval' in development so Next dev/HMR can hydrate", async () => {
+    const prev = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
+    try {
+      const [{ headers }] = await nextConfig.headers()
+      const csp = headers.find((h) => h.key === 'Content-Security-Policy').value
+      expect(csp).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'")
+    } finally {
+      process.env.NODE_ENV = prev
+    }
+  })
+
+  it("forbids 'unsafe-eval' in production (the deployed policy stays strict)", async () => {
+    const prev = process.env.NODE_ENV
+    process.env.NODE_ENV = 'production'
+    try {
+      const [{ headers }] = await nextConfig.headers()
+      const csp = headers.find((h) => h.key === 'Content-Security-Policy').value
+      expect(csp).toContain("script-src 'self' 'unsafe-inline'")
+      expect(csp).not.toContain("'unsafe-eval'")
+    } finally {
+      process.env.NODE_ENV = prev
+    }
+  })
 })

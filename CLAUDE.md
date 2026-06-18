@@ -172,7 +172,7 @@ Each feature folder is self-contained: components, hooks, services, tests.
 
 ## 13. PWA & TWA
 
-- Lighthouse PWA score: 90+ before Play Store submission.
+- PWA must be installable before Play Store submission — verify via Chrome DevTools → Application (manifest with 0 errors + service worker active + offline reload works) and the omnibox install icon; use PWABuilder.com on the deployed URL for a numeric score. (Lighthouse removed its standalone PWA category/score in v12 — it is no longer a single number.)
 - Web App Manifest: all required icon sizes (72, 96, 128, 144, 152, 192, 384, 512px).
 - Service Worker: cache app shell, show offline fallback page when network unavailable.
 - `/.well-known/assetlinks.json`: correct SHA-256 fingerprint from release keystore.

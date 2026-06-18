@@ -70,6 +70,13 @@ const serverEnvSchema = envSchema.extend({
   RAZORPAY_KEY_ID: z.string().min(1),
   RAZORPAY_KEY_SECRET: z.string().min(16),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(16),
+  // STUB until Razorpay activation: RAZORPAY_STUB=true injects the deterministic
+  // client (server.js) AND skips client/webhook signature verification, so the full
+  // upgrade→credit flow runs without a gateway (demo). FATAL in production (server.js
+  // refuses to boot) so payments can never be silently bypassed live. Swap to real
+  // keys at go-live with zero code change. The KEY/SECRET above still need dummy
+  // values (≥16 chars) to satisfy this schema even when stubbed.
+  RAZORPAY_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   // Surepass KYC (Step 12). Backend only (§11) — token never reaches the frontend.
   // STUB until incorporation: set SUREPASS_STUB=true to inject the deterministic
   // client (server.js); swap to a real token at go-live with zero code change.

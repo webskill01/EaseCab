@@ -24,6 +24,10 @@ describe('uploadsApi', () => {
     global.fetch.mockResolvedValue({ ok: false, status: 403 })
     await expect(uploadToR2({ url: 'u', fields: {}, file: new File(['x'], 'p.png', { type: 'image/png' }) })).rejects.toThrow()
   })
+  it('uploadToR2 skips the network POST when stub is true (local R2 stub)', async () => {
+    await uploadToR2({ url: 'https://cdn.easecab.com/easecab-uploads', fields: { key: 'dp/u/x.png' }, file: new File(['x'], 'p.png', { type: 'image/png' }), stub: true })
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
   it('dpPrecheck rejects oversize and bad mime', () => {
     expect(dpPrecheck({ size: DP_MAX_BYTES + 1, type: 'image/png' })).toBe('dp.tooBig')
     expect(dpPrecheck({ size: 10, type: 'image/gif' })).toBe('dp.badType')

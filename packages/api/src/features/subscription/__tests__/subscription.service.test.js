@@ -100,6 +100,36 @@ test('handleWebhook: payment.captured credits via the order-resolved user', asyn
   assert.strictEqual(creditedUser, 'u1');
 });
 
+// --- Razorpay STUB demo mode (RAZORPAY_STUB=true; never production — server.js FATALs) ---
+const STUB_CONFIG = { razorpay: { ...CONFIG.razorpay, stub: true } };
+
+test('stub mode: verifyPayment credits WITHOUT a valid signature', async () => {
+  let credited = false;
+  const repo = baseRepo({ async recordCaptureAndExtend() { credited = true; return { duplicate: false }; } });
+  const svc = createSubscriptionService({ repo, razorpay: {}, config: STUB_CONFIG });
+  const out = await svc.verifyPayment({ orderId: 'order_1', paymentId: 'pay_1', signature: 'stub-signature' });
+  assert.strictEqual(out.credited, true);
+  assert.strictEqual(credited, true);
+});
+
+test('stub mode: handleWebhook credits a captured event WITHOUT a valid HMAC', async () => {
+  let creditedUser = null;
+  const repo = baseRepo({ async recordCaptureAndExtend(args) { creditedUser = args.userId; return { duplicate: false }; } });
+  const svc = createSubscriptionService({ repo, razorpay: {}, config: STUB_CONFIG });
+  const body = { event: 'payment.captured', payload: { payment: { entity: { id: 'pay_1', order_id: 'order_1', amount: 14900 } } } };
+  const raw = Buffer.from(JSON.stringify(body));
+  const out = await svc.handleWebhook({ rawBody: raw, signature: 'bad' });
+  assert.strictEqual(out.credited, true);
+  assert.strictEqual(creditedUser, 'u1');
+});
+
+test('stub mode: handleWebhook still ignores a non-captured event', async () => {
+  const svc = createSubscriptionService({ repo: baseRepo(), razorpay: {}, config: STUB_CONFIG });
+  const raw = Buffer.from(JSON.stringify({ event: 'payment.failed' }));
+  const out = await svc.handleWebhook({ rawBody: raw, signature: 'bad' });
+  assert.strictEqual(out.reason, 'ignored_event');
+});
+
 test('credit is a no-op when the redis lock is already held (duplicate)', async () => {
   let extended = 0;
   const repo = baseRepo({

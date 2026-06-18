@@ -25,6 +25,18 @@ test('presign builds a user-namespaced key and returns url+fields+publicUrl for 
   assert.equal(out.publicUrl, `https://cdn.easecab.com/${out.key}`);
 });
 
+test('presign reports stub=false against a real R2 client (production: client must POST)', async () => {
+  const svc = createUploadsService({ r2: fakeR2({ isStub: false }) });
+  const out = await svc.presign({ userId: 'u1', purpose: 'dp', contentType: 'image/jpeg' });
+  assert.equal(out.stub, false);
+});
+
+test('presign reports stub=true when the R2 boundary is the stub (client skips the byte POST)', async () => {
+  const svc = createUploadsService({ r2: fakeR2({ isStub: true }) });
+  const out = await svc.presign({ userId: 'u1', purpose: 'dp', contentType: 'image/jpeg' });
+  assert.equal(out.stub, true);
+});
+
 test('presign returns publicUrl=null for a private purpose', async () => {
   const svc = createUploadsService({ r2: fakeR2() });
   const out = await svc.presign({ userId: 'u1', purpose: 'rc_image', contentType: 'application/pdf' });

@@ -19,7 +19,7 @@ export function dpPrecheck(file) {
 /**
  * Request a presigned POST policy for an upload purpose.
  * @param {{purpose: string, contentType: string}} input
- * @returns {Promise<{url: string, fields: object, key: string, publicUrl: ?string}>}
+ * @returns {Promise<{url: string, fields: object, key: string, publicUrl: ?string, stub?: boolean}>}
  */
 export async function presignUpload({ purpose, contentType }) {
   const { data } = await apiFetch('/uploads/presign', { method: 'POST', body: JSON.stringify({ purpose, contentType }) })
@@ -29,9 +29,13 @@ export async function presignUpload({ purpose, contentType }) {
 /**
  * Upload bytes straight to R2 via the presigned POST (never through our API, §8/§12).
  * No credentials, no JSON content-type — R2 wants a raw multipart form.
- * @param {{url: string, fields: object, file: File}} input
+ * When `stub` is set (local/demo R2 stub — no real bucket), there's nothing to POST
+ * to, so we resolve immediately; the server's verify gate accepts the key. Never set
+ * against real R2 in production.
+ * @param {{url: string, fields: object, file: File, stub?: boolean}} input
  */
-export async function uploadToR2({ url, fields, file }) {
+export async function uploadToR2({ url, fields, file, stub = false }) {
+  if (stub) return
   const form = new FormData()
   Object.entries(fields).forEach(([k, v]) => form.append(k, v))
   form.append('file', file)

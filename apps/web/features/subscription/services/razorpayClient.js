@@ -35,6 +35,13 @@ export async function openCheckout({ order, name, prefillContact }) {
   if (process.env.NEXT_PUBLIC_E2E === 'true') {
     return { paymentId: 'e2e-pay-id', signature: 'e2e-signature' }
   }
+  // Demo stub (NEXT_PUBLIC_RAZORPAY_STUB=true): skip the hosted popup and return a
+  // deterministic success. The API (RAZORPAY_STUB=true) skips signature verification,
+  // so the upgrade→credit flow completes for real without a live gateway. Pair both
+  // flags together; never enable in production.
+  if (process.env.NEXT_PUBLIC_RAZORPAY_STUB === 'true') {
+    return { paymentId: `stub-pay-${order.orderId}`, signature: 'stub-signature' }
+  }
   const Razorpay = await loadSdk()
   return new Promise((resolve, reject) => {
     const rzp = new Razorpay({

@@ -16,8 +16,8 @@ export function useDpUpload() {
     if (bad) { setErrorKey(bad); return null }
     setUploading(true)
     try {
-      const { url, fields, key, publicUrl } = await presignUpload({ purpose: 'dp', contentType: file.type })
-      await uploadToR2({ url, fields, file })
+      const { url, fields, key, publicUrl, stub } = await presignUpload({ purpose: 'dp', contentType: file.type })
+      await uploadToR2({ url, fields, file, stub })
       return { key, previewUrl: publicUrl }
     } catch {
       setErrorKey('dp.failed')

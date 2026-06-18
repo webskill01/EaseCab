@@ -79,3 +79,7 @@ desktop.ini
 
 # Misc
 .cache/
+
+# Redis local dump
+dump.rdb
+*.rdb

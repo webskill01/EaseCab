@@ -13,6 +13,8 @@
     "check:connections": "node scripts/check-connections.js",
     "start": "node src/server.js",
     "cron": "node src/cron/worker.js",
+    "dev": "node --env-file-if-exists=.env src/server.js",
+    "dev:cron": "node --env-file-if-exists=.env src/cron/worker.js",
     "test": "node --test",
     "test:coverage": "c8 --check-coverage node --test",
     "lint": "eslint ."

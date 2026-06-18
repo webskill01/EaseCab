@@ -28,7 +28,7 @@ function toPublicPayment(p) {
  * @param {{ razorpay: { keyId: string, keySecret: string, webhookSecret: string } }} deps.config
  */
 function createSubscriptionService({ repo, razorpay, config }) {
-  const { keyId, keySecret, webhookSecret } = config.razorpay;
+  const { keyId, keySecret, webhookSecret, stub } = config.razorpay;
 
   /** Shared idempotent credit path. Resolves the user from the stored order record. */
   async function creditPayment({ orderId, paymentId }) {
@@ -76,7 +76,9 @@ function createSubscriptionService({ repo, razorpay, config }) {
 
     /** Client callback (instant UX). HMAC-verify then credit. */
     async verifyPayment({ orderId, paymentId, signature }) {
-      if (!verifyPaymentSignature({ orderId, paymentId, signature, keySecret })) {
+      // stub demo mode (RAZORPAY_STUB=true, never production — server.js FATALs):
+      // the stub gateway emits no real HMAC, so skip verification and credit directly.
+      if (!stub && !verifyPaymentSignature({ orderId, paymentId, signature, keySecret })) {
         throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       }
       return creditPayment({ orderId, paymentId });
@@ -84,7 +86,8 @@ function createSubscriptionService({ repo, razorpay, config }) {
 
     /** Razorpay webhook (durable backstop). Verify raw-body HMAC, then credit on capture. */
     async handleWebhook({ rawBody, signature }) {
-      if (!verifyWebhookSignature({ rawBody, signature, webhookSecret })) {
+      // stub demo mode: skip the raw-body HMAC check (no real webhook secret in play).
+      if (!stub && !verifyWebhookSignature({ rawBody, signature, webhookSecret })) {
         throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       }
       let body;

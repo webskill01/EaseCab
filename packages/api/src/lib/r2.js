@@ -26,6 +26,8 @@ function createR2Client({ accountId, accessKeyId, secretAccessKey, bucket, publi
   });
 
   return {
+    // Real bucket exists → the browser POSTs the bytes straight to R2 (CLAUDE.md §12).
+    isStub: false,
     async presignPost({ key, contentType, maxBytes }) {
       const { url, fields } = await createPresignedPost(client, {
         Bucket: bucket,
@@ -61,6 +63,9 @@ function createR2Client({ accountId, accessKeyId, secretAccessKey, bucket, publi
  */
 function createStubR2Client({ bucket = 'easecab-stub', publicBaseUrl = 'https://stub.r2.local' } = {}) {
   return {
+    // No bucket to POST to — the presign carries this so the client skips the upload
+    // (the verify gate's headObject below returns exists:true, so the flow completes).
+    isStub: true,
     async presignPost({ key, contentType }) {
       return { url: `${publicBaseUrl}/${bucket}`, fields: { key, 'Content-Type': contentType, policy: 'stub' } };
     },

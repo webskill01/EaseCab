@@ -21,4 +21,22 @@ function createRazorpayClient({ keyId, keySecret }) {
   };
 }
 
-module.exports = { createRazorpayClient };
+/**
+ * Deterministic stub for the Razorpay boundary (mirrors createStubSurepassClient /
+ * createStubR2Client). Used when RAZORPAY_STUB=true — never in production (server.js
+ * FATALs). Returns a stable order id derived from the receipt so the demo upgrade
+ * flow gets a usable orderId WITHOUT calling the live SDK. Signature verification is
+ * skipped separately in the service via config.razorpay.stub (the stub gateway
+ * produces no real HMAC to verify).
+ *
+ * @returns {{ createOrder(args: { receipt: string }): Promise<{ id: string }> }}
+ */
+function createStubRazorpayClient() {
+  return {
+    async createOrder({ receipt }) {
+      return { id: `order_stub_${receipt}` };
+    },
+  };
+}
+
+module.exports = { createRazorpayClient, createStubRazorpayClient };

@@ -10,7 +10,7 @@ const { buildApp } = require('./app');
 const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
 const { createChatStore } = require('./lib/firestoreChat');
 const { createPushSender } = require('./lib/fcm');
-const { createRazorpayClient } = require('./lib/razorpay');
+const { createRazorpayClient, createStubRazorpayClient } = require('./lib/razorpay');
 const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
 const { createR2Client, createStubR2Client } = require('./lib/r2.js');
 
@@ -57,6 +57,8 @@ async function main() {
       keyId: serverEnv.RAZORPAY_KEY_ID,
       keySecret: serverEnv.RAZORPAY_KEY_SECRET,
       webhookSecret: serverEnv.RAZORPAY_WEBHOOK_SECRET,
+      // stub demo mode → the service skips signature verification (see subscription.service).
+      stub: serverEnv.RAZORPAY_STUB,
     },
   };
 
@@ -80,10 +82,19 @@ async function main() {
     privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
   });
 
-  const razorpay = createRazorpayClient({
-    keyId: serverEnv.RAZORPAY_KEY_ID,
-    keySecret: serverEnv.RAZORPAY_KEY_SECRET,
-  });
+  // Razorpay: deterministic stub until activation (RAZORPAY_STUB=true), real client at
+  // go-live — swapping is an env change, zero code change (Phase 9a). FATAL in prod so
+  // payments can never be silently bypassed live (mirrors the SUREPASS_STUB/R2_STUB guards).
+  if (serverEnv.RAZORPAY_STUB && serverEnv.NODE_ENV === 'production') {
+    logger.error('FATAL: RAZORPAY_STUB=true in production — refusing to start (payments would be bypassed)');
+    process.exit(1);
+  }
+  const razorpay = serverEnv.RAZORPAY_STUB
+    ? createStubRazorpayClient()
+    : createRazorpayClient({
+        keyId: serverEnv.RAZORPAY_KEY_ID,
+        keySecret: serverEnv.RAZORPAY_KEY_SECRET,
+      });
 
   // Surepass: deterministic stub until incorporation (SUREPASS_STUB=true), real
   // client at go-live — swapping is an env change, zero code change (Step 12).

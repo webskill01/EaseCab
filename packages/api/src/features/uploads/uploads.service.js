@@ -22,7 +22,10 @@ function createUploadsService({ r2 }) {
 
   /**
    * Issue a presigned POST for a new object. Key = `<prefix><userId>/<uuid>.<ext>`.
-   * @returns {Promise<{ url: string, fields: object, key: string, publicUrl: string|null }>}
+   * `stub` flags the demo/local R2 stub (no real bucket): the client uses it to skip
+   * the direct-to-R2 byte POST, since the stub's `headObject` accepts the key anyway.
+   * Always false against real R2 in production.
+   * @returns {Promise<{ url: string, fields: object, key: string, publicUrl: string|null, stub: boolean }>}
    */
   async function presign({ userId, purpose, contentType }) {
     const policy = policyFor(purpose);
@@ -30,7 +33,13 @@ function createUploadsService({ r2 }) {
     if (!ext) throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR, 'unsupported content type');
     const key = `${policy.keyPrefix}${userId}/${crypto.randomUUID()}.${ext}`;
     const { url, fields } = await r2.presignPost({ key, contentType, maxBytes: policy.maxBytes });
-    return { url, fields, key, publicUrl: policy.tier === UPLOAD_TIER.PUBLIC ? r2.publicUrl(key) : null };
+    return {
+      url,
+      fields,
+      key,
+      publicUrl: policy.tier === UPLOAD_TIER.PUBLIC ? r2.publicUrl(key) : null,
+      stub: r2.isStub === true,
+    };
   }
 
   /**
