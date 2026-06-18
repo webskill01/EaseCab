@@ -15,6 +15,7 @@ function toPublicProfile(u) {
     id: u.id, phone: u.phone, name: u.name ?? null, bio: u.bio ?? null,
     baseCity: u.baseCity ?? null, vehicleType: u.vehicleType ?? null,
     profilePicUrl: u.profilePicUrl ?? null, languagesSpoken: u.languagesSpoken ?? [],
+    experience: u.experience ?? null, workingCity: u.workingCity ?? null,
     profileComplete: isProfileComplete(u),
     verification: {
       aadhaarVerified: u.aadhaarVerified, dlSubmitted: u.dlSubmitted, rcSubmitted: u.rcSubmitted,

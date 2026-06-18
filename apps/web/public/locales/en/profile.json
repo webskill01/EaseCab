@@ -9,10 +9,27 @@
     "name": "Full name",
     "bio": "About me",
     "baseCity": "Base city",
+    "workingCity": "Working city",
+    "experience": "Experience",
     "vehicle": "Vehicle type",
     "languages": "Languages you speak",
     "photo": "Profile photo"
   },
+  "header": { "addPhoto": "PHOTO", "driver": "Driver" },
+  "verifiedBadge": "Verified",
+  "stats": {
+    "experience": "Experience",
+    "workingCity": "Working city",
+    "vehicle": "Vehicle",
+    "years": "yrs",
+    "tapHint": "Tap a stat to edit"
+  },
+  "about": {
+    "title": "About me",
+    "languages": "Languages spoken",
+    "empty": "Add a short bio so drivers trust your posts."
+  },
+  "version": "EaseCab · v1.0.0",
   "dp": {
     "add": "Add photo",
     "change": "Change photo",
@@ -42,6 +59,6 @@
     "verified": "Verified",
     "underReview": "Under review"
   },
-  "nav": { "membership": "Membership", "settings": "Settings" },
+  "nav": { "membership": "Membership", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
   "error": { "load": "Couldn't load your profile.", "save": "Couldn't save. Please try again." }
 }

@@ -6,7 +6,7 @@ import { VehicleIcon } from '@/components/ui/icons'
 import { DpUploader } from './DpUploader'
 import {
   PROFILE_VEHICLES, PROFILE_LANGUAGES, vehIconKeyOf,
-  isProfileFormComplete, toUpdateBody,
+  canSaveProfile, toUpdateBody,
 } from '../lib/profileForm'
 
 const field = 'h-12 w-full rounded-xl border-[1.5px] border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none focus:border-ec-blue'
@@ -14,8 +14,8 @@ const field = 'h-12 w-full rounded-xl border-[1.5px] border-ec-line bg-white px-
 /**
  * Shared profile form (SCREENS §6) — used for both hub edit and Aadhaar-onboarding
  * completion. Manages its own state from `initial`; calls `onSubmit(updateBody)`.
- * Submit is gated on L1 completeness (incl. a DP). Above the form the caller may
- * pass a `header` (e.g. the verified-as strip).
+ * Submit is gated on the core fields only — the DP is NOT a save gate (#19); it's a
+ * soft nudge for the posting gate. Above the form the caller may pass a `header`.
  * @param {{ initial: object, onSubmit: (body: object) => void, submitting: boolean,
  *   errorKey?: ?string, header?: React.ReactNode }} props
  */
@@ -25,11 +25,11 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
   const set = (patch) => setF((prev) => ({ ...prev, ...patch }))
   const toggleLang = (l) =>
     set({ languages: f.languages.includes(l) ? f.languages.filter((x) => x !== l) : [...f.languages, l] })
-  const complete = isProfileFormComplete(f)
+  const canSave = canSaveProfile(f)
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); if (complete && !submitting) onSubmit(toUpdateBody(f)) }}
+      onSubmit={(e) => { e.preventDefault(); if (canSave && !submitting) onSubmit(toUpdateBody(f)) }}
       className="flex flex-col gap-4"
     >
       {header}
@@ -45,6 +45,18 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
         <span className="text-[13px] font-bold text-ec-ink60">{t('fields.baseCity')}</span>
         <input className={field} value={f.baseCity} onChange={(e) => set({ baseCity: e.target.value })} aria-label={t('fields.baseCity')} />
       </label>
+
+      <div className="flex gap-3">
+        <label className="flex flex-1 flex-col gap-1.5">
+          <span className="text-[13px] font-bold text-ec-ink60">{t('fields.workingCity')}</span>
+          <input className={field} value={f.workingCity} onChange={(e) => set({ workingCity: e.target.value })} aria-label={t('fields.workingCity')} />
+        </label>
+        <label className="flex w-28 flex-col gap-1.5">
+          <span className="text-[13px] font-bold text-ec-ink60">{t('fields.experience')}</span>
+          <input className={field} inputMode="numeric" value={f.experience}
+            onChange={(e) => set({ experience: e.target.value.replace(/\D/g, '').slice(0, 2) })} aria-label={t('fields.experience')} />
+        </label>
+      </div>
 
       <label className="flex flex-col gap-1.5">
         <span className="text-[13px] font-bold text-ec-ink60">{t('fields.bio')}</span>
@@ -83,7 +95,7 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
 
       {errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t(errorKey)}</p>}
 
-      <button type="submit" disabled={!complete || submitting}
+      <button type="submit" disabled={!canSave || submitting}
         className="h-[52px] rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue disabled:bg-ec-disabled disabled:shadow-none">
         {submitting ? t('saving') : t('save')}
       </button>

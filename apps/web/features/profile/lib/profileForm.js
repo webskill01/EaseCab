@@ -24,6 +24,8 @@ export function profileToForm(p) {
     name: p?.name ?? '',
     bio: p?.bio ?? '',
     baseCity: p?.baseCity ?? '',
+    workingCity: p?.workingCity ?? '',
+    experience: p?.experience != null ? String(p.experience) : '',
     vehicle: p?.vehicleType ?? '',
     languages: Array.isArray(p?.languagesSpoken) ? [...p.languagesSpoken] : [],
     dpKey: null,
@@ -33,20 +35,32 @@ export function profileToForm(p) {
 
 const filled = (s) => typeof s === 'string' && s.trim().length > 0
 
-/** L1 completeness for the form (mirrors shared isProfileComplete; DP = preview OR a new key). */
-export function isProfileFormComplete(f) {
+/**
+ * The form is SAVEABLE once the schema-required text fields + ≥1 language are set
+ * (Batch D #19 — the DP is NOT a save gate; it's only the L1/posting gate). Mirrors
+ * the required fields of the shared profileUpdateSchema.
+ */
+export function canSaveProfile(f) {
   if (!f) return false
   const stringsOk = [f.name, f.bio, f.baseCity, f.vehicle].every(filled)
-  const dpOk = filled(f.dpPreview) || filled(f.dpKey)
-  return stringsOk && dpOk && Array.isArray(f.languages) && f.languages.length > 0
+  return stringsOk && Array.isArray(f.languages) && f.languages.length > 0
 }
 
-/** Form → PATCH /me/profile body (profileUpdateSchema). dpKey only when newly uploaded. */
+/** L1 completeness (mirrors shared isProfileComplete; adds the DP). Indicator only — never blocks save. */
+export function isProfileFormComplete(f) {
+  if (!f) return false
+  const dpOk = filled(f.dpPreview) || filled(f.dpKey)
+  return canSaveProfile(f) && dpOk
+}
+
+/** Form → PATCH /me/profile body (profileUpdateSchema). Optional fields omitted when blank. */
 export function toUpdateBody(f) {
   const body = {
     name: f.name.trim(), bio: f.bio.trim(), baseCity: f.baseCity.trim(),
     vehicleType: f.vehicle, languagesSpoken: f.languages,
   }
+  if (filled(f.workingCity)) body.workingCity = f.workingCity.trim()
+  if (filled(f.experience)) body.experience = Number(f.experience)
   if (filled(f.dpKey)) body.dpKey = f.dpKey
   return body
 }

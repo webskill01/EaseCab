@@ -1,56 +1,100 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { User, Crown, BellEdit, ChevR } from '@/components/ui/icons'
+import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, VehicleIcon, Info, List } from '@/components/ui/icons'
 import { LogoutButton } from '@/features/shell/components/LogoutButton'
 import { useProfile } from '../hooks/useProfile'
-import { useUpdateProfile } from '../hooks/useUpdateProfile'
-import { profileToForm } from '../lib/profileForm'
-import { ProfileForm } from './ProfileForm'
+import { vehIconKeyOf } from '../lib/profileForm'
 import { CompletenessBanner } from './CompletenessBanner'
 import { VerificationCards } from './VerificationCards'
 
-/** Profile hub (SCREENS §6) — read view + inline edit + verification center. */
+function Stat({ icon, label, value, onEdit }) {
+  return (
+    <button type="button" onClick={onEdit} className="flex flex-col items-center gap-1.5 px-2 py-4 text-center">
+      <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-ec-sky text-ec-blue">{icon}</span>
+      <span className="text-[11px] font-semibold text-ec-ink60">{label}</span>
+      <span className="truncate text-[14px] font-extrabold text-ec-ink">{value}</span>
+    </button>
+  )
+}
+
+function NavRow({ icon, tint, label, value, onClick, last }) {
+  return (
+    <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${last ? '' : 'border-b border-ec-line'}`}>
+      <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky ${tint || 'text-ec-blue'}`}>{icon}</span>
+      <span className="flex-1 text-[14px] font-bold text-ec-ink">{label}</span>
+      {value && <span className="text-[12.5px] font-bold text-ec-ink60">{value}</span>}
+      <ChevR size={16} className="text-ec-ink40" />
+    </button>
+  )
+}
+
+/** Profile hub (SCREENS §6 / profile.jsx) — header card, stats, about, verification, nav, danger logout. */
 export function ProfileScreen() {
   const t = useTranslations('profile')
   const router = useRouter()
   const { data: profile, isLoading, isError } = useProfile()
-  const [editing, setEditing] = useState(false)
-  const update = useUpdateProfile()
 
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
   if (isError || !profile) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
 
   const v = profile.verification
   const phone = `+91 ${String(profile.phone).replace(/^\+91/, '')}`
-
-  // close the editor once a save lands
-  if (update.saved && editing) setEditing(false)
+  const goEdit = () => router.push('/profile/edit')
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-ec-bg p-4">
-      <header className="flex items-center gap-3.5">
-        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-ec-sky bg-ec-sky text-ec-blue">
-          {profile.profilePicUrl ? <img src={profile.profilePicUrl} alt="" className="h-full w-full object-cover" /> : <User size={30} />}
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-[18px] font-extrabold text-ec-ink">{profile.name || '—'}</p>
-          <p className="text-[13px] font-semibold text-ec-ink60">{phone}</p>
-        </div>
-      </header>
+      {/* Header card — tap anywhere to edit */}
+      <button type="button" onClick={goEdit} className="flex items-center gap-3.5 rounded-2xl border border-ec-line bg-white p-4 text-left shadow-ec-card">
+        {profile.profilePicUrl ? (
+          <img src={profile.profilePicUrl} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-ec-sky object-cover" />
+        ) : (
+          <span className="flex h-16 w-16 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-ec-blue/40 bg-ec-sky text-ec-blue">
+            <Plus size={18} /><span className="text-[8.5px] font-extrabold">{t('header.addPhoto')}</span>
+          </span>
+        )}
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="truncate text-[18px] font-extrabold text-ec-ink">{profile.name || '—'}</span>
+            {v.aadhaarVerified && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-ec-successBg px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-ec-successTx">
+                <Shield size={12} className="text-ec-success" />{t('verifiedBadge')}
+              </span>
+            )}
+          </span>
+          <span className="mt-0.5 block text-[13px] font-semibold text-ec-ink60">{[profile.baseCity, t('header.driver')].filter(Boolean).join(' · ')}</span>
+          <span className="block text-[12.5px] font-semibold text-ec-ink40">{phone}</span>
+        </span>
+      </button>
 
-      {!profile.profileComplete && <CompletenessBanner onAction={() => (v.aadhaarVerified ? setEditing(true) : router.push('/verify?intent=l1'))} />}
+      {!profile.profileComplete && <CompletenessBanner onAction={() => (v.aadhaarVerified ? goEdit() : router.push('/verify?intent=l1'))} />}
 
-      {editing ? (
-        <div className="rounded-2xl border border-ec-line bg-white p-4">
-          <ProfileForm initial={profileToForm(profile)} onSubmit={(body) => update.save(body)} submitting={update.saving} errorKey={update.errorKey} />
-          <button type="button" onClick={() => setEditing(false)} className="mt-3 w-full text-[13px] font-bold text-ec-ink60">{t('cancel')}</button>
+      {/* Stats grid — tap to edit */}
+      <div>
+        <div className="grid grid-cols-3 divide-x divide-ec-line overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
+          <Stat icon={<Steer size={16} />} label={t('stats.experience')} value={profile.experience != null ? `${profile.experience} ${t('stats.years')}` : '—'} onEdit={goEdit} />
+          <Stat icon={<Pin size={15} />} label={t('stats.workingCity')} value={profile.workingCity || profile.baseCity || '—'} onEdit={goEdit} />
+          <Stat icon={<VehicleIcon vehicleKey={vehIconKeyOf(profile.vehicleType)} size={16} />} label={t('stats.vehicle')} value={profile.vehicleType || '—'} onEdit={goEdit} />
         </div>
-      ) : (
-        <button type="button" onClick={() => setEditing(true)} className="h-11 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-extrabold text-ec-blueInk">{t('edit')}</button>
-      )}
+        <p className="mt-1.5 text-center text-[11px] font-semibold text-ec-ink40">{t('stats.tapHint')}</p>
+      </div>
+
+      {/* About + languages */}
+      <section className="rounded-2xl border border-ec-line bg-white p-4 shadow-ec-card">
+        <p className="text-[12.5px] font-extrabold uppercase tracking-wide text-ec-ink60">{t('about.title')}</p>
+        <p className="mt-2 text-[13.5px] font-medium leading-relaxed text-ec-ink">{profile.bio || t('about.empty')}</p>
+        {profile.languagesSpoken.length > 0 && (
+          <>
+            <p className="mb-1.5 mt-3 text-[11.5px] font-bold text-ec-ink40">{t('about.languages')}</p>
+            <div className="flex flex-wrap gap-2">
+              {profile.languagesSpoken.map((l) => (
+                <span key={l} className="rounded-full bg-ec-sky px-2.5 py-1 text-[12px] font-bold text-ec-blueInk">{l}</span>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
 
       <VerificationCards
         verification={v}
@@ -58,19 +102,18 @@ export function ProfileScreen() {
         onStartL2={() => router.push('/verify?intent=driver')}
       />
 
-      <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white">
-        <button type="button" onClick={() => router.push('/membership')} className="flex w-full items-center gap-3 border-b border-ec-line px-4 py-3.5 text-left">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><Crown size={18} /></span>
-          <span className="flex-1 text-[14px] font-bold text-ec-ink">{t('nav.membership')}</span>
-          <ChevR size={16} className="text-ec-ink40" />
-        </button>
-        <button type="button" onClick={() => router.push('/settings')} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><BellEdit size={18} /></span>
-          <span className="flex-1 text-[14px] font-bold text-ec-ink">{t('nav.settings')}</span>
-          <ChevR size={16} className="text-ec-ink40" />
-        </button>
+      <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
+        <NavRow icon={<Crown size={18} />} label={t('nav.membership')} onClick={() => router.push('/membership')} />
+        <NavRow icon={<BellEdit size={18} />} label={t('nav.settings')} onClick={() => router.push('/settings')} last />
       </nav>
-      <LogoutButton />
+
+      <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
+        <NavRow icon={<Info size={16} />} tint="text-ec-ink60" label={t('nav.privacy')} onClick={() => router.push('/privacy-policy')} />
+        <NavRow icon={<List size={18} />} tint="text-ec-ink60" label={t('nav.terms')} onClick={() => router.push('/terms')} last />
+      </nav>
+
+      <LogoutButton variant="danger" />
+      <p className="pb-2 text-center text-[11px] font-semibold text-ec-ink40">{t('version')}</p>
     </div>
   )
 }

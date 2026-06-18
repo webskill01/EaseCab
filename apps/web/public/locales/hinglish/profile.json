@@ -9,10 +9,27 @@
     "name": "Poora naam",
     "bio": "Mere baare mein",
     "baseCity": "Base city",
+    "workingCity": "Working city",
+    "experience": "Experience",
     "vehicle": "Vehicle type",
     "languages": "Aap kaunsi languages bolte ho",
     "photo": "Profile photo"
   },
+  "header": { "addPhoto": "PHOTO", "driver": "Driver" },
+  "verifiedBadge": "Verified",
+  "stats": {
+    "experience": "Experience",
+    "workingCity": "Working city",
+    "vehicle": "Vehicle",
+    "years": "saal",
+    "tapHint": "Edit karne ke liye kisi stat par tap karo"
+  },
+  "about": {
+    "title": "Mere baare mein",
+    "languages": "Boli jaane wali languages",
+    "empty": "Ek chhota bio add karo taaki drivers aapki posts par bharosa karein."
+  },
+  "version": "EaseCab · v1.0.0",
   "dp": {
     "add": "Photo add karo",
     "change": "Photo badlo",
@@ -42,6 +59,6 @@
     "verified": "Verified",
     "underReview": "Review mein"
   },
-  "nav": { "membership": "Membership", "settings": "Settings" },
+  "nav": { "membership": "Membership", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
   "error": { "load": "Aapki profile load nahi ho saki.", "save": "Save nahi ho saka. Phir try karo." }
 }

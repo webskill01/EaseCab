@@ -290,6 +290,8 @@ model User {
   licenseUrl         String?            @map("license_url")
   rcUrl              String?            @map("rc_url")
   bio                String?            @map("bio")                       // L1 profile-completeness blurb (Step 21b)
+  experience         Int?               @map("experience")                // years of driving experience (profile stat, Batch D)
+  workingCity        String?            @map("working_city")              // operational city, distinct from base (Batch D)
   carMake            String?            @map("car_make")                  // from RC verify (Step 21b)
   carModel           String?            @map("car_model")
   carRegNo           String?            @map("car_reg_no")

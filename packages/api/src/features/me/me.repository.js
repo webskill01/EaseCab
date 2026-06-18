@@ -10,7 +10,7 @@ const CONTACTED_SELECT = Object.freeze({
 /** Profile + verification-display columns for GET/PATCH /me/profile (Step 21b). */
 const PROFILE_SELECT = Object.freeze({
   id: true, phone: true, name: true, bio: true, baseCity: true, vehicleType: true,
-  profilePicUrl: true, languagesSpoken: true,
+  profilePicUrl: true, languagesSpoken: true, experience: true, workingCity: true,
   aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true, verificationStatus: true,
   aadhaarLast4: true, carMake: true, carModel: true, carRegNo: true,
   carFrontUrl: true, carBackUrl: true,

@@ -12,7 +12,12 @@ describe('ProfileForm', () => {
     renderWithIntl(<ProfileForm initial={profileToForm(FULL)} onSubmit={vi.fn()} submitting={false} />)
     expect(screen.getByRole('button', { name: /save profile/i })).toBeEnabled()
   })
-  it('blocks submit when no DP present (onboarding)', () => {
+  it('allows save WITHOUT a DP when the core fields are filled (#19 soft-gate)', () => {
+    const noDp = profileToForm({ ...FULL, profilePicUrl: undefined })
+    renderWithIntl(<ProfileForm initial={noDp} onSubmit={vi.fn()} submitting={false} />)
+    expect(screen.getByRole('button', { name: /save profile/i })).toBeEnabled()
+  })
+  it('blocks submit when the core fields are incomplete (onboarding)', () => {
     renderWithIntl(<ProfileForm initial={profileToForm(null)} onSubmit={vi.fn()} submitting={false} />)
     expect(screen.getByRole('button', { name: /save profile/i })).toBeDisabled()
   })

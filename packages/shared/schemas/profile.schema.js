@@ -18,6 +18,9 @@ const profileUpdateSchema = z.object({
   baseCity: z.string().trim().min(2).max(60),
   vehicleType: z.enum(VEHICLE_LABELS),
   languagesSpoken: z.array(z.string().trim().min(1)).min(1).max(6),
+  // Profile-stat extras (Batch D) — optional, NOT L1-completeness fields.
+  experience: z.coerce.number().int().min(0).max(70).optional(),
+  workingCity: z.string().trim().min(2).max(60).optional(),
   dpKey: z.string().min(1).optional(),
 });
 
