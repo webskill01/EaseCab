@@ -12,7 +12,8 @@ describe('TopBar', () => {
     expect(screen.getByText('EaseCab')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /chats/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /language/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /support/i })).toBeInTheDocument()
+    // Support is an anchor (opens WhatsApp / mailto), so it carries the link role.
+    expect(screen.getByRole('link', { name: /support/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /log out/i })).not.toBeInTheDocument()
   })
 })

@@ -21,18 +21,26 @@ function swUrl() {
 export async function requestPermissionAndToken() {
   if (process.env.NEXT_PUBLIC_E2E === 'true') return window.__ecFcmSeam.requestPermissionAndToken()
   if (typeof Notification === 'undefined') return { permission: 'unsupported', token: null }
+  // No (or placeholder) VAPID key → FCM can't mint a web token. The SDK's getToken
+  // base64url-decodes the key and throws `atob` InvalidCharacterError on a bad value,
+  // which surfaced as an uncaught rejection in the smoke-test. Degrade gracefully.
+  const vapidKey = env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
+  if (!vapidKey) return { permission: 'unsupported', token: null }
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') return { permission, token: null }
   const messaging = await getFirebaseMessaging()
   if (!messaging) return { permission: 'unsupported', token: null }
-  const reg = await navigator.serviceWorker.register(swUrl(), {
-    scope: '/firebase-cloud-messaging-push-scope',
-  })
-  const token = await getToken(messaging, {
-    vapidKey: env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-    serviceWorkerRegistration: reg,
-  })
-  return { permission: 'granted', token }
+  try {
+    const reg = await navigator.serviceWorker.register(swUrl(), {
+      scope: '/firebase-cloud-messaging-push-scope',
+    })
+    const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: reg })
+    return { permission: 'granted', token }
+  } catch {
+    // Invalid VAPID key / SW registration failure / unsupported browser — notifications
+    // simply stay off (the caller treats a null token as "not enabled"). Never throws.
+    return { permission, token: null }
+  }
 }
 
 export async function onForegroundMessage(cb) {

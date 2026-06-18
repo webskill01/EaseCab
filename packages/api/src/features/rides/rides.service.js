@@ -87,6 +87,21 @@ function createRidesService({ repo }) {
       const { contactedAt } = await repo.recordContact(userId, rideId, snapshot);
       return { phoneNumber: ride.phoneNumber, contactedAt };
     },
+
+    /**
+     * File a user report against a bot ride. 404 if the ride is gone (before the
+     * write); otherwise persists the report for the admin moderation queue (24c).
+     *
+     * @param {{ userId: string, rideId: string, reason: string, remarks?: string }} args
+     * @returns {Promise<{ id: string, createdAt: Date }>}
+     */
+    async reportRide({ userId, rideId, reason, remarks }) {
+      const ride = await repo.findRideExists(rideId);
+      if (!ride) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      return repo.createRideReport({ reporterId: userId, rideId, reason, remarks });
+    },
   };
 }
 

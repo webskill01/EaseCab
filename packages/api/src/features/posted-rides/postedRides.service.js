@@ -140,6 +140,21 @@ function createPostedRidesService({ repo, logger }) {
       }
       return { id: postedRideId, status: POSTED_RIDE_STATUS.DELETED };
     },
+
+    /**
+     * File a user report against a posted ride. 404 if the post is gone (before the
+     * write); otherwise persists the report for the admin moderation queue (24c).
+     *
+     * @param {{ userId: string, postedRideId: string, reason: string, remarks?: string }} args
+     * @returns {Promise<{ id: string, createdAt: Date }>}
+     */
+    async reportPost({ userId, postedRideId, reason, remarks }) {
+      const post = await repo.findPostExists(postedRideId);
+      if (!post) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      return repo.createPostReport({ reporterId: userId, postedRideId, reason, remarks });
+    },
   };
 }
 

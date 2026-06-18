@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl'
 import { Swap, Shield } from '@/components/ui/icons'
 import { CityPicker } from './CityPicker'
 import { VehicleChips } from './VehicleChips'
-import { isPostable } from '../lib/postForm'
+import { isPostable, isFutureDateTime, todayStr } from '../lib/postForm'
 
 const SECTION = 'rounded-ec-card border border-ec-line bg-white p-4'
 const FIELD = 'h-12 w-full rounded-xl border border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none'
@@ -24,6 +24,7 @@ const LABEL = 'mb-1.5 block text-[12.5px] font-bold uppercase tracking-wide text
 export function PostForm({ form, onChange, onSubmit, submitting }) {
   const t = useTranslations('post')
   const postable = isPostable(form)
+  const pastSlot = Boolean(form.date && form.time && !isFutureDateTime(form.date, form.time))
   const onPhone = (e) => onChange({ phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
 
   return (
@@ -57,13 +58,16 @@ export function PostForm({ form, onChange, onSubmit, submitting }) {
         <div className="flex gap-3">
           <label className="flex-1">
             <span className={LABEL}>{t('post.date')}</span>
-            <input type="date" value={form.date} onChange={(e) => onChange({ date: e.target.value })} className={FIELD} aria-label={t('post.date')} />
+            <input type="date" min={todayStr()} value={form.date} onChange={(e) => onChange({ date: e.target.value })} className={FIELD} aria-label={t('post.date')} />
           </label>
           <label className="flex-1">
             <span className={LABEL}>{t('post.time')}</span>
             <input type="time" value={form.time} onChange={(e) => onChange({ time: e.target.value })} className={FIELD} aria-label={t('post.time')} />
           </label>
         </div>
+        {pastSlot && (
+          <p className="mt-2 text-[12px] font-bold text-ec-danger">{t('post.pastDateError')}</p>
+        )}
         <label className="mt-3 block">
           <span className={LABEL}>{t('post.fare')}</span>
           <div className="flex items-center gap-2">
@@ -99,17 +103,20 @@ export function PostForm({ form, onChange, onSubmit, submitting }) {
         <Shield size={14} />{t('post.verifiedNote')}
       </p>
 
-      {/* Sticky submit */}
-      <button
-        type="button"
-        disabled={!postable || submitting}
-        onClick={onSubmit}
-        className={`sticky bottom-3 h-[54px] w-full rounded-xl text-[15.5px] font-extrabold text-white ${
-          postable && !submitting ? 'bg-ec-blue shadow-ec-blue' : 'bg-ec-disabled shadow-none'
-        }`}
-      >
-        {submitting ? '…' : t('post.submit')}
-      </button>
+      {/* Sticky footer action bar (spec §6.12) — full-bleed white bar pinned to the
+          bottom of the scroll area, so the button never floats over the fields. */}
+      <div className="sticky bottom-0 -mx-4 -mb-4 mt-1 border-t border-ec-line bg-white px-4 py-3">
+        <button
+          type="button"
+          disabled={!postable || submitting}
+          onClick={onSubmit}
+          className={`h-[54px] w-full rounded-xl text-[15.5px] font-extrabold text-white ${
+            postable && !submitting ? 'bg-ec-blue shadow-ec-blue' : 'bg-ec-disabled shadow-none'
+          }`}
+        >
+          {submitting ? '…' : t('post.submit')}
+        </button>
+      </div>
     </div>
   )
 }

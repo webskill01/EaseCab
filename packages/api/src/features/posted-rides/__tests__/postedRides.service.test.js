@@ -30,6 +30,8 @@ function baseRepo(over = {}) {
     async recordContact() { return { contactedAt: new Date('2026-06-02T00:00:00.000Z') }; },
     async closePost() { return over.closeCount ?? 1; },
     async softDeletePost() { return over.delCount ?? 1; },
+    async findPostExists() { return over.exists === undefined ? { id: 'p1' } : over.exists; },
+    async createPostReport(data) { (over.reports ??= []).push(data); return { id: 'rep1', createdAt: new Date() }; },
   };
 }
 
@@ -138,4 +140,17 @@ test('closePost / removePost: NOT_FOUND when nothing was updated (non-owner)', a
   await assert.rejects(() => close0.closePost({ userId: 'u1', postedRideId: 'p1' }), code('NOT_FOUND'));
   const del0 = createPostedRidesService({ repo: baseRepo({ delCount: 0 }) });
   await assert.rejects(() => del0.removePost({ userId: 'u1', postedRideId: 'p1' }), code('NOT_FOUND'));
+});
+
+test('reportPost writes a report when the post exists', async () => {
+  const reports = [];
+  const svc = createPostedRidesService({ repo: baseRepo({ reports }) });
+  const out = await svc.reportPost({ userId: 'u1', postedRideId: 'p1', reason: 'inappropriate', remarks: 'rude' });
+  assert.equal(out.id, 'rep1');
+  assert.deepEqual(reports[0], { reporterId: 'u1', postedRideId: 'p1', reason: 'inappropriate', remarks: 'rude' });
+});
+
+test('reportPost throws NOT_FOUND for a missing post', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ exists: null }) });
+  await assert.rejects(() => svc.reportPost({ userId: 'u1', postedRideId: 'gone', reason: 'fake' }), code('NOT_FOUND'));
 });

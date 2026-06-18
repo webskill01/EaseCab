@@ -44,5 +44,20 @@
     "subscribe": "Subscribe",
     "renew": "Abhi renew karein"
   },
-  "reveal": { "title": "Driver se contact", "callBtn": "Call", "waBtn": "WhatsApp" }
+  "reveal": { "title": "Driver se contact", "callBtn": "Call", "waBtn": "WhatsApp" },
+  "report": {
+    "title": "Ride report karein",
+    "reasonQ": "Kya problem hai?",
+    "reasons": {
+      "fake": "Fake",
+      "spam": "Spam",
+      "wrong_info": "Galat info",
+      "inappropriate": "Inappropriate",
+      "other": "Other"
+    },
+    "remarkPlaceholder": "Details add karein (optional)",
+    "submit": "Report bhejein",
+    "submitted": "Report bhej di gayi",
+    "error": "Bhej nahi paaye. Dobara try karein."
+  }
 }

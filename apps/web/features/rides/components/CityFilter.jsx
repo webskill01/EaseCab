@@ -49,7 +49,7 @@ export function CityFilter({ locked, onPick }) {
         }`}
       >
         <span className={`inline-flex ${filtered ? 'text-white' : 'text-ec-blue'}`}><Pin size={17} /></span>
-        <span className="min-w-0 flex-1 truncate text-left">{filtered ? locked.name : t('filter.filterByCity')}</span>
+        <span className="min-w-0 truncate text-center">{filtered ? locked.name : t('filter.filterByCity')}</span>
         <span className={`inline-flex transition-transform ${open ? 'rotate-180' : ''} ${filtered ? 'text-white' : 'text-ec-ink40'}`}><ChevR size={15} /></span>
       </button>
 

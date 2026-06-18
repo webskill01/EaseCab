@@ -44,5 +44,20 @@
     "subscribe": "सब्सक्राइब",
     "renew": "अभी रिन्यू करें"
   },
-  "reveal": { "title": "ड्राइवर से संपर्क", "callBtn": "कॉल", "waBtn": "WhatsApp" }
+  "reveal": { "title": "ड्राइवर से संपर्क", "callBtn": "कॉल", "waBtn": "WhatsApp" },
+  "report": {
+    "title": "राइड रिपोर्ट करें",
+    "reasonQ": "क्या समस्या है?",
+    "reasons": {
+      "fake": "फर्जी",
+      "spam": "स्पैम",
+      "wrong_info": "गलत जानकारी",
+      "inappropriate": "अनुचित",
+      "other": "अन्य"
+    },
+    "remarkPlaceholder": "विवरण जोड़ें (वैकल्पिक)",
+    "submit": "रिपोर्ट भेजें",
+    "submitted": "रिपोर्ट भेज दी गई",
+    "error": "भेजा नहीं जा सका। फिर से कोशिश करें।"
+  }
 }

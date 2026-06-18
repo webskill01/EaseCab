@@ -13,7 +13,8 @@
     "noResults": "No matches",
     "swap": "Swap pickup and drop",
     "verifiedNote": "Aadhaar-verified members' duties post instantly",
-    "submit": "Post Ride"
+    "submit": "Post Ride",
+    "pastDateError": "Date and time must be in the future"
   },
   "paste": {
     "boxLabel": "Paste the ride message",

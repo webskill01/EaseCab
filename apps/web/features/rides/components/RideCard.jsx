@@ -125,7 +125,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
           {verified && ride.date ? <span className="font-semibold text-ec-ink60">· {ride.date}</span> : null}
         </div>
         {ride.message ? (
-          <p className="mt-1.5 line-clamp-2 text-[12.5px] font-medium leading-snug text-ec-ink60">{ride.message}</p>
+          <p className="mt-1.5 whitespace-pre-line break-words text-[12.5px] font-medium leading-snug text-ec-ink60">{ride.message}</p>
         ) : null}
       </div>
 

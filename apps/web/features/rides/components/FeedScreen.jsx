@@ -16,6 +16,7 @@ import { RideCard } from './RideCard'
 import { RideCardSkeleton, CatchingUp, EmptyFeed } from './FeedStates'
 import { NewRidesPill } from './NewRidesPill'
 import { ContactSheet } from './ContactSheet'
+import { ReportSheet } from './ReportSheet'
 import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
 import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
 import { NotificationPrePrompt } from '@/features/notifications/components/NotificationPrePrompt'
@@ -34,6 +35,7 @@ export function FeedScreen() {
   const [sub, setSub] = useState(FEED_SUB.RIDES)
   const [lockedCity, setLockedCity] = useState(null)
   const [contactRideVM, setContactRideVM] = useState(null)
+  const [reportRideVM, setReportRideVM] = useState(null)
 
   // Hydrate the persisted lock after mount (cookie read can't run on the server).
   useEffect(() => { setLockedCity(readCityLock()) }, [])
@@ -104,7 +106,7 @@ export function FeedScreen() {
                   ride={ride}
                   now={feed.now}
                   onContact={(r) => setContactRideVM(r)}
-                  onReport={() => { /* report sheet + API deferred (admin Step 24) */ }}
+                  onReport={(r) => setReportRideVM(r)}
                 />
               </div>
             ))}
@@ -119,6 +121,10 @@ export function FeedScreen() {
           onClose={() => setContactRideVM(null)}
           onUpgrade={() => { setContactRideVM(null); goMembership() }}
         />
+      )}
+
+      {reportRideVM && (
+        <ReportSheet ride={reportRideVM} onClose={() => setReportRideVM(null)} />
       )}
     </div>
   )

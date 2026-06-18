@@ -48,5 +48,20 @@
     "title": "Contact driver",
     "callBtn": "Call",
     "waBtn": "WhatsApp"
+  },
+  "report": {
+    "title": "Report ride",
+    "reasonQ": "What's the problem?",
+    "reasons": {
+      "fake": "Fake",
+      "spam": "Spam",
+      "wrong_info": "Wrong info",
+      "inappropriate": "Inappropriate",
+      "other": "Other"
+    },
+    "remarkPlaceholder": "Add details (optional)",
+    "submit": "Submit report",
+    "submitted": "Report submitted",
+    "error": "Couldn't submit. Please try again."
   }
 }

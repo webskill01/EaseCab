@@ -44,5 +44,20 @@
     "subscribe": "ਸਬਸਕ੍ਰਾਈਬ",
     "renew": "ਹੁਣੇ ਰੀਨਿਊ ਕਰੋ"
   },
-  "reveal": { "title": "ਡਰਾਈਵਰ ਨਾਲ ਸੰਪਰਕ", "callBtn": "ਕਾਲ", "waBtn": "WhatsApp" }
+  "reveal": { "title": "ਡਰਾਈਵਰ ਨਾਲ ਸੰਪਰਕ", "callBtn": "ਕਾਲ", "waBtn": "WhatsApp" },
+  "report": {
+    "title": "ਰਾਈਡ ਦੀ ਰਿਪੋਰਟ ਕਰੋ",
+    "reasonQ": "ਕੀ ਸਮੱਸਿਆ ਹੈ?",
+    "reasons": {
+      "fake": "ਜਾਅਲੀ",
+      "spam": "ਸਪੈਮ",
+      "wrong_info": "ਗਲਤ ਜਾਣਕਾਰੀ",
+      "inappropriate": "ਅਣਉਚਿਤ",
+      "other": "ਹੋਰ"
+    },
+    "remarkPlaceholder": "ਵੇਰਵੇ ਸ਼ਾਮਲ ਕਰੋ (ਵਿਕਲਪਿਕ)",
+    "submit": "ਰਿਪੋਰਟ ਭੇਜੋ",
+    "submitted": "ਰਿਪੋਰਟ ਭੇਜ ਦਿੱਤੀ",
+    "error": "ਭੇਜਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+  }
 }

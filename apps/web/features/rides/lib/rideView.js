@@ -81,6 +81,23 @@ function titleCase(s) {
   return s.replace(/\S+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
 }
 
+// Matches an http/https URL up to the next whitespace (drivers paste Insta / app
+// / referral links into ride notes — strip them out of the displayed message).
+const URL_RE = /\bhttps?:\/\/\S+/gi
+
+/**
+ * Remove embedded links from a ride message for display. Uses http/https as the
+ * identifier per the locked decision; collapses the whitespace the removed link
+ * leaves behind and trims. Returns null when nothing usable remains.
+ * @param {?string} msg
+ * @returns {?string}
+ */
+export function stripUrls(msg) {
+  if (!msg) return null
+  const cleaned = msg.replace(URL_RE, '').replace(/[ \t]{2,}/g, ' ').replace(/[ \t]+\n/g, '\n').trim()
+  return cleaned === '' ? null : cleaned
+}
+
 /**
  * The label to render for a route endpoint: the resolved canonical name when
  * present, else the title-cased raw fragment, else null (caller shows "—").

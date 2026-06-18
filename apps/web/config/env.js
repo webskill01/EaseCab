@@ -14,6 +14,10 @@ const schema = z.object({
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1),
   NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1),
   NEXT_PUBLIC_FIREBASE_VAPID_KEY: z.string().min(1),
+  // Support contact (top-bar headset → WhatsApp, else email). WhatsApp number is
+  // digits only incl. country code, e.g. 919876543210. Both optional.
+  NEXT_PUBLIC_SUPPORT_WHATSAPP: z.string().regex(/^\d{10,15}$/).optional(),
+  NEXT_PUBLIC_SUPPORT_EMAIL: z.string().email().default('support@easecab.com'),
 })
 
 const parsed = schema.safeParse({
@@ -24,6 +28,8 @@ const parsed = schema.safeParse({
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   NEXT_PUBLIC_FIREBASE_VAPID_KEY: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+  NEXT_PUBLIC_SUPPORT_WHATSAPP: process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP,
+  NEXT_PUBLIC_SUPPORT_EMAIL: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
 })
 
 if (!parsed.success) {

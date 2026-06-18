@@ -21,4 +21,5 @@ module.exports = {
   ...require('./contacts'),
   ...require('./uploads'),
   ...require('./admin'),
+  ...require('./reports'),
 };

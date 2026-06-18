@@ -13,7 +13,8 @@
     "noResults": "Koi match nahi",
     "swap": "Pickup aur drop badlein",
     "verifiedNote": "Aadhaar-verified members ki duties turant post hoti hain",
-    "submit": "Duty post karein"
+    "submit": "Duty post karein",
+    "pastDateError": "Date aur time future mein hona chahiye"
   },
   "paste": {
     "boxLabel": "Ride message paste karein",

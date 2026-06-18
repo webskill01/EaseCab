@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { emptyForm, draftToForm, isPostable, toCreateBody, POST_VEHICLES } from '../postForm'
+import { emptyForm, draftToForm, isPostable, toCreateBody, isFutureDateTime, todayStr, POST_VEHICLES } from '../postForm'
+
+// Fixed reference clock so the future/past assertions don't depend on the wall clock.
+const NOW = new Date('2026-06-18T12:00:00').getTime()
 
 describe('postForm', () => {
   it('emptyForm has blank fields', () => {
@@ -31,12 +34,30 @@ describe('postForm', () => {
     expect(f.phone).toBe('')
   })
 
-  it('isPostable requires from, to, vehicle, date, time, 10-digit phone', () => {
+  it('isPostable requires from, to, vehicle, future date+time, 10-digit phone', () => {
     const base = { from: { id: 'a', name: 'A' }, to: { id: 'b', name: 'B' }, vehicle: 'Sedan', date: '2026-06-20', time: '09:30', phone: '9876543210', fare: '', notes: '' }
-    expect(isPostable(base)).toBe(true)
-    expect(isPostable({ ...base, phone: '12345' })).toBe(false)
-    expect(isPostable({ ...base, vehicle: '' })).toBe(false)
-    expect(isPostable({ ...base, to: null })).toBe(false)
+    expect(isPostable(base, NOW)).toBe(true)
+    expect(isPostable({ ...base, phone: '12345' }, NOW)).toBe(false)
+    expect(isPostable({ ...base, vehicle: '' }, NOW)).toBe(false)
+    expect(isPostable({ ...base, to: null }, NOW)).toBe(false)
+  })
+
+  it('isPostable rejects a past date/time (#8)', () => {
+    const base = { from: { id: 'a', name: 'A' }, to: { id: 'b', name: 'B' }, vehicle: 'Sedan', phone: '9876543210', fare: '', notes: '' }
+    expect(isPostable({ ...base, date: '2026-06-10', time: '09:30' }, NOW)).toBe(false)
+    expect(isPostable({ ...base, date: '2026-06-18', time: '11:00' }, NOW)).toBe(false) // earlier today
+    expect(isPostable({ ...base, date: '2026-06-18', time: '13:00' }, NOW)).toBe(true)  // later today
+  })
+
+  it('isFutureDateTime needs both parts and a future instant', () => {
+    expect(isFutureDateTime('2026-06-19', '08:00', NOW)).toBe(true)
+    expect(isFutureDateTime('2026-06-17', '08:00', NOW)).toBe(false)
+    expect(isFutureDateTime('', '08:00', NOW)).toBe(false)
+    expect(isFutureDateTime('2026-06-19', '', NOW)).toBe(false)
+  })
+
+  it('todayStr formats local YYYY-MM-DD', () => {
+    expect(todayStr(new Date('2026-06-18T12:00:00'))).toBe('2026-06-18')
   })
 
   it('toCreateBody prefers cityId, falls back to cityRaw, prefixes phone, coerces fare', () => {
@@ -58,5 +79,15 @@ describe('postForm', () => {
     expect(body.fare).toBeUndefined()
     expect(body.notes).toBeUndefined()
     expect(body.fromCityRaw).toBeUndefined()
+  })
+
+  it('toCreateBody omits empty date/time so the free-text direct post does not 422 (#9)', () => {
+    const body = toCreateBody({
+      from: { id: 'c1', name: 'Delhi' }, to: { id: null, name: 'Pinjore' },
+      vehicle: 'Innova', date: '', time: '', phone: '9876543210', fare: '', notes: '',
+    })
+    expect(body.rideDate).toBeUndefined()
+    expect(body.rideTime).toBeUndefined()
+    expect(body).toEqual({ fromCityId: 'c1', toCityRaw: 'Pinjore', phone: '+919876543210', vehicleType: 'Innova' })
   })
 })

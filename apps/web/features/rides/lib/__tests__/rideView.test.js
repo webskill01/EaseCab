@@ -1,8 +1,25 @@
 import { describe, it, expect } from 'vitest'
 import {
-  ageMinFrom, statusOf, relParts, vehIconKey, cityLabel,
+  ageMinFrom, statusOf, relParts, vehIconKey, cityLabel, stripUrls,
   RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
 } from '../rideView'
+
+describe('stripUrls', () => {
+  it('removes http/https links and tidies the leftover whitespace (#2)', () => {
+    expect(stripUrls('Delhi to Manali, book now https://insta.gr/abc thanks')).toBe('Delhi to Manali, book now thanks')
+    expect(stripUrls('Call me http://wa.link/x9')).toBe('Call me')
+  })
+
+  it('keeps non-link text untouched', () => {
+    expect(stripUrls('Amritsar to Delhi ████')).toBe('Amritsar to Delhi ████')
+  })
+
+  it('returns null for empty / link-only messages', () => {
+    expect(stripUrls('https://only.link/here')).toBeNull()
+    expect(stripUrls(null)).toBeNull()
+    expect(stripUrls('')).toBeNull()
+  })
+})
 
 describe('ageMinFrom', () => {
   it('floors elapsed whole minutes, never negative', () => {

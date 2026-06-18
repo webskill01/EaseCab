@@ -208,6 +208,19 @@ function createPostedRidesRepository({ prisma, redis }) {
       });
       return count;
     },
+
+    /** Existence check for the report path — null if the post is gone. */
+    async findPostExists(id) {
+      return prisma.postedRide.findUnique({ where: { id }, select: { id: true } });
+    },
+
+    /** Write a user report against a posted ride (feeds the admin moderation queue, 24c). */
+    async createPostReport({ reporterId, postedRideId, reason, remarks }) {
+      return prisma.rideReport.create({
+        data: { reporterId, postedRideId, reason, remarks: remarks ?? null },
+        select: { id: true, createdAt: true },
+      });
+    },
   };
 }
 

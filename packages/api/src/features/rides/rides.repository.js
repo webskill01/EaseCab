@@ -138,6 +138,19 @@ function createRidesRepository({ prisma, redis }) {
         select: { contactedAt: true },
       });
     },
+
+    /** Existence check for the report path — null if the ride is gone. */
+    async findRideExists(id) {
+      return prisma.ride.findUnique({ where: { id }, select: { id: true } });
+    },
+
+    /** Write a user report against a bot ride (feeds the admin moderation queue, 24c). */
+    async createRideReport({ reporterId, rideId, reason, remarks }) {
+      return prisma.rideReport.create({
+        data: { reporterId, rideId, reason, remarks: remarks ?? null },
+        select: { id: true, createdAt: true },
+      });
+    },
   };
 }
 

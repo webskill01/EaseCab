@@ -1,4 +1,4 @@
-import { cityLabel, RIDE_KIND } from './rideView'
+import { cityLabel, stripUrls, RIDE_KIND } from './rideView'
 
 /**
  * Normalize the two API ride shapes (bot `/rides`, verified `/posted-rides`) into a
@@ -16,7 +16,7 @@ export function toBotVM(r) {
     from: cityLabel(r.pickupCityName, r.pickupRaw),
     to: cityLabel(r.dropCityName, r.dropRaw),
     vehicleType: r.vehicleType ?? null,
-    message: r.displayText ?? null,
+    message: stripUrls(r.displayText ?? null),
     cityIds: [r.pickupCityId, r.dropCityId].filter(Boolean),
   }
 }
@@ -73,7 +73,7 @@ export function toVerifiedVM(p) {
     from: cityLabel(p.fromCityName, p.fromCityRaw),
     to: cityLabel(p.toCityName, p.toCityRaw),
     vehicleType: p.vehicleType ?? null,
-    message: p.notes ?? null,
+    message: stripUrls(p.notes ?? null),
     fare: p.fare ?? null,
     date: p.rideDate ?? null,
     time: p.rideTime ?? null,

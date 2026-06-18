@@ -177,3 +177,27 @@ test('contactRide records a bot-source snapshot (route, vehicle, revealed phone)
     vehicleType: 'Sedan', revealedPhone: '+919876500000',
   });
 });
+
+test('reportRide writes a report when the ride exists', async () => {
+  let created = null;
+  const repo = {
+    findRideExists: async (id) => ({ id }),
+    createRideReport: async (data) => { created = data; return { id: 'rep1', createdAt: new Date() }; },
+  };
+  const out = await createRidesService({ repo }).reportRide({ userId: 'u1', rideId: 'r1', reason: 'spam', remarks: 'dupe' });
+  assert.strictEqual(out.id, 'rep1');
+  assert.deepStrictEqual(created, { reporterId: 'u1', rideId: 'r1', reason: 'spam', remarks: 'dupe' });
+});
+
+test('reportRide throws NOT_FOUND for a missing ride and never writes', async () => {
+  let wrote = false;
+  const repo = {
+    findRideExists: async () => null,
+    createRideReport: async () => { wrote = true; return {}; },
+  };
+  await assert.rejects(
+    createRidesService({ repo }).reportRide({ userId: 'u1', rideId: 'gone', reason: 'fake' }),
+    (e) => e.code === ERROR_CODES.NOT_FOUND,
+  );
+  assert.strictEqual(wrote, false);
+});

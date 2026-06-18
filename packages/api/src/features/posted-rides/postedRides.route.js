@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { HTTP_STATUS, postedRideCreateSchema, postedRideParseSchema, postedRidesListQuerySchema, postedRideIdParamSchema } = require('@easecab/shared');
+const { HTTP_STATUS, postedRideCreateSchema, postedRideParseSchema, postedRidesListQuerySchema, postedRideIdParamSchema, reportCreateSchema } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
@@ -61,6 +61,12 @@ function createPostedRidesRouter({ service, parser, requireAuth }) {
   router.post('/:id/contact', validate(postedRideIdParamSchema, 'params'), async (req, res) => {
     const data = await service.contactPost({ userId: req.user.id, postedRideId: req.valid.params.id });
     sendSuccess(res, { data });
+  });
+
+  // POST /api/v1/posted-rides/:id/report — file a report against a posted ride (admin queue, 24c).
+  router.post('/:id/report', validate(postedRideIdParamSchema, 'params'), validate(reportCreateSchema), async (req, res) => {
+    const data = await service.reportPost({ userId: req.user.id, postedRideId: req.valid.params.id, ...req.valid.body });
+    sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
   });
 
   return router;

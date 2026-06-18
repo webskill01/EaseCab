@@ -37,18 +37,50 @@ export function draftToForm(draft) {
 
 const isTenDigit = (p) => /^[6-9]\d{9}$/.test(p)
 
-/** Sticky-button rule (SCREENS §5): from + to + vehicle + date + time + valid phone. */
-export function isPostable(f) {
-  return Boolean(f.from && f.to && f.vehicle && f.date && f.time && isTenDigit(f.phone))
+/** Local "YYYY-MM-DD" for the date input's `min` (today — no past dates). */
+export function todayStr(now = new Date()) {
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/**
+ * Is the picked date+time strictly in the future (local time)? A ride can't be
+ * posted for a past slot (#8). Both parts must be present; an unparseable value
+ * is treated as not-future.
+ * @param {string} date - "YYYY-MM-DD"
+ * @param {string} time - "HH:MM"
+ * @param {number} [now] - epoch ms (injectable for tests)
+ */
+export function isFutureDateTime(date, time, now = Date.now()) {
+  if (!date || !time) return false
+  const t = new Date(`${date}T${time}`).getTime()
+  if (Number.isNaN(t)) return false
+  return t > now
+}
+
+/**
+ * Sticky-button rule (SCREENS §5): from + to + vehicle + date + time + valid phone,
+ * with the date/time in the future (#8).
+ */
+export function isPostable(f, now = Date.now()) {
+  return Boolean(
+    f.from && f.to && f.vehicle && f.date && f.time && isTenDigit(f.phone) && isFutureDateTime(f.date, f.time, now),
+  )
 }
 
 /**
  * Map form state → postedRideCreateSchema body. cityId wins; else cityRaw. Empty
- * optionals are omitted so the schema's `.optional()` fields stay absent.
- * @param {object} f - form state (assumed postable)
+ * optionals are OMITTED so the schema's `.optional()` fields stay absent — an empty
+ * string for rideDate/rideTime fails `z.coerce.date()`/the HH:MM regex with a 422
+ * (this is the free-text "direct post" bug, #9).
+ * @param {object} f - form state
  */
 export function toCreateBody(f) {
-  const body = { phone: `+91${f.phone}`, vehicleType: f.vehicle, rideDate: f.date, rideTime: f.time }
+  const body = { phone: `+91${f.phone}`, vehicleType: f.vehicle }
+  if (f.date) body.rideDate = f.date
+  if (f.time) body.rideTime = f.time
   if (f.from.id) body.fromCityId = f.from.id
   else body.fromCityRaw = f.from.name
   if (f.to.id) body.toCityId = f.to.id
