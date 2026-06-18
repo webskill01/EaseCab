@@ -103,6 +103,16 @@ export function Repeat({ size = 16, className }) {
   )
 }
 
+/** Pencil — edit affordance. */
+export function Pencil({ size = 16, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={1.9}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </svg>
+  )
+}
+
 /** Map pin — location. */
 export function Pin({ size = 18, className }) {
   return (

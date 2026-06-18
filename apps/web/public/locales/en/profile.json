@@ -26,9 +26,11 @@
   },
   "about": {
     "title": "About me",
+    "edit": "Edit",
     "languages": "Languages spoken",
     "empty": "Add a short bio so drivers trust your posts."
   },
+  "support": "Help & Support",
   "version": "EaseCab · v1.0.0",
   "dp": {
     "add": "Add photo",

@@ -2,19 +2,25 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, VehicleIcon, Info, List } from '@/components/ui/icons'
+import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, Pencil, Headset, VehicleIcon, Info, List } from '@/components/ui/icons'
+import { env } from '@/config/env'
 import { LogoutButton } from '@/features/shell/components/LogoutButton'
 import { useProfile } from '../hooks/useProfile'
 import { vehIconKeyOf } from '../lib/profileForm'
 import { CompletenessBanner } from './CompletenessBanner'
 import { VerificationCards } from './VerificationCards'
 
+/** Support deep-link — WhatsApp when configured, else email (mirrors shell SupportButton). */
+function supportHref() {
+  return env.NEXT_PUBLIC_SUPPORT_WHATSAPP ? `https://wa.me/${env.NEXT_PUBLIC_SUPPORT_WHATSAPP}` : `mailto:${env.NEXT_PUBLIC_SUPPORT_EMAIL}`
+}
+
 function Stat({ icon, label, value, onEdit }) {
   return (
     <button type="button" onClick={onEdit} className="flex flex-col items-center gap-1.5 px-2 py-4 text-center">
       <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-ec-sky text-ec-blue">{icon}</span>
       <span className="text-[11px] font-semibold text-ec-ink60">{label}</span>
-      <span className="truncate text-[14px] font-extrabold text-ec-ink">{value}</span>
+      <span className="flex items-center justify-center gap-1 truncate text-[14px] font-extrabold text-ec-ink">{value}<span className="inline-flex text-ec-ink40"><Pencil size={11} /></span></span>
     </button>
   )
 }
@@ -66,6 +72,7 @@ export function ProfileScreen() {
           <span className="mt-0.5 block text-[13px] font-semibold text-ec-ink60">{[profile.baseCity, t('header.driver')].filter(Boolean).join(' · ')}</span>
           <span className="block text-[12.5px] font-semibold text-ec-ink40">{phone}</span>
         </span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-ec-bg text-ec-ink60"><Pencil size={17} /></span>
       </button>
 
       {!profile.profileComplete && <CompletenessBanner onAction={() => (v.aadhaarVerified ? goEdit() : router.push('/verify?intent=l1'))} />}
@@ -82,7 +89,10 @@ export function ProfileScreen() {
 
       {/* About + languages */}
       <section className="rounded-2xl border border-ec-line bg-white p-4 shadow-ec-card">
-        <p className="text-[12.5px] font-extrabold uppercase tracking-wide text-ec-ink60">{t('about.title')}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-[12.5px] font-extrabold uppercase tracking-wide text-ec-ink60">{t('about.title')}</p>
+          <button type="button" onClick={goEdit} className="inline-flex items-center gap-1 text-[12.5px] font-bold text-ec-blue"><Pencil size={13} />{t('about.edit')}</button>
+        </div>
         <p className="mt-2 text-[13.5px] font-medium leading-relaxed text-ec-ink">{profile.bio || t('about.empty')}</p>
         {profile.languagesSpoken.length > 0 && (
           <>
@@ -111,6 +121,10 @@ export function ProfileScreen() {
         <NavRow icon={<Info size={16} />} tint="text-ec-ink60" label={t('nav.privacy')} onClick={() => router.push('/privacy-policy')} />
         <NavRow icon={<List size={18} />} tint="text-ec-ink60" label={t('nav.terms')} onClick={() => router.push('/terms')} last />
       </nav>
+
+      <a href={supportHref()} target="_blank" rel="noopener noreferrer" className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14.5px] font-extrabold text-ec-blueInk shadow-ec-card">
+        <Headset size={18} />{t('support')}
+      </a>
 
       <LogoutButton variant="danger" />
       <p className="pb-2 text-center text-[11px] font-semibold text-ec-ink40">{t('version')}</p>

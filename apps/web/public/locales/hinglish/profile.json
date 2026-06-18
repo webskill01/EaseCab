@@ -26,9 +26,11 @@
   },
   "about": {
     "title": "Mere baare mein",
+    "edit": "Edit",
     "languages": "Boli jaane wali languages",
     "empty": "Ek chhota bio add karo taaki drivers aapki posts par bharosa karein."
   },
+  "support": "Help & Support",
   "version": "EaseCab · v1.0.0",
   "dp": {
     "add": "Photo add karo",
