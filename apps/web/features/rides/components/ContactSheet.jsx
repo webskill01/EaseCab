@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Crown, Whatsapp, Phone } from '@/components/ui/icons'
 import { contactRide, contactVerifiedRide } from '../services/ridesApi'
@@ -27,8 +27,12 @@ function waLink(phone) {
  */
 export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
   const t = useTranslations('rides')
+  const qc = useQueryClient()
   const reveal = useMutation({
     mutationFn: () => (ride.kind === RIDE_KIND.VERIFIED ? contactVerifiedRide(ride.id) : contactRide(ride.id)),
+    // The contact is snapshotted server-side immediately; refresh the Contacted tab
+    // so it shows up right away rather than after the 60s stale window (#13).
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['contacted'] }),
   })
   const [tried, setTried] = useState(false)
 
