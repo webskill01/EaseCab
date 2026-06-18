@@ -1,8 +1,8 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Swap, Shield, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
-import { statusOf, relParts, ageMinFrom, vehIconKey, RIDE_DISPLAY_STATUS } from '../lib/rideView'
+import { statusOf, relParts, ageMinFrom, vehIconKey, pickCityName, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
 /** Status pill — Fresh (green dot) / Likely-booked (blue dot) / Verified (shield). */
 export function StatusBadge({ status }) {
@@ -93,11 +93,14 @@ function CardActions({ ride, disabled, onContact, onReport }) {
  */
 export function RideCard({ ride, now, onContact, onReport }) {
   const t = useTranslations('rides')
+  const locale = useLocale()
   const verified = ride.kind === 'verified'
   const ageMin = ageMinFrom(ride.receivedAt, now)
   const display = statusOf({ kind: ride.kind, status: ride.status, ageMin })
   const booked = display === RIDE_DISPLAY_STATUS.BOOKED
   const rel = relParts(ageMin)
+  const from = pickCityName(ride.from, ride.fromLocalized, locale)
+  const to = pickCityName(ride.to, ride.toLocalized, locale)
 
   return (
     <article
@@ -115,7 +118,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
         <StatusBadge status={display} />
       </div>
 
-      <RouteRow from={ride.from} to={ride.to} />
+      <RouteRow from={from} to={to} />
 
       <div className="mt-2.5 border-t border-ec-line pt-2.5">
         <div className="flex items-center gap-1.5 text-[13px] font-semibold text-ec-ink60">

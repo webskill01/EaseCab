@@ -19,8 +19,8 @@ const PUBLIC_RIDE_SELECT = Object.freeze({
   // Join just the canonical name of each resolved city so the feed can render a
   // clean "Ludhiana → Delhi" instead of the messy raw fragment. Null when the
   // string never resolved (SetNull relation) — the raw fragment is the fallback.
-  pickupCity: { select: { canonicalName: true } },
-  dropCity: { select: { canonicalName: true } },
+  pickupCity: { select: { canonicalName: true, namePa: true, nameHi: true } },
+  dropCity: { select: { canonicalName: true, namePa: true, nameHi: true } },
   vehicleType: true,
   status: true,
   receivedAt: true,

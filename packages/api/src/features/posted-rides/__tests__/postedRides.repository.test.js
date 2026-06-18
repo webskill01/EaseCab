@@ -53,10 +53,11 @@ test('closePost: updateMany scoped to owner + active; returns the count', async 
   assert.equal(prisma.postedRide._um.where.id, 'p1');
 });
 
-test('POSTED_PUBLIC_SELECT joins only the canonical name of each city relation, never phone', () => {
+test('POSTED_PUBLIC_SELECT joins the canonical + localized names of each city relation (#10), never phone', () => {
   assert.equal('phone' in POSTED_PUBLIC_SELECT, false);
-  assert.deepEqual(POSTED_PUBLIC_SELECT.fromCity, { select: { canonicalName: true } });
-  assert.deepEqual(POSTED_PUBLIC_SELECT.toCity, { select: { canonicalName: true } });
+  const cityNameSelect = { select: { canonicalName: true, namePa: true, nameHi: true } };
+  assert.deepEqual(POSTED_PUBLIC_SELECT.fromCity, cityNameSelect);
+  assert.deepEqual(POSTED_PUBLIC_SELECT.toCity, cityNameSelect);
 });
 
 test('listActivePosts: cityId-only filters from OR to (no cursor)', async () => {

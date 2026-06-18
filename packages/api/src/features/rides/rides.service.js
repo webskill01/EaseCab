@@ -21,6 +21,11 @@ function toPublicRide(r) {
     // Clean resolved name (joined relation); null when the fragment never resolved.
     pickupCityName: r.pickupCity?.canonicalName ?? null,
     dropCityName: r.dropCity?.canonicalName ?? null,
+    // Localized names for the feed (#10); null → client falls back to canonical.
+    pickupCityNamePa: r.pickupCity?.namePa ?? null,
+    pickupCityNameHi: r.pickupCity?.nameHi ?? null,
+    dropCityNamePa: r.dropCity?.namePa ?? null,
+    dropCityNameHi: r.dropCity?.nameHi ?? null,
     vehicleType: r.vehicleType ?? null,
     status: r.status,
     receivedAt: r.receivedAt,

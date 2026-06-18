@@ -28,9 +28,10 @@ test('PUBLIC_RIDE_SELECT never exposes phoneNumber or rawText', () => {
   assert.strictEqual(PUBLIC_RIDE_SELECT.displayText, true);
 });
 
-test('PUBLIC_RIDE_SELECT joins only the canonical name of each city relation', () => {
-  assert.deepStrictEqual(PUBLIC_RIDE_SELECT.pickupCity, { select: { canonicalName: true } });
-  assert.deepStrictEqual(PUBLIC_RIDE_SELECT.dropCity, { select: { canonicalName: true } });
+test('PUBLIC_RIDE_SELECT joins the canonical + localized names of each city relation (#10), never phone', () => {
+  const cityNameSelect = { select: { canonicalName: true, namePa: true, nameHi: true } };
+  assert.deepStrictEqual(PUBLIC_RIDE_SELECT.pickupCity, cityNameSelect);
+  assert.deepStrictEqual(PUBLIC_RIDE_SELECT.dropCity, cityNameSelect);
 });
 
 test('listVisibleRides filters to visible+unexpired, orders newest-first, fetches limit+1', async () => {

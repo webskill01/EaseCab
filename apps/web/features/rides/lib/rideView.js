@@ -110,3 +110,18 @@ export function cityLabel(name, raw) {
   if (raw && raw.trim()) return titleCase(raw.trim())
   return null
 }
+
+/**
+ * Pick the city name for the active locale (#10). pa/hi use the localized name
+ * when present; en, hinglish, or a missing localization fall back to the base
+ * (canonical/raw) label. Pure — the card passes `useLocale()` in.
+ * @param {?string} base - cityLabel() result (canonical or title-cased raw)
+ * @param {?{pa?: ?string, hi?: ?string}} localized
+ * @param {string} locale
+ * @returns {?string}
+ */
+export function pickCityName(base, localized, locale) {
+  if (locale === 'pa' && localized?.pa) return localized.pa
+  if (locale === 'hi' && localized?.hi) return localized.hi
+  return base
+}

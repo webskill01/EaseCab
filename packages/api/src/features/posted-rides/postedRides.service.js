@@ -23,6 +23,11 @@ function toPublicPostedRide(p) {
     toCityRaw: p.toCityRaw ?? null,
     fromCityName: p.fromCity?.canonicalName ?? null,
     toCityName: p.toCity?.canonicalName ?? null,
+    // Localized names for the feed (#10); null → client falls back to canonical.
+    fromCityNamePa: p.fromCity?.namePa ?? null,
+    fromCityNameHi: p.fromCity?.nameHi ?? null,
+    toCityNamePa: p.toCity?.namePa ?? null,
+    toCityNameHi: p.toCity?.nameHi ?? null,
     vehicleType: p.vehicleType ?? null,
     fare: p.fare === null || p.fare === undefined ? null : Number(p.fare),
     rideDate: p.rideDate ?? null,

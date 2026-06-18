@@ -1,8 +1,25 @@
 import { describe, it, expect } from 'vitest'
 import {
-  ageMinFrom, statusOf, relParts, vehIconKey, cityLabel, stripUrls,
+  ageMinFrom, statusOf, relParts, vehIconKey, cityLabel, stripUrls, pickCityName,
   RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
 } from '../rideView'
+
+describe('pickCityName', () => {
+  const loc = { pa: 'ਲੁਧਿਆਣਾ', hi: 'लुधियाना' }
+  it('uses the localized name for pa/hi (#10)', () => {
+    expect(pickCityName('Ludhiana', loc, 'pa')).toBe('ਲੁਧਿਆਣਾ')
+    expect(pickCityName('Ludhiana', loc, 'hi')).toBe('लुधियाना')
+  })
+  it('keeps the base name for en/hinglish', () => {
+    expect(pickCityName('Ludhiana', loc, 'en')).toBe('Ludhiana')
+    expect(pickCityName('Ludhiana', loc, 'hinglish')).toBe('Ludhiana')
+  })
+  it('falls back to the base when the localized name is missing', () => {
+    expect(pickCityName('Karnal', { pa: null, hi: null }, 'pa')).toBe('Karnal')
+    expect(pickCityName('Karnal', null, 'hi')).toBe('Karnal')
+    expect(pickCityName(null, null, 'pa')).toBeNull()
+  })
+})
 
 describe('stripUrls', () => {
   it('removes http/https links and tidies the leftover whitespace (#2)', () => {

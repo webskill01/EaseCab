@@ -6,6 +6,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const { CITIES } = require('./data/cities');
+const { CITY_NAMES } = require('./data/cityNames');
 
 const prisma = new PrismaClient();
 
@@ -14,6 +15,11 @@ async function seedCities() {
   let aliasCount = 0;
 
   for (const c of CITIES) {
+    // Localized display names (#10) — curated map wins, falling back to any
+    // inline namePa/nameHi on the entry, else null (UI shows the English name).
+    const loc = CITY_NAMES[c.canonicalName] ?? {};
+    const namePa = loc.pa ?? c.namePa ?? null;
+    const nameHi = loc.hi ?? c.nameHi ?? null;
     const city = await prisma.city.upsert({
       where: { canonicalName_state: { canonicalName: c.canonicalName, state: c.state } },
       update: {
@@ -22,6 +28,8 @@ async function seedCities() {
         lat: c.lat ?? null,
         lng: c.lng ?? null,
         population: c.population ?? null,
+        namePa,
+        nameHi,
       },
       create: {
         canonicalName: c.canonicalName,
@@ -31,6 +39,8 @@ async function seedCities() {
         lat: c.lat ?? null,
         lng: c.lng ?? null,
         population: c.population ?? null,
+        namePa,
+        nameHi,
       },
     });
     cityCount += 1;

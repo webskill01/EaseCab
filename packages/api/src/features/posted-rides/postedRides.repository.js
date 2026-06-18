@@ -13,8 +13,8 @@ const POSTED_PUBLIC_SELECT = Object.freeze({
   toCityRaw: true,
   // Joined clean names for the feed (mirrors the bot-rides projection, T1). Null
   // when the picked free-text never resolved — the raw fragment is the fallback.
-  fromCity: { select: { canonicalName: true } },
-  toCity: { select: { canonicalName: true } },
+  fromCity: { select: { canonicalName: true, namePa: true, nameHi: true } },
+  toCity: { select: { canonicalName: true, namePa: true, nameHi: true } },
   vehicleType: true,
   fare: true,
   rideDate: true,

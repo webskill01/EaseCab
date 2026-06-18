@@ -118,6 +118,10 @@ enum AdminRole {
 model City {
   id            String   @id @default(uuid()) @db.Uuid
   canonicalName String   @map("canonical_name")
+  // Localized display names for the feed (#10). Null → the UI falls back to the
+  // canonical (English/Latin) name. en + hinglish always render canonicalName.
+  namePa        String?  @map("name_pa")
+  nameHi        String?  @map("name_hi")
   state         String
   district      String?
   type          CityType @default(city)

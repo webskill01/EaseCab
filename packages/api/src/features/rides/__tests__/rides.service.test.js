@@ -35,9 +35,21 @@ test('toPublicRide whitelists public fields and drops phoneNumber/rawText', () =
   assert.strictEqual('phoneNumber' in pub, false);
   assert.strictEqual('rawText' in pub, false);
   assert.deepStrictEqual(Object.keys(pub).sort(), [
-    'displayText', 'dropCityId', 'dropCityName', 'dropRaw', 'expiresAt', 'id',
-    'pickupCityId', 'pickupCityName', 'pickupRaw', 'receivedAt', 'status', 'vehicleType',
+    'displayText', 'dropCityId', 'dropCityName', 'dropCityNameHi', 'dropCityNamePa', 'dropRaw',
+    'expiresAt', 'id', 'pickupCityId', 'pickupCityName', 'pickupCityNameHi', 'pickupCityNamePa',
+    'pickupRaw', 'receivedAt', 'status', 'vehicleType',
   ]);
+});
+
+test('toPublicRide surfaces localized city names, null when the relation lacks them (#10)', () => {
+  const withLoc = toPublicRide(ride('r1', {
+    pickupCity: { canonicalName: 'Amritsar', namePa: 'ਅੰਮ੍ਰਿਤਸਰ', nameHi: 'अमृतसर' },
+    dropCity: { canonicalName: 'Delhi' },
+  }));
+  assert.strictEqual(withLoc.pickupCityNamePa, 'ਅੰਮ੍ਰਿਤਸਰ');
+  assert.strictEqual(withLoc.pickupCityNameHi, 'अमृतसर');
+  assert.strictEqual(withLoc.dropCityNamePa, null);
+  assert.strictEqual(withLoc.dropCityNameHi, null);
 });
 
 test('toPublicRide surfaces joined canonical city names, null when the relation is absent', () => {
