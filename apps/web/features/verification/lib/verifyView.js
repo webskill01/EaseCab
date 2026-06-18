@@ -9,3 +9,15 @@ export function maskAadhaar(last4) {
 export function docState(flag) {
   return flag ? 'verified' : 'notStarted'
 }
+
+/**
+ * Format Aadhaar digits as the card's 4-4-4 groups for display (#18). Strips
+ * non-digits, caps at 12, joins groups with a single space. Pure — the input keeps
+ * the raw digits in state and renders this.
+ * @param {string} value
+ * @returns {string}
+ */
+export function groupAadhaar(value) {
+  const digits = (value || '').replace(/\D/g, '').slice(0, 12)
+  return (digits.match(/.{1,4}/g) || []).join(' ')
+}

@@ -35,6 +35,7 @@
     "change": "Photo badlo",
     "uploading": "Upload ho rahi hai…",
     "required": "Duty post karne ke liye profile photo zaroori hai",
+    "requiredBadge": "Photo zaroori",
     "tooBig": "Photo 5 MB se kam honi chahiye",
     "badType": "JPG, PNG ya WebP image use karo",
     "failed": "Upload fail — phir try karo"

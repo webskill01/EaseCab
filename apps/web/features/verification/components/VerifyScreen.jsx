@@ -6,12 +6,14 @@ import { useAadhaarFlow } from '../hooks/useAadhaarFlow'
 import { AadhaarStep } from './AadhaarStep'
 import { AadhaarOtpStep } from './AadhaarOtpStep'
 import { CompleteProfileStep } from './CompleteProfileStep'
-import { DriverVerify } from './DriverVerify'
+import { DriverHub } from './DriverHub'
+import { DlVerify } from './DlVerify'
+import { RcVerify } from './RcVerify'
 
 /**
- * /verify host (SCREENS §7). intent=driver → L2 forms; intent=l1 → the Aadhaar
- * machine, short-circuiting to profile completion when the user is already
- * Aadhaar-verified. On L1 completion routes back to /profile.
+ * /verify host (SCREENS §7). intent=driver → L2 hub; intent=dl/rc → the dedicated
+ * document pages (#21); intent=l1 → the Aadhaar machine, short-circuiting to profile
+ * completion when already Aadhaar-verified. On L1 completion routes back to /profile.
  */
 export function VerifyScreen() {
   const router = useRouter()
@@ -21,9 +23,10 @@ export function VerifyScreen() {
 
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
 
-  if (intent === 'driver') {
-    return <DriverVerify status={profile?.verification ?? { dlSubmitted: false, rcSubmitted: false }} />
-  }
+  const status = profile?.verification ?? { dlSubmitted: false, rcSubmitted: false }
+  if (intent === 'driver') return <DriverHub status={status} />
+  if (intent === 'dl') return <DlVerify status={status} />
+  if (intent === 'rc') return <RcVerify status={status} />
 
   const alreadyVerified = Boolean(profile?.verification?.aadhaarVerified)
   if (alreadyVerified || flow.phase === 'done') {

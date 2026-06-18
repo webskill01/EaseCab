@@ -4,6 +4,9 @@ import { apiFetch } from '@/lib/api/client'
  * (web doesn't bundle @easecab/shared; same mirroring pattern as rideView.js). */
 export const DP_MAX_BYTES = 5 * 1024 * 1024
 export const DP_MIMES = Object.freeze(['image/jpeg', 'image/png', 'image/webp'])
+// KYC docs (DL/RC images) — mirrors shared UPLOAD_PURPOSE.{rc_image,licence_image} (10MB, +PDF).
+export const KYC_MAX_BYTES = 10 * 1024 * 1024
+export const KYC_MIMES = Object.freeze(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
 
 /**
  * Client-side precheck for a chosen DP file (server re-checks via verifyUpload).
@@ -13,6 +16,17 @@ export const DP_MIMES = Object.freeze(['image/jpeg', 'image/png', 'image/webp'])
 export function dpPrecheck(file) {
   if (file.size > DP_MAX_BYTES) return 'dp.tooBig'
   if (!DP_MIMES.includes(file.type)) return 'dp.badType'
+  return null
+}
+
+/**
+ * Client-side precheck for a DL/RC document file (server re-checks via verifyUpload).
+ * @param {{size: number, type: string}} file
+ * @returns {?string} a `verification` i18n sub-key for the failure, or null when OK
+ */
+export function kycPrecheck(file) {
+  if (file.size > KYC_MAX_BYTES) return 'driver.docTooBig'
+  if (!KYC_MIMES.includes(file.type)) return 'driver.docBadType'
   return null
 }
 

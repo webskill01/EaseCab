@@ -26,11 +26,13 @@ export function DpUploader({ preview, onUploaded }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <button type="button" onClick={() => inputRef.current?.click()} className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-ec-sky bg-ec-sky text-ec-blue shadow-ec-card">
+      <button type="button" onClick={() => inputRef.current?.click()} className={`relative h-24 w-24 overflow-hidden rounded-full bg-ec-sky text-ec-blue shadow-ec-card ${preview ? 'border-2 border-ec-sky' : 'border-2 border-dashed border-ec-warning'}`}>
         {preview
           ? <img src={preview} alt="" className="h-full w-full object-cover" />
           : <span className="flex h-full w-full items-center justify-center"><User size={40} /></span>}
-        {preview && <span className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-ec-success text-white"><Check size={14} /></span>}
+        {preview
+          ? <span className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-ec-success text-white"><Check size={14} /></span>
+          : <span aria-label={t('dp.requiredBadge')} className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-ec-warning text-[14px] font-extrabold text-white">!</span>}
       </button>
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPick} aria-label={t('fields.photo')} className="hidden" />
       <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="text-[13px] font-bold text-ec-blue disabled:text-ec-ink40">
