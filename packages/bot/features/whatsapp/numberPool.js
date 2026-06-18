@@ -53,7 +53,19 @@ function createNumberPool({
   let connectTimer = null;
   let backoffTimer = null;
   let rescanTimer = null;
+  let watchdogTimer = null;
   let stopped = false;
+  let open = false; // true between onOpen and the next close — the watchdog only acts when open
+  let lastActivityAt = 0; // epoch ms of the last inbound group message (stall watchdog, #16)
+
+  /**
+   * Stamp inbound activity, then delegate to the real ingest orchestrator. The
+   * watchdog uses `lastActivityAt` to detect a silently-wedged OPEN socket.
+   */
+  async function trackedOnMessage(m) {
+    lastActivityAt = Date.now();
+    return onMessage(m);
+  }
 
   /**
    * Mirror a slot's state into the easecab:bot:numbers hash (best-effort).
@@ -82,22 +94,26 @@ function createNumberPool({
   async function connectSlot(slot) {
     if (stopped) return;
     currentSlot = slot;
+    open = false;
     const myToken = (token += 1);
     try {
       currentSock = await connectionFactory({
         sessionPath: registry.sessionDirFor(slot),
         targetGroupJid,
-        onMessage,
+        onMessage: trackedOnMessage,
         logger,
         onOpen: () => {
           if (stopped || myToken !== token) return;
           clearTimeout(connectTimer);
           attempt = 0;
+          open = true;
+          lastActivityAt = Date.now(); // reset the stall window on a fresh open
           logger.info({ slot }, 'numberPool: slot active');
           setSlotState(slot, SLOT_STATE.ACTIVE);
         },
         onClose: (code) => {
           if (stopped || myToken !== token) return;
+          open = false;
           clearTimeout(connectTimer);
           handleClose(code);
         },
@@ -184,12 +200,36 @@ function createNumberPool({
     }, BOT_HEALTH.RESCAN_MS);
   }
 
+  /**
+   * Stall watchdog (#16): when the slot is OPEN but no inbound message has arrived
+   * for STALL_WATCHDOG_MS, the socket has likely silently wedged (Baileys emits no
+   * 'close'). Force-end it — that fires 'close' → onClose → handleClose → a transient
+   * reconnect of the same slot. Bump lastActivityAt first so we don't re-fire before
+   * the close lands. A forced reconnect during a genuinely quiet stretch is harmless.
+   */
+  function checkStall() {
+    if (stopped || !open || !currentSock) return;
+    if (Date.now() - lastActivityAt < BOT_HEALTH.STALL_WATCHDOG_MS) return;
+    logger.warn(
+      { slot: currentSlot, idleMs: Date.now() - lastActivityAt },
+      'numberPool: inbound silence on an open socket — forcing reconnect (stall watchdog)',
+    );
+    open = false;
+    lastActivityAt = Date.now();
+    try {
+      if (currentSock) currentSock.end(undefined);
+    } catch {
+      // already torn down — the close path will still run
+    }
+  }
+
   /** Begin supervising: mark unregistered slots, connect the first available. */
   function start() {
     const eligible = new Set(registry.eligibleSlots());
     for (const slot of slots) {
       if (!eligible.has(slot)) setSlotState(slot, SLOT_STATE.UNREGISTERED);
     }
+    watchdogTimer = setInterval(checkStall, BOT_HEALTH.WATCHDOG_CHECK_MS);
     const first = pickAvailable();
     if (!first) {
       onExhausted();
@@ -204,6 +244,7 @@ function createNumberPool({
     clearTimeout(connectTimer);
     clearTimeout(backoffTimer);
     if (rescanTimer) clearInterval(rescanTimer);
+    if (watchdogTimer) clearInterval(watchdogTimer);
     try {
       if (currentSock) currentSock.end(undefined);
     } catch {

@@ -43,6 +43,13 @@ const BOT_HEALTH = Object.freeze({
   ACTIVE_HOUR_END_IST: 23, // exclusive
   RESCAN_MS: 60 * 1000, // when all slots exhausted, re-scan for a newly-paired slot this often
   CONNECT_TIMEOUT_MS: 60 * 1000, // a slot that never reaches 'open' in this window = a failed attempt
+  // Live-socket stall watchdog (#16): Baileys can silently wedge an OPEN socket with
+  // no 'close' event and no messages — the supervisor's only recovery path (handleClose)
+  // never fires, so the feed stalls indefinitely while the group is still active. The
+  // watchdog forces a reconnect when no inbound message has arrived for this long while
+  // open. A forced reconnect during a genuinely quiet stretch is harmless (read-only).
+  STALL_WATCHDOG_MS: 12 * 60 * 1000,
+  WATCHDOG_CHECK_MS: 60 * 1000, // how often the watchdog evaluates inbound silence
 });
 
 /** Reconnect backoff for transient (non-logout) disconnects on one slot. */
