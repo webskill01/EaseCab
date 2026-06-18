@@ -17,7 +17,7 @@ export function usePushPreferences() {
     prefs: q.data ?? null,
     isLoading: q.isLoading,
     isError: q.isError,
-    update: (body) => m.mutate(body),
+    update: (body, opts) => m.mutate(body, opts),
     saving: m.isPending,
     errorKey: m.isError ? 'error.save' : null,
   }

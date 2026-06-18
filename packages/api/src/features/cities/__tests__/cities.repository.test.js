@@ -44,3 +44,14 @@ test('findNearest: returns null when no city is in range', async () => {
   const repo = createCitiesRepository({ prisma });
   assert.equal(await repo.findNearest({ lat: 0, lng: 0, maxRadiusKm: 150 }), null);
 });
+
+test('listAll: returns active cities with localized names, ordered by canonical name', async () => {
+  let captured;
+  const rows = [{ id: 'c1', canonicalName: 'Ambala', namePa: 'ਅੰਬਾਲਾ', nameHi: 'अंबाला' }];
+  const prisma = { city: { async findMany(args) { captured = args; return rows; } } };
+  const out = await createCitiesRepository({ prisma }).listAll();
+  assert.deepEqual(out, rows);
+  assert.deepEqual(captured.where, { isActive: true });
+  assert.deepEqual(captured.orderBy, { canonicalName: 'asc' });
+  assert.deepEqual(captured.select, { id: true, canonicalName: true, namePa: true, nameHi: true });
+});

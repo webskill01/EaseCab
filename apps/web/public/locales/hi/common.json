@@ -4,7 +4,8 @@
   "actions": {
     "continue": "जारी रखें",
     "cancel": "रद्द करें",
-    "retry": "पुनः प्रयास करें"
+    "retry": "पुनः प्रयास करें",
+    "back": "वापस"
   },
   "shell": { "support": "सहायता", "logout": "लॉग आउट", "language": "भाषा", "chats": "चैट" },
   "nav": { "rides": "राइड्स", "post": "ड्यूटी पोस्ट", "mine": "मेरी", "profile": "प्रोफ़ाइल" },

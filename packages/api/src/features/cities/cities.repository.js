@@ -44,6 +44,20 @@ function createCitiesRepository({ prisma }) {
     },
 
     /**
+     * All active cities (Batch C — the "All Locations" overlay groups these A–Z).
+     * Localized names ride along so pa/hi render natively (#10). Ordered by the
+     * canonical (Latin) name so the client letter-grouping is stable.
+     * @returns {Promise<{ id: string, canonicalName: string, namePa: ?string, nameHi: ?string }[]>}
+     */
+    async listAll() {
+      return prisma.city.findMany({
+        where: { isActive: true },
+        select: { id: true, canonicalName: true, namePa: true, nameHi: true },
+        orderBy: { canonicalName: 'asc' },
+      });
+    },
+
+    /**
      * Closest active city to (lat,lng) with non-null coords, within maxRadiusKm.
      * Haversine (great-circle, km) computed in SQL; all inputs are bound params.
      * @param {{ lat: number, lng: number, maxRadiusKm: number }} args

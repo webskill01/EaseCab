@@ -18,7 +18,9 @@
     "filterByCity": "ਸ਼ਹਿਰ ਫਿਲਟਰ",
     "allLocations": "ਸਾਰੇ ਸ਼ਹਿਰ",
     "searchCity": "ਸ਼ਹਿਰ ਲੱਭੋ…",
-    "noResults": "ਕੋਈ ਸ਼ਹਿਰ ਨਹੀਂ ਮਿਲਿਆ"
+    "noResults": "ਕੋਈ ਸ਼ਹਿਰ ਨਹੀਂ ਮਿਲਿਆ",
+    "quickPick": "ਸ਼ਹਿਰ ਚੁਣੋ",
+    "myLocation": "ਮੇਰੀ ਲੋਕੇਸ਼ਨ"
   },
   "banner": {
     "freeTrial": "ਫ੍ਰੀ ਟ੍ਰਾਇਲ",

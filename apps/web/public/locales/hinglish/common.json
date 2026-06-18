@@ -4,7 +4,8 @@
   "actions": {
     "continue": "Continue karein",
     "cancel": "Cancel karein",
-    "retry": "Dobara try karein"
+    "retry": "Dobara try karein",
+    "back": "Back"
   },
   "shell": { "support": "Support", "logout": "Log out", "language": "Bhasha", "chats": "Chats" },
   "nav": { "rides": "Rides", "post": "Post duty", "mine": "My Rides", "profile": "Profile" },

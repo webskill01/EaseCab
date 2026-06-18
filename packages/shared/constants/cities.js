@@ -19,4 +19,11 @@ const CITY_SEARCH = Object.freeze({
  */
 const CITY_NEAREST = Object.freeze({ MAX_RADIUS_KM: 150 });
 
-module.exports = { CITY_SEARCH, CITY_NEAREST };
+/**
+ * Full active-city list (Batch C — the "All Locations" overlay). Cached in Redis
+ * with the §15 5-minute TTL; cities are seeded/near-static so the TTL is the only
+ * staleness bound (no explicit invalidation hook).
+ */
+const CITY_LIST = Object.freeze({ CACHE_TTL_SEC: 300 });
+
+module.exports = { CITY_SEARCH, CITY_NEAREST, CITY_LIST };

@@ -7,5 +7,16 @@
   },
   "enable": "Notifications on karo",
   "useMyLocation": "Meri location use karo",
+  "dutyAlerts": {
+    "title": "Duty alerts pao",
+    "notifLabel": "Duty notifications",
+    "locationPrefs": "Location preferences",
+    "clearAll": "Sab hatao",
+    "addUpTo": "Matching duty alerts ke liye {max} tak cities add karo",
+    "locationN": "Location {n}",
+    "searchCity": "Shehar dhoondo",
+    "save": "Preferences save karo",
+    "remove": "{city} hatao"
+  },
   "error": { "geo": "Aapki location nahi mili.", "noCity": "Paas koi city nahi mili." }
 }

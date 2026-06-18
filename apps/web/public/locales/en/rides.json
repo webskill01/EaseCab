@@ -18,7 +18,9 @@
     "filterByCity": "Filter by city",
     "allLocations": "All Locations",
     "searchCity": "Search cities…",
-    "noResults": "No cities found"
+    "noResults": "No cities found",
+    "quickPick": "Filter by city",
+    "myLocation": "My location"
   },
   "banner": {
     "freeTrial": "Free trial",

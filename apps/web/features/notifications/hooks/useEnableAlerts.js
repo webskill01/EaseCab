@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { requestPermissionAndToken } from '../services/fcmClient'
-import { registerToken, updatePreferences } from '../services/pushApi'
+import { registerToken, unregisterToken, updatePreferences } from '../services/pushApi'
 import { getCurrentPosition } from '../services/geoClient'
 import { nearestCity } from '@/features/rides/services/citiesApi'
-import { setStoredToken } from '../lib/pushStorage'
+import { getStoredToken, setStoredToken, clearStoredToken } from '../lib/pushStorage'
 
 /**
  * Full "enable alerts" flow (Step 23): OS notification prompt → FCM token →
@@ -36,5 +36,18 @@ export function useEnableAlerts() {
     }
   }
 
-  return { enable, isEnabling, permission, suggestion }
+  /**
+   * Turn alerts off: unregister the cached device token (best-effort) and clear it
+   * locally so the master toggle reads "off". The OS-level permission can't be
+   * revoked programmatically — token presence is the app-side "alerts on" signal.
+   */
+  async function disable() {
+    const token = getStoredToken()
+    if (token) {
+      try { await unregisterToken({ deviceToken: token }) } catch { /* best-effort */ }
+      clearStoredToken()
+    }
+  }
+
+  return { enable, disable, isEnabling, permission, suggestion }
 }

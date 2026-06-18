@@ -176,7 +176,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   // Cities (Step 13) — authed typeahead for the post form + Step-18 filter bar.
   // Built before the admin block so Step-24e can reuse citiesService behind requireAdmin.
   const citiesRepo = createCitiesRepository({ prisma });
-  const citiesService = createCitiesService({ repo: citiesRepo });
+  const citiesService = createCitiesService({ repo: citiesRepo, redis });
 
   // Admin auth (Step 24a) — fully isolated: own JWT secret, own cookies, checks the
   // admin_users table only (CLAUDE.md §6). requireAdmin gates the 24b–24e admin

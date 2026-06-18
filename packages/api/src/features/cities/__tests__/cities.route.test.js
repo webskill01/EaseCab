@@ -55,3 +55,26 @@ test('GET /api/v1/cities/nearest → 401 without auth', async () => {
   const res = await request(app).get('/api/v1/cities/nearest?lat=30&lng=76');
   assert.equal(res.status, 401);
 });
+
+function makeAppWithCities(cityRows) {
+  return buildApp({
+    prisma: { async $queryRaw() { return []; }, city: { async findMany() { return cityRows; } } },
+    redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
+    identity: { async verifyOtpToken() { return { phone: '+910000000000' }; } },
+    subscriber: { on() {}, subscribe: async () => {}, duplicate() { return this; }, disconnect() {} },
+  });
+}
+
+test('GET /api/v1/cities/all → 200 with the full active-city list', async () => {
+  const rows = [{ id: 'c1', canonicalName: 'Ambala', namePa: 'ਅੰਬਾਲਾ', nameHi: 'अंबाला' }];
+  const app = makeAppWithCities(rows);
+  const res = await request(app).get('/api/v1/cities/all').set('Cookie', cookieFor('u1'));
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { success: true, data: { cities: rows } });
+});
+
+test('GET /api/v1/cities/all → 401 without auth', async () => {
+  const app = makeAppWithCities([]);
+  const res = await request(app).get('/api/v1/cities/all');
+  assert.equal(res.status, 401);
+});

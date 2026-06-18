@@ -97,10 +97,16 @@ module.exports = {
           '0%': { strokeDashoffset: '1' },
           '100%': { strokeDashoffset: '0' },
         },
+        // Full-cover overlay screens slide in from the right (design-spec §6.12).
+        'ec-slide-in': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
       },
       animation: {
         'ec-pop': 'ec-pop 0.45s cubic-bezier(0.16,1,0.3,1) both',
         'ec-draw': 'ec-draw 0.4s ease-out 0.28s both',
+        'ec-slide-in': 'ec-slide-in 0.22s ease both',
       },
     },
   },

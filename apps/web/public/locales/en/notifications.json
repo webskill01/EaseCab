@@ -7,5 +7,16 @@
   },
   "enable": "Enable notifications",
   "useMyLocation": "Use my location",
+  "dutyAlerts": {
+    "title": "Get Duty Alerts",
+    "notifLabel": "Duty notifications",
+    "locationPrefs": "Location Preferences",
+    "clearAll": "Clear all",
+    "addUpTo": "Add up to {max} cities to get matching duty alerts",
+    "locationN": "Location {n}",
+    "searchCity": "Search city",
+    "save": "Save Preferences",
+    "remove": "Remove {city}"
+  },
   "error": { "geo": "Couldn't get your location.", "noCity": "No nearby city found." }
 }

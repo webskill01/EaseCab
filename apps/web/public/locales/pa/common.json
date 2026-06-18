@@ -4,7 +4,8 @@
   "actions": {
     "continue": "ਜਾਰੀ ਰੱਖੋ",
     "cancel": "ਰੱਦ ਕਰੋ",
-    "retry": "ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ"
+    "retry": "ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
+    "back": "ਵਾਪਸ"
   },
   "shell": { "support": "ਸਹਾਇਤਾ", "logout": "ਲੌਗ ਆਊਟ", "language": "ਭਾਸ਼ਾ", "chats": "ਚੈਟ" },
   "nav": { "rides": "ਰਾਈਡਾਂ", "post": "ਡਿਊਟੀ ਪਾਓ", "mine": "ਮੇਰੀਆਂ", "profile": "ਪ੍ਰੋਫਾਈਲ" },

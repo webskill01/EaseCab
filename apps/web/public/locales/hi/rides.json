@@ -18,7 +18,9 @@
     "filterByCity": "शहर फ़िल्टर",
     "allLocations": "सभी शहर",
     "searchCity": "शहर खोजें…",
-    "noResults": "कोई शहर नहीं मिला"
+    "noResults": "कोई शहर नहीं मिला",
+    "quickPick": "शहर चुनें",
+    "myLocation": "मेरी लोकेशन"
   },
   "banner": {
     "freeTrial": "फ्री ट्रायल",

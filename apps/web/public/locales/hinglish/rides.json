@@ -18,7 +18,9 @@
     "filterByCity": "Shehar filter",
     "allLocations": "Saare shehar",
     "searchCity": "Shehar dhoondo…",
-    "noResults": "Koi shehar nahi mila"
+    "noResults": "Koi shehar nahi mila",
+    "quickPick": "Shehar chuno",
+    "myLocation": "Meri location"
   },
   "banner": {
     "freeTrial": "Free trial",

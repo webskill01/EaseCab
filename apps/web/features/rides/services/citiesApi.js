@@ -17,6 +17,18 @@ export async function searchCities(q, { limit, signal } = {}) {
 }
 
 /**
+ * Full active-city list for the "All Locations" overlay (Batch C). Backed by the
+ * cached `/cities/all` endpoint — returns every active city with its localized
+ * names so the overlay can group A–Z and render the active locale's script.
+ *
+ * @returns {Promise<{ id: string, canonicalName: string, namePa: ?string, nameHi: ?string }[]>}
+ */
+export async function allCities() {
+  const { data } = await apiFetch('/cities/all')
+  return data.cities
+}
+
+/**
  * Suggested alert city for a device location (Step 23). Returns the nearest
  * `{ id, canonicalName, distanceKm }` or `null` when none is within range.
  * @param {{ lat: number, lng: number }} coords

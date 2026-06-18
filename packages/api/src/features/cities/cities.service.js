@@ -1,6 +1,8 @@
 'use strict';
 
-const { CITY_SEARCH, CITY_NEAREST } = require('@easecab/shared');
+const { CITY_SEARCH, CITY_NEAREST, CITY_LIST, redisKey } = require('@easecab/shared');
+
+const CITY_LIST_CACHE_KEY = redisKey('cities', 'all');
 
 /**
  * Sanitize a typeahead query: lowercase, drop LIKE wildcards/escape chars so a
@@ -19,9 +21,32 @@ function sanitizeQ(q) {
  *
  * @param {object} deps
  * @param {ReturnType<import('./cities.repository').createCitiesRepository>} deps.repo
+ * @param {import('ioredis').Redis} [deps.redis] - optional; caches the full city
+ *   list (§15, 5-min TTL). Absent (or failing) → graceful fall-through to the DB.
  */
-function createCitiesService({ repo }) {
+function createCitiesService({ repo, redis }) {
   return {
+    /**
+     * All active cities for the "All Locations" overlay (Batch C). Redis-cached
+     * with the §15 TTL when a client is wired; any cache error degrades to the DB.
+     * @returns {Promise<{ cities: { id: string, canonicalName: string, namePa: ?string, nameHi: ?string }[] }>}
+     */
+    async listAllCities() {
+      if (redis) {
+        try {
+          const raw = await redis.get(CITY_LIST_CACHE_KEY);
+          if (raw) return { cities: JSON.parse(raw) };
+        } catch { /* cache miss/poison/down — fall through to the DB */ }
+      }
+      const cities = await repo.listAll();
+      if (redis) {
+        try {
+          await redis.set(CITY_LIST_CACHE_KEY, JSON.stringify(cities), 'EX', CITY_LIST.CACHE_TTL_SEC);
+        } catch { /* best-effort cache write */ }
+      }
+      return { cities };
+    },
+
     /**
      * @param {{ q: string, limit: number }} query
      * @returns {Promise<{ cities: { id: string, canonicalName: string }[] }>}

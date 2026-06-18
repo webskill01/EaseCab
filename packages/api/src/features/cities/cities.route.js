@@ -22,6 +22,12 @@ function createCitiesRouter({ service, requireAuth }) {
     const data = await service.nearestCity(req.valid.query);
     sendSuccess(res, { data });
   });
+  // GET /api/v1/cities/all — full active-city list for the "All Locations" overlay
+  // (Batch C). No params; declared before `/` so it isn't shadowed by the typeahead.
+  router.get('/all', requireAuth, async (req, res) => {
+    const data = await service.listAllCities();
+    sendSuccess(res, { data });
+  });
   router.get('/', requireAuth, validate(citySearchQuerySchema, 'query'), async (req, res) => {
     const data = await service.searchCities(req.valid.query);
     sendSuccess(res, { data });

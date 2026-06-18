@@ -4,7 +4,8 @@
   "actions": {
     "continue": "Continue",
     "cancel": "Cancel",
-    "retry": "Retry"
+    "retry": "Retry",
+    "back": "Back"
   },
   "shell": { "support": "Support", "logout": "Log out", "language": "Language", "chats": "Chats" },
   "nav": { "rides": "Rides", "post": "Post duty", "mine": "My Rides", "profile": "Profile" },
