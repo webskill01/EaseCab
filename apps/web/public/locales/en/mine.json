@@ -22,7 +22,8 @@
     "any": "Any",
     "whatsapp": "WhatsApp",
     "call": "Call",
-    "chat": "Chat"
+    "chat": "Chat",
+    "ridesLabel": "Rides"
   },
   "confirm": {
     "cancel": "Cancel",
