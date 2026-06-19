@@ -34,10 +34,13 @@ export function ChatThread({ chatId }) {
 
   return (
     <div className="flex h-full flex-col bg-ec-bg">
-      <header className="flex items-center gap-2 border-b border-ec-line bg-white px-2 py-2.5">
-        <button type="button" onClick={() => router.push('/messages')} aria-label={t('thread.back')} className="flex h-9 w-9 items-center justify-center rounded-full text-ec-ink60">
-          <ChevronLeft size={22} />
+      <header className="flex items-center gap-2.5 border-b border-ec-line bg-white px-3 py-2.5">
+        <button type="button" onClick={() => router.push('/messages')} aria-label={t('thread.back')} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ec-ink">
+          <ChevronLeft size={24} />
         </button>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[15px] font-extrabold text-ec-blue">
+          {(headerTitle || '?').slice(0, 1).toUpperCase()}
+        </span>
         <span className="truncate text-[15px] font-extrabold text-ec-ink">{headerTitle}</span>
       </header>
       {hasRoute && (
