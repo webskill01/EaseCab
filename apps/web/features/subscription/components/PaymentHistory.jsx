@@ -10,12 +10,12 @@ export function PaymentHistory() {
   const { data } = usePayments()
   const payments = data?.payments ?? []
   return (
-    <section className="rounded-2xl border border-ec-line bg-white p-4">
-      <h2 className="text-[15px] font-extrabold text-ec-ink">{t('history.title')}</h2>
+    <section>
+      <h2 className="mb-2.5 text-[12.5px] font-extrabold uppercase tracking-wide text-ec-ink60">{t('history.title')}</h2>
       {payments.length === 0 ? (
-        <p className="mt-2 text-[13px] font-medium text-ec-ink40">{t('history.empty')}</p>
+        <p className="text-[13px] font-medium text-ec-ink40">{t('history.empty')}</p>
       ) : (
-        <ul className="mt-1 divide-y divide-ec-line">
+        <ul className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
           {payments.map((p) => (
             <PaymentRow key={p.id} payment={p} />
           ))}
