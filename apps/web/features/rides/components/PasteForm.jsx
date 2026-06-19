@@ -13,16 +13,14 @@ function isEmptyDraft(d) {
 
 /**
  * WhatsApp-style free-text tab (SCREENS §5): paste a message → "Read message" →
- * backend parse → structured preview → edit or post. On a failed/empty parse it
- * offers the structured form instead.
+ * backend parse → structured preview → continue into the prefilled form (paste
+ * never posts directly, #9 / F5). On a failed/empty parse it offers the form.
  *
  * @param {object} props
  * @param {(draft: ?object) => void} props.onEdit - switch to the form, prefilled
  *   from the draft (or null to start blank)
- * @param {(draft: object) => void} props.onConfirm - post the draft directly
- * @param {boolean} props.posting - the create mutation is in flight
  */
-export function PasteForm({ onEdit, onConfirm, posting }) {
+export function PasteForm({ onEdit }) {
   const t = useTranslations('post')
   const [text, setText] = useState('')
   const parse = useMutation({ mutationFn: (msg) => parsePost(msg) })
@@ -31,7 +29,7 @@ export function PasteForm({ onEdit, onConfirm, posting }) {
   const failed = parse.isError || (draft && isEmptyDraft(draft))
 
   if (draft && !failed) {
-    return <ParsePreview draft={draft} onEdit={() => onEdit(draft)} onConfirm={() => onConfirm(draft)} posting={posting} />
+    return <ParsePreview draft={draft} onEdit={() => onEdit(draft)} />
   }
 
   return (

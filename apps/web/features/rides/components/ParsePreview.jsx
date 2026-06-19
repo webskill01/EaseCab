@@ -7,16 +7,14 @@ const cityLabel = (id, name, raw) => name || raw || null
 
 /**
  * Read-only preview of a parsed draft (SCREENS §5 free-text mode). Date/fare are
- * not auto-read — shown as a hint to fill in the form. The user confirms to post
- * or edits the fields.
+ * not auto-read. Paste never posts directly (#9 / F5) — the single CTA carries the
+ * draft into the prefilled form where the user completes date+time and posts.
  *
  * @param {object} props
  * @param {object} props.draft - from POST /posted-rides/parse
- * @param {() => void} props.onEdit
- * @param {() => void} props.onConfirm
- * @param {boolean} props.posting
+ * @param {() => void} props.onEdit - continue into the prefilled form
  */
-export function ParsePreview({ draft, onEdit, onConfirm, posting }) {
+export function ParsePreview({ draft, onEdit }) {
   const t = useTranslations('post')
   const from = cityLabel(draft.fromCityId, draft.fromCityName, draft.fromCityRaw)
   const to = cityLabel(draft.toCityId, draft.toCityName, draft.toCityRaw)
@@ -37,14 +35,9 @@ export function ParsePreview({ draft, onEdit, onConfirm, posting }) {
           <Row label={`${t('post.date')} / ${t('post.fare')}`} value={t('paste.noDate')} />
         </dl>
       </div>
-      <div className="flex gap-2">
-        <button type="button" onClick={onEdit} className="h-[52px] flex-1 rounded-xl border-[1.5px] border-ec-line bg-white text-[15px] font-extrabold text-ec-blueInk">
-          {t('paste.edit')}
-        </button>
-        <button type="button" disabled={posting} onClick={onConfirm} className="h-[52px] flex-1 rounded-xl bg-ec-blue text-[15px] font-extrabold text-white shadow-ec-blue disabled:bg-ec-disabled disabled:shadow-none">
-          {posting ? '…' : t('paste.looksGood')}
-        </button>
-      </div>
+      <button type="button" onClick={onEdit} className="h-[52px] w-full rounded-xl bg-ec-blue text-[15px] font-extrabold text-white shadow-ec-blue">
+        {t('paste.continueToForm')}
+      </button>
     </div>
   )
 }

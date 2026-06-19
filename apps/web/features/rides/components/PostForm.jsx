@@ -84,6 +84,7 @@ export function PostForm({ form, onChange, onSubmit, submitting }) {
           <span className="flex h-12 items-center rounded-xl border border-ec-line bg-ec-bg px-3 text-[14px] font-bold text-ec-ink">+91</span>
           <input inputMode="numeric" maxLength={10} value={form.phone} onChange={onPhone} className={FIELD} aria-label={t('post.contact')} />
         </div>
+        <p className="mt-1.5 text-[11.5px] leading-snug text-ec-ink40">{t('post.autofilledNote')}</p>
       </section>
 
       {/* Notes */}

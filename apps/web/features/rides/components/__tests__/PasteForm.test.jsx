@@ -20,27 +20,27 @@ const EMPTY = { fromCityId: null, fromCityName: null, fromCityRaw: null, toCityI
 
 describe('PasteForm', () => {
   it('disables Read on an empty box', () => {
-    renderPaste(<PasteForm onEdit={vi.fn()} onConfirm={vi.fn()} posting={false} />)
+    renderPaste(<PasteForm onEdit={vi.fn()} />)
     expect(screen.getByRole('button', { name: /read message/i })).toBeDisabled()
   })
 
-  it('parses, previews the route, and confirms with the draft', async () => {
+  it('parses, previews the route, and continues into the prefilled form (no direct post)', async () => {
     parsePost.mockResolvedValue(GOOD)
-    const onConfirm = vi.fn()
+    const onEdit = vi.fn()
     const user = userEvent.setup()
-    renderPaste(<PasteForm onEdit={vi.fn()} onConfirm={onConfirm} posting={false} />)
+    renderPaste(<PasteForm onEdit={onEdit} />)
     await user.type(screen.getByLabelText(/paste the ride message/i), 'Delhi to Chandigarh Innova 9876543210')
     await user.click(screen.getByRole('button', { name: /read message/i }))
     await waitFor(() => expect(screen.getByText('Delhi')).toBeInTheDocument())
-    await user.click(screen.getByRole('button', { name: /looks good/i }))
-    expect(onConfirm).toHaveBeenCalledWith(GOOD)
+    await user.click(screen.getByRole('button', { name: /continue to form/i }))
+    expect(onEdit).toHaveBeenCalledWith(GOOD)
   })
 
   it('shows the failure state + form fallback on an empty draft', async () => {
     parsePost.mockResolvedValue(EMPTY)
     const onEdit = vi.fn()
     const user = userEvent.setup()
-    renderPaste(<PasteForm onEdit={onEdit} onConfirm={vi.fn()} posting={false} />)
+    renderPaste(<PasteForm onEdit={onEdit} />)
     await user.type(screen.getByLabelText(/paste the ride message/i), 'good morning everyone')
     await user.click(screen.getByRole('button', { name: /read message/i }))
     await waitFor(() => expect(screen.getByText(/couldn't read that/i)).toBeInTheDocument())

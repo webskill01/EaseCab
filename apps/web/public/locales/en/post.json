@@ -17,7 +17,8 @@
     "swap": "Swap pickup and drop",
     "verifiedNote": "Aadhaar-verified members' duties post instantly",
     "submit": "Post Ride",
-    "pastDateError": "Date and time must be in the future"
+    "pastDateError": "Date and time must be in the future",
+    "autofilledNote": "Autofilled from your account — edit if you want a different number."
   },
   "paste": {
     "boxLabel": "Paste the ride message",
@@ -25,8 +26,7 @@
     "read": "Read message",
     "previewTitle": "Here's what we read",
     "noDate": "— add in form",
-    "edit": "Edit fields",
-    "looksGood": "Looks good — post",
+    "continueToForm": "Continue to form",
     "failed": "Couldn't read that message",
     "useForm": "Use the form instead"
   },

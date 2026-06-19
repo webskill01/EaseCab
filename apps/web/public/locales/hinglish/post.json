@@ -17,7 +17,8 @@
     "swap": "Pickup aur drop badlein",
     "verifiedNote": "Aadhaar-verified members ki duties turant post hoti hain",
     "submit": "Duty post karein",
-    "pastDateError": "Date aur time future mein hona chahiye"
+    "pastDateError": "Date aur time future mein hona chahiye",
+    "autofilledNote": "Aapke account se autofill hua — doosra number chahiye to badal lein."
   },
   "paste": {
     "boxLabel": "Ride message paste karein",
@@ -25,8 +26,7 @@
     "read": "Message padhein",
     "previewTitle": "Humne yeh padha",
     "noDate": "— form mein bharein",
-    "edit": "Fields edit karein",
-    "looksGood": "Theek hai — post karein",
+    "continueToForm": "Form par jaayein",
     "failed": "Woh message padh nahi sake",
     "useForm": "Iske bajaye form use karein"
   },
