@@ -8,7 +8,6 @@ import { CityPicker } from '@/features/rides/components/CityPicker'
 import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
 import { permissionState } from '../lib/pushFlow'
-import { getStoredToken } from '../lib/pushStorage'
 
 // Design-spec §7.3 "up to 5 city slots". Always ≤ the server cap (25), so valid.
 const ALERT_CITIES_MAX = 5
@@ -44,7 +43,10 @@ export function DutyAlertsOverlay({ onClose }) {
   useEffect(() => {
     if (prefs && slots === null) {
       setSlots((prefs.cities ?? []).slice(0, ALERT_CITIES_MAX))
-      setNotifOn(permissionState() === 'granted' && !!getStoredToken())
+      // App-side "alerts on" = OS permission granted. A push token is a delivery bonus
+      // that needs a real VAPID key, so don't gate the toggle on it (F1) — otherwise the
+      // toggle reads off in dev/demo even after the user granted permission.
+      setNotifOn(permissionState() === 'granted')
     }
   }, [prefs, slots])
 

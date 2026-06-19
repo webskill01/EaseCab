@@ -7,12 +7,13 @@ vi.mock('../../hooks/usePushPreferences', () => ({ usePushPreferences: vi.fn() }
 const enable = vi.fn().mockResolvedValue({ permission: 'granted', city: null })
 const disable = vi.fn().mockResolvedValue(undefined)
 vi.mock('../../hooks/useEnableAlerts', () => ({ useEnableAlerts: () => ({ enable, disable, isEnabling: false }) }))
-vi.mock('../../lib/pushFlow', () => ({ permissionState: () => 'default' }))
+vi.mock('../../lib/pushFlow', () => ({ permissionState: vi.fn(() => 'default') }))
 vi.mock('../../lib/pushStorage', () => ({ getStoredToken: () => null }))
 vi.mock('@/features/rides/components/CityPicker', () => ({
   CityPicker: ({ onPick }) => <button type="button" onClick={() => onPick({ id: 'c2', name: 'Mohali' })}>add-city</button>,
 }))
 import { usePushPreferences } from '../../hooks/usePushPreferences'
+import { permissionState } from '../../lib/pushFlow'
 import { DutyAlertsOverlay } from '../DutyAlertsOverlay'
 
 const stub = (over = {}) => ({
@@ -20,12 +21,21 @@ const stub = (over = {}) => ({
   isLoading: false, isError: false, update: vi.fn(), saving: false, ...over,
 })
 
-beforeEach(() => { vi.clearAllMocks(); usePushPreferences.mockReturnValue(stub()) })
+beforeEach(() => { vi.clearAllMocks(); permissionState.mockReturnValue('default'); usePushPreferences.mockReturnValue(stub()) })
 
 describe('DutyAlertsOverlay', () => {
   it('seeds the city slots from saved preferences', async () => {
     renderWithIntl(<DutyAlertsOverlay onClose={vi.fn()} />)
     expect(await screen.findByText('Ludhiana')).toBeInTheDocument()
+  })
+
+  it('seeds the master toggle ON when OS permission is already granted (token optional — F1)', async () => {
+    // No stored token (e.g. demo without a VAPID key) must NOT force the toggle off:
+    // app-side "alerts on" = OS permission granted; the push token is a delivery bonus.
+    permissionState.mockReturnValue('granted')
+    renderWithIntl(<DutyAlertsOverlay onClose={vi.fn()} />)
+    const toggle = await screen.findByRole('switch', { name: /duty notifications/i })
+    expect(toggle).toHaveAttribute('aria-checked', 'true')
   })
 
   it('turns alerts on via the master toggle (drives the enable flow)', async () => {
