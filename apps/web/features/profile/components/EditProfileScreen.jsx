@@ -32,7 +32,7 @@ export function EditProfileScreen() {
         <div className="flex-1 text-[18px] font-extrabold tracking-tight text-ec-ink">{t('edit')}</div>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
-        <ProfileForm initial={profileToForm(profile)} onSubmit={(body) => update.save(body)} submitting={update.saving} errorKey={update.errorKey} />
+        <ProfileForm initial={profileToForm(profile)} phone={profile.phone} onSubmit={(body) => update.save(body)} submitting={update.saving} errorKey={update.errorKey} />
       </div>
     </div>
   )

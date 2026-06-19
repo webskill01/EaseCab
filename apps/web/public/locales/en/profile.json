@@ -13,8 +13,10 @@
     "experience": "Experience",
     "vehicle": "Vehicle type",
     "languages": "Languages you speak",
-    "photo": "Profile photo"
+    "photo": "Profile photo",
+    "workingCityHint": "Where you mostly take duties — used to surface nearby rides."
   },
+  "locked": "Locked",
   "header": { "addPhoto": "PHOTO", "driver": "Driver" },
   "verifiedBadge": "Verified",
   "stats": {

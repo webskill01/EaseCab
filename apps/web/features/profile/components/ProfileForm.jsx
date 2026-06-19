@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { VehicleIcon } from '@/components/ui/icons'
+import { VehicleIcon, Steer, Lock } from '@/components/ui/icons'
+import { CityPicker } from '@/features/rides/components/CityPicker'
 import { DpUploader } from './DpUploader'
 import {
   PROFILE_VEHICLES, PROFILE_LANGUAGES, vehIconKeyOf,
@@ -17,9 +18,9 @@ const field = 'h-12 w-full rounded-xl border-[1.5px] border-ec-line bg-white px-
  * Submit is gated on the core fields only — the DP is NOT a save gate (#19); it's a
  * soft nudge for the posting gate. Above the form the caller may pass a `header`.
  * @param {{ initial: object, onSubmit: (body: object) => void, submitting: boolean,
- *   errorKey?: ?string, header?: React.ReactNode }} props
+ *   errorKey?: ?string, header?: React.ReactNode, phone?: ?string }} props
  */
-export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, header = null }) {
+export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, header = null, phone = null }) {
   const t = useTranslations('profile')
   const [f, setF] = useState(initial)
   const set = (patch) => setF((prev) => ({ ...prev, ...patch }))
@@ -46,17 +47,28 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
         <input className={field} value={f.baseCity} onChange={(e) => set({ baseCity: e.target.value })} aria-label={t('fields.baseCity')} />
       </label>
 
-      <div className="flex gap-3">
-        <label className="flex flex-1 flex-col gap-1.5">
-          <span className="text-[13px] font-bold text-ec-ink60">{t('fields.workingCity')}</span>
-          <input className={field} value={f.workingCity} onChange={(e) => set({ workingCity: e.target.value })} aria-label={t('fields.workingCity')} />
-        </label>
-        <label className="flex w-28 flex-col gap-1.5">
-          <span className="text-[13px] font-bold text-ec-ink60">{t('fields.experience')}</span>
-          <input className={field} inputMode="numeric" value={f.experience}
-            onChange={(e) => set({ experience: e.target.value.replace(/\D/g, '').slice(0, 2) })} aria-label={t('fields.experience')} />
-        </label>
+      {/* Working city — typeahead picker (mockup uses a city dropdown), so it resolves
+          to a real city instead of free text. */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[13px] font-bold text-ec-ink60">{t('fields.workingCity')}</span>
+        <CityPicker
+          label={t('fields.workingCity')}
+          value={f.workingCity ? { id: null, name: f.workingCity } : null}
+          onPick={(c) => set({ workingCity: c.name })}
+        />
+        <span className="text-[12px] font-medium text-ec-ink40">{t('fields.workingCityHint')}</span>
       </div>
+
+      {/* Experience — icon prefix + "yrs" suffix (mockup) */}
+      <label className="flex flex-col gap-1.5">
+        <span className="text-[13px] font-bold text-ec-ink60">{t('fields.experience')}</span>
+        <div className="flex h-12 items-center overflow-hidden rounded-xl border-[1.5px] border-ec-line bg-white focus-within:border-ec-blue">
+          <span className="flex h-full items-center border-r border-ec-line bg-ec-bg px-3 text-ec-blue"><Steer size={16} /></span>
+          <input className="h-full min-w-0 flex-1 bg-transparent px-3 text-[14px] font-semibold text-ec-ink outline-none" inputMode="numeric" value={f.experience}
+            onChange={(e) => set({ experience: e.target.value.replace(/\D/g, '').slice(0, 2) })} aria-label={t('fields.experience')} />
+          <span className="px-3 text-[13.5px] font-medium text-ec-ink60">{t('stats.years')}</span>
+        </div>
+      </label>
 
       <label className="flex flex-col gap-1.5">
         <span className="text-[13px] font-bold text-ec-ink60">{t('fields.bio')}</span>
@@ -92,6 +104,17 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
           })}
         </div>
       </div>
+
+      {/* Phone — read-only (login identity, never editable here). Mockup shows it locked. */}
+      {phone && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] font-bold text-ec-ink60">{t('phoneLabel')}</span>
+          <div className="flex h-12 items-center justify-between rounded-xl border-[1.5px] border-ec-line bg-ec-bg px-3 text-[14px] font-semibold text-ec-ink40">
+            <span>+91 {String(phone).replace(/^\+91/, '')}</span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold"><Lock size={12} />{t('locked')}</span>
+          </div>
+        </div>
+      )}
 
       {errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t(errorKey)}</p>}
 

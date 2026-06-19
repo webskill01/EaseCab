@@ -13,8 +13,10 @@
     "experience": "Experience",
     "vehicle": "Vehicle type",
     "languages": "Aap kaunsi languages bolte ho",
-    "photo": "Profile photo"
+    "photo": "Profile photo",
+    "workingCityHint": "Jahan aap zyada duties lete ho — paas ki rides dikhane ke liye."
   },
+  "locked": "Locked",
   "header": { "addPhoto": "PHOTO", "driver": "Driver" },
   "verifiedBadge": "Verified",
   "stats": {
