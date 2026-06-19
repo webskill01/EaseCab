@@ -62,6 +62,6 @@
     "verified": "Verified",
     "underReview": "Review mein"
   },
-  "nav": { "membership": "Membership", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} din baaki", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
   "error": { "load": "Aapki profile load nahi ho saki.", "save": "Save nahi ho saka. Phir try karo." }
 }

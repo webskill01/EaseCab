@@ -62,6 +62,6 @@
     "verified": "Verified",
     "underReview": "Under review"
   },
-  "nav": { "membership": "Membership", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} days left", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
   "error": { "load": "Couldn't load your profile.", "save": "Couldn't save. Please try again." }
 }

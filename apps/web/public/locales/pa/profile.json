@@ -62,6 +62,6 @@
     "verified": "ਤਸਦੀਕਸ਼ੁਦਾ",
     "underReview": "ਜਾਂਚ ਅਧੀਨ"
   },
-  "nav": { "membership": "ਮੈਂਬਰਸ਼ਿਪ", "settings": "ਸੈਟਿੰਗਾਂ", "privacy": "ਪ੍ਰਾਈਵੇਸੀ ਨੀਤੀ", "terms": "ਨਿਯਮ ਤੇ ਸ਼ਰਤਾਂ" },
+  "nav": { "membership": "ਮੈਂਬਰਸ਼ਿਪ", "membershipValue": { "trial": "ਟ੍ਰਾਇਲ · {days} ਦਿਨ ਬਾਕੀ", "active": "ਚਾਲੂ", "expired": "ਮਿਆਦ ਮੁੱਕੀ" }, "notifications": "ਸੂਚਨਾਵਾਂ", "language": "ਭਾਸ਼ਾ", "settings": "ਸੈਟਿੰਗਾਂ", "privacy": "ਪ੍ਰਾਈਵੇਸੀ ਨੀਤੀ", "terms": "ਨਿਯਮ ਤੇ ਸ਼ਰਤਾਂ" },
   "error": { "load": "ਤੁਹਾਡਾ ਪ੍ਰੋਫਾਈਲ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ।", "save": "ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।" }
 }

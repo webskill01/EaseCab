@@ -4,6 +4,7 @@ import { renderWithIntl } from '@/test/intl'
 const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 vi.mock('../../hooks/useProfile', () => ({ useProfile: vi.fn() }))
+vi.mock('@/features/subscription/hooks/useMembership', () => ({ useMembership: () => ({ data: { isActive: true } }) }))
 vi.mock('@/features/shell/components/LogoutButton', () => ({ LogoutButton: () => <div /> }))
 import { useProfile } from '../../hooks/useProfile'
 import { ProfileScreen } from '../ProfileScreen'

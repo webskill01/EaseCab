@@ -1,10 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, Pencil, Headset, VehicleIcon, Info, List } from '@/components/ui/icons'
+import { useLocale, useTranslations } from 'next-intl'
+import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe } from '@/components/ui/icons'
 import { env } from '@/config/env'
 import { LogoutButton } from '@/features/shell/components/LogoutButton'
+import { LanguageMenu } from '@/features/shell/components/LanguageMenu'
+import { useMembership } from '@/features/subscription/hooks/useMembership'
+import { membershipView, MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { useProfile } from '../hooks/useProfile'
 import { vehIconKeyOf } from '../lib/profileForm'
 import { CompletenessBanner } from './CompletenessBanner'
@@ -25,12 +28,12 @@ function Stat({ icon, label, value, onEdit }) {
   )
 }
 
-function NavRow({ icon, tint, label, value, onClick, last }) {
+function NavRow({ icon, tint, label, value, valueTint, onClick, last }) {
   return (
     <button type="button" onClick={onClick} className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${last ? '' : 'border-b border-ec-line'}`}>
       <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky ${tint || 'text-ec-blue'}`}>{icon}</span>
       <span className="flex-1 text-[14px] font-bold text-ec-ink">{label}</span>
-      {value && <span className="text-[12.5px] font-bold text-ec-ink60">{value}</span>}
+      {value && <span className={`text-[12.5px] font-bold ${valueTint || 'text-ec-ink60'}`}>{value}</span>}
       <ChevR size={16} className="text-ec-ink40" />
     </button>
   )
@@ -39,8 +42,10 @@ function NavRow({ icon, tint, label, value, onClick, last }) {
 /** Profile hub (SCREENS §6 / profile.jsx) — header card, stats, about, verification, nav, danger logout. */
 export function ProfileScreen() {
   const t = useTranslations('profile')
+  const locale = useLocale()
   const router = useRouter()
   const { data: profile, isLoading, isError } = useProfile()
+  const { data: sub } = useMembership()
 
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
   if (isError || !profile) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
@@ -48,6 +53,15 @@ export function ProfileScreen() {
   const v = profile.verification
   const phone = `+91 ${String(profile.phone).replace(/^\+91/, '')}`
   const goEdit = () => router.push('/profile/edit')
+
+  // Membership row value + tint (mockup profile.jsx) — only once the status loads,
+  // so we never flash a misleading "Expired" while the query is in flight.
+  const mv = sub ? membershipView(sub) : null
+  const memValue = mv && (mv.state === MEMBERSHIP_STATE.TRIAL
+    ? t('nav.membershipValue.trial', { days: mv.daysLeft ?? 0 })
+    : t(`nav.membershipValue.${mv.state}`))
+  const memTint = mv && (mv.state === MEMBERSHIP_STATE.EXPIRED ? 'text-ec-danger'
+    : mv.state === MEMBERSHIP_STATE.ACTIVE ? 'text-ec-successTx' : 'text-ec-warning')
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-ec-bg p-4">
@@ -112,9 +126,16 @@ export function ProfileScreen() {
         onStartL2={() => router.push('/verify?intent=driver')}
       />
 
+      {/* Options — inline rows per mockup profile.jsx (Membership · Notifications · Language).
+          Language hosts the existing LanguageMenu dropdown so the row isn't a nested button. */}
       <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
-        <NavRow icon={<Crown size={18} />} label={t('nav.membership')} onClick={() => router.push('/membership')} />
-        <NavRow icon={<BellEdit size={18} />} label={t('nav.settings')} onClick={() => router.push('/settings')} last />
+        <NavRow icon={<Crown size={18} />} label={t('nav.membership')} value={memValue} valueTint={memTint} onClick={() => router.push('/membership')} />
+        <NavRow icon={<BellEdit size={18} />} label={t('nav.notifications')} onClick={() => router.push('/notifications')} />
+        <div className="flex w-full items-center gap-3 px-4 py-3.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><Globe size={18} /></span>
+          <span className="flex-1 text-[14px] font-bold text-ec-ink">{t('nav.language')}</span>
+          <LanguageMenu current={locale} />
+        </div>
       </nav>
 
       <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
