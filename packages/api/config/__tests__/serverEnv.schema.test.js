@@ -92,6 +92,18 @@ test('rejects an invalid NODE_ENV, naming it', () => {
   assert.ok(r.errors.some((e) => e.startsWith('NODE_ENV')));
 });
 
+test('COOKIE_SECURE: unset → undefined; "true"/"false" → boolean (Phase 9c demo override)', () => {
+  // Unset → undefined so server.js falls back to the NODE_ENV default.
+  assert.equal(parseServerEnv(BASE).data.COOKIE_SECURE, undefined);
+  // Explicit true/false are coerced to real booleans (false must stay honoured).
+  assert.equal(parseServerEnv({ ...BASE, COOKIE_SECURE: 'true' }).data.COOKIE_SECURE, true);
+  assert.equal(parseServerEnv({ ...BASE, COOKIE_SECURE: 'false' }).data.COOKIE_SECURE, false);
+  // Anything else is rejected, naming the var.
+  const bad = parseServerEnv({ ...BASE, COOKIE_SECURE: 'yes' });
+  assert.equal(bad.success, false);
+  assert.ok(bad.errors.some((e) => e.startsWith('COOKIE_SECURE')));
+});
+
 test('serverEnvSchema requires the FIREBASE_* credentials', () => {
   // Build a base that has every required field EXCEPT the Firebase ones.
   const baseNoFirebase = {

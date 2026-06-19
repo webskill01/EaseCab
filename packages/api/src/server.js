@@ -40,7 +40,13 @@ async function main() {
 
   const config = {
     corsOrigins: serverEnv.CORS_ORIGINS,
-    cookie: { secure: serverEnv.NODE_ENV === 'production', adminDomain: serverEnv.ADMIN_COOKIE_DOMAIN },
+    // `secure` defaults to "production only", but COOKIE_SECURE overrides it so the
+    // HTTPS investor-demo box (stubs on, NODE_ENV !== production) still gets Secure
+    // cookies (Phase 9c). `??` keeps an explicit COOKIE_SECURE=false honoured.
+    cookie: {
+      secure: serverEnv.COOKIE_SECURE ?? serverEnv.NODE_ENV === 'production',
+      adminDomain: serverEnv.ADMIN_COOKIE_DOMAIN,
+    },
     jwt: {
       accessSecret: serverEnv.JWT_ACCESS_SECRET,
       refreshSecret: serverEnv.JWT_REFRESH_SECRET,

@@ -1,0 +1,84 @@
+name: Deploy
+
+# Phase 9c — deploy on push to main (CLAUDE.md §11):
+#   gate (install → lint → test → build) → SSH to VPS → pull → migrate → build → pm2 reload → health check.
+# The PR gate (ci.yml) already runs on PRs into main; this re-runs the quality gate
+# on the merge commit before touching the box, then deploys only if it is green.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # allow a manual redeploy from the Actions tab
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false # never interrupt an in-flight deploy mid-migration
+
+jobs:
+  # ---- 1. Quality gate (mirrors ci.yml) — deploy is blocked unless this passes ----
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_API_URL: https://api.easecab.com/api/v1
+      NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder-key
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: easecab.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: easecab-ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run prisma:generate --workspace=packages/api
+      - run: npm run lint
+      - run: npm run test:coverage
+      - run: npm run build:web
+
+  # ---- 2. Deploy — SSH into the VPS and roll the release ----
+  deploy:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Bind to a GitHub Environment so the host/key secrets + optional approval live there.
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }} # optional; appleboy defaults to 22 when empty
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.DEPLOY_PATH }}"
+
+            echo "==> Fetch + hard-reset to origin/main"
+            git fetch --prune origin main
+            git reset --hard origin/main
+
+            echo "==> Install (clean, lockfile-pinned)"
+            npm ci
+
+            echo "==> Prisma generate + migrate deploy (forward-only)"
+            npm run prisma:generate --workspace=packages/api
+            npm run prisma:deploy --workspace=packages/api
+
+            echo "==> Build web + admin (standalone)"
+            npm run build --workspace=apps/web
+            npm run build --workspace=apps/admin
+
+            echo "==> Reload PM2 process map (zero-downtime where possible)"
+            pm2 reload ecosystem.config.js --update-env
+            pm2 save
+
+            echo "==> Health check: GET /ping must return 200 within ~30s"
+            for i in $(seq 1 15); do
+              code=$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:4000/ping || true)
+              if [ "$code" = "200" ]; then echo "api healthy ($code)"; exit 0; fi
+              echo "waiting for api... ($i, last=$code)"; sleep 2
+            done
+            echo "HEALTH CHECK FAILED — api did not return 200"; exit 1

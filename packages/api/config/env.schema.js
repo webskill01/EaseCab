@@ -55,6 +55,16 @@ const serverEnvSchema = envSchema.extend({
   // Next middleware can route-gate on it. Leave UNSET in dev/test → host-only cookie
   // (shared across localhost ports already, so the middleware still works locally).
   ADMIN_COOKIE_DOMAIN: z.string().optional(),
+  // Force the `secure` flag on all auth cookies independent of NODE_ENV. By default
+  // `secure` tracks NODE_ENV === 'production' (server.js). The investor-demo profile
+  // (Phase 9c) runs the stubbed stack over HTTPS with NODE_ENV !== 'production' (the
+  // RAZORPAY/SUREPASS/R2 stubs are FATAL under production), which would otherwise emit
+  // non-Secure cookies on an HTTPS origin. Set COOKIE_SECURE=true on that box to keep
+  // Secure cookies without flipping NODE_ENV. Unset → preserve the NODE_ENV default.
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === 'true')),
   CORS_ORIGINS: z
     .string()
     .default(DEFAULT_CORS_ORIGINS)
