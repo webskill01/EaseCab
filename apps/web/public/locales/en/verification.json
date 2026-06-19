@@ -55,5 +55,31 @@
     "verifyFailed": "Couldn't verify these details. Please check and retry.",
     "network": "Network problem. Please try again.",
     "generic": "Something went wrong. Please try again."
+  },
+  "timeline": {
+    "title": "Complete your profile",
+    "stepsDone": "{done} of {total} steps completed",
+    "postUnlocked": "Posting unlocked — Aadhaar + photo done",
+    "postPending": "Aadhaar + a profile photo unlock posting",
+    "groupPost": "Required to post",
+    "groupBadge": "Verified-driver badge",
+    "verified": "Verified",
+    "pending": "Pending",
+    "view": "View verified details",
+    "completeNow": "Complete now",
+    "aadhaar": "Aadhaar",
+    "photo": "Profile photo",
+    "photoHint": "Add a profile photo to unlock posting.",
+    "needHelp": "Need help?",
+    "contactSupport": "Contact our support team"
+  },
+  "detail": {
+    "onlyYou": "Only you can see this verified information.",
+    "statusVerified": "Verified",
+    "aadhaarNumber": "Aadhaar number",
+    "privacyNote": "For your privacy, EaseCab stores only your verified status and the last 4 digits — never your full Aadhaar or demographic details.",
+    "dlPrivacyNote": "Your licence was verified against the RTO database. We store only your verification status — not the licence number or details.",
+    "holder": "Holder",
+    "verifyAgain": "Verify again"
   }
 }

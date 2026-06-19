@@ -55,5 +55,31 @@
     "verifyFailed": "Yeh details verify nahi huin. Check karke phir try karo.",
     "network": "Network problem. Phir try karo.",
     "generic": "Kuch galat ho gaya. Phir try karo."
+  },
+  "timeline": {
+    "title": "Apni profile complete karein",
+    "stepsDone": "{total} mein se {done} steps complete",
+    "postUnlocked": "Posting unlock — Aadhaar + photo ho gaye",
+    "postPending": "Aadhaar + profile photo posting unlock karte hain",
+    "groupPost": "Post karne ke liye zaroori",
+    "groupBadge": "Verified-driver badge",
+    "verified": "Verified",
+    "pending": "Pending",
+    "view": "Verified details dekhein",
+    "completeNow": "Abhi complete karein",
+    "aadhaar": "Aadhaar",
+    "photo": "Profile photo",
+    "photoHint": "Posting unlock karne ke liye profile photo add karein.",
+    "needHelp": "Help chahiye?",
+    "contactSupport": "Hamari support team se contact karein"
+  },
+  "detail": {
+    "onlyYou": "Yeh verified information sirf aap dekh sakte hain.",
+    "statusVerified": "Verified",
+    "aadhaarNumber": "Aadhaar number",
+    "privacyNote": "Aapki privacy ke liye, EaseCab sirf aapka verified status aur last 4 digits rakhta hai — kabhi poora Aadhaar ya demographic details nahi.",
+    "dlPrivacyNote": "Aapka licence RTO database se verify kiya gaya. Hum sirf aapka verification status rakhte hain — licence number ya details nahi.",
+    "holder": "Holder",
+    "verifyAgain": "Dobara verify karein"
   }
 }

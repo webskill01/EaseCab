@@ -6,7 +6,9 @@ import { useAadhaarFlow } from '../hooks/useAadhaarFlow'
 import { AadhaarStep } from './AadhaarStep'
 import { AadhaarOtpStep } from './AadhaarOtpStep'
 import { CompleteProfileStep } from './CompleteProfileStep'
-import { DriverHub } from './DriverHub'
+import { VerificationTimeline } from './VerificationTimeline'
+import { AadhaarDetail } from './AadhaarDetail'
+import { DlDetail } from './DlDetail'
 import { DlVerify } from './DlVerify'
 import { RcVerify } from './RcVerify'
 
@@ -24,7 +26,9 @@ export function VerifyScreen() {
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
 
   const status = profile?.verification ?? { dlSubmitted: false, rcSubmitted: false }
-  if (intent === 'driver') return <DriverHub status={status} />
+  if (intent === 'driver') return <VerificationTimeline profile={profile} />
+  if (intent === 'aadhaar-detail') return <AadhaarDetail profile={profile} />
+  if (intent === 'dl-detail') return <DlDetail profile={profile} />
   if (intent === 'dl') return <DlVerify status={status} />
   if (intent === 'rc') return <RcVerify status={status} />
 

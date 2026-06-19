@@ -5,7 +5,9 @@ let mockSearch = 'intent=l1'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }), useSearchParams: () => new URLSearchParams(mockSearch) }))
 vi.mock('@/features/profile/hooks/useProfile', () => ({ useProfile: vi.fn() }))
 vi.mock('../CompleteProfileStep', () => ({ CompleteProfileStep: () => <div>complete-step</div> }))
-vi.mock('../DriverHub', () => ({ DriverHub: () => <div>driver-hub</div> }))
+vi.mock('../VerificationTimeline', () => ({ VerificationTimeline: () => <div>timeline</div> }))
+vi.mock('../AadhaarDetail', () => ({ AadhaarDetail: () => <div>aadhaar-detail</div> }))
+vi.mock('../DlDetail', () => ({ DlDetail: () => <div>dl-detail</div> }))
 vi.mock('../DlVerify', () => ({ DlVerify: () => <div>dl-page</div> }))
 vi.mock('../RcVerify', () => ({ RcVerify: () => <div>rc-page</div> }))
 import { useProfile } from '@/features/profile/hooks/useProfile'
@@ -24,10 +26,20 @@ describe('VerifyScreen', () => {
     renderWithIntl(<VerifyScreen />)
     expect(screen.getByText('complete-step')).toBeInTheDocument()
   })
-  it('intent=driver → renders the driver hub', () => {
+  it('intent=driver → renders the verification timeline', () => {
     mockSearch = 'intent=driver'; useProfile.mockReturnValue(VER())
     renderWithIntl(<VerifyScreen />)
-    expect(screen.getByText('driver-hub')).toBeInTheDocument()
+    expect(screen.getByText('timeline')).toBeInTheDocument()
+  })
+  it('intent=aadhaar-detail → renders the Aadhaar record', () => {
+    mockSearch = 'intent=aadhaar-detail'; useProfile.mockReturnValue(VER({ aadhaarVerified: true }))
+    renderWithIntl(<VerifyScreen />)
+    expect(screen.getByText('aadhaar-detail')).toBeInTheDocument()
+  })
+  it('intent=dl-detail → renders the DL record', () => {
+    mockSearch = 'intent=dl-detail'; useProfile.mockReturnValue(VER({ dlSubmitted: true }))
+    renderWithIntl(<VerifyScreen />)
+    expect(screen.getByText('dl-detail')).toBeInTheDocument()
   })
   it('intent=dl → renders the dedicated DL page', () => {
     mockSearch = 'intent=dl'; useProfile.mockReturnValue(VER())
