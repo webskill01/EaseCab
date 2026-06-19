@@ -120,18 +120,10 @@ function createPostedRidesRepository({ prisma, redis }) {
      */
     async listActivePosts({ createdAt, id, cityId, limit }) {
       const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() } };
-      const cursorClause = createdAt && id
-        ? { OR: [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }] }
-        : null;
-      const cityClause = cityId
-        ? { OR: [{ fromCityId: cityId }, { toCityId: cityId }] }
-        : null;
-      if (cursorClause && cityClause) {
-        where.AND = [cursorClause, cityClause];
-      } else if (cursorClause) {
-        where.OR = cursorClause.OR;
-      } else if (cityClause) {
-        where.OR = cityClause.OR;
+      // City lock matches the FROM (pickup) city only — same rule as the bot feed.
+      if (cityId) where.fromCityId = cityId;
+      if (createdAt && id) {
+        where.OR = [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }];
       }
       return prisma.postedRide.findMany({
         where,

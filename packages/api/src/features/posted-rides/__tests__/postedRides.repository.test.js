@@ -60,23 +60,23 @@ test('POSTED_PUBLIC_SELECT joins the canonical + localized names of each city re
   assert.deepEqual(POSTED_PUBLIC_SELECT.toCity, cityNameSelect);
 });
 
-test('listActivePosts: cityId-only filters from OR to (no cursor)', async () => {
+test('listActivePosts: cityId-only filters by FROM (pickup) city (no cursor)', async () => {
   let seen;
   const repo = createPostedRidesRepository({ prisma: fakePrisma({ findMany: (a) => { seen = a; return []; } }), redis: fakeRedis() });
   await repo.listActivePosts({ cityId: 'c-uuid', limit: 10 });
-  assert.deepEqual(seen.where.OR, [{ fromCityId: 'c-uuid' }, { toCityId: 'c-uuid' }]);
-  assert.equal('AND' in seen.where, false);
+  assert.equal(seen.where.fromCityId, 'c-uuid');
+  assert.equal('OR' in seen.where, false);
 });
 
-test('listActivePosts: cursor + cityId AND-combine both OR groups', async () => {
+test('listActivePosts: cursor + cityId → from field ANDs with the cursor OR', async () => {
   let seen;
   const repo = createPostedRidesRepository({ prisma: fakePrisma({ findMany: (a) => { seen = a; return []; } }), redis: fakeRedis() });
   const createdAt = new Date('2026-06-02T10:00:00.000Z');
   await repo.listActivePosts({ createdAt, id: 'p1', cityId: 'c-uuid', limit: 5 });
-  assert.equal('OR' in seen.where, false);
-  assert.deepEqual(seen.where.AND, [
-    { OR: [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: 'p1' } }] },
-    { OR: [{ fromCityId: 'c-uuid' }, { toCityId: 'c-uuid' }] },
+  assert.equal(seen.where.fromCityId, 'c-uuid');
+  assert.deepEqual(seen.where.OR, [
+    { createdAt: { lt: createdAt } },
+    { createdAt, id: { lt: 'p1' } },
   ]);
 });
 

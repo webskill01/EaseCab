@@ -59,7 +59,7 @@ function createRidesRepository({ prisma, redis }) {
      * @param {Date} [args.receivedAt] - cursor key (omit for the first page)
      * @param {string} [args.id] - cursor key (omit for the first page)
      * @param {string} [args.cityId] - live city-filter lock; keep only rides whose
-     *   pickup OR drop touches this city (SCREENS §2). Omit for the unfiltered feed.
+     *   PICKUP city equals this (SCREENS §2). Omit for the unfiltered feed.
      * @param {number} args.limit - page size (the +1 is added here)
      * @returns {Promise<object[]>} up to limit+1 public ride rows
      */
@@ -68,21 +68,12 @@ function createRidesRepository({ prisma, redis }) {
         status: { in: VISIBLE_STATUSES },
         expiresAt: { gt: new Date() },
       };
+      // Live city lock = match the PICKUP city only (drivers filter by where the
+      // ride starts, SCREENS §2). Flat field, so it ANDs with the cursor cleanly.
+      if (cityId) where.pickupCityId = cityId;
       // Strict "older than the cursor" in (receivedAt DESC, id DESC) order.
-      const cursorClause = receivedAt && id
-        ? { OR: [{ receivedAt: { lt: receivedAt } }, { receivedAt, id: { lt: id } }] }
-        : null;
-      // "Touching the locked city" = pickup OR drop equals it.
-      const cityClause = cityId
-        ? { OR: [{ pickupCityId: cityId }, { dropCityId: cityId }] }
-        : null;
-      if (cursorClause && cityClause) {
-        // Two independent OR groups must both hold → AND them so neither widens the other.
-        where.AND = [cursorClause, cityClause];
-      } else if (cursorClause) {
-        where.OR = cursorClause.OR;
-      } else if (cityClause) {
-        where.OR = cityClause.OR;
+      if (receivedAt && id) {
+        where.OR = [{ receivedAt: { lt: receivedAt } }, { receivedAt, id: { lt: id } }];
       }
       return prisma.ride.findMany({
         where,
