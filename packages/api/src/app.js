@@ -256,7 +256,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   // My Rides → Contacted (Step 19) + profile read/update + image-attach (Step 21b).
   const meRepo = createMeRepository({ prisma });
   const meService = createMeService({ repo: meRepo, uploads: uploadsService });
-  v1.use('/me', createMeRouter({ service: meService, requireAuth }));
+  v1.use('/me', createMeRouter({ service: meService, requireAuth, cookieSecure: config.cookie.secure }));
 
   // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole
   // writer to both Postgres (durable) and Firestore (realtime, via chatStore).

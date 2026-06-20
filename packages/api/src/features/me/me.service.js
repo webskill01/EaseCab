@@ -77,6 +77,12 @@ function createMeService({ repo, uploads }) {
       return toPublicProfile(await repo.updateProfile(userId, data));
     },
 
+    /** Soft-delete the caller's account (§7). The route clears the auth cookies after. */
+    async deleteAccount(userId) {
+      await repo.softDeleteUser(userId);
+      return { deleted: true };
+    },
+
     /** Verify a client-reported upload key and attach it to its purpose's User column. */
     async attachImage(userId, { purpose, key }) {
       const field = PURPOSE_FIELD[purpose];

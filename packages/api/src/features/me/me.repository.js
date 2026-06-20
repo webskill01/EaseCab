@@ -55,6 +55,18 @@ function createMeRepository({ prisma }) {
     async attachImage(userId, data) {
       return prisma.user.update({ where: { id: userId }, data, select: { id: true } });
     },
+
+    /**
+     * Soft-delete the caller (CLAUDE.md §7): flag the row; a cron hard-deletes after
+     * 30 days. Logging back in within that window restores it (auth.service restoreUser).
+     */
+    async softDeleteUser(userId) {
+      return prisma.user.update({
+        where: { id: userId },
+        data: { isDeleted: true, deletedAt: new Date() },
+        select: { id: true },
+      });
+    },
   };
 }
 

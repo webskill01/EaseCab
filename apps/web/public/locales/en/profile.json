@@ -80,5 +80,14 @@
     "done": "Done",
     "hint": "You can change these anytime in your phone settings"
   },
+  "deleteAccount": {
+    "action": "Delete account",
+    "title": "Delete your account?",
+    "body": "Your profile and posts are removed. Sign in again within 30 days to restore everything; after that it's deleted for good.",
+    "cancel": "Cancel",
+    "confirm": "Delete account",
+    "deleting": "Deleting…",
+    "error": "Couldn't delete your account. Please try again."
+  },
   "error": { "load": "Couldn't load your profile.", "save": "Couldn't save. Please try again." }
 }

@@ -38,3 +38,12 @@ test('attachImage maps purpose → field and stores key for private tier', async
   assert.deepStrictEqual(updates[0], { carFrontUrl: 'https://r2/car/u1/f.jpg' });
   assert.deepStrictEqual(updates[1], { rcUrl: 'kyc/u1/rc.pdf' });
 });
+
+test('deleteAccount soft-deletes the caller and reports deleted', async () => {
+  const calls = [];
+  const repo = { softDeleteUser: async (id) => { calls.push(id); return { id }; } };
+  const svc = createMeService({ repo });
+  const out = await svc.deleteAccount('u1');
+  assert.deepStrictEqual(calls, ['u1']);
+  assert.deepStrictEqual(out, { deleted: true });
+});

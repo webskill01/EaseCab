@@ -14,6 +14,7 @@ import { vehIconKeyOf } from '../lib/profileForm'
 import { CompletenessBanner } from './CompletenessBanner'
 import { VerificationCards } from './VerificationCards'
 import { AppPermsSheet } from './AppPermsSheet'
+import { DeleteAccountButton } from './DeleteAccountButton'
 
 /** Support deep-link — WhatsApp when configured, else email (mirrors shell SupportButton). */
 function supportHref() {
@@ -152,6 +153,7 @@ export function ProfileScreen() {
       </a>
 
       <LogoutButton variant="danger" />
+      <DeleteAccountButton />
       <p className="pb-2 text-center text-[11px] font-semibold text-ec-ink40">{t('version')}</p>
 
       {permsOpen && <AppPermsSheet onClose={() => setPermsOpen(false)} />}

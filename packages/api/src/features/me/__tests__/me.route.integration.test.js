@@ -135,3 +135,19 @@ test('POST /me/uploads attaches a verified car image → its URL field', async (
   assert.equal(res.body.data.field, 'carFrontUrl');
   assert.equal(res.body.data.value, 'https://r2.example/car/u1/front.jpg');
 });
+
+test('DELETE /me/account soft-deletes the caller and clears the auth cookies', async () => {
+  const userRow = { ...PROFILE_ROW, isDeleted: false, deletedAt: null };
+  const res = await request(makeApp([], userRow)).delete('/api/v1/me/account').set('Cookie', cookieFor('u1'));
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.deleted, true);
+  // Both auth cookies are cleared (Max-Age=0 / past Expires) on the response.
+  const cleared = (res.headers['set-cookie'] || []).join(';');
+  assert.match(cleared, new RegExp(AUTH_COOKIES.ACCESS_TOKEN));
+  assert.match(cleared, new RegExp(AUTH_COOKIES.REFRESH_TOKEN));
+});
+
+test('DELETE /me/account → 401 unauthenticated', async () => {
+  const res = await request(makeApp([])).delete('/api/v1/me/account');
+  assert.equal(res.status, 401);
+});

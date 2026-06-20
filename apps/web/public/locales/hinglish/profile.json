@@ -80,5 +80,14 @@
     "done": "Done",
     "hint": "Aap inhe kabhi bhi apni phone settings me badal sakte ho"
   },
+  "deleteAccount": {
+    "action": "Delete account",
+    "title": "Apna account delete karein?",
+    "body": "Aapki profile aur posts hat jaayengi. 30 din ke andar dobara sign-in karke sab kuch wapas pa sakte ho; uske baad hamesha ke liye delete ho jaayega.",
+    "cancel": "Cancel",
+    "confirm": "Delete account",
+    "deleting": "Delete ho raha hai…",
+    "error": "Aapka account delete nahi ho saka. Phir try karo."
+  },
   "error": { "load": "Aapki profile load nahi ho saki.", "save": "Save nahi ho saka. Phir try karo." }
 }
