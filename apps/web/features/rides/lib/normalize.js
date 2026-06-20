@@ -40,6 +40,8 @@ export function matchesCity(vm, cityId) {
 export function toMyPostVM(p) {
   return {
     id: p.id,
+    fromCityId: p.fromCityId ?? null, // backs the Repost chip's resolved-city prefill
+    toCityId: p.toCityId ?? null,
     from: cityLabel(p.fromCityName, p.fromCityRaw),
     to: cityLabel(p.toCityName, p.toCityRaw),
     vehicleType: p.vehicleType ?? null,

@@ -35,6 +35,23 @@ export function draftToForm(draft) {
   }
 }
 
+/**
+ * Build a Post-form draft from one of the caller's posted rides (My Rides → Repost
+ * chip). Resolved cities keep their id; raw-only cities fall back to a null-id slot
+ * (re-resolved on create). Date/time are intentionally dropped — a repost is for a
+ * NEW slot, so the user picks them fresh (matches the mockup's repost draft).
+ * @param {object} post - a toMyPostVM view-model
+ */
+export function repostDraftFromPost(post) {
+  const slot = (id, name) => (name ? { id: id ?? null, name } : null)
+  return {
+    from: slot(post.fromCityId, post.from),
+    to: slot(post.toCityId, post.to),
+    vehicle: post.vehicleType || '',
+    fare: post.fare != null ? String(post.fare) : '',
+  }
+}
+
 const isTenDigit = (p) => /^[6-9]\d{9}$/.test(p)
 
 /** Local "YYYY-MM-DD" for the date input's `min` (today — no past dates). */

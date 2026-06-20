@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Check, Trash, Chat } from '@/components/ui/icons'
+import { Check, Trash, Chat, Swap } from '@/components/ui/icons'
 import { RouteRow } from './RideCard'
 import { ageMinFrom, relParts } from '../lib/rideView'
+import { repostDraftFromPost } from '../lib/postForm'
+import { saveRepostDraft } from '../lib/repostDraft'
 
 /** Active (green dot) / Completed (grey dot) status pill — myrides.jsx StatusPill. */
 function StatusPill({ active, label }) {
@@ -32,6 +34,12 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
   const router = useRouter()
   const active = post.status === 'active'
   const rel = relParts(ageMinFrom(post.createdAt))
+  const onRepost = () => {
+    // sourceId rides along so the Post screen can delete this stale original once the
+    // repost is published — keeps the verified feed to one fresh listing, not a dupe.
+    saveRepostDraft({ ...repostDraftFromPost(post), sourceId: post.id })
+    router.push('/post')
+  }
   return (
     <article
       className={`rounded-ec-card border border-l-4 p-3.5 ${
@@ -44,7 +52,18 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
         <span className="text-[12px] font-semibold text-ec-ink60">
           {t('posted.postedAt')} · <b className="font-bold text-ec-ink">{tr(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
         </span>
-        <StatusPill active={active} label={active ? t('posted.active') : t('posted.done')} />
+        <div className="flex items-center gap-2">
+          {active && (
+            <button
+              type="button"
+              onClick={onRepost}
+              className="inline-flex h-6 items-center gap-1 rounded-ec-chip border-[1.5px] border-ec-blue/30 bg-ec-sky px-2.5 text-[11.5px] font-extrabold text-ec-blue"
+            >
+              <Swap size={13} />{t('posted.repost')}
+            </button>
+          )}
+          <StatusPill active={active} label={active ? t('posted.active') : t('posted.done')} />
+        </div>
       </div>
 
       <div className={active ? '' : 'opacity-[0.62]'}>

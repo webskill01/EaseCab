@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Check } from '@/components/ui/icons'
 import { PostForm } from './PostForm'
@@ -10,6 +11,8 @@ import { VerifyGateSheet } from './VerifyGateSheet'
 import { usePostRide } from '../hooks/usePostRide'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { emptyForm, draftToForm } from '../lib/postForm'
+import { takeRepostDraft } from '../lib/repostDraft'
+import { deleteMyPost } from '../services/myRidesApi'
 
 const TAB = { FORM: 'form', PASTE: 'paste' }
 
@@ -21,10 +24,35 @@ const TAB = { FORM: 'form', PASTE: 'paste' }
 export function PostScreen() {
   const t = useTranslations('post')
   const router = useRouter()
+  const qc = useQueryClient()
   const [tab, setTab] = useState(TAB.FORM)
   const [form, setForm] = useState(emptyForm())
+  const [repostSourceId, setRepostSourceId] = useState(null)
   const post = usePostRide()
   const { data: profile } = useProfile()
+
+  // Repost hand-off: a draft stashed by My Rides' Repost chip prefills from/to/
+  // vehicle/fare once on mount (then it's consumed). Runs before the phone effect
+  // fills phone, and only touches the fields the draft carries. The original post's
+  // id is kept aside so it can be removed after the repost publishes (below).
+  useEffect(() => {
+    const draft = takeRepostDraft()
+    if (!draft) return
+    const { sourceId, ...patch } = draft
+    setForm((f) => ({ ...f, ...patch }))
+    if (sourceId) setRepostSourceId(sourceId)
+  }, [])
+
+  // Once the repost is published, soft-delete the stale original so the verified
+  // feed shows one fresh listing, not a confusing duplicate. Best-effort cleanup
+  // (matches useChatThread/LogoutButton): a failed delete just leaves the old post.
+  useEffect(() => {
+    if (!post.posted || !repostSourceId) return
+    setRepostSourceId(null)
+    deleteMyPost(repostSourceId)
+      .catch(() => {})
+      .finally(() => qc.invalidateQueries({ queryKey: ['myposts'] }))
+  }, [post.posted, repostSourceId, qc])
 
   // F3: prefill the contact field from the signed-in user's phone, but only while
   // it's still untouched — never clobber a manual edit or a paste-prefilled value.

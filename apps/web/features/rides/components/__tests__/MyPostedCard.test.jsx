@@ -1,11 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/test/intl'
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
+const { push } = vi.hoisted(() => ({ push: vi.fn() }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 import { MyPostedCard } from '../MyPostedCard'
+import { takeRepostDraft } from '../../lib/repostDraft'
 
-const VM = { id: 'p1', from: 'Mohali', to: 'Manali', vehicleType: 'Innova', fare: 4200, date: null, status: 'active', isClosed: false }
+const VM = { id: 'p1', fromCityId: 'c1', toCityId: 'c2', from: 'Mohali', to: 'Manali', vehicleType: 'Innova', fare: 4200, date: null, status: 'active', isClosed: false }
+
+beforeEach(() => { push.mockClear(); sessionStorage.clear() })
 
 describe('MyPostedCard', () => {
   it('renders the route and fires mark-done + delete', () => {
@@ -21,5 +25,15 @@ describe('MyPostedCard', () => {
   it('hides the actions for an already-done post', () => {
     renderWithIntl(<MyPostedCard post={{ ...VM, status: 'done', isClosed: true }} onMarkDone={() => {}} onDelete={() => {}} />)
     expect(screen.queryByRole('button', { name: /mark done/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /repost/i })).toBeNull()
+  })
+
+  it('Repost chip stashes a draft and navigates to /post', () => {
+    renderWithIntl(<MyPostedCard post={VM} onMarkDone={() => {}} onDelete={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /repost/i }))
+    expect(takeRepostDraft()).toEqual({
+      from: { id: 'c1', name: 'Mohali' }, to: { id: 'c2', name: 'Manali' }, vehicle: 'Innova', fare: '4200', sourceId: 'p1',
+    })
+    expect(push).toHaveBeenCalledWith('/post')
   })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { emptyForm, draftToForm, isPostable, toCreateBody, isFutureDateTime, todayStr, POST_VEHICLES } from '../postForm'
+import { emptyForm, draftToForm, isPostable, toCreateBody, isFutureDateTime, todayStr, POST_VEHICLES, repostDraftFromPost } from '../postForm'
 
 // Fixed reference clock so the future/past assertions don't depend on the wall clock.
 const NOW = new Date('2026-06-18T12:00:00').getTime()
@@ -79,6 +79,19 @@ describe('postForm', () => {
     expect(body.fare).toBeUndefined()
     expect(body.notes).toBeUndefined()
     expect(body.fromCityRaw).toBeUndefined()
+  })
+
+  it('repostDraftFromPost builds resolved + raw city slots, vehicle, fare; drops date/time', () => {
+    const d = repostDraftFromPost({
+      id: 'p1', fromCityId: 'c1', from: 'Delhi', toCityId: null, to: 'Pinjore',
+      vehicleType: 'Innova', fare: 4200, date: '2026-06-20', status: 'active',
+    })
+    expect(d).toEqual({ from: { id: 'c1', name: 'Delhi' }, to: { id: null, name: 'Pinjore' }, vehicle: 'Innova', fare: '4200' })
+  })
+
+  it('repostDraftFromPost blanks fare/vehicle when absent', () => {
+    const d = repostDraftFromPost({ id: 'p2', fromCityId: 'c1', from: 'Delhi', toCityId: 'c2', to: 'Chd', vehicleType: null, fare: null })
+    expect(d).toEqual({ from: { id: 'c1', name: 'Delhi' }, to: { id: 'c2', name: 'Chd' }, vehicle: '', fare: '' })
   })
 
   it('toCreateBody omits empty date/time so the free-text direct post does not 422 (#9)', () => {
