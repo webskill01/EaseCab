@@ -80,8 +80,13 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
           <button type="button" onClick={() => onMarkDone(post)} className="flex h-[42px] flex-1 items-center justify-center gap-1.5 rounded-[11px] border-[1.5px] border-ec-success/40 bg-ec-successBg/60 text-[13.5px] font-bold text-ec-successTx">
             <Check size={16} />{t('posted.markDone')}
           </button>
-          <button type="button" onClick={() => router.push('/messages')} className="flex h-[42px] flex-1 items-center justify-center gap-1.5 rounded-[11px] border-[1.5px] border-ec-blue/30 bg-ec-sky text-[13.5px] font-bold text-ec-blueInk">
+          <button type="button" onClick={() => router.push('/messages')} className="relative flex h-[42px] flex-1 items-center justify-center gap-1.5 rounded-[11px] border-[1.5px] border-ec-blue/30 bg-ec-sky text-[13.5px] font-bold text-ec-blueInk">
             <Chat size={16} />{t('posted.chat')}
+            {post.chatCount > 0 && (
+              <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-ec-blue px-1.5 text-[11px] font-extrabold text-white">
+                {post.chatCount}
+              </span>
+            )}
           </button>
           <button type="button" onClick={() => onDelete(post)} aria-label={t('posted.delete')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] border-[1.5px] border-ec-danger/30 bg-ec-dangerBg text-ec-danger">
             <Trash size={16} />

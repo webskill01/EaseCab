@@ -50,6 +50,7 @@ export function toMyPostVM(p) {
     status: p.status, // 'active' | 'done'
     isClosed: p.isClosed,
     createdAt: p.createdAt,
+    chatCount: p.chatCount ?? 0, // P12-3: badge on the Chat button
   }
 }
 

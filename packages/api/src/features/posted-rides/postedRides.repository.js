@@ -143,7 +143,9 @@ function createPostedRidesRepository({ prisma, redis }) {
         where: { postedBy: userId, status: { not: POSTED_RIDE_STATUS.DELETED } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         take: limit,
-        select: POSTED_PUBLIC_SELECT,
+        // Owner-only chat count for the My-Posted card badge (P12-3). Kept out of
+        // POSTED_PUBLIC_SELECT so the public feed never carries it.
+        select: { ...POSTED_PUBLIC_SELECT, _count: { select: { chats: true } } },
       });
     },
 

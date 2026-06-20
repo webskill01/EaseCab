@@ -83,6 +83,16 @@ test('toPublicPostedRide: surfaces joined canonical city names, null when absent
   assert.equal(bare.verifiedDriver, false); // no poster join → not a verified driver
 });
 
+test('listMine: surfaces each post chat count from _count (0 when absent)', async () => {
+  const mine = [
+    { id: 'p1', status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date(), _count: { chats: 3 } },
+    { id: 'p2', status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date() },
+  ];
+  const { posts } = await createPostedRidesService({ repo: baseRepo({ mine }) }).listMine('u1');
+  assert.equal(posts[0].chatCount, 3);
+  assert.equal(posts[1].chatCount, 0);
+});
+
 test('listFeed: forwards the optional cityId filter and maps city names', async () => {
   let seen;
   const repo = baseRepo();

@@ -96,10 +96,10 @@ function createPostedRidesService({ repo, logger, uploads }) {
       return { posts: page.map(toPublicPostedRide), nextCursor };
     },
 
-    /** The caller's own posts (My Rides → posted tab). */
+    /** The caller's own posts (My Rides → posted tab), each with its chat count (P12-3). */
     async listMine(userId) {
       const rows = await repo.listMyPosts({ userId, limit: POSTED_RIDES.MINE_LIMIT });
-      return { posts: rows.map(toPublicPostedRide) };
+      return { posts: rows.map((p) => ({ ...toPublicPostedRide(p), chatCount: p._count?.chats ?? 0 })) };
     },
 
     /**

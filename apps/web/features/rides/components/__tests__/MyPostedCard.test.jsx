@@ -28,6 +28,16 @@ describe('MyPostedCard', () => {
     expect(screen.queryByRole('button', { name: /repost/i })).toBeNull()
   })
 
+  it('shows a chat-count badge when chatCount > 0, hidden otherwise', () => {
+    renderWithIntl(<MyPostedCard post={VM} onMarkDone={() => {}} onDelete={() => {}} />)
+    expect(screen.queryByText('3')).toBeNull() // VM has no chatCount
+  })
+
+  it('renders the chat-count badge value', () => {
+    renderWithIntl(<MyPostedCard post={{ ...VM, chatCount: 3 }} onMarkDone={() => {}} onDelete={() => {}} />)
+    expect(screen.getByText('3')).toBeInTheDocument()
+  })
+
   it('Repost chip stashes a draft and navigates to /post', () => {
     renderWithIntl(<MyPostedCard post={VM} onMarkDone={() => {}} onDelete={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: /repost/i }))
