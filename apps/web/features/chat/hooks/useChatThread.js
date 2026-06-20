@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { mintFirebaseToken, sendMessage as sendApi, markRead } from '../services/chatApi'
+import { mintFirebaseToken, sendMessage as sendApi, sendImageMessage as sendImageApi, markRead } from '../services/chatApi'
 import { subscribeToChat } from '../services/firestoreClient'
 
 /**
@@ -61,5 +61,19 @@ export function useChatThread(chatId, myId) {
     }
   }, [chatId, myId, qc])
 
-  return { live, pending, meta, isActive: meta.isActive !== false, send }
+  // Image send: the bytes are already in R2 (key + public previewUrl from the composer).
+  // Show an optimistic image bubble, then persist via the API (mirrors to Firestore).
+  const sendImage = useCallback(async ({ key, previewUrl }) => {
+    const tmp = { id: `tmp-${Date.now()}`, senderId: myId, messageType: 'image', attachmentUrl: previewUrl, sentAt: new Date().toISOString(), pending: true }
+    setPending((p) => [...p, tmp])
+    try {
+      await sendImageApi(chatId, key)
+      qc.invalidateQueries({ queryKey: ['chats'] })
+    } catch (e) {
+      setPending((p) => p.filter((m) => m.id !== tmp.id))
+      throw e
+    }
+  }, [chatId, myId, qc])
+
+  return { live, pending, meta, isActive: meta.isActive !== false, send, sendImage }
 }

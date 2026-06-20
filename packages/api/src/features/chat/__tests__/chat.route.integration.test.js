@@ -108,6 +108,12 @@ function makeApp(seed) {
     razorpay: { async createOrder() { return { id: 'order_x' }; } },
     surepass: {},
     chatStore: store,
+    // Fake R2 boundary so the chat_image verify gate resolves a stable public URL.
+    uploads: {
+      isStub: true,
+      async headObject() { return { exists: true, size: 1024, contentType: 'image/jpeg' }; },
+      publicUrl(key) { return `https://cdn.test/${key}`; },
+    },
   });
   app.locals._store = store;
   return app;
@@ -156,10 +162,21 @@ test('POST /chats/:id/messages → 404 when the ride has expired (read-only)', a
   assert.equal(res.status, 404);
 });
 
-test('POST /chats/:id/messages → 422 rejects an image message (deferred)', async () => {
+test('POST /chats/:id/messages → 422 rejects an image message with no attachmentKey', async () => {
   const app = makeApp({ posts: [activePost(UUID(6), 'u9')], chats: [{ id: UUID('c'), postedRideId: UUID(6), posterId: 'u9', initiatorId: 'u1' }] });
-  const res = await request(app).post(`/api/v1/chats/${UUID('c')}/messages`).set('Cookie', cookieFor('u1')).send({ messageType: 'image', messageText: 'x' });
+  const res = await request(app).post(`/api/v1/chats/${UUID('c')}/messages`).set('Cookie', cookieFor('u1')).send({ messageType: 'image' });
   assert.equal(res.status, 422);
+});
+
+test('POST /chats/:id/messages → 201 persists an image (verified key → public URL) + mirrors imageUrl', async () => {
+  const app = makeApp({ posts: [activePost(UUID(6), 'u9')], chats: [{ id: UUID('c'), postedRideId: UUID(6), posterId: 'u9', initiatorId: 'u1' }] });
+  const key = 'chat/u1/abc.jpg';
+  const res = await request(app).post(`/api/v1/chats/${UUID('c')}/messages`).set('Cookie', cookieFor('u1')).send({ messageType: 'image', attachmentKey: key });
+  assert.equal(res.status, 201);
+  assert.equal(res.body.data.messageType, 'image');
+  assert.equal(res.body.data.attachmentUrl, `https://cdn.test/${key}`);
+  assert.equal(res.body.data.messageText, null);
+  assert.equal(app.locals._store.msgs[0].imageUrl, `https://cdn.test/${key}`);
 });
 
 test('GET /chats/:id/messages → 404 for a non-participant', async () => {

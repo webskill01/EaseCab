@@ -22,7 +22,7 @@ export function ChatThread({ chatId }) {
   const qc = useQueryClient()
   const { data: profile } = useProfile()
   const myId = profile?.id
-  const { meta, live, pending, isActive, send } = useChatThread(chatId, myId)
+  const { meta, live, pending, isActive, send, sendImage } = useChatThread(chatId, myId)
 
   const messages = mergeLiveMessages(live, pending)
   const amPoster = meta.posterId === myId
@@ -72,7 +72,7 @@ export function ChatThread({ chatId }) {
           <Info size={14} />{t('thread.readOnly')}
         </div>
       )}
-      <Composer disabled={!isActive} onSend={send} />
+      <Composer disabled={!isActive} onSend={send} onSendImage={sendImage} />
     </div>
   )
 }

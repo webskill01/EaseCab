@@ -16,7 +16,11 @@
     "composerPlaceholder": "ਸੁਨੇਹਾ",
     "readOnly": "ਇਹ ਰਾਈਡ ਖਤਮ ਹੋ ਗਈ ਹੈ — ਚੈਟ ਸਿਰਫ਼ ਪੜ੍ਹਨ ਲਈ ਹੈ",
     "send": "ਭੇਜੋ",
-    "viewProfile": "ਪ੍ਰੋਫਾਈਲ ਵੇਖੋ"
+    "viewProfile": "ਪ੍ਰੋਫਾਈਲ ਵੇਖੋ",
+    "attachImage": "ਫੋਟੋ ਜੋੜੋ",
+    "attaching": "ਫੋਟੋ ਅੱਪਲੋਡ ਹੋ ਰਹੀ…",
+    "attachError": "ਜੋੜੀ ਨਹੀਂ ਜਾ ਸਕੀ। ਛੋਟੀ ਤਸਵੀਰ ਵਰਤੋ।",
+    "imageAlt": "ਸਾਂਝੀ ਕੀਤੀ ਫੋਟੋ"
   },
   "tick": {
     "sent": "ਭੇਜਿਆ",

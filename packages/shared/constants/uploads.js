@@ -29,6 +29,10 @@ const UPLOAD_PURPOSE = Object.freeze({
   // Report evidence (P12-1): a screenshot a user attaches to a ride/post report.
   // PRIVATE — may contain another party's PII (chat/phone); admin-only via presigned GET.
   report_screenshot: Object.freeze({ tier: UPLOAD_TIER.PRIVATE, keyPrefix: 'reports/', maxBytes: 5 * MB, allowedMime: IMAGE_MIME }),
+  // Chat image (P12-2): a photo shared in a 1:1 chat. PUBLIC tier (stable URL stored
+  // in the Firestore message doc → both participants render it directly from the
+  // realtime subscription, like dp/car). 10MB per CLAUDE.md §6. Key is an unguessable UUID.
+  chat_image: Object.freeze({ tier: UPLOAD_TIER.PUBLIC, keyPrefix: 'chat/', maxBytes: 10 * MB, allowedMime: IMAGE_MIME }),
 });
 
 /** The ordered tuple of valid purposes — feeds the Zod enum (uploads.schema.js). */

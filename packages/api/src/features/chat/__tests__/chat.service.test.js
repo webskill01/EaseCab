@@ -142,5 +142,17 @@ test('sendMessage: persists to PG then mirrors to Firestore, returns the public 
   assert.equal(msg.id, 'm1');
   assert.equal(msg.messageText, 'hi');
   assert.equal(store.calls.msg.length, 1);
-  assert.deepEqual(store.calls.msg[0], { chatId: 'ch1', messageId: 'm1', senderId: 'u1', type: 'text', text: 'hi', sentAt: msg.sentAt });
+  assert.deepEqual(store.calls.msg[0], { chatId: 'ch1', messageId: 'm1', senderId: 'u1', type: 'text', text: 'hi', imageUrl: null, sentAt: msg.sentAt });
+});
+
+test('sendMessage: an image verifies the key, stores the public URL, mirrors imageUrl (no text)', async () => {
+  const store = spyStore();
+  let verified = null;
+  const uploads = { verifyUpload: async (a) => { verified = a; return { key: a.key, publicUrl: 'https://cdn/chat/u1/x.jpg' }; } };
+  const svc = createChatService({ repo: baseRepo(), chatStore: store, uploads });
+  const msg = await svc.sendMessage('u1', 'ch1', { messageType: 'image', attachmentKey: 'chat/u1/x.jpg' });
+  assert.deepEqual(verified, { userId: 'u1', purpose: 'chat_image', key: 'chat/u1/x.jpg' });
+  assert.equal(msg.attachmentUrl, 'https://cdn/chat/u1/x.jpg');
+  assert.equal(msg.messageText, null);
+  assert.deepEqual(store.calls.msg[0], { chatId: 'ch1', messageId: 'm1', senderId: 'u1', type: 'image', text: null, imageUrl: 'https://cdn/chat/u1/x.jpg', sentAt: msg.sentAt });
 });

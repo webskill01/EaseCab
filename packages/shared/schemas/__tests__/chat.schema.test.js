@@ -30,9 +30,22 @@ test('send: accepts a trimmed non-empty text, defaults messageType to text', () 
   assert.equal(r.data.messageText, 'hello');
 });
 
-test('send: rejects empty text, over-max text, and image type (deferred)', () => {
+test('send: rejects empty text, over-max text, and unknown keys', () => {
   assert.equal(sendMessageSchema.safeParse({ messageText: '' }).success, false);
   assert.equal(sendMessageSchema.safeParse({ messageText: 'x'.repeat(2001) }).success, false);
-  assert.equal(sendMessageSchema.safeParse({ messageType: 'image', messageText: 'hi' }).success, false);
   assert.equal(sendMessageSchema.safeParse({ messageText: 'hi', extra: 1 }).success, false);
+});
+
+test('send: accepts an image message with an attachmentKey and no text', () => {
+  const r = sendMessageSchema.safeParse({ messageType: 'image', attachmentKey: 'chat/u1/a.jpg' });
+  assert.equal(r.success, true);
+  assert.equal(r.data.messageType, 'image');
+  assert.equal(r.data.attachmentKey, 'chat/u1/a.jpg');
+});
+
+test('send: enforces the right field per type', () => {
+  // image without a key, image with text, text with an attachment → all rejected
+  assert.equal(sendMessageSchema.safeParse({ messageType: 'image' }).success, false);
+  assert.equal(sendMessageSchema.safeParse({ messageType: 'image', attachmentKey: 'chat/u1/a.jpg', messageText: 'hi' }).success, false);
+  assert.equal(sendMessageSchema.safeParse({ messageText: 'hi', attachmentKey: 'chat/u1/a.jpg' }).success, false);
 });

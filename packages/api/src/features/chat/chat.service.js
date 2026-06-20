@@ -48,6 +48,7 @@ function toPublicMessage(m) {
     senderId: m.senderId,
     messageType: m.messageType,
     messageText: m.messageText ?? null,
+    attachmentUrl: m.attachmentUrl ?? null,
     sentAt: m.sentAt,
   };
 }
@@ -63,8 +64,9 @@ function toPublicMessage(m) {
  * @param {object} deps
  * @param {ReturnType<import('./chat.repository').createChatRepository>} deps.repo
  * @param {{ createChatDoc: Function, appendMessage: Function }} deps.chatStore
+ * @param {{ verifyUpload: Function }} [deps.uploads] - R2 verify gate (image messages)
  */
-function createChatService({ repo, chatStore }) {
+function createChatService({ repo, chatStore, uploads }) {
   return {
     /** Open (or return) the 1:1 chat for a posted ride, behind the verified-contact gate. */
     async openChat(initiatorId, { postedRideId }) {
@@ -133,22 +135,34 @@ function createChatService({ repo, chatStore }) {
     },
 
     /**
-     * Send a text message. NOT_FOUND if the caller isn't a participant OR the chat
-     * is read-only (ride expired/closed). Postgres first (durable), then Firestore
-     * (realtime mirror).
+     * Send a text OR image message. NOT_FOUND if the caller isn't a participant OR the
+     * chat is read-only (ride expired/closed). An image carries an `attachmentKey` from
+     * a `chat_image` upload, re-verified here (owner/size/MIME) → stored as a stable
+     * public URL. Postgres first (durable), then Firestore (realtime mirror).
      */
-    async sendMessage(userId, chatId, { messageText }) {
+    async sendMessage(userId, chatId, { messageType = MESSAGE_TYPE.TEXT, messageText, attachmentKey }) {
       const writable = await repo.getWritableChat(chatId, userId);
       if (!writable) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
-      const msg = await repo.insertMessage({ chatId, senderId: userId, messageText });
+      const isImage = messageType === MESSAGE_TYPE.IMAGE;
+      const attachmentUrl = isImage
+        ? (await uploads.verifyUpload({ userId, purpose: 'chat_image', key: attachmentKey })).publicUrl
+        : null;
+      const msg = await repo.insertMessage({
+        chatId,
+        senderId: userId,
+        messageType,
+        messageText: isImage ? null : messageText,
+        attachmentUrl,
+      });
       await chatStore.appendMessage({
         chatId,
         messageId: msg.id,
         senderId: userId,
-        type: MESSAGE_TYPE.TEXT,
-        text: messageText,
+        type: messageType,
+        text: isImage ? null : messageText,
+        imageUrl: attachmentUrl,
         sentAt: msg.sentAt,
       });
       return toPublicMessage(msg);

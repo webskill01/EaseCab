@@ -28,6 +28,12 @@ test('report_screenshot is private 5MB images-only (evidence may hold PII)', () 
   assert.ok(!UPLOAD_PURPOSE.report_screenshot.allowedMime.includes('application/pdf'));
 });
 
+test('chat_image is public 10MB images-only (rendered via stable URL in Firestore)', () => {
+  assert.equal(UPLOAD_PURPOSE.chat_image.tier, UPLOAD_TIER.PUBLIC);
+  assert.equal(UPLOAD_PURPOSE.chat_image.maxBytes, 10 * 1024 * 1024);
+  assert.ok(!UPLOAD_PURPOSE.chat_image.allowedMime.includes('application/pdf'));
+});
+
 test('mime→ext map and frozen table', () => {
   assert.equal(UPLOAD_MIME_EXT['image/jpeg'], 'jpg');
   assert.equal(UPLOAD_MIME_EXT['application/pdf'], 'pdf');

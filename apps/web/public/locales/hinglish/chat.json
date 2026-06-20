@@ -16,7 +16,11 @@
     "composerPlaceholder": "Message",
     "readOnly": "Yeh ride khatam ho gayi hai — chat sirf padhne ke liye hai",
     "send": "Bhejo",
-    "viewProfile": "Profile dekho"
+    "viewProfile": "Profile dekho",
+    "attachImage": "Photo add karein",
+    "attaching": "Photo upload ho rahi…",
+    "attachError": "Add nahi hui. Choti image try karein.",
+    "imageAlt": "Share ki gayi photo"
   },
   "tick": {
     "sent": "Bheja",

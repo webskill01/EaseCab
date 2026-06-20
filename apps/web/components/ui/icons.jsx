@@ -278,6 +278,17 @@ export function Plus({ size = 24, className }) {
   )
 }
 
+/** Image — chat photo attach. */
+export function Image({ size = 22, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base}>
+      <rect x="3" y="3" width="18" height="18" rx="2.5" />
+      <circle cx="8.5" cy="8.5" r="1.6" />
+      <path d="M21 15l-5-5L5 21" />
+    </svg>
+  )
+}
+
 /** List — My Rides tab. */
 export function List({ size = 22, className }) {
   return (

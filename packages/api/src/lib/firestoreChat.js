@@ -18,7 +18,7 @@ const { FIRESTORE_PATHS } = require('@easecab/shared');
  * @param {{ projectId: string, clientEmail: string, privateKey: string }} creds
  * @returns {{
  *   createChatDoc(args: { chatId: string, postedRideId: string, posterId: string, initiatorId: string }): Promise<void>,
- *   appendMessage(args: { chatId: string, messageId: string, senderId: string, type: string, text: string, sentAt: Date }): Promise<void>,
+ *   appendMessage(args: { chatId: string, messageId: string, senderId: string, type: string, text: string|null, imageUrl: string|null, sentAt: Date }): Promise<void>,
  *   setLastRead(args: { chatId: string, role: 'initiator' | 'poster', at: Date }): Promise<void>
  * }}
  */
@@ -42,12 +42,14 @@ function createChatStore({ projectId, clientEmail, privateKey }) {
       );
     },
 
-    /** Append a message under the chat, keyed by the same UUID as the PG row. */
-    async appendMessage({ chatId, messageId, senderId, type, text, sentAt }) {
+    /** Append a message under the chat, keyed by the same UUID as the PG row. An image
+     *  message carries `imageUrl` (stable public R2 URL) instead of `text`. */
+    async appendMessage({ chatId, messageId, senderId, type, text, imageUrl, sentAt }) {
       await db.doc(FIRESTORE_PATHS.messageDoc(chatId, messageId)).set({
         senderId,
         type,
-        text,
+        text: text ?? null,
+        imageUrl: imageUrl ?? null,
         sentAt,
       });
     },

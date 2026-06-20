@@ -20,6 +20,11 @@ export function MessageBubble({ message, myId, otherLastReadAt }) {
   const t = useTranslations('chat')
   const mine = message.senderId === myId
   const tick = tickState(message, myId, otherLastReadAt)
+  // Tolerant field reads: Firestore docs use type/text/imageUrl; the API + optimistic
+  // bubbles use messageType/messageText/attachmentUrl.
+  const isImage = (message.messageType ?? message.type) === 'image'
+  const imageUrl = message.attachmentUrl ?? message.imageUrl
+  const text = message.messageText ?? message.text
   return (
     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
       <div
@@ -27,7 +32,12 @@ export function MessageBubble({ message, myId, otherLastReadAt }) {
           mine ? 'rounded-br-[5px] bg-ec-blue text-white' : 'rounded-bl-[5px] border border-ec-line bg-white text-ec-ink'
         }`}
       >
-        <span className="block whitespace-pre-wrap break-words leading-[1.4]">{message.messageText}</span>
+        {isImage && imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- dynamic R2 URL, same as DpUploader
+          <img src={imageUrl} alt={t('thread.imageAlt')} className="mb-0.5 max-h-64 w-full rounded-lg object-cover" />
+        ) : (
+          <span className="block whitespace-pre-wrap break-words leading-[1.4]">{text}</span>
+        )}
         <span className="mt-[3px] flex items-center justify-end gap-1">
           <span className={`text-[10px] font-semibold ${mine ? 'text-white/70' : 'text-ec-ink40'}`}>{bubbleTime(message.sentAt)}</span>
           {mine && tick !== 'none' && (

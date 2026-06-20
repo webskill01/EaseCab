@@ -34,13 +34,14 @@ const CHAT_LIST_SELECT = Object.freeze({
   messages: { orderBy: { sentAt: 'desc' }, take: 1, select: { messageText: true, senderId: true, sentAt: true } },
 });
 
-/** Message columns that may reach a client. attachmentUrl/readAt deferred (Step 22). */
+/** Message columns that may reach a client (readAt is surfaced via tick state, not here). */
 const MESSAGE_SELECT = Object.freeze({
   id: true,
   chatId: true,
   senderId: true,
   messageType: true,
   messageText: true,
+  attachmentUrl: true,
   sentAt: true,
 });
 
@@ -144,10 +145,10 @@ function createChatRepository({ prisma }) {
     },
 
     /** Insert a text message + bump the chat's lastMessageAt, atomically. */
-    async insertMessage({ chatId, senderId, messageText }) {
+    async insertMessage({ chatId, senderId, messageType = MESSAGE_TYPE.TEXT, messageText = null, attachmentUrl = null }) {
       return prisma.$transaction(async (tx) => {
         const msg = await tx.chatMessage.create({
-          data: { chatId, senderId, messageType: MESSAGE_TYPE.TEXT, messageText },
+          data: { chatId, senderId, messageType, messageText, attachmentUrl },
           select: MESSAGE_SELECT,
         });
         await tx.chat.update({ where: { id: chatId }, data: { lastMessageAt: msg.sentAt } });

@@ -16,7 +16,11 @@
     "composerPlaceholder": "Message",
     "readOnly": "This ride has expired — chat is read-only",
     "send": "Send",
-    "viewProfile": "View profile"
+    "viewProfile": "View profile",
+    "attachImage": "Attach photo",
+    "attaching": "Uploading photo…",
+    "attachError": "Couldn't attach. Try a smaller image.",
+    "imageAlt": "Shared photo"
   },
   "tick": {
     "sent": "Sent",

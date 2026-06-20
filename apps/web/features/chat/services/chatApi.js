@@ -26,6 +26,15 @@ export async function sendMessage(chatId, messageText) {
   return data
 }
 
+/** Send an image message by its verified R2 key (from a chat_image presign). @returns {Promise<object>} */
+export async function sendImageMessage(chatId, attachmentKey) {
+  const { data } = await apiFetch(`/chats/${chatId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ messageType: 'image', attachmentKey }),
+  })
+  return data
+}
+
 /** Mark the caller's inbound messages in a chat read (read receipts). */
 export async function markRead(chatId) {
   await apiFetch(`/chats/${chatId}/read`, { method: 'POST' })

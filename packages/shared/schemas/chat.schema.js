@@ -17,19 +17,26 @@ const chatMessagesQuerySchema = z.object({
 });
 
 /**
- * Send a text message. `messageType` defaults to text; image is rejected until R2
- * presigned upload lands (Step 22) — the refine keeps the 400 at the validation
- * layer so the service never sees an image. `messageText` is required + bounded.
+ * Send a message. `messageType` defaults to text. A text message carries a bounded
+ * `messageText` (no attachment); an image message carries an `attachmentKey` (an R2
+ * key from a `chat_image` presigned upload, re-verified server-side) and no text.
+ * The superRefine enforces exactly the right field per type at the validation layer.
  */
 const sendMessageSchema = z
   .object({
     messageType: z.enum(Object.values(MESSAGE_TYPE)).default(MESSAGE_TYPE.TEXT),
-    messageText: z.string().trim().min(1).max(CHAT.TEXT_MAX),
+    messageText: z.string().trim().min(1).max(CHAT.TEXT_MAX).optional(),
+    attachmentKey: z.string().trim().min(1).optional(),
   })
   .strict()
-  .refine((d) => d.messageType === MESSAGE_TYPE.TEXT, {
-    path: ['messageType'],
-    message: 'image messages are not yet supported',
+  .superRefine((d, ctx) => {
+    if (d.messageType === MESSAGE_TYPE.IMAGE) {
+      if (!d.attachmentKey) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['attachmentKey'], message: 'attachmentKey is required for an image message' });
+      if (d.messageText) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['messageText'], message: 'an image message must not carry text' });
+    } else {
+      if (!d.messageText) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['messageText'], message: 'messageText is required for a text message' });
+      if (d.attachmentKey) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['attachmentKey'], message: 'a text message must not carry an attachment' });
+    }
   });
 
 module.exports = { chatOpenSchema, chatIdParamSchema, chatMessagesQuerySchema, sendMessageSchema };
