@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Lock, Pin, BellEdit, Battery, Check } from '@/components/ui/icons'
 import { PERM } from '../lib/appPerms'
 import { useAppPerms } from '../hooks/useAppPerms'
@@ -55,13 +56,7 @@ export function AppPermsSheet({ onClose }) {
   const blockedHint = (state) => (state === PERM.DENIED ? t('perms.blocked') : t('perms.phoneHint'))
   return (
     <BottomSheet onClose={onClose} label={t('perms.title')}>
-      <div className="mb-3 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ec-sky text-ec-blue"><Lock size={20} /></span>
-        <div>
-          <h2 className="text-[17px] font-extrabold text-ec-ink">{t('perms.title')}</h2>
-          <p className="text-[12.5px] font-medium text-ec-ink60">{t('perms.sub')}</p>
-        </div>
-      </div>
+      <SheetTitle icon={<Lock size={20} />} tone="sky" title={t('perms.title')} sub={t('perms.sub')} />
 
       <div className="flex flex-col gap-2.5">
         <PermRow icon={<Pin size={20} />} title={t('perms.location')} sub={t('perms.locationSub')} state={location} hint={blockedHint(location)} onAllow={requestLocation} />

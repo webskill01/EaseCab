@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
-import { Crown, Whatsapp, Phone, Swap } from '@/components/ui/icons'
+import { SheetTitle } from '@/components/ui/SheetTitle'
+import { Crown, Whatsapp, Phone, Swap, Check } from '@/components/ui/icons'
 import { contactRide, contactVerifiedRide } from '../services/ridesApi'
 import { MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { RIDE_KIND } from '../lib/rideView'
@@ -57,12 +58,8 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
   if (gatedOut) {
     return (
       <BottomSheet onClose={onClose} label={t('gate.contactTitle')}>
+        <SheetTitle icon={<Crown size={22} />} tone="blue" title={t('gate.contactTitle')} sub={t('gate.contactSub')} />
         <div className="flex flex-col gap-3 pb-2">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ec-sky text-ec-blue"><Crown size={26} /></div>
-            <h2 className="text-[18px] font-extrabold text-ec-ink">{t('gate.contactTitle')}</h2>
-            <p className="max-w-[300px] text-[13.5px] font-medium text-ec-ink60">{t('gate.contactSub')}</p>
-          </div>
           <RouteLine ride={ride} />
           <div className="flex items-center gap-3 rounded-2xl bg-ec-sky px-4 py-3.5">
             <span className="text-[30px] font-extrabold leading-none tracking-tight text-ec-blue">₹149<span className="text-[14px] font-bold text-ec-ink60">{t('gate.perMonth')}</span></span>
@@ -82,8 +79,8 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
   const phone = reveal.data?.phoneNumber
   return (
     <BottomSheet onClose={onClose} label={t('reveal.title')}>
+      <SheetTitle icon={<Check size={22} />} tone="success" title={t('reveal.title')} />
       <div className="flex flex-col gap-3 pb-2">
-        <h2 className="text-center text-[18px] font-extrabold text-ec-ink">{t('reveal.title')}</h2>
         <RouteLine ride={ride} />
         {!phone ? (
           <button

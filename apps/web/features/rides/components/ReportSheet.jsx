@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Flag, Check } from '@/components/ui/icons'
 import { reportRide } from '../services/reportApi'
 
@@ -30,23 +31,15 @@ export function ReportSheet({ ride, onClose }) {
   if (submit.isSuccess) {
     return (
       <BottomSheet onClose={onClose} label={t('report.submitted')}>
-        <div className="flex flex-col items-center gap-3 pb-2 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ec-successBg text-ec-success"><Check size={26} /></div>
-          <h2 className="text-[18px] font-extrabold text-ec-ink">{t('report.submitted')}</h2>
-        </div>
+        <SheetTitle icon={<Check size={22} />} tone="success" title={t('report.submitted')} />
       </BottomSheet>
     )
   }
 
   return (
     <BottomSheet onClose={onClose} label={t('report.title')}>
+      <SheetTitle icon={<Flag size={20} />} tone="danger" title={t('report.title')} sub={t('report.reasonQ')} />
       <div className="flex flex-col gap-3 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex text-ec-danger"><Flag size={18} /></span>
-          <h2 className="text-[17px] font-extrabold text-ec-ink">{t('report.title')}</h2>
-        </div>
-        <p className="text-[13px] font-medium text-ec-ink60">{t('report.reasonQ')}</p>
-
         <div className="flex flex-wrap gap-2">
           {REASONS.map((r) => {
             const on = reason === r

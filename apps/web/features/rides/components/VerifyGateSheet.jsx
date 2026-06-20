@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Shield } from '@/components/ui/icons'
 
 /**
@@ -15,11 +16,9 @@ export function VerifyGateSheet({ onClose, onVerify }) {
   const t = useTranslations('post')
   return (
     <BottomSheet onClose={onClose} label={t('gate.title')}>
-      <div className="flex flex-col items-center gap-3 pb-2 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ec-sky text-ec-blue"><Shield size={26} /></div>
-        <h2 className="text-[18px] font-extrabold text-ec-ink">{t('gate.title')}</h2>
-        <p className="max-w-[300px] text-[13.5px] font-medium text-ec-ink60">{t('gate.body')}</p>
-        <button type="button" onClick={onVerify} className="mt-1 h-[52px] w-full rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue">
+      <SheetTitle icon={<Shield size={22} />} tone="blueInk" title={t('gate.title')} sub={t('gate.body')} />
+      <div className="flex flex-col gap-2.5 pb-2">
+        <button type="button" onClick={onVerify} className="h-[52px] w-full rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue">
           {t('gate.cta')}
         </button>
         <button type="button" onClick={onClose} className="h-[46px] w-full rounded-xl bg-ec-bg text-[14.5px] font-bold text-ec-ink60">
