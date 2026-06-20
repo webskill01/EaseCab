@@ -79,7 +79,8 @@
     "settings": "सेटिंग्स",
     "appPermissions": "ऐप अनुमतियाँ",
     "privacy": "प्राइवेसी नीति",
-    "terms": "नियम व शर्तें"
+    "terms": "नियम व शर्तें",
+    "notificationsCount": "{count, plural, one {# शहर} other {# शहर}}"
   },
   "perms": {
     "title": "ऐप अनुमतियाँ",

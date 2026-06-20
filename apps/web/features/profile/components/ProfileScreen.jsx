@@ -9,6 +9,7 @@ import { LogoutButton } from '@/features/shell/components/LogoutButton'
 import { LanguageMenu } from '@/features/shell/components/LanguageMenu'
 import { useMembership } from '@/features/subscription/hooks/useMembership'
 import { membershipView, MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
+import { usePushPreferences } from '@/features/notifications/hooks/usePushPreferences'
 import { useProfile } from '../hooks/useProfile'
 import { vehIconKeyOf } from '../lib/profileForm'
 import { CompletenessBanner } from './CompletenessBanner'
@@ -50,6 +51,9 @@ export function ProfileScreen() {
   const [permsOpen, setPermsOpen] = useState(false)
   const { data: profile, isLoading, isError } = useProfile()
   const { data: sub } = useMembership()
+  // Subscribed alert-city count for the Notifications row (P12-6); 0 → no value shown.
+  const { prefs: pushPrefs } = usePushPreferences()
+  const alertCityCount = pushPrefs?.notificationCities?.length ?? 0
 
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
   if (isError || !profile) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
@@ -134,7 +138,7 @@ export function ProfileScreen() {
           Language hosts the existing LanguageMenu dropdown so the row isn't a nested button. */}
       <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
         <NavRow icon={<Crown size={18} />} label={t('nav.membership')} value={memValue} valueTint={memTint} onClick={() => router.push('/membership')} />
-        <NavRow icon={<BellEdit size={18} />} label={t('nav.notifications')} onClick={() => router.push('/notifications')} />
+        <NavRow icon={<BellEdit size={18} />} label={t('nav.notifications')} value={alertCityCount > 0 ? t('nav.notificationsCount', { count: alertCityCount }) : undefined} onClick={() => router.push('/notifications')} />
         <div className="flex w-full items-center gap-3 px-4 py-3.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><Globe size={18} /></span>
           <span className="flex-1 text-[14px] font-bold text-ec-ink">{t('nav.language')}</span>

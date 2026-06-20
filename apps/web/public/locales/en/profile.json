@@ -79,7 +79,8 @@
     "settings": "Settings",
     "appPermissions": "App permissions",
     "privacy": "Privacy Policy",
-    "terms": "Terms & Conditions"
+    "terms": "Terms & Conditions",
+    "notificationsCount": "{count, plural, one {# city} other {# cities}}"
   },
   "perms": {
     "title": "App permissions",

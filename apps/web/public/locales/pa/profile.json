@@ -79,7 +79,8 @@
     "settings": "ਸੈਟਿੰਗਾਂ",
     "appPermissions": "ਐਪ ਅਨੁਮਤੀਆਂ",
     "privacy": "ਪ੍ਰਾਈਵੇਸੀ ਨੀਤੀ",
-    "terms": "ਨਿਯਮ ਤੇ ਸ਼ਰਤਾਂ"
+    "terms": "ਨਿਯਮ ਤੇ ਸ਼ਰਤਾਂ",
+    "notificationsCount": "{count, plural, one {# ਸ਼ਹਿਰ} other {# ਸ਼ਹਿਰ}}"
   },
   "perms": {
     "title": "ਐਪ ਅਨੁਮਤੀਆਂ",
