@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * Settings E2E (Step 21d). AuthGuard probe + /push/preferences + /cities are
- * network-mocked. A small mutable prefs object lets PATCH → refetch reflect changes.
+ * Notifications E2E (Profile → Notifications). AuthGuard probe + /push/preferences
+ * + /cities are network-mocked. A small mutable prefs object lets PATCH → refetch
+ * reflect changes.
  */
 const ok = (data, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify({ success: true, data }) })
 
@@ -21,7 +22,7 @@ test('toggles a ride-alert preference and adds an alert city', async ({ page }) 
   })
   await page.route('**/api/v1/cities**', (r) => r.fulfill(ok({ cities: [{ id: 'c2', canonicalName: 'Mohali' }] })))
 
-  await page.goto('/settings')
+  await page.goto('/notifications')
 
   // Toggle "Verified ride alerts" on.
   const postedToggle = page.getByRole('switch', { name: 'Verified ride alerts' })
