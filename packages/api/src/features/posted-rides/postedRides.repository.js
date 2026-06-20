@@ -7,6 +7,10 @@ const { getCachedSub, setCachedSub } = require('../../lib/subscriptionCache');
 /** Columns of a posted ride that may reach a client — never `phone` (§3.10). */
 const POSTED_PUBLIC_SELECT = Object.freeze({
   id: true,
+  postedBy: true,
+  // Verified-driver poster block on the feed card (dirA). Name is public (§3.10 —
+  // PII is phone/Aadhaar, not display name); flags derive the Verified badge.
+  poster: { select: { name: true, baseCity: true, aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true } },
   fromCityId: true,
   toCityId: true,
   fromCityRaw: true,

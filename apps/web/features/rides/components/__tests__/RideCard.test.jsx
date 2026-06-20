@@ -4,6 +4,9 @@ import userEvent from '@testing-library/user-event'
 import { renderWithIntl } from '@/test/intl'
 import { RideCard } from '../RideCard'
 
+const push = vi.fn()
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
+
 const NOW = Date.parse('2026-06-06T10:00:00.000Z')
 const ago = (min) => new Date(NOW - min * 60000).toISOString()
 
@@ -37,6 +40,20 @@ describe('RideCard', () => {
     renderWithIntl(<RideCard ride={botRide({ kind: 'verified', status: 'verified', fare: 4200 })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
     expect(screen.getByText('Verified')).toBeInTheDocument()
     expect(screen.getByText(/₹4200/)).toBeInTheDocument()
+  })
+
+  it('verified ride with a poster shows the poster block and links to their profile', async () => {
+    const user = userEvent.setup()
+    const ride = botRide({ kind: 'verified', status: 'verified', posterId: 'u9', posterName: 'Gurpreet', posterBaseCity: 'Patiala', verifiedDriver: true })
+    renderWithIntl(<RideCard ride={ride} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    expect(screen.getByText('Gurpreet')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /view profile/i }))
+    expect(push).toHaveBeenCalledWith('/u/u9')
+  })
+
+  it('verified ride without a posterId renders no poster block', () => {
+    renderWithIntl(<RideCard ride={botRide({ kind: 'verified', status: 'verified' })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: /view profile/i })).toBeNull()
   })
 
   it('fires onContact with the tapped channel', async () => {

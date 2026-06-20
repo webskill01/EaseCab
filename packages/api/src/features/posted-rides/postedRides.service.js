@@ -17,6 +17,11 @@ const TTL_MS = POSTED_RIDES.TTL_HOURS * 3600_000;
 function toPublicPostedRide(p) {
   return {
     id: p.id,
+    // Poster identity for the verified-card profile link (T3-2 feed entry point).
+    posterId: p.postedBy ?? null,
+    posterName: p.poster?.name ?? null,
+    posterBaseCity: p.poster?.baseCity ?? null,
+    verifiedDriver: Boolean(p.poster && p.poster.aadhaarVerified && p.poster.dlSubmitted && p.poster.rcSubmitted),
     fromCityId: p.fromCityId ?? null,
     toCityId: p.toCityId ?? null,
     fromCityRaw: p.fromCityRaw ?? null,

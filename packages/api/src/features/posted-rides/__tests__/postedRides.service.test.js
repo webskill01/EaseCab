@@ -63,16 +63,24 @@ test('createPost: sets a ~24h expiresAt and returns the masked shape (no phone)'
 
 test('toPublicPostedRide: surfaces joined canonical city names, null when absent, no phone', () => {
   const named = toPublicPostedRide({
-    id: 'p1', fromCityId: 'c1', toCityId: 'c2', fromCityRaw: 'patiala', toCityRaw: 'delhi',
+    id: 'p1', postedBy: 'u1', fromCityId: 'c1', toCityId: 'c2', fromCityRaw: 'patiala', toCityRaw: 'delhi',
     fromCity: { canonicalName: 'Patiala' }, toCity: { canonicalName: 'Delhi' },
+    poster: { name: 'Gurpreet', baseCity: 'Patiala', aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true },
     status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date(), phone: '+919876543210',
   });
   assert.equal(named.fromCityName, 'Patiala');
   assert.equal(named.toCityName, 'Delhi');
   assert.equal('phone' in named, false);
+  assert.equal(named.posterId, 'u1');
+  assert.equal(named.posterName, 'Gurpreet');
+  assert.equal(named.posterBaseCity, 'Patiala');
+  assert.equal(named.verifiedDriver, true);
   const bare = toPublicPostedRide({ id: 'p2', fromCity: null, status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date() });
   assert.equal(bare.fromCityName, null);
   assert.equal(bare.toCityName, null);
+  assert.equal(bare.posterId, null);
+  assert.equal(bare.posterName, null);
+  assert.equal(bare.verifiedDriver, false); // no poster join → not a verified driver
 });
 
 test('listFeed: forwards the optional cityId filter and maps city names', async () => {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Swap, Shield, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
 import { statusOf, relParts, ageMinFrom, vehIconKey, pickCityName, RIDE_DISPLAY_STATUS } from '../lib/rideView'
@@ -80,6 +81,35 @@ function CardActions({ ride, disabled, onContact, onReport }) {
   )
 }
 
+/** Verified-ride poster block (dirA): initials avatar + name + Verified-driver line,
+ * with a "View profile" button → /u/[id]. Only rendered when the ride carries a posterId. */
+function PosterRow({ ride }) {
+  const t = useTranslations('rides')
+  const router = useRouter()
+  const initial = (ride.posterName || '?').trim().charAt(0).toUpperCase()
+  return (
+    <div className="mt-2.5 flex items-center gap-2.5 border-t border-ec-line pt-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[15px] font-extrabold text-ec-blue">{initial}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-[13.5px] font-extrabold text-ec-ink">{ride.posterName || '—'}</span>
+          {ride.verifiedDriver && <span className="inline-flex text-ec-success"><Shield size={13} /></span>}
+        </div>
+        <div className="truncate text-[11.5px] font-medium text-ec-ink60">
+          {[ride.posterBaseCity, ride.verifiedDriver ? t('card.verifiedDriver') : null].filter(Boolean).join(' · ')}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => router.push(`/u/${ride.posterId}`)}
+        className="h-8 shrink-0 rounded-[9px] bg-ec-blueInk px-3 text-[12px] font-bold text-white"
+      >
+        {t('card.viewProfile')}
+      </button>
+    </div>
+  )
+}
+
 /**
  * Ride card — CardA "Professional" (design_handoff dirA.jsx). Bot rides grey out +
  * read "Likely booked" past the 5-min fresh window; verified rides get a blue accent
@@ -119,6 +149,8 @@ export function RideCard({ ride, now, onContact, onReport }) {
       </div>
 
       <RouteRow from={from} to={to} />
+
+      {verified && ride.posterId ? <PosterRow ride={ride} /> : null}
 
       <div className="mt-2.5 border-t border-ec-line pt-2.5">
         <div className="flex items-center gap-1.5 text-[13px] font-semibold text-ec-ink60">
