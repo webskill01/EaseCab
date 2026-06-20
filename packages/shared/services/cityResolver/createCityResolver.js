@@ -153,15 +153,25 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
    * Inserts with occurrence_count 1 (and a suggestion if one exists), or
    * increments occurrence_count on a repeat. Never overwrites an existing
    * suggestion (admin's resolution wins).
+   *
+   * Best-effort (E2 #24 hardening): a failed queue write is logged but NEVER
+   * thrown. Previously a blip on this upsert bubbled to resolve()'s INTERNAL_ERROR
+   * and the bot silently dropped the unresolved string. Degrading here keeps the
+   * ride save intact (raw fragment still stored) and lets a recurrence re-queue
+   * the string on its next occurrence (occurrence_count then increments).
    * @param {string} normalized
    * @param {string|null} suggestedCityId
    */
   async function queueUnresolved(normalized, suggestedCityId) {
-    await prisma.unresolvedCityString.upsert({
-      where: { rawText: normalized },
-      create: { rawText: normalized, occurrenceCount: 1, suggestedCityId },
-      update: { occurrenceCount: { increment: 1 } },
-    });
+    try {
+      await prisma.unresolvedCityString.upsert({
+        where: { rawText: normalized },
+        create: { rawText: normalized, occurrenceCount: 1, suggestedCityId },
+        update: { occurrenceCount: { increment: 1 } },
+      });
+    } catch (err) {
+      logger.warn?.({ err: err.message }, 'cityResolver: queueUnresolved write failed (non-fatal) — will re-queue on recurrence');
+    }
   }
 
   /**

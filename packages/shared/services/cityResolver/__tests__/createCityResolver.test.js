@@ -206,3 +206,18 @@ test('DB failure throws AppError(INTERNAL_ERROR)', async () => {
     (err) => err.name === 'AppError' && err.code === 'INTERNAL_ERROR' && err.statusCode === 500,
   );
 });
+
+// E2 #24 hardening: a failed queue write must NOT abort resolution (previously it
+// bubbled to INTERNAL_ERROR and the bot silently dropped the unresolved string).
+test('queueUnresolved write failure degrades to unresolved instead of throwing', async () => {
+  let logged = false;
+  const prisma = makePrismaFuzzy([]); // no fuzzy candidate → falls to queueUnresolved
+  prisma.unresolvedCityString.upsert = async () => { throw new Error('queue write blip'); };
+  const logger = { warn: () => { logged = true; }, error: () => {} };
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger });
+
+  const result = await resolver.resolve('zzqq plot'); // unresolvable fragment
+  assert.equal(result.status, 'unresolved'); // resolution completed, did not throw
+  assert.equal(result.cityId, null);
+  assert.equal(logged, true); // failure surfaced as an operational warning
+});
