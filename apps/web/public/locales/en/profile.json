@@ -64,6 +64,21 @@
     "verified": "Verified",
     "underReview": "Under review"
   },
-  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} days left", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} days left", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "appPermissions": "App permissions", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "perms": {
+    "title": "App permissions",
+    "sub": "Control what EaseCab can access",
+    "location": "Location",
+    "locationSub": "Surface rides near where you drive",
+    "push": "Notifications",
+    "pushSub": "Get alerts for new matching rides",
+    "battery": "Battery optimization",
+    "batterySub": "Let background alerts arrive on time",
+    "allow": "Allow",
+    "blocked": "Blocked",
+    "phoneHint": "Phone settings",
+    "done": "Done",
+    "hint": "You can change these anytime in your phone settings"
+  },
   "error": { "load": "Couldn't load your profile.", "save": "Couldn't save. Please try again." }
 }

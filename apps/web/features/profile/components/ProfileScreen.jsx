@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe } from '@/components/ui/icons'
+import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock } from '@/components/ui/icons'
 import { env } from '@/config/env'
 import { LogoutButton } from '@/features/shell/components/LogoutButton'
 import { LanguageMenu } from '@/features/shell/components/LanguageMenu'
@@ -12,6 +13,7 @@ import { useProfile } from '../hooks/useProfile'
 import { vehIconKeyOf } from '../lib/profileForm'
 import { CompletenessBanner } from './CompletenessBanner'
 import { VerificationCards } from './VerificationCards'
+import { AppPermsSheet } from './AppPermsSheet'
 
 /** Support deep-link — WhatsApp when configured, else email (mirrors shell SupportButton). */
 function supportHref() {
@@ -44,6 +46,7 @@ export function ProfileScreen() {
   const t = useTranslations('profile')
   const locale = useLocale()
   const router = useRouter()
+  const [permsOpen, setPermsOpen] = useState(false)
   const { data: profile, isLoading, isError } = useProfile()
   const { data: sub } = useMembership()
 
@@ -139,6 +142,7 @@ export function ProfileScreen() {
       </nav>
 
       <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
+        <NavRow icon={<Lock size={16} />} tint="text-ec-amberTx" label={t('nav.appPermissions')} onClick={() => setPermsOpen(true)} />
         <NavRow icon={<Info size={16} />} tint="text-ec-ink60" label={t('nav.privacy')} onClick={() => router.push('/privacy-policy')} />
         <NavRow icon={<List size={18} />} tint="text-ec-ink60" label={t('nav.terms')} onClick={() => router.push('/terms')} last />
       </nav>
@@ -149,6 +153,8 @@ export function ProfileScreen() {
 
       <LogoutButton variant="danger" />
       <p className="pb-2 text-center text-[11px] font-semibold text-ec-ink40">{t('version')}</p>
+
+      {permsOpen && <AppPermsSheet onClose={() => setPermsOpen(false)} />}
     </div>
   )
 }

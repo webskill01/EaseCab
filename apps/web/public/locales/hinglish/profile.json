@@ -64,6 +64,21 @@
     "verified": "Verified",
     "underReview": "Review mein"
   },
-  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} din baaki", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} din baaki", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "appPermissions": "App permissions", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "perms": {
+    "title": "App permissions",
+    "sub": "Control kya EaseCab access kar sakta hai",
+    "location": "Location",
+    "locationSub": "Jahan aap gaadi chalate ho, wahan ki nearby rides dikhao",
+    "push": "Notifications",
+    "pushSub": "Nayi matching rides ke alerts pao",
+    "battery": "Battery optimization",
+    "batterySub": "Background alerts time par aane do",
+    "allow": "Allow",
+    "blocked": "Blocked",
+    "phoneHint": "Phone settings",
+    "done": "Done",
+    "hint": "Aap inhe kabhi bhi apni phone settings me badal sakte ho"
+  },
   "error": { "load": "Aapki profile load nahi ho saki.", "save": "Save nahi ho saka. Phir try karo." }
 }
