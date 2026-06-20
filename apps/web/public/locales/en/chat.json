@@ -20,7 +20,12 @@
     "attachImage": "Attach photo",
     "attaching": "Uploading photo…",
     "attachError": "Couldn't attach. Try a smaller image.",
-    "imageAlt": "Shared photo"
+    "imageAlt": "Shared photo",
+    "menu": "More options",
+    "report": "Report",
+    "block": "Block user",
+    "blockTitle": "Block this user?",
+    "blockBody": "They won't be able to message you, and you won't see this chat. You can't undo this yet."
   },
   "tick": {
     "sent": "Sent",

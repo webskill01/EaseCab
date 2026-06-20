@@ -19,4 +19,11 @@ describe('ChatRow', () => {
     expect(screen.getByText('No messages yet')).toBeInTheDocument()
     expect(screen.queryByText('0')).not.toBeInTheDocument()
   })
+
+  it('shows a verified shield only when the other party is verified', () => {
+    const plain = renderWithIntl(<ChatRow chat={{ id: 'c1', otherName: 'A', otherVerified: false, unreadCount: 0 }} />)
+    expect(plain.container.querySelector('svg')).toBeNull() // no shield (avatar is a text initial)
+    const verified = renderWithIntl(<ChatRow chat={{ id: 'c2', otherName: 'A', otherVerified: true, unreadCount: 0 }} />)
+    expect(verified.container.querySelector('svg')).not.toBeNull()
+  })
 })

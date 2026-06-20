@@ -20,7 +20,12 @@
     "attachImage": "Photo add karein",
     "attaching": "Photo upload ho rahi…",
     "attachError": "Add nahi hui. Choti image try karein.",
-    "imageAlt": "Share ki gayi photo"
+    "imageAlt": "Share ki gayi photo",
+    "menu": "Aur options",
+    "report": "Report karein",
+    "block": "User block karein",
+    "blockTitle": "Is user ko block karein?",
+    "blockBody": "Wo aapko message nahi bhej payenge, aur yeh chat nahi dikhegi. Ise abhi undo nahi kar sakte."
   },
   "tick": {
     "sent": "Bheja",

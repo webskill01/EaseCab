@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/api/client', () => ({ apiFetch: vi.fn() }))
 import { apiFetch } from '@/lib/api/client'
-import { listChats, listMessages, sendMessage, markRead, openChat, mintFirebaseToken } from '../chatApi'
+import { listChats, listMessages, sendMessage, sendImageMessage, blockUser, markRead, openChat, mintFirebaseToken } from '../chatApi'
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -38,6 +38,22 @@ describe('sendMessage', () => {
     const out = await sendMessage('c1', 'hi')
     expect(apiFetch).toHaveBeenCalledWith('/chats/c1/messages', { method: 'POST', body: JSON.stringify({ messageText: 'hi' }) })
     expect(out.messageText).toBe('hi')
+  })
+})
+
+describe('sendImageMessage', () => {
+  it('POSTs an image message with the attachment key', async () => {
+    apiFetch.mockResolvedValue({ data: { id: 'm1', messageType: 'image' } })
+    await sendImageMessage('c1', 'chat/u1/a.jpg')
+    expect(apiFetch).toHaveBeenCalledWith('/chats/c1/messages', { method: 'POST', body: JSON.stringify({ messageType: 'image', attachmentKey: 'chat/u1/a.jpg' }) })
+  })
+})
+
+describe('blockUser', () => {
+  it('POSTs /blocks with the blockedId', async () => {
+    apiFetch.mockResolvedValue({ data: {} })
+    await blockUser('u2')
+    expect(apiFetch).toHaveBeenCalledWith('/blocks', { method: 'POST', body: JSON.stringify({ blockedId: 'u2' }) })
   })
 })
 

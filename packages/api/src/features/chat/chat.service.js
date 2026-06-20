@@ -27,11 +27,15 @@ const cityName = (c, raw) => (c && c.canonicalName) || raw || null;
 function toChatListItem(c, userId, unread) {
   const amPoster = c.posterId === userId;
   const last = c.messages && c.messages[0];
+  const other = amPoster ? c.initiator : c.poster;
   return {
     id: c.id,
     postedRideId: c.postedRideId,
     isActive: c.isActive,
-    otherName: (amPoster ? c.initiator && c.initiator.name : c.poster && c.poster.name) ?? null,
+    otherName: (other && other.name) ?? null,
+    // Verified-driver shield + base-city subtitle for the chat list/header (P12-4a).
+    otherVerified: Boolean(other && other.aadhaarVerified && other.dlSubmitted && other.rcSubmitted),
+    otherBaseCity: (other && other.baseCity) ?? null,
     fromCityName: cityName(c.postedRide && c.postedRide.fromCity, c.postedRide && c.postedRide.fromCityRaw),
     toCityName: cityName(c.postedRide && c.postedRide.toCity, c.postedRide && c.postedRide.toCityRaw),
     lastMessageText: (last && last.messageText) ?? null,
@@ -76,6 +80,9 @@ function createChatService({ repo, chatStore, uploads }) {
       }
       if (post.postedBy === initiatorId) {
         throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR); // can't chat with your own post
+      }
+      if (await repo.isBlockedBetween(initiatorId, post.postedBy)) {
+        throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR); // a block (either way) bars the chat
       }
       const contacted = await repo.hasContacted(initiatorId, postedRideId);
       if (!contacted) {
@@ -143,6 +150,11 @@ function createChatService({ repo, chatStore, uploads }) {
     async sendMessage(userId, chatId, { messageType = MESSAGE_TYPE.TEXT, messageText, attachmentKey }) {
       const writable = await repo.getWritableChat(chatId, userId);
       if (!writable) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      // A block (either direction) makes the chat unwritable — same NOT_FOUND as read-only.
+      const other = writable.posterId === userId ? writable.initiatorId : writable.posterId;
+      if (await repo.isBlockedBetween(userId, other)) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
       const isImage = messageType === MESSAGE_TYPE.IMAGE;

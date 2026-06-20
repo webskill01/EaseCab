@@ -278,6 +278,17 @@ export function Plus({ size = 24, className }) {
   )
 }
 
+/** Dots — vertical ellipsis (overflow menu). */
+export function Dots({ size = 20, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={2.4}>
+      <circle cx="12" cy="5" r="0.6" />
+      <circle cx="12" cy="12" r="0.6" />
+      <circle cx="12" cy="19" r="0.6" />
+    </svg>
+  )
+}
+
 /** Image — chat photo attach. */
 export function Image({ size = 22, className }) {
   return (

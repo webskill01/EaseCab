@@ -43,6 +43,8 @@ function fakePrisma(seed = {}) {
         return contacts.has(`${userId}|${postedRideId}`) ? { id: 'rc' } : null;
       },
     },
+    // No blocks seeded in these chat-flow tests → isBlockedBetween always false.
+    userBlock: { async findFirst() { return null; } },
     chat: {
       async upsert({ where, create, select }) {
         const { postedRideId, initiatorId } = where.postedRideId_initiatorId;

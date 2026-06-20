@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { Shield } from '@/components/ui/icons'
 
 /** Short clock time for the last-activity stamp. */
 function shortTime(iso) {
@@ -27,12 +28,13 @@ export function ChatRow({ chat }) {
       onClick={() => router.push(`/messages/${chat.id}`)}
       className="flex w-full items-center gap-3 border-b border-ec-line bg-white px-4 py-[13px] text-left"
     >
-      <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-ec-sky text-[17px] font-extrabold text-ec-blue">
+      <span className={`flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold ${chat.otherVerified ? 'bg-ec-blue text-white' : 'bg-ec-sky text-ec-blue'}`}>
         {(title || '?').slice(0, 1).toUpperCase()}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-1.5">
           <span className="truncate text-[15px] font-extrabold text-ec-ink">{title}</span>
+          {chat.otherVerified && <span className="shrink-0 text-ec-success"><Shield size={14} /></span>}
           {chat.isActive === false && (
             <span className="shrink-0 rounded-[5px] bg-ec-bg px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-ec-ink40">{t('row.closed')}</span>
           )}

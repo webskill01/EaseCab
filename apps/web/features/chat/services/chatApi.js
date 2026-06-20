@@ -46,6 +46,11 @@ export async function openChat(postedRideId) {
   return data
 }
 
+/** Block a user (chat overflow menu, P12-4c). Idempotent server-side. */
+export async function blockUser(blockedId) {
+  await apiFetch('/blocks', { method: 'POST', body: JSON.stringify({ blockedId }) })
+}
+
 /** Mint a Firebase custom token for client-side Firestore chat reads. @returns {Promise<string>} */
 export async function mintFirebaseToken() {
   const { data } = await apiFetch('/auth/firebase-token', { method: 'POST' })

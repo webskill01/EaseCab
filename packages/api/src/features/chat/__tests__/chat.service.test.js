@@ -15,7 +15,8 @@ function baseRepo(over = {}) {
     async hasContacted() { return over.contacted ?? true; },
     async openChat(args) { return { id: 'ch1', isActive: true, createdAt: new Date(), lastMessageAt: null, ...args }; },
     async getParticipantChat() { return 'chat' in over ? over.chat : { id: 'ch1' }; },
-    async getWritableChat() { return 'writable' in over ? over.writable : { id: 'ch1' }; },
+    async getWritableChat() { return 'writable' in over ? over.writable : { id: 'ch1', posterId: 'u9', initiatorId: 'u1' }; },
+    async isBlockedBetween() { return over.blocked ?? false; },
     async listMyChats() { return over.chats ?? []; },
     async unreadCountsByChat() { return over.unread ?? {}; },
     async markMessagesRead() { return over.markResult ?? { count: 0 }; },
@@ -49,6 +50,11 @@ test('openChat: VALIDATION_ERROR when the initiator has not contacted the post',
   await assert.rejects(() => svc.openChat('u1', { postedRideId: 'p1' }), code('VALIDATION_ERROR'));
 });
 
+test('openChat: VALIDATION_ERROR when a block exists between the two users', async () => {
+  const svc = createChatService({ repo: baseRepo({ blocked: true }), chatStore: spyStore() });
+  await assert.rejects(() => svc.openChat('u1', { postedRideId: 'p1' }), code('VALIDATION_ERROR'));
+});
+
 test('openChat: creates PG chat + Firestore doc and returns a public chat (no phone)', async () => {
   const store = spyStore();
   const svc = createChatService({ repo: baseRepo(), chatStore: store });
@@ -77,13 +83,15 @@ test('listChats: composes other-party name, route, last-message preview and unre
   const chats = [{
     id: 'ch1', postedRideId: 'p1', posterId: 'poster', initiatorId: 'u1',
     isActive: true, lastMessageAt: new Date('2026-06-13T01:00:00.000Z'), createdAt: new Date('2026-06-12T00:00:00.000Z'),
-    initiator: { name: 'Me' }, poster: { name: 'Driver Singh' },
+    initiator: { name: 'Me' }, poster: { name: 'Driver Singh', baseCity: 'Ludhiana', aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true },
     postedRide: { fromCityRaw: null, toCityRaw: null, fromCity: { canonicalName: 'Ludhiana' }, toCity: { canonicalName: 'Delhi' } },
     messages: [{ messageText: 'on my way', senderId: 'poster', sentAt: new Date('2026-06-13T01:00:00.000Z') }],
   }];
   const svc = createChatService({ repo: baseRepo({ chats, unread: { ch1: 2 } }), chatStore: spyStore() });
   const { chats: out } = await svc.listChats('u1');
   assert.equal(out[0].otherName, 'Driver Singh');
+  assert.equal(out[0].otherVerified, true); // poster has all three KYC flags
+  assert.equal(out[0].otherBaseCity, 'Ludhiana');
   assert.equal(out[0].fromCityName, 'Ludhiana');
   assert.equal(out[0].toCityName, 'Delhi');
   assert.equal(out[0].lastMessageText, 'on my way');
@@ -96,13 +104,15 @@ test('listChats: falls back to raw city + null preview, and shows the initiator 
   const chats = [{
     id: 'ch2', postedRideId: 'p2', posterId: 'u1', initiatorId: 'rider',
     isActive: true, lastMessageAt: null, createdAt: new Date('2026-06-12T00:00:00.000Z'),
-    initiator: { name: 'Rider Kaur' }, poster: { name: 'Me' },
+    initiator: { name: 'Rider Kaur', baseCity: 'Mohali', aadhaarVerified: true, dlSubmitted: false, rcSubmitted: false },
+    poster: { name: 'Me' },
     postedRide: { fromCityRaw: 'Mohali', toCityRaw: 'Panchkula', fromCity: null, toCity: null },
     messages: [],
   }];
   const svc = createChatService({ repo: baseRepo({ chats }), chatStore: spyStore() });
   const { chats: out } = await svc.listChats('u1');
   assert.equal(out[0].otherName, 'Rider Kaur');
+  assert.equal(out[0].otherVerified, false); // only aadhaar → not a full verified driver
   assert.equal(out[0].fromCityName, 'Mohali');
   assert.equal(out[0].lastMessageText, null);
   assert.equal(out[0].unreadCount, 0);
@@ -132,6 +142,11 @@ test('markRead: NOT_FOUND when the caller is not a participant', async () => {
 
 test('sendMessage: NOT_FOUND when the chat is read-only / not a participant', async () => {
   const svc = createChatService({ repo: baseRepo({ writable: null }), chatStore: spyStore() });
+  await assert.rejects(() => svc.sendMessage('u1', 'ch1', { messageText: 'hi' }), code('NOT_FOUND'));
+});
+
+test('sendMessage: NOT_FOUND when a block exists between the participants', async () => {
+  const svc = createChatService({ repo: baseRepo({ blocked: true }), chatStore: spyStore() });
   await assert.rejects(() => svc.sendMessage('u1', 'ch1', { messageText: 'hi' }), code('NOT_FOUND'));
 });
 

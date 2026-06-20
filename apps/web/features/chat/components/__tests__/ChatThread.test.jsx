@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/test/intl'
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
@@ -22,5 +22,14 @@ describe('ChatThread', () => {
     useChatThread.mockReturnValue({ meta: { isActive: true, posterId: 'other' }, live: [{ id: 'm1', senderId: 'other', messageText: 'hey there', sentAt: 'x' }], pending: [], isActive: true, send: vi.fn() })
     renderWithIntl(<ChatThread chatId="c1" />)
     expect(screen.getByText('hey there')).toBeInTheDocument()
+  })
+
+  it('opens the overflow menu with Report + Block', () => {
+    useChatThread.mockReturnValue({ meta: { isActive: true, posterId: 'other', postedRideId: 'p1' }, live: [], pending: [], isActive: true, send: vi.fn() })
+    renderWithIntl(<ChatThread chatId="c1" />)
+    expect(screen.queryByText('Block user')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /more options/i }))
+    expect(screen.getByText('Report')).toBeInTheDocument()
+    expect(screen.getByText('Block user')).toBeInTheDocument()
   })
 })

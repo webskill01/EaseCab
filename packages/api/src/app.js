@@ -42,6 +42,9 @@ const { createUsersRouter } = require('./features/users/users.route');
 const { createChatRepository } = require('./features/chat/chat.repository');
 const { createChatService } = require('./features/chat/chat.service');
 const { createChatRouter } = require('./features/chat/chat.route');
+const { createBlocksRepository } = require('./features/blocks/blocks.repository');
+const { createBlocksService } = require('./features/blocks/blocks.service');
+const { createBlocksRouter } = require('./features/blocks/blocks.route');
 const { createPushRepository } = require('./features/push/push.repository');
 const { createPushService } = require('./features/push/push.service');
 const { createPushRouter } = require('./features/push/push.route');
@@ -272,6 +275,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const chatRepo = createChatRepository({ prisma });
   const chatService = createChatService({ repo: chatRepo, chatStore, uploads: uploadsService });
   v1.use('/chats', createChatRouter({ service: chatService, requireAuth }));
+
+  // Blocks (P12-4c) — authed user-to-user block; chat-scoped enforcement lives in
+  // the chat service (open/send check isBlockedBetween).
+  const blocksService = createBlocksService({ repo: createBlocksRepository({ prisma }) });
+  v1.use('/blocks', createBlocksRouter({ service: blocksService, requireAuth }));
 
   // Push (Step 15) — authed FCM token registration + per-source notification
   // preferences. The live city-targeted fan-out runs via a dedicated subscriber,

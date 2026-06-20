@@ -22,8 +22,9 @@ const CHAT_SELECT = Object.freeze({
 const CHAT_LIST_SELECT = Object.freeze({
   id: true, postedRideId: true, posterId: true, initiatorId: true,
   isActive: true, lastMessageAt: true, createdAt: true,
-  initiator: { select: { name: true } },
-  poster: { select: { name: true } },
+  // Name + base city + KYC flags → the list/header verified shield + subtitle (P12-4a).
+  initiator: { select: { name: true, baseCity: true, aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true } },
+  poster: { select: { name: true, baseCity: true, aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true } },
   postedRide: {
     select: {
       fromCityRaw: true, toCityRaw: true,
@@ -62,6 +63,20 @@ function createChatRepository({ prisma }) {
         where: { id: postedRideId, status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() } },
         select: { id: true, postedBy: true },
       });
+    },
+
+    /** True if either user has blocked the other (P12-4c, block is enforced both ways). */
+    async isBlockedBetween(userA, userB) {
+      const row = await prisma.userBlock.findFirst({
+        where: {
+          OR: [
+            { blockerId: userA, blockedId: userB },
+            { blockerId: userB, blockedId: userA },
+          ],
+        },
+        select: { id: true },
+      });
+      return row !== null;
     },
 
     /** Has this user already contacted this posted ride? (the "verified contact" gate.) */
@@ -128,7 +143,7 @@ function createChatRepository({ prisma }) {
           OR: [{ initiatorId: userId }, { posterId: userId }],
           postedRide: { is: { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() } } },
         },
-        select: { id: true },
+        select: { id: true, posterId: true, initiatorId: true },
       });
     },
 
