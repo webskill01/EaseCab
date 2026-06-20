@@ -4,9 +4,15 @@ import { renderWithIntl } from '@/test/intl'
 import { PostForm } from '../PostForm'
 import { emptyForm } from '../../lib/postForm'
 
+// Date must be in the FUTURE — isPostable rejects past slots (#8). Compute it
+// from now (+1 day) so the fixture never rots as the clock passes a hardcoded time.
+const pad = (n) => String(n).padStart(2, '0')
+const tomorrow = new Date(Date.now() + 86_400_000)
+const FUTURE_DATE = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`
+
 const FULL = {
   from: { id: 'a', name: 'Mohali' }, to: { id: 'b', name: 'Manali' },
-  vehicle: 'Innova', date: '2026-06-20', time: '09:30', phone: '9876543210', fare: '', notes: '',
+  vehicle: 'Innova', date: FUTURE_DATE, time: '09:30', phone: '9876543210', fare: '', notes: '',
 }
 
 describe('PostForm', () => {
