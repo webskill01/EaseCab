@@ -15,7 +15,8 @@
     "empty": "Abhi koi message nahi — hello bolo 👋",
     "composerPlaceholder": "Message",
     "readOnly": "Yeh ride khatam ho gayi hai — chat sirf padhne ke liye hai",
-    "send": "Bhejo"
+    "send": "Bhejo",
+    "viewProfile": "Profile dekho"
   },
   "tick": {
     "sent": "Bheja",

@@ -17,7 +17,10 @@
     "workingCityHint": "Jahan aap zyada duties lete ho — paas ki rides dikhane ke liye."
   },
   "locked": "Locked",
-  "header": { "addPhoto": "PHOTO", "driver": "Driver" },
+  "header": {
+    "addPhoto": "PHOTO",
+    "driver": "Driver"
+  },
   "verifiedBadge": "Verified",
   "stats": {
     "experience": "Experience",
@@ -64,7 +67,20 @@
     "verified": "Verified",
     "underReview": "Review mein"
   },
-  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} din baaki", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "appPermissions": "App permissions", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "nav": {
+    "membership": "Membership",
+    "membershipValue": {
+      "trial": "Trial · {days} din baaki",
+      "active": "Active",
+      "expired": "Expired"
+    },
+    "notifications": "Notifications",
+    "language": "Language",
+    "settings": "Settings",
+    "appPermissions": "App permissions",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions"
+  },
   "perms": {
     "title": "App permissions",
     "sub": "Control kya EaseCab access kar sakta hai",
@@ -89,5 +105,26 @@
     "deleting": "Delete ho raha hai…",
     "error": "Aapka account delete nahi ho saka. Phir try karo."
   },
-  "error": { "load": "Aapki profile load nahi ho saki.", "save": "Save nahi ho saka. Phir try karo." }
+  "error": {
+    "load": "Aapki profile load nahi ho saki.",
+    "save": "Save nahi ho saka. Phir try karo."
+  },
+  "poster": {
+    "title": "Profile",
+    "back": "Back",
+    "verifiedDriver": "Verified driver",
+    "error": "Yeh profile load nahi ho saki.",
+    "aboutEmpty": "Abhi koi bio nahi.",
+    "about": "{name} ke baare mein",
+    "stats": {
+      "baseCity": "Base city",
+      "aadhaar": "Aadhaar",
+      "license": "Licence",
+      "languages": "Languages"
+    },
+    "status": {
+      "verified": "Verified",
+      "pending": "Pending"
+    }
+  }
 }

@@ -17,7 +17,10 @@
     "workingCityHint": "जहाँ आप ज़्यादातर ड्यूटी लेते हैं — पास की राइड दिखाने के लिए।"
   },
   "locked": "लॉक्ड",
-  "header": { "addPhoto": "फ़ोटो", "driver": "ड्राइवर" },
+  "header": {
+    "addPhoto": "फ़ोटो",
+    "driver": "ड्राइवर"
+  },
   "verifiedBadge": "सत्यापित",
   "stats": {
     "experience": "अनुभव",
@@ -64,7 +67,20 @@
     "verified": "सत्यापित",
     "underReview": "समीक्षा में"
   },
-  "nav": { "membership": "मेंबरशिप", "membershipValue": { "trial": "ट्रायल · {days} दिन बाकी", "active": "चालू", "expired": "समाप्त" }, "notifications": "सूचनाएँ", "language": "भाषा", "settings": "सेटिंग्स", "appPermissions": "ऐप अनुमतियाँ", "privacy": "प्राइवेसी नीति", "terms": "नियम व शर्तें" },
+  "nav": {
+    "membership": "मेंबरशिप",
+    "membershipValue": {
+      "trial": "ट्रायल · {days} दिन बाकी",
+      "active": "चालू",
+      "expired": "समाप्त"
+    },
+    "notifications": "सूचनाएँ",
+    "language": "भाषा",
+    "settings": "सेटिंग्स",
+    "appPermissions": "ऐप अनुमतियाँ",
+    "privacy": "प्राइवेसी नीति",
+    "terms": "नियम व शर्तें"
+  },
   "perms": {
     "title": "ऐप अनुमतियाँ",
     "sub": "नियंत्रित करें कि EaseCab क्या एक्सेस कर सकता है",
@@ -89,5 +105,26 @@
     "deleting": "हटाया जा रहा है…",
     "error": "आपका खाता हटाया नहीं जा सका। फिर कोशिश करें।"
   },
-  "error": { "load": "आपकी प्रोफ़ाइल लोड नहीं हो सकी।", "save": "सहेजा नहीं जा सका। फिर कोशिश करें।" }
+  "error": {
+    "load": "आपकी प्रोफ़ाइल लोड नहीं हो सकी।",
+    "save": "सहेजा नहीं जा सका। फिर कोशिश करें।"
+  },
+  "poster": {
+    "title": "प्रोफ़ाइल",
+    "back": "वापस",
+    "verifiedDriver": "वेरिफाइड ड्राइवर",
+    "error": "यह प्रोफ़ाइल लोड नहीं हो सकी।",
+    "aboutEmpty": "अभी कोई बायो नहीं।",
+    "about": "{name} के बारे में",
+    "stats": {
+      "baseCity": "बेस शहर",
+      "aadhaar": "आधार",
+      "license": "लाइसेंस",
+      "languages": "भाषाएँ"
+    },
+    "status": {
+      "verified": "वेरिफाइड",
+      "pending": "बाकी"
+    }
+  }
 }

@@ -36,6 +36,9 @@ const { createCityResolver } = require('@easecab/shared');
 const { createMeRepository } = require('./features/me/me.repository');
 const { createMeService } = require('./features/me/me.service');
 const { createMeRouter } = require('./features/me/me.route');
+const { createUsersRepository } = require('./features/users/users.repository');
+const { createUsersService } = require('./features/users/users.service');
+const { createUsersRouter } = require('./features/users/users.route');
 const { createChatRepository } = require('./features/chat/chat.repository');
 const { createChatService } = require('./features/chat/chat.service');
 const { createChatRouter } = require('./features/chat/chat.route');
@@ -257,6 +260,10 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   const meRepo = createMeRepository({ prisma });
   const meService = createMeService({ repo: meRepo, uploads: uploadsService });
   v1.use('/me', createMeRouter({ service: meService, requireAuth, cookieSecure: config.cookie.secure }));
+
+  // Public poster profile (T3-2) — read-only, no PII; opened by tapping another user.
+  const usersService = createUsersService({ repo: createUsersRepository({ prisma }) });
+  v1.use('/users', createUsersRouter({ service: usersService, requireAuth }));
 
   // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole
   // writer to both Postgres (durable) and Firestore (realtime, via chatStore).

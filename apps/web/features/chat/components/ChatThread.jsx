@@ -27,6 +27,7 @@ export function ChatThread({ chatId }) {
   const messages = mergeLiveMessages(live, pending)
   const amPoster = meta.posterId === myId
   const otherRead = otherLastReadAt(meta, amPoster)
+  const otherId = amPoster ? meta.initiatorId : meta.posterId
 
   const cached = (qc.getQueryData(['chats']) || []).find((c) => c.id === chatId)
   const headerTitle = cached?.otherName || (cached ? `${cached.fromCityName ?? ''} → ${cached.toCityName ?? ''}` : t('list.title'))
@@ -38,10 +39,18 @@ export function ChatThread({ chatId }) {
         <button type="button" onClick={() => router.push('/messages')} aria-label={t('thread.back')} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ec-ink">
           <ChevronLeft size={24} />
         </button>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[15px] font-extrabold text-ec-blue">
-          {(headerTitle || '?').slice(0, 1).toUpperCase()}
-        </span>
-        <span className="truncate text-[15px] font-extrabold text-ec-ink">{headerTitle}</span>
+        <button
+          type="button"
+          onClick={() => otherId && router.push(`/u/${otherId}`)}
+          disabled={!otherId}
+          aria-label={t('thread.viewProfile')}
+          className="flex min-w-0 flex-1 items-center gap-2.5 text-left disabled:cursor-default"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[15px] font-extrabold text-ec-blue">
+            {(headerTitle || '?').slice(0, 1).toUpperCase()}
+          </span>
+          <span className="truncate text-[15px] font-extrabold text-ec-ink">{headerTitle}</span>
+        </button>
       </header>
       {hasRoute && (
         <div className="flex items-center gap-2 border-b border-ec-line bg-ec-sky px-3.5 py-2">

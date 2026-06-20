@@ -17,7 +17,10 @@
     "workingCityHint": "Where you mostly take duties — used to surface nearby rides."
   },
   "locked": "Locked",
-  "header": { "addPhoto": "PHOTO", "driver": "Driver" },
+  "header": {
+    "addPhoto": "PHOTO",
+    "driver": "Driver"
+  },
   "verifiedBadge": "Verified",
   "stats": {
     "experience": "Experience",
@@ -64,7 +67,20 @@
     "verified": "Verified",
     "underReview": "Under review"
   },
-  "nav": { "membership": "Membership", "membershipValue": { "trial": "Trial · {days} days left", "active": "Active", "expired": "Expired" }, "notifications": "Notifications", "language": "Language", "settings": "Settings", "appPermissions": "App permissions", "privacy": "Privacy Policy", "terms": "Terms & Conditions" },
+  "nav": {
+    "membership": "Membership",
+    "membershipValue": {
+      "trial": "Trial · {days} days left",
+      "active": "Active",
+      "expired": "Expired"
+    },
+    "notifications": "Notifications",
+    "language": "Language",
+    "settings": "Settings",
+    "appPermissions": "App permissions",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions"
+  },
   "perms": {
     "title": "App permissions",
     "sub": "Control what EaseCab can access",
@@ -89,5 +105,26 @@
     "deleting": "Deleting…",
     "error": "Couldn't delete your account. Please try again."
   },
-  "error": { "load": "Couldn't load your profile.", "save": "Couldn't save. Please try again." }
+  "error": {
+    "load": "Couldn't load your profile.",
+    "save": "Couldn't save. Please try again."
+  },
+  "poster": {
+    "title": "Profile",
+    "back": "Back",
+    "verifiedDriver": "Verified driver",
+    "error": "Couldn't load this profile.",
+    "aboutEmpty": "No bio added yet.",
+    "about": "About {name}",
+    "stats": {
+      "baseCity": "Base city",
+      "aadhaar": "Aadhaar",
+      "license": "Licence",
+      "languages": "Languages"
+    },
+    "status": {
+      "verified": "Verified",
+      "pending": "Pending"
+    }
+  }
 }

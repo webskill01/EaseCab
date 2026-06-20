@@ -15,7 +15,8 @@
     "empty": "No messages yet — say hello 👋",
     "composerPlaceholder": "Message",
     "readOnly": "This ride has expired — chat is read-only",
-    "send": "Send"
+    "send": "Send",
+    "viewProfile": "View profile"
   },
   "tick": {
     "sent": "Sent",
