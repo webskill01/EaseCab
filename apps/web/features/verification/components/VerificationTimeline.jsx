@@ -29,7 +29,7 @@ export function VerificationTimeline({ profile }) {
     { key: 'aadhaar', title: t('timeline.aadhaar'), Icon: Shield, done: Boolean(v.aadhaarVerified), group: 'post', onView: () => router.push('/verify?intent=aadhaar-detail'), onComplete: () => router.push('/verify?intent=l1') },
     { key: 'photo', title: t('timeline.photo'), Icon: User, done: hasPhoto, group: 'post', hint: t('timeline.photoHint'), onComplete: () => router.push('/profile') },
     { key: 'dl', title: t('driver.dlTitle'), Icon: List, done: Boolean(v.dlSubmitted), group: 'badge', onView: () => router.push('/verify?intent=dl-detail'), onComplete: () => router.push('/verify?intent=dl') },
-    { key: 'rc', title: t('driver.rcTitle'), Icon: Car, done: Boolean(v.rcSubmitted), group: 'badge', onView: () => router.push('/verify?intent=rc'), onComplete: () => router.push('/verify?intent=rc') },
+    { key: 'rc', title: t('driver.rcTitle'), Icon: Car, done: Boolean(v.rcSubmitted), group: 'badge', onView: () => router.push('/verify?intent=rc-detail'), onComplete: () => router.push('/verify?intent=rc') },
   ]
   const completed = steps.filter((s) => s.done).length
   const postReady = steps[0].done && steps[1].done

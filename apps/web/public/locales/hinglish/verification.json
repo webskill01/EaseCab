@@ -80,6 +80,12 @@
     "privacyNote": "Aapki privacy ke liye, EaseCab sirf aapka verified status aur last 4 digits rakhta hai — kabhi poora Aadhaar ya demographic details nahi.",
     "dlPrivacyNote": "Aapka licence RTO database se verify kiya gaya. Hum sirf aapka verification status rakhte hain — licence number ya details nahi.",
     "holder": "Holder",
-    "verifyAgain": "Dobara verify karein"
+    "verifyAgain": "Dobara verify karein",
+    "vehicleTitle": "Vehicle details",
+    "vehicleLabel": "Vehicle",
+    "regLabel": "Registration no.",
+    "typeLabel": "Type",
+    "rcStatus": "RC status",
+    "rcPrivacyNote": "Aapki RC VAHAN database se verify ki gayi. Hum sirf aapke vehicle ka make, model aur registration rakhte hain — owner, fuel ya doosre RC details nahi."
   }
 }

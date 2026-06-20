@@ -80,6 +80,12 @@
     "privacyNote": "For your privacy, EaseCab stores only your verified status and the last 4 digits — never your full Aadhaar or demographic details.",
     "dlPrivacyNote": "Your licence was verified against the RTO database. We store only your verification status — not the licence number or details.",
     "holder": "Holder",
-    "verifyAgain": "Verify again"
+    "verifyAgain": "Verify again",
+    "vehicleTitle": "Vehicle details",
+    "vehicleLabel": "Vehicle",
+    "regLabel": "Registration no.",
+    "typeLabel": "Type",
+    "rcStatus": "RC status",
+    "rcPrivacyNote": "Your RC was verified against the VAHAN database. We store only your vehicle's make, model and registration — not owner, fuel or other RC details."
   }
 }

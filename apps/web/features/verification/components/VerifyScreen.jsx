@@ -9,6 +9,7 @@ import { CompleteProfileStep } from './CompleteProfileStep'
 import { VerificationTimeline } from './VerificationTimeline'
 import { AadhaarDetail } from './AadhaarDetail'
 import { DlDetail } from './DlDetail'
+import { VehicleDetail } from './VehicleDetail'
 import { DlVerify } from './DlVerify'
 import { RcVerify } from './RcVerify'
 
@@ -29,6 +30,7 @@ export function VerifyScreen() {
   if (intent === 'driver') return <VerificationTimeline profile={profile} />
   if (intent === 'aadhaar-detail') return <AadhaarDetail profile={profile} />
   if (intent === 'dl-detail') return <DlDetail profile={profile} />
+  if (intent === 'rc-detail') return <VehicleDetail profile={profile} />
   if (intent === 'dl') return <DlVerify status={status} />
   if (intent === 'rc') return <RcVerify status={status} />
 

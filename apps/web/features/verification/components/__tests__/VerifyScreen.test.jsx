@@ -8,6 +8,7 @@ vi.mock('../CompleteProfileStep', () => ({ CompleteProfileStep: () => <div>compl
 vi.mock('../VerificationTimeline', () => ({ VerificationTimeline: () => <div>timeline</div> }))
 vi.mock('../AadhaarDetail', () => ({ AadhaarDetail: () => <div>aadhaar-detail</div> }))
 vi.mock('../DlDetail', () => ({ DlDetail: () => <div>dl-detail</div> }))
+vi.mock('../VehicleDetail', () => ({ VehicleDetail: () => <div>rc-detail</div> }))
 vi.mock('../DlVerify', () => ({ DlVerify: () => <div>dl-page</div> }))
 vi.mock('../RcVerify', () => ({ RcVerify: () => <div>rc-page</div> }))
 import { useProfile } from '@/features/profile/hooks/useProfile'
@@ -40,6 +41,11 @@ describe('VerifyScreen', () => {
     mockSearch = 'intent=dl-detail'; useProfile.mockReturnValue(VER({ dlSubmitted: true }))
     renderWithIntl(<VerifyScreen />)
     expect(screen.getByText('dl-detail')).toBeInTheDocument()
+  })
+  it('intent=rc-detail → renders the vehicle/RC record', () => {
+    mockSearch = 'intent=rc-detail'; useProfile.mockReturnValue(VER({ rcSubmitted: true }))
+    renderWithIntl(<VerifyScreen />)
+    expect(screen.getByText('rc-detail')).toBeInTheDocument()
   })
   it('intent=dl → renders the dedicated DL page', () => {
     mockSearch = 'intent=dl'; useProfile.mockReturnValue(VER())

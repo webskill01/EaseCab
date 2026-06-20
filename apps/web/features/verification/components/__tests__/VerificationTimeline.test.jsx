@@ -33,4 +33,11 @@ describe('VerificationTimeline', () => {
     fireEvent.click(screen.getAllByText('View verified details')[0])
     expect(push).toHaveBeenCalledWith('/verify?intent=aadhaar-detail')
   })
+
+  it('opens the verified vehicle/RC detail record', () => {
+    renderWithIntl(<VerificationTimeline profile={profile} />)
+    // RC is the second verified node (after Aadhaar).
+    fireEvent.click(screen.getAllByText('View verified details')[1])
+    expect(push).toHaveBeenCalledWith('/verify?intent=rc-detail')
+  })
 })
