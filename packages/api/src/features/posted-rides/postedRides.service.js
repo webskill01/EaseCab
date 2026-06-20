@@ -54,8 +54,9 @@ function toPublicPostedRide(p) {
  * @param {ReturnType<import('./postedRides.repository').createPostedRidesRepository>} deps.repo
  * @param {import('pino').Logger} [deps.logger] - used only to log a best-effort
  *   push-publish failure on create; test harnesses may omit it.
+ * @param {{ verifyUpload: Function }} [deps.uploads] - R2 verify gate (report screenshots)
  */
-function createPostedRidesService({ repo, logger }) {
+function createPostedRidesService({ repo, logger, uploads }) {
   return {
     /** Create a 24h post behind the KYC soft gate, validating any picked cityIds. */
     async createPost(userId, input) {
@@ -157,15 +158,18 @@ function createPostedRidesService({ repo, logger }) {
      * File a user report against a posted ride. 404 if the post is gone (before the
      * write); otherwise persists the report for the admin moderation queue (24c).
      *
-     * @param {{ userId: string, postedRideId: string, reason: string, remarks?: string }} args
+     * @param {{ userId: string, postedRideId: string, reason: string, remarks?: string, screenshotKey?: string }} args
      * @returns {Promise<{ id: string, createdAt: Date }>}
      */
-    async reportPost({ userId, postedRideId, reason, remarks }) {
+    async reportPost({ userId, postedRideId, reason, remarks, screenshotKey }) {
       const post = await repo.findPostExists(postedRideId);
       if (!post) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
-      return repo.createPostReport({ reporterId: userId, postedRideId, reason, remarks });
+      const screenshotUrl = screenshotKey
+        ? (await uploads.verifyUpload({ userId, purpose: 'report_screenshot', key: screenshotKey })).key
+        : null;
+      return repo.createPostReport({ reporterId: userId, postedRideId, reason, remarks, screenshotUrl });
     },
   };
 }

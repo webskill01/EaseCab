@@ -217,10 +217,15 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     v1.use('/admin/city-strings', createAdminCityStringsRouter({ service: adminCityStringsService, citiesService, requireAdmin }));
   }
 
+  // Uploads (Step 21a) — built early because the report (rides/posted-rides), profile-DP,
+  // and image-attach paths all consume its verifyUpload gate. R2 boundary injected as
+  // `uploads` (optional); bytes go direct to R2, never here (§8/§12).
+  const uploadsService = createUploadsService({ r2: uploads });
+
   // Rides (Step 10) — authed. One SSE fan-out (backed by `subscriber`) serves all
   // stream clients; start the subscription now and stash it for graceful shutdown.
   const ridesRepo = createRidesRepository({ prisma, redis });
-  const ridesService = createRidesService({ repo: ridesRepo });
+  const ridesService = createRidesService({ repo: ridesRepo, uploads: uploadsService });
   const rideFeed = createRideFeed({ subscriber, repo: ridesRepo, logger });
   rideFeed.start().catch((err) => logger.error({ err: err.message }, 'rides SSE subscribe failed'));
   app.locals.rideFeed = rideFeed;
@@ -241,7 +246,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   // subscription-gated contact. The free-text parser (Step 20) reuses the shared
   // CityResolver + extractors to turn a pasted message into a draft preview.
   const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
-  const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger });
+  const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger, uploads: uploadsService });
   const postParser = createPostParser({
     repo: postedRidesRepo,
     resolver: createCityResolver({ prisma, redis, logger }),
@@ -249,11 +254,8 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   });
   v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, parser: postParser, requireAuth }));
 
-  // Uploads (Step 21a) — authed presigned-POST issuance for DP/car/KYC images.
-  // R2 boundary injected as `uploads` (optional); bytes go direct to R2, never here.
-  // Created before `me` because the profile-DP + image-attach paths consume its
-  // verifyUpload gate (Step 21b).
-  const uploadsService = createUploadsService({ r2: uploads });
+  // Uploads (Step 21a) — authed presigned-POST issuance for DP/car/KYC/report images.
+  // Service built above (consumed by the report + me paths); just mount the router here.
   v1.use('/uploads', createUploadsRouter({ service: uploadsService, requireAuth }));
 
   // My Rides → Contacted (Step 19) + profile read/update + image-attach (Step 21b).

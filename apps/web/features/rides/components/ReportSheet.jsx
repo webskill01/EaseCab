@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Flag, Check } from '@/components/ui/icons'
+// Generic R2 upload client (shared infra, lives under the profile feature).
+import { presignUpload, uploadToR2, dpPrecheck } from '@/features/profile/services/uploadsApi'
 import { reportRide } from '../services/reportApi'
 
 // Mirrors @easecab/shared REPORT_REASON + sheets.jsx ReportSheet reason chips.
@@ -22,11 +24,40 @@ const REASONS = ['fake', 'spam', 'wrong_info', 'inappropriate', 'other']
  */
 export function ReportSheet({ ride, onClose }) {
   const t = useTranslations('rides')
+  const inputRef = useRef(null)
   const [reason, setReason] = useState('')
   const [remarks, setRemarks] = useState('')
+  const [screenshotKey, setScreenshotKey] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [attachError, setAttachError] = useState(false)
   const submit = useMutation({
-    mutationFn: () => reportRide(ride, { reason, ...(remarks.trim() ? { remarks: remarks.trim() } : {}) }),
+    mutationFn: () =>
+      reportRide(ride, {
+        reason,
+        ...(remarks.trim() ? { remarks: remarks.trim() } : {}),
+        ...(screenshotKey ? { screenshotKey } : {}),
+      }),
   })
+
+  // report_screenshot policy == dp (5MB, images) → reuse dpPrecheck. Private tier, so
+  // there's no public preview URL; we keep only the verified key to send with the report.
+  async function onPickScreenshot(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setAttachError(false)
+    if (dpPrecheck(file)) { setAttachError(true); return }
+    setUploading(true)
+    try {
+      const { url, fields, key, stub } = await presignUpload({ purpose: 'report_screenshot', contentType: file.type })
+      await uploadToR2({ url, fields, file, stub })
+      setScreenshotKey(key)
+    } catch {
+      setAttachError(true)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   if (submit.isSuccess) {
     return (
@@ -67,6 +98,23 @@ export function ReportSheet({ ride, onClose }) {
           aria-label={t('report.remarkPlaceholder')}
           className="w-full resize-none rounded-xl border-[1.5px] border-ec-line p-3 text-[14px] font-medium text-ec-ink outline-none"
         />
+
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onPickScreenshot} aria-label={t('report.attach')} className="hidden" />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex h-11 items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-ec-line text-[13.5px] font-bold text-ec-ink60 disabled:text-ec-ink40"
+        >
+          {uploading
+            ? t('report.attaching')
+            : screenshotKey
+              ? <><Check size={16} /> {t('report.attached')}</>
+              : t('report.attach')}
+        </button>
+        {attachError && (
+          <p className="text-center text-[12.5px] font-semibold text-ec-danger">{t('report.attachError')}</p>
+        )}
 
         {submit.isError && (
           <p className="text-center text-[13px] font-bold text-ec-danger">{t('report.error')}</p>

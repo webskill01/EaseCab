@@ -26,6 +26,9 @@ const UPLOAD_PURPOSE = Object.freeze({
   car_back: Object.freeze({ tier: UPLOAD_TIER.PUBLIC, keyPrefix: 'car/', maxBytes: 5 * MB, allowedMime: IMAGE_MIME }),
   rc_image: Object.freeze({ tier: UPLOAD_TIER.PRIVATE, keyPrefix: 'kyc/', maxBytes: 10 * MB, allowedMime: KYC_MIME }),
   licence_image: Object.freeze({ tier: UPLOAD_TIER.PRIVATE, keyPrefix: 'kyc/', maxBytes: 10 * MB, allowedMime: KYC_MIME }),
+  // Report evidence (P12-1): a screenshot a user attaches to a ride/post report.
+  // PRIVATE — may contain another party's PII (chat/phone); admin-only via presigned GET.
+  report_screenshot: Object.freeze({ tier: UPLOAD_TIER.PRIVATE, keyPrefix: 'reports/', maxBytes: 5 * MB, allowedMime: IMAGE_MIME }),
 });
 
 /** The ordered tuple of valid purposes — feeds the Zod enum (uploads.schema.js). */

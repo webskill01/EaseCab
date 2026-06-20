@@ -84,6 +84,10 @@
     "remarkPlaceholder": "Details add karein (optional)",
     "submit": "Report bhejein",
     "submitted": "Report bhej di gayi",
-    "error": "Bhej nahi paaye. Dobara try karein."
+    "error": "Bhej nahi paaye. Dobara try karein.",
+    "attach": "Screenshot add karein",
+    "attaching": "Upload ho raha…",
+    "attached": "Screenshot add ho gaya",
+    "attachError": "Add nahi hua. Choti image try karein."
   }
 }

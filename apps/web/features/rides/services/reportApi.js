@@ -3,10 +3,10 @@ import { RIDE_KIND } from '../lib/rideView'
 
 /**
  * File a report against a ride. Routes to the bot-ride or posted-ride endpoint by
- * kind. Body = { reason, remarks? } (reportCreateSchema).
+ * kind. Body = { reason, remarks?, screenshotKey? } (reportCreateSchema).
  *
  * @param {{ id: string, kind: string }} ride
- * @param {{ reason: string, remarks?: string }} body
+ * @param {{ reason: string, remarks?: string, screenshotKey?: string }} body
  * @returns {Promise<object>} the created report stub { id, createdAt }
  */
 export async function reportRide(ride, body) {

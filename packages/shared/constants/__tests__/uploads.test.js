@@ -22,6 +22,12 @@ test('dp/car are public 5MB images; rc/licence are private 10MB and allow pdf', 
   assert.ok(!UPLOAD_PURPOSE.dp.allowedMime.includes('application/pdf'));
 });
 
+test('report_screenshot is private 5MB images-only (evidence may hold PII)', () => {
+  assert.equal(UPLOAD_PURPOSE.report_screenshot.tier, UPLOAD_TIER.PRIVATE);
+  assert.equal(UPLOAD_PURPOSE.report_screenshot.maxBytes, 5 * 1024 * 1024);
+  assert.ok(!UPLOAD_PURPOSE.report_screenshot.allowedMime.includes('application/pdf'));
+});
+
 test('mime→ext map and frozen table', () => {
   assert.equal(UPLOAD_MIME_EXT['image/jpeg'], 'jpg');
   assert.equal(UPLOAD_MIME_EXT['application/pdf'], 'pdf');

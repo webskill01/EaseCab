@@ -14,6 +14,9 @@ const reportCreateSchema = z
   .object({
     reason: z.enum(Object.values(REPORT_REASON)),
     remarks: z.string().trim().min(1).max(REPORT.REMARKS_MAX).optional(),
+    // Optional evidence — an R2 key from a `report_screenshot` presigned upload.
+    // The server re-verifies ownership/size/MIME before storing it (§8).
+    screenshotKey: z.string().trim().min(1).optional(),
   })
   .strict();
 

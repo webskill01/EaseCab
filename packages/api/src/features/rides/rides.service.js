@@ -37,8 +37,9 @@ function toPublicRide(r) {
  * Rides business logic (CLAUDE.md §4 service layer).
  * @param {object} deps
  * @param {ReturnType<import('./rides.repository').createRidesRepository>} deps.repo
+ * @param {{ verifyUpload: Function }} [deps.uploads] - R2 verify gate (report screenshots)
  */
-function createRidesService({ repo }) {
+function createRidesService({ repo, uploads }) {
   return {
     /**
      * One page of the live feed, newest first. Decodes the opaque cursor (a bad one
@@ -97,15 +98,18 @@ function createRidesService({ repo }) {
      * File a user report against a bot ride. 404 if the ride is gone (before the
      * write); otherwise persists the report for the admin moderation queue (24c).
      *
-     * @param {{ userId: string, rideId: string, reason: string, remarks?: string }} args
+     * @param {{ userId: string, rideId: string, reason: string, remarks?: string, screenshotKey?: string }} args
      * @returns {Promise<{ id: string, createdAt: Date }>}
      */
-    async reportRide({ userId, rideId, reason, remarks }) {
+    async reportRide({ userId, rideId, reason, remarks, screenshotKey }) {
       const ride = await repo.findRideExists(rideId);
       if (!ride) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
-      return repo.createRideReport({ reporterId: userId, rideId, reason, remarks });
+      const screenshotUrl = screenshotKey
+        ? (await uploads.verifyUpload({ userId, purpose: 'report_screenshot', key: screenshotKey })).key
+        : null;
+      return repo.createRideReport({ reporterId: userId, rideId, reason, remarks, screenshotUrl });
     },
   };
 }

@@ -136,9 +136,9 @@ function createRidesRepository({ prisma, redis }) {
     },
 
     /** Write a user report against a bot ride (feeds the admin moderation queue, 24c). */
-    async createRideReport({ reporterId, rideId, reason, remarks }) {
+    async createRideReport({ reporterId, rideId, reason, remarks, screenshotUrl }) {
       return prisma.rideReport.create({
-        data: { reporterId, rideId, reason, remarks: remarks ?? null },
+        data: { reporterId, rideId, reason, remarks: remarks ?? null, screenshotUrl: screenshotUrl ?? null },
         select: { id: true, createdAt: true },
       });
     },
