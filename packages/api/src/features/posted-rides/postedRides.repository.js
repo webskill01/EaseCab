@@ -156,6 +156,7 @@ function createPostedRidesRepository({ prisma, redis }) {
           fromCityRaw: true, toCityRaw: true,
           fromCity: { select: { canonicalName: true } },
           toCity: { select: { canonicalName: true } },
+          poster: { select: { name: true } }, // snapshotted into the contact (Slice 2)
         },
       });
     },

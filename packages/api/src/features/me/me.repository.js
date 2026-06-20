@@ -4,7 +4,7 @@
 const CONTACTED_SELECT = Object.freeze({
   id: true, source: true, fromCityName: true, toCityName: true,
   vehicleType: true, revealedPhone: true, contactedAt: true,
-  rideId: true, postedRideId: true,
+  rideId: true, postedRideId: true, posterId: true, posterName: true,
 });
 
 /** Profile + verification-display columns for GET/PATCH /me/profile (Step 21b). */

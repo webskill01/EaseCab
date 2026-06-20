@@ -38,6 +38,8 @@ function toPublicContacted(c) {
     contactedAt: c.contactedAt,
     rideId: c.rideId ?? null,
     postedRideId: c.postedRideId ?? null,
+    posterId: c.posterId ?? null, // verified contacts only; links the card to /u/[id]
+    posterName: c.posterName ?? null,
   };
 }
 

@@ -59,6 +59,8 @@ export function toContactedVM(c) {
     kind: c.source === 'posted' ? RIDE_KIND.VERIFIED : RIDE_KIND.BOT,
     id: c.id,
     postedRideId: c.postedRideId ?? null,
+    posterId: c.posterId ?? null, // verified contacts: backs the card's profile link
+    posterName: c.posterName ?? null,
     from: cityLabel(c.fromCityName, null),
     to: cityLabel(c.toCityName, null),
     vehicleType: c.vehicleType ?? null,

@@ -441,6 +441,11 @@ model RideContact {
   toCityName    String?        @map("to_city_name")
   vehicleType   String?        @map("vehicle_type")
   revealedPhone String?        @map("revealed_phone")
+  // Poster identity snapshot (T3-3 Slice 2) so the Contacted card can show + link to
+  // the verified poster's profile. Plain columns (no FK) — like the other snapshot
+  // fields, they must outlive the source ride's hard-delete; navigation hits /u/[id].
+  posterId      String?        @map("poster_id") @db.Uuid
+  posterName    String?        @map("poster_name")
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   ride       Ride?       @relation(fields: [rideId], references: [id], onDelete: SetNull)

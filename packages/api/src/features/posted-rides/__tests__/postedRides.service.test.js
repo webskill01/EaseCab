@@ -132,6 +132,7 @@ test('contactPost records a posted-source snapshot for a subscribed contacter', 
     id: 'p1', phone: '+919811111111', postedBy: 'owner', vehicleType: 'Innova',
     fromCityRaw: null, toCityRaw: 'manali',
     fromCity: { canonicalName: 'Mohali' }, toCity: null,
+    poster: { name: 'Harman' },
   });
   repo.recordContact = async (userId, postedRideId, snapshot) => { recorded.push(snapshot); return { contactedAt: new Date() }; };
   const out = await createPostedRidesService({ repo }).contactPost({ userId: 'u1', postedRideId: 'p1' });
@@ -140,6 +141,7 @@ test('contactPost records a posted-source snapshot for a subscribed contacter', 
   assert.deepEqual(recorded[0], {
     source: 'posted', fromCityName: 'Mohali', toCityName: 'manali',
     vehicleType: 'Innova', revealedPhone: '+919811111111',
+    posterId: 'owner', posterName: 'Harman',
   });
 });
 

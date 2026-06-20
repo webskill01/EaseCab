@@ -128,6 +128,8 @@ function createPostedRidesService({ repo, logger }) {
         toCityName: post.toCity?.canonicalName ?? post.toCityRaw ?? null,
         vehicleType: post.vehicleType ?? null,
         revealedPhone: post.phone,
+        posterId: post.postedBy ?? null, // backs the Contacted card's profile link
+        posterName: post.poster?.name ?? null,
       };
       const { contactedAt } = await repo.recordContact(userId, postedRideId, snapshot);
       return { phoneNumber: post.phone, contactedAt };

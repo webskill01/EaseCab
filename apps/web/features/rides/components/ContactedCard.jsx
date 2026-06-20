@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Whatsapp, Phone, Chat } from '@/components/ui/icons'
+import { Whatsapp, Phone, Chat, ChevR } from '@/components/ui/icons'
 import { openChat } from '@/features/chat/services/chatApi'
 import { RouteRow, StatusBadge } from './RideCard'
 import { ageMinFrom, relParts } from '../lib/rideView'
@@ -43,6 +43,20 @@ export function ContactedCard({ contact }) {
           : <span className="text-[11px] font-extrabold uppercase tracking-wide text-ec-ink40">{t('contacted.ridesLabel')}</span>}
       </div>
       <RouteRow from={contact.from} to={contact.to} />
+      {verified && contact.posterId && (
+        <button
+          type="button"
+          onClick={() => router.push(`/u/${contact.posterId}`)}
+          aria-label={tr('card.viewProfile')}
+          className="mt-2.5 flex w-full items-center gap-2.5 border-t border-ec-line pt-2.5 text-left"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[14px] font-extrabold text-ec-blue">
+            {(contact.posterName || '?').trim().charAt(0).toUpperCase()}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-[13.5px] font-extrabold text-ec-ink">{contact.posterName || '—'}</span>
+          <span className="shrink-0 text-ec-ink40"><ChevR size={16} /></span>
+        </button>
+      )}
       <div className="mt-2.5 border-t border-ec-line pt-2.5 text-[13px] font-semibold text-ec-ink60">
         {t('contacted.vehicle')} : <span className="font-extrabold text-ec-ink">{contact.vehicleType || t('contacted.any')}</span>
       </div>
