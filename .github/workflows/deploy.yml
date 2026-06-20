@@ -19,6 +19,12 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Tells the deploy job whether VPS secrets are configured. Secrets can't be used in
+    # a job-level `if:`, so we surface a boolean here (echoes only true/false, never the
+    # value). Until the VPS is provisioned + secrets set, deploy is SKIPPED (run stays
+    # green) instead of failing the SSH step on every push. Auto-resumes once set.
+    outputs:
+      deployable: ${{ steps.deployable.outputs.value }}
     env:
       NEXT_PUBLIC_API_URL: https://api.easecab.com/api/v1
       NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder-key
@@ -38,10 +44,14 @@ jobs:
       - run: npm run lint
       - run: npm run test:coverage
       - run: npm run build:web
+      - id: deployable
+        run: echo "value=${{ secrets.VPS_HOST != '' }}" >> "$GITHUB_OUTPUT"
 
   # ---- 2. Deploy — SSH into the VPS and roll the release ----
   deploy:
     needs: gate
+    # Skip cleanly (no failure email) until VPS secrets exist; auto-runs once they do.
+    if: needs.gate.outputs.deployable == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Bind to a GitHub Environment so the host/key secrets + optional approval live there.
