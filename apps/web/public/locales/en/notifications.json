@@ -16,7 +16,11 @@
     "locationN": "Location {n}",
     "searchCity": "Search city",
     "save": "Save Preferences",
-    "remove": "Remove {city}"
+    "remove": "Remove {city}",
+    "blockedHint": "Notifications are blocked. Turn them on for EaseCab in your browser or phone settings, then tap the toggle again."
   },
-  "error": { "geo": "Couldn't get your location.", "noCity": "No nearby city found." }
+  "error": {
+    "geo": "Couldn't get your location.",
+    "noCity": "No nearby city found."
+  }
 }

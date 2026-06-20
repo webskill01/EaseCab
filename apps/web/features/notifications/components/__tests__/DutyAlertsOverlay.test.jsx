@@ -69,6 +69,27 @@ describe('DutyAlertsOverlay', () => {
     expect(update).toHaveBeenCalledWith({ notificationCities: [] }, expect.anything())
   })
 
+  it('shows the blocked hint when OS permission is already denied (10.1-b)', async () => {
+    // Denied can't be re-prompted, so the toggle can never flip on — the user needs to
+    // be told where to fix it instead of the toggle silently staying off.
+    permissionState.mockReturnValue('denied')
+    renderWithIntl(<DutyAlertsOverlay onClose={vi.fn()} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent(/blocked/i)
+    expect(screen.getByRole('switch', { name: /duty notifications/i })).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('surfaces the blocked hint after a denied enable attempt (10.1-b)', async () => {
+    enable.mockResolvedValueOnce({ permission: 'denied', city: null })
+    const user = userEvent.setup()
+    renderWithIntl(<DutyAlertsOverlay onClose={vi.fn()} />)
+    const toggle = await screen.findByRole('switch', { name: /duty notifications/i })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    await user.click(toggle)
+    expect(enable).toHaveBeenCalled()
+    expect(toggle).toHaveAttribute('aria-checked', 'false')
+    expect(await screen.findByRole('alert')).toHaveTextContent(/blocked/i)
+  })
+
   it('Clear all empties every slot', async () => {
     const update = vi.fn()
     usePushPreferences.mockReturnValue(stub({ update }))

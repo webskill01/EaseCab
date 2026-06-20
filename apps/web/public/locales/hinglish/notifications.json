@@ -16,7 +16,11 @@
     "locationN": "Location {n}",
     "searchCity": "Shehar dhoondo",
     "save": "Preferences save karo",
-    "remove": "{city} hatao"
+    "remove": "{city} hatao",
+    "blockedHint": "Notifications block hain. Inhe apne browser ya phone settings me EaseCab ke liye on karein, phir toggle dobara dabayein."
   },
-  "error": { "geo": "Aapki location nahi mili.", "noCity": "Paas koi city nahi mili." }
+  "error": {
+    "geo": "Aapki location nahi mili.",
+    "noCity": "Paas koi city nahi mili."
+  }
 }

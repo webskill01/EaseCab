@@ -38,6 +38,10 @@ export function DutyAlertsOverlay({ onClose }) {
 
   const [slots, setSlots] = useState(null) // {id,name}[] — seeded from prefs once loaded
   const [notifOn, setNotifOn] = useState(false)
+  // True once we know the OS permission is 'denied'/'unsupported' — a re-prompt is then
+  // impossible, so the toggle can never flip on and we must tell the user where to fix it
+  // (10.1-b: the toggle silently snapping back read as "won't activate").
+  const [blocked, setBlocked] = useState(false)
 
   // Seed local slots + the master-toggle state once preferences arrive.
   useEffect(() => {
@@ -46,7 +50,9 @@ export function DutyAlertsOverlay({ onClose }) {
       // App-side "alerts on" = OS permission granted. A push token is a delivery bonus
       // that needs a real VAPID key, so don't gate the toggle on it (F1) — otherwise the
       // toggle reads off in dev/demo even after the user granted permission.
-      setNotifOn(permissionState() === 'granted')
+      const ps = permissionState()
+      setNotifOn(ps === 'granted')
+      setBlocked(ps === 'denied' || ps === 'unsupported')
     }
   }, [prefs, slots])
 
@@ -63,6 +69,9 @@ export function DutyAlertsOverlay({ onClose }) {
       const res = await alerts.enable()
       const granted = res.permission === 'granted'
       setNotifOn(granted)
+      // Denied/unsupported can't be re-prompted — surface the "blocked" hint instead of
+      // silently snapping the toggle back off (10.1-b).
+      setBlocked(!granted)
       if (granted && res.city && !ids.has(res.city.id) && slots.length < ALERT_CITIES_MAX) {
         setSlots((cur) => [...cur, { id: res.city.id, name: res.city.canonicalName }])
       }
@@ -83,6 +92,11 @@ export function DutyAlertsOverlay({ onClose }) {
           <div className="flex-1 text-[14.5px] font-bold text-ec-ink">{t('dutyAlerts.notifLabel')}</div>
           <Toggle on={notifOn} onChange={toggleNotif} label={t('dutyAlerts.notifLabel')} />
         </div>
+        {blocked && (
+          <p role="alert" className="mt-2 rounded-xl bg-ec-warnBg px-3.5 py-2.5 text-[12.5px] font-semibold leading-snug text-ec-amberTx">
+            {t('dutyAlerts.blockedHint')}
+          </p>
+        )}
 
         <div className="mt-5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-[16px] font-extrabold text-ec-ink">
