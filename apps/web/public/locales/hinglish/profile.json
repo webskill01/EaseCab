@@ -78,6 +78,7 @@
     "language": "Language",
     "settings": "Settings",
     "appPermissions": "App permissions",
+    "blocked": "Blocked users",
     "privacy": "Privacy Policy",
     "terms": "Terms & Conditions",
     "notificationsCount": "{count, plural, one {# city} other {# cities}}"
@@ -127,5 +128,12 @@
       "verified": "Verified",
       "pending": "Pending"
     }
+  },
+  "blocked": {
+    "title": "Blocked users",
+    "emptyTitle": "Koi blocked user nahi",
+    "emptyHint": "Jinhe aap chat se block karte ho woh yahan dikhenge.",
+    "unblock": "Unblock",
+    "unblocking": "Unblock ho raha…"
   }
 }

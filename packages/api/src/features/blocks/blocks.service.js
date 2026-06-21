@@ -20,6 +20,24 @@ function createBlocksService({ repo }) {
       const row = await repo.createBlock({ blockerId, blockedId });
       return { id: row.id, blockedId, createdAt: row.createdAt };
     },
+
+    /** The caller's blocked users, flattened to the display shape the UI renders. */
+    async listBlocks(blockerId) {
+      const rows = await repo.listBlocks(blockerId);
+      return rows.map((r) => ({
+        id: r.id,
+        blockedId: r.blockedId,
+        name: r.blocked?.name ?? null,
+        profilePicUrl: r.blocked?.profilePicUrl ?? null,
+        baseCity: r.blocked?.baseCity ?? null,
+        createdAt: r.createdAt,
+      }));
+    },
+
+    /** Unblock a user. Idempotent — unblocking someone not blocked is a no-op success. */
+    async unblockUser(blockerId, blockedId) {
+      await repo.deleteBlock({ blockerId, blockedId });
+    },
   };
 }
 

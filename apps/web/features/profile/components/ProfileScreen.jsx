@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock } from '@/components/ui/icons'
+import { User, Shield, Crown, BellEdit, ChevR, Pin, Steer, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock, Ban } from '@/components/ui/icons'
 import { env } from '@/config/env'
 import { LogoutButton } from '@/features/shell/components/LogoutButton'
 import { LanguageMenu } from '@/features/shell/components/LanguageMenu'
@@ -148,6 +148,7 @@ export function ProfileScreen() {
 
       <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
         <NavRow icon={<Lock size={16} />} tint="text-ec-amberTx" label={t('nav.appPermissions')} onClick={() => setPermsOpen(true)} />
+        <NavRow icon={<Ban size={16} />} tint="text-ec-ink60" label={t('nav.blocked')} onClick={() => router.push('/profile/blocked')} />
         <NavRow icon={<Info size={16} />} tint="text-ec-ink60" label={t('nav.privacy')} onClick={() => router.push('/privacy-policy')} />
         <NavRow icon={<List size={18} />} tint="text-ec-ink60" label={t('nav.terms')} onClick={() => router.push('/terms')} last />
       </nav>
