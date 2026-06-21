@@ -78,6 +78,7 @@
     "language": "भाषा",
     "settings": "सेटिंग्स",
     "appPermissions": "ऐप अनुमतियाँ",
+    "blocked": "ब्लॉक किए गए यूज़र",
     "privacy": "प्राइवेसी नीति",
     "terms": "नियम व शर्तें",
     "notificationsCount": "{count, plural, one {# शहर} other {# शहर}}"
@@ -127,5 +128,12 @@
       "verified": "वेरिफाइड",
       "pending": "बाकी"
     }
+  },
+  "blocked": {
+    "title": "ब्लॉक किए गए यूज़र",
+    "emptyTitle": "कोई ब्लॉक किया यूज़र नहीं",
+    "emptyHint": "जिन्हें आप चैट से ब्लॉक करते हैं वे यहाँ दिखेंगे।",
+    "unblock": "अनब्लॉक",
+    "unblocking": "अनब्लॉक हो रहा…"
   }
 }

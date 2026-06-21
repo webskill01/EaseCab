@@ -8,4 +8,7 @@ const { z } = require('zod');
  */
 const blockCreateSchema = z.object({ blockedId: z.string().uuid() }).strict();
 
-module.exports = { blockCreateSchema };
+/** Route-param schema for unblock: DELETE /blocks/:blockedId. */
+const blockParamSchema = z.object({ blockedId: z.string().uuid() });
+
+module.exports = { blockCreateSchema, blockParamSchema };

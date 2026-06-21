@@ -163,6 +163,16 @@ export function Lock({ size = 18, className }) {
   )
 }
 
+/** Ban — circle with a diagonal slash; blocked users. */
+export function Ban({ size = 18, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base} strokeWidth={1.9}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M5.6 5.6l12.8 12.8" />
+    </svg>
+  )
+}
+
 /** Shield (filled) — trust / verified. */
 export function Shield({ size = 14, className }) {
   return (

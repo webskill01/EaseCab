@@ -78,6 +78,7 @@
     "language": "ਭਾਸ਼ਾ",
     "settings": "ਸੈਟਿੰਗਾਂ",
     "appPermissions": "ਐਪ ਅਨੁਮਤੀਆਂ",
+    "blocked": "ਬਲਾਕ ਕੀਤੇ ਵਰਤੋਂਕਾਰ",
     "privacy": "ਪ੍ਰਾਈਵੇਸੀ ਨੀਤੀ",
     "terms": "ਨਿਯਮ ਤੇ ਸ਼ਰਤਾਂ",
     "notificationsCount": "{count, plural, one {# ਸ਼ਹਿਰ} other {# ਸ਼ਹਿਰ}}"
@@ -127,5 +128,12 @@
       "verified": "ਵੈਰੀਫਾਈਡ",
       "pending": "ਬਾਕੀ"
     }
+  },
+  "blocked": {
+    "title": "ਬਲਾਕ ਕੀਤੇ ਵਰਤੋਂਕਾਰ",
+    "emptyTitle": "ਕੋਈ ਬਲਾਕ ਕੀਤਾ ਵਰਤੋਂਕਾਰ ਨਹੀਂ",
+    "emptyHint": "ਜਿਨ੍ਹਾਂ ਨੂੰ ਤੁਸੀਂ ਚੈਟ ਤੋਂ ਬਲਾਕ ਕਰਦੇ ਹੋ ਉਹ ਇੱਥੇ ਦਿਸਣਗੇ।",
+    "unblock": "ਅਨਬਲਾਕ",
+    "unblocking": "ਅਨਬਲਾਕ ਹੋ ਰਿਹਾ…"
   }
 }

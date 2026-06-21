@@ -23,3 +23,28 @@ test('blockUser: rejects blocking yourself and never writes', async () => {
   );
   assert.equal(wrote, false);
 });
+
+test('listBlocks: flattens the joined blocked user to the display shape', async () => {
+  const at = new Date('2026-06-21T00:00:00Z');
+  const repo = { listBlocks: async (id) => {
+    assert.equal(id, 'u1');
+    return [{ id: 'b1', blockedId: 'u2', createdAt: at, blocked: { name: 'Raj', profilePicUrl: 'r2/x', baseCity: 'Ludhiana' } }];
+  } };
+  const out = await createBlocksService({ repo }).listBlocks('u1');
+  assert.deepEqual(out, [{ id: 'b1', blockedId: 'u2', name: 'Raj', profilePicUrl: 'r2/x', baseCity: 'Ludhiana', createdAt: at }]);
+});
+
+test('listBlocks: null-safe when the joined user fields are missing', async () => {
+  const repo = { listBlocks: async () => [{ id: 'b1', blockedId: 'u2', createdAt: new Date(), blocked: null }] };
+  const [row] = await createBlocksService({ repo }).listBlocks('u1');
+  assert.equal(row.name, null);
+  assert.equal(row.profilePicUrl, null);
+  assert.equal(row.baseCity, null);
+});
+
+test('unblockUser: delegates to repo.deleteBlock with both ids', async () => {
+  let args = null;
+  const repo = { deleteBlock: async (a) => { args = a; return 1; } };
+  await createBlocksService({ repo }).unblockUser('u1', 'u2');
+  assert.deepEqual(args, { blockerId: 'u1', blockedId: 'u2' });
+});
