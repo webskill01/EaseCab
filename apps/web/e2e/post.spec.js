@@ -14,6 +14,10 @@ const DRAFT = {
   vehicleType: 'Innova', phone: '+919876543210',
 }
 
+// The post form rejects past dates (CLAUDE.md #8), so the fixture date must be in
+// the future or this suite rots over time. Tomorrow, formatted for <input type=date>.
+const FUTURE_DATE = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
+
 async function mockBase(page) {
   await page.route('**/api/v1/auth/refresh', (r) => r.fulfill(ok({ refreshed: true })))
   await page.route('**/api/v1/cities**', (r) =>
@@ -28,7 +32,7 @@ async function fillStructured(page) {
   await page.getByLabel('Search city').fill('man')
   await page.getByRole('button', { name: 'Manali' }).click()
   await page.getByRole('radio', { name: /innova/i }).click()
-  await page.getByLabel('Date').fill('2026-06-20')
+  await page.getByLabel('Date').fill(FUTURE_DATE)
   await page.getByLabel('Time').fill('09:30')
   await page.getByLabel('Contact number').fill('9876543210')
 }
@@ -53,7 +57,14 @@ test('paste path: read message, preview, post', async ({ page }) => {
   await page.getByLabel('Paste the ride message').fill('Delhi to Chandigarh Innova 9876543210')
   await page.getByRole('button', { name: /read message/i }).click()
   await expect(page.getByText('Delhi')).toBeVisible()
-  await page.getByRole('button', { name: /looks good/i }).click()
+  // Paste never posts directly (#9/F5): the preview continues into the prefilled
+  // form, where the bits paste can't read (date/time) are completed before posting.
+  await page.getByRole('button', { name: /continue to form/i }).click()
+  await page.getByLabel('Date').fill(FUTURE_DATE)
+  await page.getByLabel('Time').fill('09:30')
+  const post = page.getByRole('button', { name: /post ride/i })
+  await expect(post).toBeEnabled()
+  await post.click()
   await expect(page.getByText(/duty posted/i)).toBeVisible()
 })
 

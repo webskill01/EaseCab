@@ -16,7 +16,8 @@ export async function setLocale(locale) {
   if (!LOCALES.includes(locale)) {
     throw new Error(`Unsupported locale: ${locale}`)
   }
-  cookies().set(LOCALE_COOKIE, locale, {
+  const store = await cookies()
+  store.set(LOCALE_COOKIE, locale, {
     path: '/',
     maxAge: 60 * 60 * 24 * 365,
     sameSite: 'lax',

@@ -15,15 +15,15 @@ describe('getUserLocale', () => {
     expect(DEFAULT_LOCALE).toBe('en')
   })
 
-  it('returns the cookie locale when valid', () => {
+  it('returns the cookie locale when valid', async () => {
     cookieGet.mockReturnValue({ value: 'pa' })
-    expect(getUserLocale()).toBe('pa')
+    expect(await getUserLocale()).toBe('pa')
   })
 
-  it('falls back to the default for an unknown/missing cookie', () => {
+  it('falls back to the default for an unknown/missing cookie', async () => {
     cookieGet.mockReturnValue(undefined)
-    expect(getUserLocale()).toBe('en')
+    expect(await getUserLocale()).toBe('en')
     cookieGet.mockReturnValue({ value: 'fr' })
-    expect(getUserLocale()).toBe('en')
+    expect(await getUserLocale()).toBe('en')
   })
 })
