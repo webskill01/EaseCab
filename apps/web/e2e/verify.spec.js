@@ -50,7 +50,7 @@ test('L2: DL submit shows the result', async ({ page }) => {
   await mockBase(page)
   await page.route('**/api/v1/me/profile', (r) => r.fulfill(ok(BASE_PROFILE)))
   await page.route('**/api/v1/verification/dl', (r) => r.fulfill(ok({ verified: true, name: 'Amrit', validUpto: '2030-01-01', cov: 'LMV' })))
-  await page.goto('/verify?intent=driver')
+  await page.goto('/verify?intent=dl')
   await page.getByLabel('DL number').fill('PB1020200012345')
   await page.getByLabel('Date of birth').fill('1990-05-20')
   await page.getByRole('button', { name: /^verify$/i }).first().click()

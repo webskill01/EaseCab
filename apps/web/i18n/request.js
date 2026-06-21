@@ -8,7 +8,7 @@ import { getUserLocale } from './locale'
  * namespaces here as feature steps introduce them (auth, rides, ...).
  */
 export default getRequestConfig(async () => {
-  const locale = getUserLocale()
+  const locale = await getUserLocale()
   const common = (await import(`../public/locales/${locale}/common.json`)).default
   const auth = (await import(`../public/locales/${locale}/auth.json`)).default
   const rides = (await import(`../public/locales/${locale}/rides.json`)).default
@@ -21,6 +21,9 @@ export default getRequestConfig(async () => {
   const chat = (await import(`../public/locales/${locale}/chat.json`)).default
   const notifications = (await import(`../public/locales/${locale}/notifications.json`)).default
   return {
+    // next-intl v4 requires an explicit timeZone, else it logs ENVIRONMENT_FALLBACK
+    // and risks server/client markup mismatches. EaseCab is India-only (§1).
+    timeZone: 'Asia/Kolkata',
     locale,
     messages: { common, auth, rides, mine, post, profile, verification, membership, settings, chat, notifications },
   }

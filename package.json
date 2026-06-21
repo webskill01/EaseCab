@@ -2,7 +2,11 @@
   "name": "easecab",
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=20.9" },
+  "overrides": {
+    "next": "^16.2.9",
+    "undici": "^6.27.0"
+  },
   "scripts": {
     "dev:web": "npm run dev --workspace=apps/web",
     "build:web": "npm run build --workspace=apps/web",

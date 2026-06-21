@@ -4,7 +4,7 @@
 const apiOrigin = process.env.NEXT_PUBLIC_API_URL || ''
 
 // Content-Security-Policy for the admin panel (security-review M1). 'unsafe-inline'
-// is required for styles (Tailwind/Next inject inline <style>) and for Next 14's
+// is required for styles (Tailwind/Next inject inline <style>) and for Next's
 // inline hydration bootstrap script — without per-request nonces this is the
 // tightest workable policy. No external script/style/frame sources are allowed.
 //
