@@ -36,10 +36,10 @@ jobs:
       NEXT_PUBLIC_FIREBASE_VAPID_KEY: ci-placeholder-vapid-key
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20' # matches engines.node and the VPS runtime (not the dev machine's 24)
           cache: npm
