@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/api/client', () => ({ apiFetch: vi.fn() }))
 import { apiFetch } from '@/lib/api/client'
-import { listChats, listMessages, sendMessage, sendImageMessage, blockUser, markRead, openChat, mintFirebaseToken } from '../chatApi'
+import { listChats, listMessages, sendMessage, sendImageMessage, blockUser, markRead, touchPresence, openChat, mintFirebaseToken } from '../chatApi'
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -62,6 +62,14 @@ describe('markRead', () => {
     apiFetch.mockResolvedValue({ data: { readAt: 't' } })
     await markRead('c1')
     expect(apiFetch).toHaveBeenCalledWith('/chats/c1/read', { method: 'POST' })
+  })
+})
+
+describe('touchPresence', () => {
+  it('POSTs /chats/:id/presence', async () => {
+    apiFetch.mockResolvedValue({ data: { activeAt: 't' } })
+    await touchPresence('c1')
+    expect(apiFetch).toHaveBeenCalledWith('/chats/c1/presence', { method: 'POST' })
   })
 })
 

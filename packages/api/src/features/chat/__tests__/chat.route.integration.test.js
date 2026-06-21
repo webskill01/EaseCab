@@ -102,7 +102,7 @@ function fakeRedis() {
 }
 
 function makeApp(seed) {
-  const store = { docs: [], msgs: [], reads: [], async createChatDoc(a) { this.docs.push(a); }, async appendMessage(a) { this.msgs.push(a); }, async setLastRead(a) { this.reads.push(a); } };
+  const store = { docs: [], msgs: [], reads: [], actives: [], async createChatDoc(a) { this.docs.push(a); }, async appendMessage(a) { this.msgs.push(a); }, async setLastRead(a) { this.reads.push(a); }, async setLastActive(a) { this.actives.push(a); } };
   const app = buildApp({
     prisma: fakePrisma(seed), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { async verifyOtpToken() { return { phone: '+910000000000' }; } },
@@ -216,6 +216,25 @@ test('POST /chats/:id/read → 404 for a non-participant', async () => {
   const app = makeApp({ chats: [{ id: UUID(2), postedRideId: UUID(7), posterId: 'u9', initiatorId: 'u2' }] });
   const res = await request(app).post(`/api/v1/chats/${UUID(2)}/read`).set('Cookie', cookieFor('u1'));
   assert.equal(res.status, 404);
+});
+
+test('POST /chats/:id/presence → 201 stamps the caller-role lastActiveAt', async () => {
+  const app = makeApp({ chats: [{ id: UUID('f'), postedRideId: UUID(9), posterId: 'u9', initiatorId: 'u1' }] });
+  const res = await request(app).post(`/api/v1/chats/${UUID('f')}/presence`).set('Cookie', cookieFor('u1'));
+  assert.equal(res.status, 201);
+  assert.equal(app.locals._store.actives[0].role, 'initiator');
+  assert.equal(app.locals._store.actives[0].chatId, UUID('f'));
+});
+
+test('POST /chats/:id/presence → 404 for a non-participant', async () => {
+  const app = makeApp({ chats: [{ id: UUID(2), postedRideId: UUID(7), posterId: 'u9', initiatorId: 'u2' }] });
+  const res = await request(app).post(`/api/v1/chats/${UUID(2)}/presence`).set('Cookie', cookieFor('u1'));
+  assert.equal(res.status, 404);
+});
+
+test('POST /chats/:id/presence → 401 without auth', async () => {
+  const res = await request(makeApp({})).post(`/api/v1/chats/${UUID('f')}/presence`);
+  assert.equal(res.status, 401);
 });
 
 test('unauthenticated → 401 on the chat list', async () => {
