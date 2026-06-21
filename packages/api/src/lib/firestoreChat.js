@@ -19,7 +19,8 @@ const { FIRESTORE_PATHS } = require('@easecab/shared');
  * @returns {{
  *   createChatDoc(args: { chatId: string, postedRideId: string, posterId: string, initiatorId: string }): Promise<void>,
  *   appendMessage(args: { chatId: string, messageId: string, senderId: string, type: string, text: string|null, imageUrl: string|null, sentAt: Date }): Promise<void>,
- *   setLastRead(args: { chatId: string, role: 'initiator' | 'poster', at: Date }): Promise<void>
+ *   setLastRead(args: { chatId: string, role: 'initiator' | 'poster', at: Date }): Promise<void>,
+ *   setLastActive(args: { chatId: string, role: 'initiator' | 'poster', at: Date }): Promise<void>
  * }}
  */
 function createChatStore({ projectId, clientEmail, privateKey }) {
@@ -61,6 +62,16 @@ function createChatStore({ projectId, clientEmail, privateKey }) {
      */
     async setLastRead({ chatId, role, at }) {
       const field = role === 'poster' ? 'posterLastReadAt' : 'initiatorLastReadAt';
+      await db.doc(FIRESTORE_PATHS.chatDoc(chatId)).set({ [field]: at }, { merge: true });
+    },
+
+    /**
+     * Stamp a participant's last-active time on the chat doc (P12-8 presence) so the
+     * OTHER party's subscribed thread can render online / last-seen live. One field
+     * per role, same single-merge-write shape as setLastRead.
+     */
+    async setLastActive({ chatId, role, at }) {
+      const field = role === 'poster' ? 'posterLastActiveAt' : 'initiatorLastActiveAt';
       await db.doc(FIRESTORE_PATHS.chatDoc(chatId)).set({ [field]: at }, { merge: true });
     },
   };

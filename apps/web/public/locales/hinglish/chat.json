@@ -17,6 +17,8 @@
     "readOnly": "Yeh ride khatam ho gayi hai — chat sirf padhne ke liye hai",
     "send": "Bhejo",
     "viewProfile": "Profile dekho",
+    "online": "Online",
+    "lastSeen": "last seen {time}",
     "attachImage": "Photo add karein",
     "attaching": "Photo upload ho rahi…",
     "attachError": "Add nahi hui. Choti image try karein.",
@@ -25,7 +27,7 @@
     "report": "Report karein",
     "block": "User block karein",
     "blockTitle": "Is user ko block karein?",
-    "blockBody": "Wo aapko message nahi bhej payenge, aur yeh chat nahi dikhegi. Ise abhi undo nahi kar sakte."
+    "blockBody": "Wo aapko message nahi bhej payenge, aur yeh chat nahi dikhegi. Aap unhe baad mein Profile → Blocked se unblock kar sakte ho."
   },
   "tick": {
     "sent": "Bheja",

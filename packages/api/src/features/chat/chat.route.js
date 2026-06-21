@@ -49,6 +49,12 @@ function createChatRouter({ service, requireAuth }) {
     sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
   });
 
+  // POST /api/v1/chats/:id/presence — heartbeat; stamps the caller's lastActiveAt.
+  router.post('/:id/presence', validate(chatIdParamSchema, 'params'), async (req, res) => {
+    const data = await service.touchPresence(req.user.id, req.valid.params.id);
+    sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
+  });
+
   return router;
 }
 

@@ -5,6 +5,7 @@ import { renderWithIntl } from '@/test/intl'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock('@/features/profile/hooks/useProfile', () => ({ useProfile: () => ({ data: { id: 'me' } }) }))
 vi.mock('../../hooks/useChatThread', () => ({ useChatThread: vi.fn() }))
+vi.mock('../../hooks/useChatPresence', () => ({ useChatPresence: vi.fn() }))
 
 import { useChatThread } from '../../hooks/useChatThread'
 import { ChatThread } from '../ChatThread'
@@ -31,5 +32,19 @@ describe('ChatThread', () => {
     fireEvent.click(screen.getByRole('button', { name: /more options/i }))
     expect(screen.getByText('Report')).toBeInTheDocument()
     expect(screen.getByText('Block user')).toBeInTheDocument()
+  })
+
+  it('shows the Online indicator when the other party is recently active', () => {
+    useChatThread.mockReturnValue({ meta: { isActive: true, posterId: 'other', posterLastActiveAt: new Date().toISOString() }, live: [], pending: [], isActive: true, send: vi.fn() })
+    renderWithIntl(<ChatThread chatId="c1" />)
+    expect(screen.getByText('Online')).toBeInTheDocument()
+  })
+
+  it('shows a last-seen subtitle when the other party went stale', () => {
+    const tenMinAgo = new Date(Date.now() - 10 * 60_000).toISOString()
+    useChatThread.mockReturnValue({ meta: { isActive: true, posterId: 'other', posterLastActiveAt: tenMinAgo }, live: [], pending: [], isActive: true, send: vi.fn() })
+    renderWithIntl(<ChatThread chatId="c1" />)
+    expect(screen.getByText(/last seen/i)).toBeInTheDocument()
+    expect(screen.queryByText('Online')).toBeNull()
   })
 })

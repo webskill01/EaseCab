@@ -26,12 +26,13 @@ function baseRepo(over = {}) {
 }
 
 function spyStore() {
-  const calls = { doc: [], msg: [], read: [] };
+  const calls = { doc: [], msg: [], read: [], active: [] };
   return {
     calls,
     async createChatDoc(a) { calls.doc.push(a); },
     async appendMessage(a) { calls.msg.push(a); },
     async setLastRead(a) { calls.read.push(a); },
+    async setLastActive(a) { calls.active.push(a); },
   };
 }
 
@@ -138,6 +139,28 @@ test('markRead: resolves the poster role when the caller is the poster', async (
 test('markRead: NOT_FOUND when the caller is not a participant', async () => {
   const svc = createChatService({ repo: baseRepo({ chat: null }), chatStore: spyStore() });
   await assert.rejects(() => svc.markRead('u1', 'ch1'), code('NOT_FOUND'));
+});
+
+test('touchPresence: stamps the caller-role lastActiveAt on the chat doc', async () => {
+  const store = spyStore();
+  const svc = createChatService({ repo: baseRepo({ chat: { id: 'ch1', posterId: 'poster', initiatorId: 'u1' } }), chatStore: store });
+  const res = await svc.touchPresence('u1', 'ch1');
+  assert.ok(res.activeAt instanceof Date);
+  assert.equal(store.calls.active.length, 1);
+  assert.equal(store.calls.active[0].role, 'initiator');
+  assert.equal(store.calls.active[0].chatId, 'ch1');
+});
+
+test('touchPresence: resolves the poster role when the caller is the poster', async () => {
+  const store = spyStore();
+  const svc = createChatService({ repo: baseRepo({ chat: { id: 'ch1', posterId: 'u1', initiatorId: 'other' } }), chatStore: store });
+  await svc.touchPresence('u1', 'ch1');
+  assert.equal(store.calls.active[0].role, 'poster');
+});
+
+test('touchPresence: NOT_FOUND when the caller is not a participant', async () => {
+  const svc = createChatService({ repo: baseRepo({ chat: null }), chatStore: spyStore() });
+  await assert.rejects(() => svc.touchPresence('u1', 'ch1'), code('NOT_FOUND'));
 });
 
 test('sendMessage: NOT_FOUND when the chat is read-only / not a participant', async () => {

@@ -17,6 +17,8 @@
     "readOnly": "This ride has expired — chat is read-only",
     "send": "Send",
     "viewProfile": "View profile",
+    "online": "Online",
+    "lastSeen": "last seen {time}",
     "attachImage": "Attach photo",
     "attaching": "Uploading photo…",
     "attachError": "Couldn't attach. Try a smaller image.",
@@ -25,7 +27,7 @@
     "report": "Report",
     "block": "Block user",
     "blockTitle": "Block this user?",
-    "blockBody": "They won't be able to message you, and you won't see this chat. You can't undo this yet."
+    "blockBody": "They won't be able to message you, and you won't see this chat. You can unblock them later from Profile → Blocked."
   },
   "tick": {
     "sent": "Sent",

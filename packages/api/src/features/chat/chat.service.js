@@ -126,6 +126,22 @@ function createChatService({ repo, chatStore, uploads }) {
       return { readAt: at };
     },
 
+    /**
+     * Heartbeat (P12-8 presence): stamp the caller's role lastActiveAt on the chat doc
+     * so the OTHER party's subscribed thread renders online / last-seen. Ephemeral —
+     * Firestore only, no Postgres write. NOT_FOUND if not a participant.
+     */
+    async touchPresence(userId, chatId) {
+      const chat = await repo.getParticipantChat(chatId, userId);
+      if (!chat) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      const at = new Date();
+      const role = chat.posterId === userId ? 'poster' : 'initiator';
+      await chatStore.setLastActive({ chatId, role, at });
+      return { activeAt: at };
+    },
+
     /** One page of a chat's message history. Participant-gated. */
     async listMessages(userId, chatId, { limit, cursor }) {
       const chat = await repo.getParticipantChat(chatId, userId);

@@ -40,6 +40,11 @@ export async function markRead(chatId) {
   await apiFetch(`/chats/${chatId}/read`, { method: 'POST' })
 }
 
+/** Presence heartbeat (P12-8): stamp the caller's lastActiveAt on the chat doc. */
+export async function touchPresence(chatId) {
+  await apiFetch(`/chats/${chatId}/presence`, { method: 'POST' })
+}
+
 /** Open (or reuse) the 1:1 chat for a posted ride the caller has contacted. @returns {Promise<object>} */
 export async function openChat(postedRideId) {
   const { data } = await apiFetch('/chats', { method: 'POST', body: JSON.stringify({ postedRideId }) })

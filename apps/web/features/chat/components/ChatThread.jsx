@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useEffect, useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useProfile } from '@/features/profile/hooks/useProfile'
@@ -10,8 +10,9 @@ import { ReportSheet } from '@/features/rides/components/ReportSheet'
 import { ConfirmSheet } from '@/features/rides/components/ConfirmSheet'
 import { RIDE_KIND } from '@/features/rides/lib/rideView'
 import { useChatThread } from '../hooks/useChatThread'
+import { useChatPresence } from '../hooks/useChatPresence'
 import { blockUser } from '../services/chatApi'
-import { mergeLiveMessages, otherLastReadAt } from '../lib/chatView'
+import { mergeLiveMessages, otherLastReadAt, otherLastActiveAt, presenceState, toMillis, lastSeenLabel, PRESENCE_ONLINE_WINDOW_MS } from '../lib/chatView'
 import { MessageBubble } from './MessageBubble'
 import { Composer } from './Composer'
 import { EmptyThread } from './ChatStates'
@@ -23,14 +24,24 @@ import { EmptyThread } from './ChatStates'
  */
 export function ChatThread({ chatId }) {
   const t = useTranslations('chat')
+  const locale = useLocale()
   const router = useRouter()
   const qc = useQueryClient()
   const { data: profile } = useProfile()
   const myId = profile?.id
   const { meta, live, pending, isActive, send, sendImage } = useChatThread(chatId, myId)
+  useChatPresence(chatId)
   const [menu, setMenu] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const [confirmBlock, setConfirmBlock] = useState(false)
+
+  // Tick so the other party's presence decays online→offline + last-seen advances even
+  // when no new snapshot arrives (e.g. they just closed the thread).
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(id)
+  }, [])
 
   const messages = mergeLiveMessages(live, pending)
   const amPoster = meta.posterId === myId
@@ -47,6 +58,14 @@ export function ChatThread({ chatId }) {
   const cached = (qc.getQueryData(['chats']) || []).find((c) => c.id === chatId)
   const headerTitle = cached?.otherName || (cached ? `${cached.fromCityName ?? ''} → ${cached.toCityName ?? ''}` : t('list.title'))
   const hasRoute = Boolean(cached?.fromCityName || cached?.toCityName)
+
+  // Presence subtitle (P12-8): "Online" while active, "last seen …" once stale,
+  // falling back to the base city when the other party has no presence stamp yet.
+  const otherActive = otherLastActiveAt(meta, amPoster)
+  const presence = presenceState(otherActive, now, PRESENCE_ONLINE_WINDOW_MS)
+  const subtitle = presence === 'offline'
+    ? t('thread.lastSeen', { time: lastSeenLabel(toMillis(otherActive), now, locale) })
+    : cached?.otherBaseCity
 
   return (
     <div className="flex h-full flex-col bg-ec-bg">
@@ -69,7 +88,13 @@ export function ChatThread({ chatId }) {
               <span className="truncate text-[15px] font-extrabold text-ec-ink">{headerTitle}</span>
               {cached?.otherVerified && <span className="shrink-0 text-ec-success"><Shield size={13} /></span>}
             </span>
-            {cached?.otherBaseCity && <span className="block truncate text-[11.5px] font-semibold text-ec-ink40">{cached.otherBaseCity}</span>}
+            {presence === 'online' ? (
+              <span className="flex items-center gap-1 text-[11.5px] font-bold text-ec-success">
+                <span className="h-1.5 w-1.5 rounded-full bg-ec-success" aria-hidden="true" />{t('thread.online')}
+              </span>
+            ) : subtitle ? (
+              <span className="block truncate text-[11.5px] font-semibold text-ec-ink40">{subtitle}</span>
+            ) : null}
           </span>
         </button>
         <button type="button" onClick={() => setMenu((m) => !m)} aria-label={t('thread.menu')} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ec-ink60">
