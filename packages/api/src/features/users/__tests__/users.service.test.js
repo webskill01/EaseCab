@@ -11,9 +11,14 @@ const ROW = {
   phone: '+919999999999', // present on the row but must NOT leak
 };
 
+/** profile-view repo stub: an always-ok rate counter + the given profile row. */
+function profileRepo(getPublicProfile, incrProfileViewCount = async () => 1) {
+  return { getPublicProfile, incrProfileViewCount };
+}
+
 test('getPublicProfile shapes a public profile WITHOUT phone/PII', async () => {
-  const svc = createUsersService({ repo: { getPublicProfile: async () => ({ ...ROW }) } });
-  const out = await svc.getPublicProfile('u1');
+  const svc = createUsersService({ repo: profileRepo(async () => ({ ...ROW })) });
+  const out = await svc.getPublicProfile('u1', 'viewer');
   assert.strictEqual(out.name, 'Gurpreet');
   assert.strictEqual(out.verifiedDriver, true);
   assert.strictEqual(out.verification.verificationStatus, 'approved');
@@ -21,14 +26,19 @@ test('getPublicProfile shapes a public profile WITHOUT phone/PII', async () => {
 });
 
 test('verifiedDriver is false when any of Aadhaar/DL/RC is missing', async () => {
-  const svc = createUsersService({ repo: { getPublicProfile: async () => ({ ...ROW, rcSubmitted: false }) } });
-  const out = await svc.getPublicProfile('u1');
+  const svc = createUsersService({ repo: profileRepo(async () => ({ ...ROW, rcSubmitted: false })) });
+  const out = await svc.getPublicProfile('u1', 'viewer');
   assert.strictEqual(out.verifiedDriver, false);
 });
 
 test('getPublicProfile throws NOT_FOUND when the repo returns null (absent/soft-deleted)', async () => {
-  const svc = createUsersService({ repo: { getPublicProfile: async () => null } });
-  await assert.rejects(() => svc.getPublicProfile('missing'), /not found|NOT_FOUND/i);
+  const svc = createUsersService({ repo: profileRepo(async () => null) });
+  await assert.rejects(() => svc.getPublicProfile('missing', 'viewer'), /not found|NOT_FOUND/i);
+});
+
+test('getPublicProfile throws RATE_LIMITED past the per-viewer view cap (M3)', async () => {
+  const svc = createUsersService({ repo: profileRepo(async () => ({ ...ROW }), async () => 61) });
+  await assert.rejects(() => svc.getPublicProfile('u1', 'viewer'), (e) => e.code === 'RATE_LIMITED');
 });
 
 // --- reportUser (P13-12 #5) -------------------------------------------------

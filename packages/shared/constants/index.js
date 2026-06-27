@@ -22,4 +22,5 @@ module.exports = {
   ...require('./uploads'),
   ...require('./admin'),
   ...require('./reports'),
+  ...require('./users'),
 };

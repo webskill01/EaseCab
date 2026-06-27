@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, USER_REPORT } = require('@easecab/shared');
+const { AppError, ERROR_CODES, USER_REPORT, PROFILE_VIEW_RATE_LIMIT } = require('@easecab/shared');
 
 /**
  * Client-safe public poster profile (T3-2). No phone, no PII. `verifiedDriver` is
@@ -38,8 +38,18 @@ function toPublicPoster(u) {
  */
 function createUsersService({ repo, uploads }) {
   return {
-    /** Public profile of any non-deleted user. NOT_FOUND if absent or soft-deleted. */
-    async getPublicProfile(id) {
+    /**
+     * Public profile of any non-deleted user. NOT_FOUND if absent or soft-deleted.
+     * Per-viewer rate-limited to stop one account scraping the whole driver directory
+     * (security-review M3) — counted before the lookup so a 404 still burns the budget.
+     * @param {string} id - target user id
+     * @param {string} viewerId - the authenticated caller (rate-limit subject)
+     */
+    async getPublicProfile(id, viewerId) {
+      const views = await repo.incrProfileViewCount(viewerId, PROFILE_VIEW_RATE_LIMIT.WINDOW_SEC);
+      if (views > PROFILE_VIEW_RATE_LIMIT.MAX_PER_WINDOW) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
       const row = await repo.getPublicProfile(id);
       if (!row) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);

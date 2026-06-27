@@ -23,11 +23,17 @@ const PUBLIC_POSTER_SELECT = Object.freeze({
  */
 function createUsersRepository({ prisma, redis }) {
   const reportCountKey = (reporterId) => redisKey('userreport', reporterId);
+  const profileViewKey = (viewerId) => redisKey('profileview', viewerId);
 
   return {
     /** A non-deleted user's public columns, or null. Soft-deleted users are invisible. */
     async getPublicProfile(id) {
       return prisma.user.findFirst({ where: { id, isDeleted: false }, select: PUBLIC_POSTER_SELECT });
+    },
+
+    /** Per-viewer fixed-window profile-view counter (anti directory-scrape). New count. */
+    async incrProfileViewCount(viewerId, windowSec) {
+      return fixedWindowIncr(redis, profileViewKey(viewerId), windowSec);
     },
 
     /** True iff the target exists and is not soft-deleted. */
@@ -56,9 +62,14 @@ function createUsersRepository({ prisma, redis }) {
       }
     },
 
-    /** Distinct reporters of a user = row count (dedup is enforced by the unique key). */
+    /**
+     * Distinct reporters with an OPEN (unreviewed) report = row count (dedup is enforced
+     * by the unique key). Excludes reports an admin has already resolved, so once a user
+     * is reinstated the auto-hide threshold resets — a single fresh report can't silently
+     * re-flag a vindicated driver (security-review M1).
+     */
     async countReporters(reportedUserId) {
-      return prisma.userReport.count({ where: { reportedUserId } });
+      return prisma.userReport.count({ where: { reportedUserId, reviewedAt: null } });
     },
 
     /** Auto-flag the target, idempotently (only sets flaggedAt when not already set). */

@@ -21,7 +21,7 @@ function createUsersRouter({ service, requireAuth }) {
 
   // GET /api/v1/users/:id/profile — public poster profile.
   router.get('/:id/profile', validate(userIdParamSchema, 'params'), async (req, res) => {
-    const data = await service.getPublicProfile(req.valid.params.id);
+    const data = await service.getPublicProfile(req.valid.params.id, req.user.id);
     sendSuccess(res, { data });
   });
 
