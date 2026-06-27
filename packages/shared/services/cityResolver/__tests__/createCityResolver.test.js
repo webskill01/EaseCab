@@ -207,6 +207,21 @@ test('DB failure throws AppError(INTERNAL_ERROR)', async () => {
   );
 });
 
+// E2 #24: a layer (exact/fuzzy) DB failure must still QUEUE the string for admin
+// review before surfacing the error — otherwise both callers swallow the throw,
+// keep the raw fragment, and the unresolved string is silently lost forever.
+test('layer DB failure queues the string for review before throwing', async () => {
+  let queuedRaw = null;
+  const prisma = makePrisma({
+    cityAlias: { findFirst: async () => { throw new Error('db down'); } },
+  });
+  prisma.unresolvedCityString.upsert = async (arg) => { queuedRaw = arg.where.rawText; return {}; };
+  const resolver = createCityResolver({ prisma, redis: makeRedis(), logger: silentLogger });
+
+  await assert.rejects(() => resolver.resolve('delhi'), (err) => err.code === 'INTERNAL_ERROR');
+  assert.equal(queuedRaw, 'delhi'); // queued (best-effort) before the error surfaced
+});
+
 // E2 #24 hardening: a failed queue write must NOT abort resolution (previously it
 // bubbled to INTERNAL_ERROR and the bot silently dropped the unresolved string).
 test('queueUnresolved write failure degrades to unresolved instead of throwing', async () => {

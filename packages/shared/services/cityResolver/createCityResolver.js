@@ -221,6 +221,13 @@ function createCityResolver({ prisma, redis, logger = console } = {}) {
       return unresolvedResult();
     } catch (err) {
       if (err instanceof AppError) throw err;
+      // A layer (exact/fuzzy) DB failure previously threw INTERNAL_ERROR straight out,
+      // and both callers (bot ingest, post parse) swallow the throw + keep the raw
+      // fragment — so the string was NEVER queued for admin review and silently lost
+      // (E2 #24). Queue it (best-effort) before surfacing the error so a transient
+      // layer blip can't drop an unresolved string; the next healthy occurrence still
+      // increments occurrence_count rather than double-inserting.
+      await queueUnresolved(normalized, null);
       throw new AppError(ERROR_CODES.INTERNAL_ERROR, 'City resolution failed', 500);
     }
   }
