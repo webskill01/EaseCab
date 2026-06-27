@@ -167,7 +167,7 @@ test('reportPost writes a report when the post exists', async () => {
   const svc = createPostedRidesService({ repo: baseRepo({ reports }) });
   const out = await svc.reportPost({ userId: 'u1', postedRideId: 'p1', reason: 'inappropriate', remarks: 'rude' });
   assert.equal(out.id, 'rep1');
-  assert.deepEqual(reports[0], { reporterId: 'u1', postedRideId: 'p1', reason: 'inappropriate', remarks: 'rude', screenshotUrl: null });
+  assert.deepEqual(reports[0], { reporterId: 'u1', postedRideId: 'p1', reason: 'inappropriate', remarks: 'rude', screenshotKey: null });
 });
 
 test('reportPost verifies + stores a screenshot key when supplied', async () => {
@@ -177,7 +177,7 @@ test('reportPost verifies + stores a screenshot key when supplied', async () => 
   const svc = createPostedRidesService({ repo: baseRepo({ reports }), uploads });
   await svc.reportPost({ userId: 'u1', postedRideId: 'p1', reason: 'fake', screenshotKey: 'reports/u1/x.png' });
   assert.deepEqual(verified, { userId: 'u1', purpose: 'report_screenshot', key: 'reports/u1/x.png' });
-  assert.equal(reports[0].screenshotUrl, 'reports/u1/x.png');
+  assert.equal(reports[0].screenshotKey, 'reports/u1/x.png');
 });
 
 test('reportPost throws NOT_FOUND for a missing post', async () => {

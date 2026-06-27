@@ -7,8 +7,8 @@ const { createAdminUserReportsService } = require('../adminUserReports.service')
 const USER_ROW = {
   id: 'u1', name: 'Gurpreet', baseCity: 'Ludhiana', vehicleType: 'Innova', flaggedAt: new Date(),
   reportsReceived: [
-    { id: 'rep1', reason: 'spam', remarks: 'junk', screenshotUrl: null, createdAt: new Date(), reporter: { id: 'a', name: 'A', phone: '+919876543210' } },
-    { id: 'rep2', reason: 'fake', remarks: null, screenshotUrl: 'reports/a/x.jpg', createdAt: new Date(), reporter: { id: 'b', name: null, phone: '+911112223334' } },
+    { id: 'rep1', reason: 'spam', remarks: 'junk', screenshotKey: null, createdAt: new Date(), reporter: { id: 'a', name: 'A', phone: '+919876543210' } },
+    { id: 'rep2', reason: 'fake', remarks: null, screenshotKey: 'reports/a/x.jpg', createdAt: new Date(), reporter: { id: 'b', name: null, phone: '+911112223334' } },
   ],
 };
 

@@ -32,7 +32,7 @@ function fakeRedis() {
 
 const ADMIN = { id: 'adm1', email: 'admin@easecab.com', name: 'Root', role: 'super', passwordHash: HASH };
 const REPORT_ROW = {
-  id: REPORT_ID, reason: 'spam', remarks: 'junk', screenshotUrl: null, createdAt: new Date(), reviewedAt: null,
+  id: REPORT_ID, reason: 'spam', remarks: 'junk', screenshotKey: null, createdAt: new Date(), reviewedAt: null,
   reporter: { id: 'u1', name: 'Reporter', phone: '+919876543210' },
   ride: { id: RIDE_ID, displayText: 'A to B', status: 'fresh', pickupRaw: 'a', dropRaw: 'b', pickupCity: null, dropCity: null },
   postedRide: null,

@@ -34,7 +34,7 @@ function createAdminUserReportsService({ repo, r2 }) {
       id: r.id,
       reason: r.reason,
       remarks: r.remarks,
-      screenshotUrl: await presign(r.screenshotUrl),
+      screenshotUrl: await presign(r.screenshotKey),
       createdAt: r.createdAt,
       reporter: { id: r.reporter.id, name: r.reporter.name, phoneMasked: maskPhone(r.reporter.phone) },
     };

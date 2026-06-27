@@ -198,7 +198,7 @@ test('reportRide writes a report when the ride exists', async () => {
   };
   const out = await createRidesService({ repo }).reportRide({ userId: 'u1', rideId: 'r1', reason: 'spam', remarks: 'dupe' });
   assert.strictEqual(out.id, 'rep1');
-  assert.deepStrictEqual(created, { reporterId: 'u1', rideId: 'r1', reason: 'spam', remarks: 'dupe', screenshotUrl: null });
+  assert.deepStrictEqual(created, { reporterId: 'u1', rideId: 'r1', reason: 'spam', remarks: 'dupe', screenshotKey: null });
 });
 
 test('reportRide verifies + stores a screenshot key when supplied', async () => {
@@ -213,7 +213,7 @@ test('reportRide verifies + stores a screenshot key when supplied', async () => 
   };
   await createRidesService({ repo, uploads }).reportRide({ userId: 'u1', rideId: 'r1', reason: 'fake', screenshotKey: 'reports/u1/abc.jpg' });
   assert.deepStrictEqual(verified, { userId: 'u1', purpose: 'report_screenshot', key: 'reports/u1/abc.jpg' });
-  assert.strictEqual(created.screenshotUrl, 'reports/u1/abc.jpg');
+  assert.strictEqual(created.screenshotKey, 'reports/u1/abc.jpg');
 });
 
 test('reportRide throws NOT_FOUND for a missing ride and never writes', async () => {

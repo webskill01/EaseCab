@@ -96,5 +96,5 @@ test('reportUser verifies a screenshotKey and stores the returned key (P13-13 #2
   const repo = reportRepo();
   const uploads = { verifyUpload: async ({ userId, purpose, key }) => { assert.strictEqual(userId, 'u9'); assert.strictEqual(purpose, 'report_screenshot'); return { key: `verified/${key}` }; } };
   await createUsersService({ repo, uploads }).reportUser({ reporterId: 'u9', reportedUserId: 'u2', reason: 'fake', screenshotKey: 'reports/u9/x.jpg' });
-  assert.strictEqual(repo.calls.created[0].screenshotUrl, 'verified/reports/u9/x.jpg');
+  assert.strictEqual(repo.calls.created[0].screenshotKey, 'verified/reports/u9/x.jpg');
 });

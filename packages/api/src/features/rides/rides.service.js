@@ -106,10 +106,10 @@ function createRidesService({ repo, uploads }) {
       if (!ride) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
-      const screenshotUrl = screenshotKey
+      const storedKey = screenshotKey
         ? (await uploads.verifyUpload({ userId, purpose: 'report_screenshot', key: screenshotKey })).key
         : null;
-      return repo.createRideReport({ reporterId: userId, rideId, reason, remarks, screenshotUrl });
+      return repo.createRideReport({ reporterId: userId, rideId, reason, remarks, screenshotKey: storedKey });
     },
   };
 }

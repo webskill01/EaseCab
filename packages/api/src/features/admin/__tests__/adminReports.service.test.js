@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const { createAdminReportsService } = require('../adminReports.service');
 
 const BOT_ROW = {
-  id: 'r1', reason: 'spam', remarks: 'junk', screenshotUrl: null, createdAt: new Date(), reviewedAt: null,
+  id: 'r1', reason: 'spam', remarks: 'junk', screenshotKey: null, createdAt: new Date(), reviewedAt: null,
   reporter: { id: 'u1', name: 'Reporter', phone: '+919876543210' },
   ride: { id: 'ride1', displayText: 'Amritsar to Delhi', status: 'fresh', pickupRaw: 'asr', dropRaw: 'del', pickupCity: { canonicalName: 'Amritsar' }, dropCity: { canonicalName: 'Delhi' } },
   postedRide: null,
@@ -38,7 +38,7 @@ test('list shapes a posted-ride target (raw-city + poster-name fallbacks)', asyn
     async listReports() {
       return {
         rows: [{
-          id: 'r2', reason: 'fake', remarks: null, screenshotUrl: null, createdAt: new Date(), reviewedAt: null,
+          id: 'r2', reason: 'fake', remarks: null, screenshotKey: null, createdAt: new Date(), reviewedAt: null,
           reporter: { id: 'u2', name: null, phone: '+911112223334' },
           ride: null,
           postedRide: { id: 'p1', status: 'active', fromCityRaw: 'Mohali', toCityRaw: 'Chd', fromCity: null, toCity: null, poster: { name: 'Driver' } },
@@ -57,7 +57,7 @@ test('list shapes a posted-ride target (raw-city + poster-name fallbacks)', asyn
 
 test('list presigns the screenshotUrl via the r2 boundary (never returns a raw key)', async () => {
   const repo = fakeRepo({
-    async listReports() { return { rows: [{ ...BOT_ROW, id: 'r3', screenshotUrl: 'reports/abc.jpg' }], total: 1 }; },
+    async listReports() { return { rows: [{ ...BOT_ROW, id: 'r3', screenshotKey: 'reports/abc.jpg' }], total: 1 }; },
   });
   const r2 = { async presignGet({ key }) { return `https://signed/${key}`; } };
   const svc = createAdminReportsService({ repo, r2 });
@@ -67,7 +67,7 @@ test('list presigns the screenshotUrl via the r2 boundary (never returns a raw k
 
 test('list yields null screenshotUrl when there is no key or no r2 boundary', async () => {
   const repo = fakeRepo({
-    async listReports() { return { rows: [{ ...BOT_ROW, id: 'r4', screenshotUrl: 'reports/x.jpg' }], total: 1 }; },
+    async listReports() { return { rows: [{ ...BOT_ROW, id: 'r4', screenshotKey: 'reports/x.jpg' }], total: 1 }; },
   });
   const svc = createAdminReportsService({ repo }); // no r2 injected
   const item = (await svc.list({ page: 1, limit: 20, status: 'open' })).items[0];

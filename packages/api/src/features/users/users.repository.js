@@ -50,10 +50,10 @@ function createUsersRepository({ prisma, redis }) {
      * Create a user report. The unique (reporter, reported) makes a re-report a no-op:
      * a P2002 conflict returns { created: false } instead of throwing.
      */
-    async createUserReport({ reporterId, reportedUserId, reason, remarks, screenshotUrl }) {
+    async createUserReport({ reporterId, reportedUserId, reason, remarks, screenshotKey }) {
       try {
         await prisma.userReport.create({
-          data: { reporterId, reportedUserId, reason, remarks: remarks ?? null, screenshotUrl: screenshotUrl ?? null },
+          data: { reporterId, reportedUserId, reason, remarks: remarks ?? null, screenshotKey: screenshotKey ?? null },
         });
         return { created: true };
       } catch (err) {

@@ -170,10 +170,10 @@ function createPostedRidesService({ repo, logger, uploads }) {
       if (post.postedBy === userId) {
         throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       }
-      const screenshotUrl = screenshotKey
+      const storedKey = screenshotKey
         ? (await uploads.verifyUpload({ userId, purpose: 'report_screenshot', key: screenshotKey })).key
         : null;
-      return repo.createPostReport({ reporterId: userId, postedRideId, reason, remarks, screenshotUrl });
+      return repo.createPostReport({ reporterId: userId, postedRideId, reason, remarks, screenshotKey: storedKey });
     },
   };
 }

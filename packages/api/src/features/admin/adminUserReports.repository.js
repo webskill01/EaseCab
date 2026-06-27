@@ -34,7 +34,7 @@ function createAdminUserReportsRepository({ prisma }) {
               where: { reviewedAt: null },
               orderBy: { createdAt: 'desc' },
               select: {
-                id: true, reason: true, remarks: true, screenshotUrl: true, createdAt: true,
+                id: true, reason: true, remarks: true, screenshotKey: true, createdAt: true,
                 reporter: { select: REPORTER_SELECT },
               },
             },

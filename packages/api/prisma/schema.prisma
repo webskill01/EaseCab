@@ -480,7 +480,8 @@ model RideReport {
   postedRideId String?      @map("posted_ride_id") @db.Uuid
   reason       ReportReason
   remarks      String?
-  screenshotUrl String?     @map("screenshot_url")
+  // Holds an R2 object KEY, not a URL (the admin API presigns it on read).
+  screenshotKey String?     @map("screenshot_url")
   reviewedAt   DateTime?    @map("reviewed_at") @db.Timestamptz(6)
   // Admin moderation verdict (Step 24c). reviewedBy → admin_users.id (never users — §6).
   reviewedBy    String?       @map("reviewed_by") @db.Uuid
@@ -512,7 +513,8 @@ model UserReport {
   reportedUserId String        @map("reported_user_id") @db.Uuid
   reason         ReportReason
   remarks        String?
-  screenshotUrl  String?       @map("screenshot_url")
+  // Holds an R2 object KEY, not a URL (the admin API presigns it on read).
+  screenshotKey  String?       @map("screenshot_url")
   reviewedAt     DateTime?     @map("reviewed_at") @db.Timestamptz(6)
   // Admin moderation verdict. reviewedBy → admin_users.id (never users — §6).
   reviewedBy     String?       @map("reviewed_by") @db.Uuid

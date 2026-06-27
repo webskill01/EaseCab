@@ -78,10 +78,10 @@ function createUsersService({ repo, uploads }) {
       if (count > USER_REPORT.MAX_PER_DAY) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
-      const screenshotUrl = screenshotKey
+      const storedKey = screenshotKey
         ? (await uploads.verifyUpload({ userId: reporterId, purpose: 'report_screenshot', key: screenshotKey })).key
         : null;
-      const { created } = await repo.createUserReport({ reporterId, reportedUserId, reason, remarks, screenshotUrl });
+      const { created } = await repo.createUserReport({ reporterId, reportedUserId, reason, remarks, screenshotKey: storedKey });
       if (!created) {
         return { reported: true, alreadyReported: true };
       }

@@ -64,7 +64,7 @@ function createAdminReportsService({ repo, r2 }) {
       id: row.id,
       reason: row.reason,
       remarks: row.remarks,
-      screenshotUrl: await presign(row.screenshotUrl),
+      screenshotUrl: await presign(row.screenshotKey),
       createdAt: row.createdAt,
       reviewedAt: row.reviewedAt,
       reporter: { id: row.reporter.id, name: row.reporter.name, phoneMasked: maskPhone(row.reporter.phone) },
