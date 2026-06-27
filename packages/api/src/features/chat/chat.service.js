@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, CHAT, MESSAGE_TYPE } = require('@easecab/shared');
+const { AppError, ERROR_CODES, CHAT, CHAT_RATE_LIMIT, MESSAGE_TYPE } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
 /** Client-safe chat projection — participants are user ids; no PII. */
@@ -132,6 +132,10 @@ function createChatService({ repo, chatStore, uploads }) {
      * Firestore only, no Postgres write. NOT_FOUND if not a participant.
      */
     async touchPresence(userId, chatId) {
+      const beats = await repo.incrPresenceCount(userId, CHAT_RATE_LIMIT.PRESENCE.WINDOW_SEC);
+      if (beats > CHAT_RATE_LIMIT.PRESENCE.MAX_PER_WINDOW) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
       const chat = await repo.getParticipantChat(chatId, userId);
       if (!chat) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
@@ -164,6 +168,10 @@ function createChatService({ repo, chatStore, uploads }) {
      * public URL. Postgres first (durable), then Firestore (realtime mirror).
      */
     async sendMessage(userId, chatId, { messageType = MESSAGE_TYPE.TEXT, messageText, attachmentKey }) {
+      const sent = await repo.incrMessageCount(userId, CHAT_RATE_LIMIT.MESSAGE.WINDOW_SEC);
+      if (sent > CHAT_RATE_LIMIT.MESSAGE.MAX_PER_WINDOW) {
+        throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
       const writable = await repo.getWritableChat(chatId, userId);
       if (!writable) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);

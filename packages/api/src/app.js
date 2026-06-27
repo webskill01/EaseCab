@@ -296,7 +296,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
 
   // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole
   // writer to both Postgres (durable) and Firestore (realtime, via chatStore).
-  const chatRepo = createChatRepository({ prisma });
+  const chatRepo = createChatRepository({ prisma, redis });
   const chatService = createChatService({ repo: chatRepo, chatStore, uploads: uploadsService });
   v1.use('/chats', createChatRouter({ service: chatService, requireAuth }));
 

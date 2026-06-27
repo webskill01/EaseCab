@@ -22,6 +22,8 @@ function baseRepo(over = {}) {
     async markMessagesRead() { return over.markResult ?? { count: 0 }; },
     async insertMessage(args) { return { id: 'm1', messageType: 'text', sentAt: new Date('2026-06-02T10:00:00.000Z'), ...args, messageText: args.messageText }; },
     async listMessages() { return over.messages ?? []; },
+    async incrMessageCount() { return over.messageCount ?? 1; },
+    async incrPresenceCount() { return over.presenceCount ?? 1; },
   };
 }
 
@@ -163,6 +165,13 @@ test('touchPresence: NOT_FOUND when the caller is not a participant', async () =
   await assert.rejects(() => svc.touchPresence('u1', 'ch1'), code('NOT_FOUND'));
 });
 
+test('touchPresence: RATE_LIMITED once over the per-sender heartbeat cap (M2)', async () => {
+  const store = spyStore();
+  const svc = createChatService({ repo: baseRepo({ presenceCount: 31 }), chatStore: store });
+  await assert.rejects(() => svc.touchPresence('u1', 'ch1'), code('RATE_LIMITED'));
+  assert.equal(store.calls.active.length, 0); // capped before any Firestore write
+});
+
 test('sendMessage: NOT_FOUND when the chat is read-only / not a participant', async () => {
   const svc = createChatService({ repo: baseRepo({ writable: null }), chatStore: spyStore() });
   await assert.rejects(() => svc.sendMessage('u1', 'ch1', { messageText: 'hi' }), code('NOT_FOUND'));
@@ -171,6 +180,13 @@ test('sendMessage: NOT_FOUND when the chat is read-only / not a participant', as
 test('sendMessage: NOT_FOUND when a block exists between the participants', async () => {
   const svc = createChatService({ repo: baseRepo({ blocked: true }), chatStore: spyStore() });
   await assert.rejects(() => svc.sendMessage('u1', 'ch1', { messageText: 'hi' }), code('NOT_FOUND'));
+});
+
+test('sendMessage: RATE_LIMITED once over the per-sender message cap (M2)', async () => {
+  const store = spyStore();
+  const svc = createChatService({ repo: baseRepo({ messageCount: 31 }), chatStore: store });
+  await assert.rejects(() => svc.sendMessage('u1', 'ch1', { messageText: 'spam' }), code('RATE_LIMITED'));
+  assert.equal(store.calls.msg.length, 0); // capped before any PG/Firestore write
 });
 
 test('sendMessage: persists to PG then mirrors to Firestore, returns the public message', async () => {

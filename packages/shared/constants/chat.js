@@ -19,4 +19,16 @@ const CHAT = Object.freeze({
   PRESENCE: Object.freeze({ HEARTBEAT_MS: 30000, ONLINE_WINDOW_MS: 60000 }),
 });
 
-module.exports = { CHAT };
+/**
+ * Per-sender chat write limits (security-review M2). Both endpoints are authed but
+ * uncapped, so one account could flood messages or hammer presence. Fixed-window,
+ * per-user. MESSAGE: brisk human chat is ~one per few seconds, so 30/min has wide
+ * headroom yet stops a bot flood. PRESENCE: the client beats every 30s (2/min), so
+ * 30/min absorbs tab refocus, multiple tabs and reconnects while still bounded.
+ */
+const CHAT_RATE_LIMIT = Object.freeze({
+  MESSAGE: Object.freeze({ MAX_PER_WINDOW: 30, WINDOW_SEC: 60 }),
+  PRESENCE: Object.freeze({ MAX_PER_WINDOW: 30, WINDOW_SEC: 60 }),
+});
+
+module.exports = { CHAT, CHAT_RATE_LIMIT };

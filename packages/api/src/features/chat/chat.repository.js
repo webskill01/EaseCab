@@ -1,6 +1,7 @@
 'use strict';
 
-const { POSTED_RIDE_STATUS, MESSAGE_TYPE } = require('@easecab/shared');
+const { POSTED_RIDE_STATUS, MESSAGE_TYPE, redisKey } = require('@easecab/shared');
+const { fixedWindowIncr } = require('../../lib/rateLimit');
 
 /** Chat columns that may reach a client — no PII (the participants are user ids). */
 const CHAT_SELECT = Object.freeze({
@@ -54,9 +55,22 @@ const MESSAGE_SELECT = Object.freeze({
  *
  * @param {object} deps
  * @param {import('@prisma/client').PrismaClient} deps.prisma
+ * @param {import('ioredis').Redis} deps.redis - backs the per-sender write rate limits (M2)
  */
-function createChatRepository({ prisma }) {
+function createChatRepository({ prisma, redis }) {
+  const messageRateKey = (userId) => redisKey('chatmsg', userId);
+  const presenceRateKey = (userId) => redisKey('chatpresence', userId);
   return {
+    /** Per-sender fixed-window message counter (anti-spam, M2). Returns new count. */
+    async incrMessageCount(userId, windowSec) {
+      return fixedWindowIncr(redis, messageRateKey(userId), windowSec);
+    },
+
+    /** Per-sender fixed-window presence-heartbeat counter (anti-flood, M2). Returns new count. */
+    async incrPresenceCount(userId, windowSec) {
+      return fixedWindowIncr(redis, presenceRateKey(userId), windowSec);
+    },
+
     /** The active, unexpired posted ride + its owner, for the open gate. null if gone. */
     async findActivePost(postedRideId) {
       return prisma.postedRide.findFirst({
