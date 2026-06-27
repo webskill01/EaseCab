@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevL } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
 
 /** L1 step 2 — OTP to the Aadhaar-linked mobile (six boxes + 30s resend). */
 export function AadhaarOtpStep({ onSubmit, onResend, onBack, loading, errorKey }) {
@@ -40,7 +41,7 @@ export function AadhaarOtpStep({ onSubmit, onResend, onBack, loading, errorKey }
       </div>
 
       {errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t(errorKey)}</p>}
-      <button type="submit" disabled={!valid || loading} className="h-[52px] rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue disabled:bg-ec-disabled disabled:shadow-none">{t('l1.verify')}</button>
+      <Button type="submit" size="lg" disabled={!valid || loading} className="w-full">{t('l1.verify')}</Button>
     </form>
   )
 }

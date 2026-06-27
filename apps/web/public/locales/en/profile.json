@@ -14,9 +14,17 @@
     "vehicle": "Vehicle type",
     "languages": "Languages you speak",
     "photo": "Profile photo",
-    "workingCityHint": "Where you mostly take duties — used to surface nearby rides."
+    "workingCityHint": "Where you mostly take duties — used to surface nearby rides.",
+    "baseCityFrom": "From Aadhaar"
   },
   "locked": "Locked",
+  "addLanguage": "Add language",
+  "removeLanguage": "Remove",
+  "logout": {
+    "action": "Log out",
+    "title": "Log out?",
+    "body": "You'll need to sign in again to see new ride leads."
+  },
   "header": {
     "addPhoto": "PHOTO",
     "driver": "Driver"
@@ -30,14 +38,15 @@
     "tapHint": "Tap a stat to edit"
   },
   "about": {
-    "title": "About me",
+    "title": "About",
     "edit": "Edit",
     "languages": "Languages spoken",
     "empty": "Add a short bio so drivers trust your posts."
   },
-  "support": "Help & Support",
+  "support": "Need help? Contact support",
   "version": "EaseCab · v1.0.0",
   "dp": {
+    "caption": "Edit photo · Profile photo",
     "add": "Add photo",
     "change": "Change photo",
     "uploading": "Uploading…",
@@ -65,9 +74,12 @@
     "notStarted": "Not started",
     "submitted": "Submitted",
     "verified": "Verified",
+    "pending": "Pending",
     "underReview": "Under review"
   },
   "nav": {
+    "verification": "Verification",
+    "editReverify": "Edit & re-verify",
     "membership": "Membership",
     "membershipValue": {
       "trial": "Trial · {days} days left",
@@ -100,6 +112,7 @@
   },
   "deleteAccount": {
     "action": "Delete account",
+    "sub": "Permanently remove your profile & data",
     "title": "Delete your account?",
     "body": "Your profile and posts are removed. Sign in again within 30 days to restore everything; after that it's deleted for good.",
     "cancel": "Cancel",
@@ -118,6 +131,33 @@
     "error": "Couldn't load this profile.",
     "aboutEmpty": "No bio added yet.",
     "about": "About {name}",
+    "report": {
+      "flag": "Report this driver",
+      "title": "Report this driver",
+      "reasonQ": "Why are you reporting them?",
+      "reasons": {
+        "fake": "Fake profile",
+        "spam": "Spam",
+        "wrong_info": "Wrong info",
+        "inappropriate": "Inappropriate",
+        "other": "Other"
+      },
+      "remarkPlaceholder": "Add details (optional)",
+      "attach": "Add screenshot",
+      "attaching": "Uploading…",
+      "attached": "Screenshot added",
+      "attachError": "Couldn't attach. Try a smaller image.",
+      "submit": "Submit report",
+      "submitting": "Submitting…",
+      "submitted": "Report received",
+      "submittedSub": "Thanks — our team will review this driver.",
+      "already": "You've already reported this driver.",
+      "error": "Couldn't submit. Please try again.",
+      "errorSelf": "You can't report your own profile.",
+      "errorRate": "You've reported too many drivers today. Please try again later.",
+      "errorGone": "This driver is no longer available.",
+      "errorNetwork": "No connection. Check your internet and try again."
+    },
     "stats": {
       "baseCity": "Base city",
       "aadhaar": "Aadhaar",

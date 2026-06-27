@@ -22,7 +22,8 @@
   },
   "paste": {
     "boxLabel": "राइड संदेश पेस्ट करें",
-    "placeholder": "यहाँ WhatsApp राइड संदेश पेस्ट करें…",
+    "prompt": "अपना राइड संदेश पेस्ट करें — हम पढ़कर कार्ड बना देंगे।",
+    "placeholder": "उदा. Ludhiana → Delhi · Innova · 7 AM · ₹6500 · 98765 43210",
     "read": "संदेश पढ़ें",
     "previewTitle": "हमने यह पढ़ा",
     "noDate": "— फ़ॉर्म में भरें",

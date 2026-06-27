@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { OverlayHeader } from '@/components/ui/Overlay'
+import { Button } from '@/components/ui/button'
 import { Check, Shield, Lock } from '@/components/ui/icons'
 import { maskAadhaar } from '../lib/verifyView'
 
@@ -50,7 +51,7 @@ export function AadhaarDetail({ profile }) {
       </div>
 
       <div className="shrink-0 border-t border-ec-line bg-white p-3.5">
-        <button type="button" onClick={() => router.push('/verify?intent=l1')} className="h-[52px] w-full rounded-xl bg-ec-blueInk text-[15.5px] font-extrabold text-white">{t('detail.verifyAgain')}</button>
+        <Button type="button" size="lg" onClick={() => router.push('/verify?intent=aadhaar-reverify')} className="w-full">{t('detail.verifyAgain')}</Button>
       </div>
     </div>
   )

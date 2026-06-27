@@ -184,3 +184,8 @@ test('reportPost throws NOT_FOUND for a missing post', async () => {
   const svc = createPostedRidesService({ repo: baseRepo({ exists: null }) });
   await assert.rejects(() => svc.reportPost({ userId: 'u1', postedRideId: 'gone', reason: 'fake' }), code('NOT_FOUND'));
 });
+
+test('reportPost rejects reporting your own post with VALIDATION_ERROR', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ exists: { id: 'p1', postedBy: 'u1' } }) });
+  await assert.rejects(() => svc.reportPost({ userId: 'u1', postedRideId: 'p1', reason: 'fake' }), code('VALIDATION_ERROR'));
+});

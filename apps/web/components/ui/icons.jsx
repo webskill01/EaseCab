@@ -42,6 +42,17 @@ export function ChevL({ size = 22, className }) {
   )
 }
 
+/** Log out — door + exit arrow (account actions). */
+export function LogOut({ size = 18, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} {...base}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  )
+}
+
 /** Check. */
 export function Check({ size = 14, className }) {
   return (
@@ -254,6 +265,15 @@ export function Crown({ size = 18, className }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="currentColor">
       <path d="M3 7l4 4 5-7 5 7 4-4-1.5 12h-15L3 7z" />
+    </svg>
+  )
+}
+
+/** Bolt (filled) — experience / energy accent. */
+export function Bolt({ size = 16, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="currentColor">
+      <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
     </svg>
   )
 }

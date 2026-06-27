@@ -22,7 +22,8 @@
   },
   "paste": {
     "boxLabel": "Paste the ride message",
-    "placeholder": "Paste a WhatsApp ride message here…",
+    "prompt": "Paste your ride message — we'll read it and build the card.",
+    "placeholder": "e.g. Ludhiana to Delhi · Innova · tomorrow 7 AM · ₹6500 · 98765 43210",
     "read": "Read message",
     "previewTitle": "Here's what we read",
     "noDate": "— add in form",

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Swap, Shield, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
-import { statusOf, relParts, ageMinFrom, vehIconKey, pickCityName, RIDE_DISPLAY_STATUS } from '../lib/rideView'
+import { statusOf, relParts, ageMinFrom, vehIconKey, pickCityName, rideDateParts, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
 /** Status pill — Fresh (green dot) / Likely-booked (blue dot) / Verified (shield). */
 export function StatusBadge({ status }) {
@@ -131,6 +131,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
   const rel = relParts(ageMin)
   const from = pickCityName(ride.from, ride.fromLocalized, locale)
   const to = pickCityName(ride.to, ride.toLocalized, locale)
+  const dateParts = verified ? rideDateParts(ride.date, locale, now) : null
 
   return (
     <article
@@ -153,11 +154,17 @@ export function RideCard({ ride, now, onContact, onReport }) {
       {verified && ride.posterId ? <PosterRow ride={ride} /> : null}
 
       <div className="mt-2.5 border-t border-ec-line pt-2.5">
-        <div className="flex items-center gap-1.5 text-[13px] font-semibold text-ec-ink60">
-          <span className="inline-flex text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
-          {t('card.vehicle')} : <span className="font-extrabold text-ec-ink">{ride.vehicleType || t('card.unknownCity')}</span>
-          {verified && ride.fare ? <span className="font-extrabold text-ec-ink">· ₹{ride.fare}</span> : null}
-          {verified && ride.date ? <span className="font-semibold text-ec-ink60">· {ride.date}</span> : null}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] font-semibold text-ec-ink60">
+          <span className="inline-flex min-w-0 items-center gap-1.5">
+            <span className="inline-flex shrink-0 text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
+            <span className="truncate font-extrabold text-ec-ink">{ride.vehicleType || t('card.unknownCity')}</span>
+          </span>
+          {verified && ride.fare ? (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-ec-sky px-2 py-0.5 text-[12.5px] font-extrabold text-ec-blueInk">₹{ride.fare}</span>
+          ) : null}
+          {dateParts ? (
+            <span className="shrink-0 text-[12.5px] font-semibold text-ec-ink60">{dateParts.text ?? t(`time.${dateParts.key}`)}</span>
+          ) : null}
         </div>
         {ride.message ? (
           <p className="mt-1.5 whitespace-pre-line break-words text-[12.5px] font-medium leading-snug text-ec-ink60">{ride.message}</p>

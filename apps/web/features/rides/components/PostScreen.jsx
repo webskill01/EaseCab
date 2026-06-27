@@ -99,11 +99,14 @@ export function PostScreen() {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-4 pt-3">
-        {post.error && (
-          <p className="mb-3 rounded-xl bg-ec-dangerBg px-3 py-2.5 text-center text-[13px] font-bold text-ec-danger">{t('error.generic')}</p>
-        )}
+      {post.error && (
+        <p className="mx-4 mt-3 rounded-xl bg-ec-dangerBg px-3 py-2.5 text-center text-[13px] font-bold text-ec-danger">{t('error.generic')}</p>
+      )}
 
+      {/* The active form owns its own scroll body + pinned footer, so the primary
+          action bar is a flex-child footer outside the scroll — never a sticky
+          last-child that rides along with the content (spec §6.12). */}
+      <div className="flex min-h-0 flex-1 flex-col">
         {tab === TAB.FORM ? (
           <PostForm
             form={form}

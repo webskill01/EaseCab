@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { userIdParamSchema } = require('@easecab/shared');
+const { userIdParamSchema, userReportCreateSchema, HTTP_STATUS } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
@@ -23,6 +23,17 @@ function createUsersRouter({ service, requireAuth }) {
   router.get('/:id/profile', validate(userIdParamSchema, 'params'), async (req, res) => {
     const data = await service.getPublicProfile(req.valid.params.id);
     sendSuccess(res, { data });
+  });
+
+  // POST /api/v1/users/:id/report — flag a user (P13-12 #5). Dedup + daily cap +
+  // ≥threshold distinct reporters auto-hides their posts pending admin review.
+  router.post('/:id/report', validate(userIdParamSchema, 'params'), validate(userReportCreateSchema), async (req, res) => {
+    const data = await service.reportUser({
+      reporterId: req.user.id,
+      reportedUserId: req.valid.params.id,
+      ...req.valid.body,
+    });
+    sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
   });
 
   return router;

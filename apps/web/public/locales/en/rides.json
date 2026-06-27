@@ -20,7 +20,9 @@
   "time": {
     "justNow": "just now",
     "minAgo": "{count} min ago",
-    "hourAgo": "{count} h ago"
+    "hourAgo": "{count} h ago",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -69,7 +71,13 @@
   "reveal": {
     "title": "Contact driver",
     "callBtn": "Call",
-    "waBtn": "WhatsApp"
+    "waBtn": "WhatsApp",
+    "failTitle": "Couldn't get the number",
+    "error": "Something went wrong. Please try again.",
+    "errorRate": "You've contacted too many drivers today. Please try again later.",
+    "errorGone": "This ride is no longer available.",
+    "errorNetwork": "No connection. Check your internet and try again.",
+    "retry": "Try again"
   },
   "report": {
     "title": "Report ride",
@@ -85,6 +93,10 @@
     "submit": "Submit report",
     "submitted": "Report submitted",
     "error": "Couldn't submit. Please try again.",
+    "errorSelf": "You can't report your own post.",
+    "errorRate": "You've reported too much today. Please try again later.",
+    "errorGone": "This ride is no longer available.",
+    "errorNetwork": "No connection. Check your internet and try again.",
     "attach": "Add screenshot",
     "attaching": "Uploading…",
     "attached": "Screenshot added",

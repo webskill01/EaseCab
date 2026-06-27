@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { Steer, ChevR } from '@/components/ui/icons'
 
 /**
@@ -76,14 +77,10 @@ export function PhoneForm({ onSubmit, loading, error }) {
         <div className="flex-1" />
 
         {error && <p className="mb-3 text-[13px] font-semibold text-ec-danger">{t(error)}</p>}
-        <button
-          type="submit"
-          disabled={!valid || loading}
-          className="flex h-[54px] items-center justify-center gap-2 rounded-xl bg-ec-blue text-[16px] font-extrabold text-white shadow-ec-blue disabled:bg-[#CBD5E1] disabled:shadow-none"
-        >
+        <Button type="submit" size="lg" disabled={!valid || loading} className="w-full">
           {t('phone.continue')}
           <ChevR size={18} />
-        </button>
+        </Button>
         <p className="mt-3.5 text-center text-[11.5px] leading-relaxed text-ec-ink40">
           {t.rich('phone.terms', {
             break: () => <br />,

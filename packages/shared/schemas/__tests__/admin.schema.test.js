@@ -20,6 +20,7 @@ const {
   adminCityStringsQuerySchema,
   adminCityStringActionSchema,
   adminCityStringIdParamSchema,
+  adminUnresolvedRideActionSchema,
 } = require('../../index');
 
 const UUID = '11111111-1111-1111-1111-111111111111';
@@ -136,6 +137,15 @@ test('adminCityStringActionSchema requires a uuid cityId when resolving', () => 
 test('adminCityStringActionSchema accepts dismiss without a cityId and rejects junk actions', () => {
   assert.equal(adminCityStringActionSchema.safeParse({ action: 'dismiss' }).success, true);
   assert.equal(adminCityStringActionSchema.safeParse({ action: 'delete' }).success, false);
+});
+
+test('adminUnresolvedRideActionSchema requires side + uuid cityId for set_city, nothing for hide', () => {
+  assert.equal(adminUnresolvedRideActionSchema.safeParse({ action: 'set_city' }).success, false);
+  assert.equal(adminUnresolvedRideActionSchema.safeParse({ action: 'set_city', side: 'pickup' }).success, false);
+  assert.equal(adminUnresolvedRideActionSchema.safeParse({ action: 'set_city', cityId: UUID }).success, false);
+  assert.equal(adminUnresolvedRideActionSchema.safeParse({ action: 'set_city', side: 'left', cityId: UUID }).success, false);
+  assert.equal(adminUnresolvedRideActionSchema.safeParse({ action: 'set_city', side: 'drop', cityId: UUID }).success, true);
+  assert.equal(adminUnresolvedRideActionSchema.safeParse({ action: 'hide' }).success, true);
 });
 
 test('adminCityStringIdParamSchema requires a uuid', () => {

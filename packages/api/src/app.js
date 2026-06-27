@@ -67,6 +67,15 @@ const { createAdminUsersRouter } = require('./features/admin/adminUsers.route');
 const { createAdminCityStringsRepository } = require('./features/admin/adminCityStrings.repository');
 const { createAdminCityStringsService } = require('./features/admin/adminCityStrings.service');
 const { createAdminCityStringsRouter } = require('./features/admin/adminCityStrings.route');
+const { createAdminUnresolvedRidesRepository } = require('./features/admin/adminUnresolvedRides.repository');
+const { createAdminUnresolvedRidesService } = require('./features/admin/adminUnresolvedRides.service');
+const { createAdminUnresolvedRidesRouter } = require('./features/admin/adminUnresolvedRides.route');
+const { createAdminUserReportsRepository } = require('./features/admin/adminUserReports.repository');
+const { createAdminUserReportsService } = require('./features/admin/adminUserReports.service');
+const { createAdminUserReportsRouter } = require('./features/admin/adminUserReports.route');
+const { createAdminStatsRepository } = require('./features/admin/adminStats.repository');
+const { createAdminStatsService } = require('./features/admin/adminStats.service');
+const { createAdminStatsRouter } = require('./features/admin/adminStats.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
 
 /**
@@ -194,6 +203,11 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     const adminAuthService = createAdminAuthService({ repo: adminAuthRepo, jwt: app.locals.adminJwt, hasher: createPasswordHasher() });
     v1.use('/admin/auth', createAdminAuthRouter({ service: adminAuthService, config, requireAdmin }));
 
+    // Dashboard stats (Step 24a) — queue counts + today's ride count for the landing page.
+    const adminStatsRepo = createAdminStatsRepository({ prisma });
+    const adminStatsService = createAdminStatsService({ repo: adminStatsRepo });
+    v1.use('/admin/stats', createAdminStatsRouter({ service: adminStatsService, requireAdmin }));
+
     // Verifications queue (Step 24b) — submitted DL/RC review + manual driver badge.
     // `uploads` is the optional R2 client (presignGet for private KYC images); when
     // absent (non-admin/test harnesses) image URLs resolve to null, never an error.
@@ -218,6 +232,16 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     const adminCityStringsRepo = createAdminCityStringsRepository({ prisma });
     const adminCityStringsService = createAdminCityStringsService({ repo: adminCityStringsRepo });
     v1.use('/admin/city-strings', createAdminCityStringsRouter({ service: adminCityStringsService, citiesService, requireAdmin }));
+
+    // Unresolved-rides queue — live bot rides the CityResolver left without a
+    // pickup/drop city; admin fills the missing FK (reusing the /cities picker) or
+    // hides the ride. Distinct from city-strings: a per-ride fix, not a resolver alias.
+    const adminUnresolvedRidesRepo = createAdminUnresolvedRidesRepository({ prisma });
+    const adminUnresolvedRidesService = createAdminUnresolvedRidesService({ repo: adminUnresolvedRidesRepo });
+    v1.use('/admin/unresolved-rides', createAdminUnresolvedRidesRouter({ service: adminUnresolvedRidesService, citiesService, requireAdmin }));
+
+    const adminUserReportsService = createAdminUserReportsService({ repo: createAdminUserReportsRepository({ prisma }), r2: uploads });
+    v1.use('/admin/user-reports', createAdminUserReportsRouter({ service: adminUserReportsService, requireAdmin }));
   }
 
   // Uploads (Step 21a) — built early because the report (rides/posted-rides), profile-DP,
@@ -267,7 +291,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   v1.use('/me', createMeRouter({ service: meService, requireAuth, cookieSecure: config.cookie.secure }));
 
   // Public poster profile (T3-2) — read-only, no PII; opened by tapping another user.
-  const usersService = createUsersService({ repo: createUsersRepository({ prisma }) });
+  const usersService = createUsersService({ repo: createUsersRepository({ prisma, redis }), uploads: uploadsService });
   v1.use('/users', createUsersRouter({ service: usersService, requireAuth }));
 
   // Chat (Step 14) — authed 1:1 chat per verified ride contact. API is the sole

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { Steer, ChevL } from '@/components/ui/icons'
 
 /**
@@ -106,13 +107,9 @@ export function OtpForm({ phone, onSubmit, onChangeNumber, loading, error }) {
       <div className="flex-1" />
 
       {error && <p className="mb-3 text-[13px] font-semibold text-ec-danger">{t(error)}</p>}
-      <button
-        type="submit"
-        disabled={!valid || loading}
-        className="flex h-[54px] items-center justify-center rounded-xl bg-ec-blue text-[16px] font-extrabold text-white shadow-ec-blue disabled:bg-[#CBD5E1] disabled:shadow-none"
-      >
+      <Button type="submit" size="lg" disabled={!valid || loading} className="w-full">
         {t('otp.verify')}
-      </button>
+      </Button>
     </form>
   )
 }

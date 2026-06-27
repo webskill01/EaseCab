@@ -43,8 +43,8 @@ export default function LoginPage() {
               key={step}
               className={
                 step === s.phase
-                  ? 'h-1.5 w-[22px] rounded-full bg-ec-blue transition-all'
-                  : 'h-1.5 w-1.5 rounded-full bg-ec-line transition-all'
+                  ? 'h-2 w-2 rounded-full bg-ec-blue transition-colors'
+                  : 'h-2 w-2 rounded-full bg-ec-line transition-colors'
               }
             />
           ))}

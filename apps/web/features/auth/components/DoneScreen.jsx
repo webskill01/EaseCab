@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { ChevR } from '@/components/ui/icons'
 
 /**
@@ -36,14 +37,10 @@ export function DoneScreen({ onEnter }) {
       </div>
       <h1 className="text-[24px] font-extrabold tracking-tight text-ec-ink">{t('done.title')}</h1>
       <p className="mt-2 max-w-[290px] text-[14.5px] leading-relaxed text-ec-ink60">{t('done.trial')}</p>
-      <button
-        type="button"
-        onClick={onEnter}
-        className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-ec-blue text-[16px] font-extrabold text-white shadow-ec-blue"
-      >
+      <Button type="button" size="lg" onClick={onEnter} className="mt-7 w-full">
         {t('done.enter')}
         <ChevR size={18} />
-      </button>
+      </Button>
     </div>
   )
 }

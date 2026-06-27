@@ -102,11 +102,43 @@ module.exports = {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(0)' },
         },
+        // Subtle drill-down page entrance: short fade + small rise (feels natural, not
+        // a forced full-width slide). No fill-mode → ends at transform:none.
+        'ec-page-rise': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        // Bottom-sheet entrance: scrim fades in, panel slides up from below.
+        'ec-scrim-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'ec-sheet-up': {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+        // Bottom-sheet exit: scrim fades out, panel slides back down.
+        'ec-scrim-out': {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        'ec-sheet-down': {
+          '0%': { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
       },
       animation: {
         'ec-pop': 'ec-pop 0.45s cubic-bezier(0.16,1,0.3,1) both',
         'ec-draw': 'ec-draw 0.4s ease-out 0.28s both',
         'ec-slide-in': 'ec-slide-in 0.22s ease both',
+        'ec-scrim-in': 'ec-scrim-in 0.2s ease-out both',
+        // Soft overshoot easing so the panel settles naturally, not a hard stop.
+        'ec-sheet-up': 'ec-sheet-up 0.28s cubic-bezier(0.16,1,0.3,1) both',
+        'ec-scrim-out': 'ec-scrim-out 0.2s ease-in both',
+        'ec-sheet-down': 'ec-sheet-down 0.24s cubic-bezier(0.4,0,1,1) both',
+        // In-flow page entrance (no fill-mode, so it ends at transform:none and never
+        // becomes a containing block for fixed-position sheets/overlays inside the page).
+        'ec-page-rise': 'ec-page-rise 0.2s ease-out',
       },
     },
   },

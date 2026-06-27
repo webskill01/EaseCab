@@ -56,6 +56,34 @@ export function relParts(ageMin) {
   return { key: 'hourAgo', count: Math.floor(ageMin / 60) }
 }
 
+// next-intl locale → Intl BCP-47 tag for date formatting (all India locales).
+const DATE_LOCALE = Object.freeze({ en: 'en-IN', hinglish: 'en-IN', hi: 'hi-IN', pa: 'pa-IN' })
+
+function dayStart(ms) {
+  const d = new Date(ms)
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+/**
+ * Format a verified ride's travel date for the card. Today/Tomorrow as i18n
+ * tokens (component localizes via `t('rides.time.<key>')`); any other date as a
+ * locale-aware "DD Mon" string. Pure — caller passes `useLocale()`.
+ * @param {?(Date|string|number)} date - ISO datetime (UTC midnight from the API)
+ * @param {string} [locale]
+ * @param {number} [now] - epoch ms (injectable for tests)
+ * @returns {{key: 'today'|'tomorrow'}|{text: string}|null}
+ */
+export function rideDateParts(date, locale = 'en', now = Date.now()) {
+  if (!date) return null
+  const t = date instanceof Date ? date.getTime() : new Date(date).getTime()
+  if (Number.isNaN(t)) return null
+  const days = Math.round((dayStart(t) - dayStart(now)) / 86400000)
+  if (days === 0) return { key: 'today' }
+  if (days === 1) return { key: 'tomorrow' }
+  return { text: new Intl.DateTimeFormat(DATE_LOCALE[locale] || 'en-IN', { day: '2-digit', month: 'short' }).format(t) }
+}
+
 // Vehicle-type enum label (@easecab/shared VEHICLE_TYPES) → glyph key for VehicleIcon.
 const VEH_ICON_KEY = Object.freeze({
   Sedan: 'sedan',

@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
+import { Button } from '@/components/ui/button'
 import { Lock, Pin, BellEdit, Battery, Check } from '@/components/ui/icons'
 import { PERM } from '../lib/appPerms'
 import { useAppPerms } from '../hooks/useAppPerms'
@@ -34,9 +35,9 @@ function PermRow({ icon, title, sub, state, hint, onAllow }) {
       {granted ? (
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ec-success text-white"><Check size={13} /></span>
       ) : state === PERM.PROMPT && onAllow ? (
-        <button type="button" onClick={onAllow} className="shrink-0 rounded-[10px] bg-ec-blue px-3.5 py-2 text-[12.5px] font-extrabold text-white shadow-ec-blue">
+        <Button type="button" size="sm" onClick={onAllow} className="h-auto shrink-0 rounded-[10px] px-3.5 py-2 text-[12.5px]">
           {t('perms.allow')}
-        </button>
+        </Button>
       ) : (
         <span className="shrink-0 text-[11.5px] font-bold text-ec-ink40">{hint}</span>
       )}
@@ -64,9 +65,9 @@ export function AppPermsSheet({ onClose }) {
         <PermRow icon={<Battery size={20} />} title={t('perms.battery')} sub={t('perms.batterySub')} state={PERM.UNSUPPORTED} hint={t('perms.phoneHint')} />
       </div>
 
-      <button type="button" onClick={onClose} className="mt-4 h-[52px] w-full rounded-xl bg-ec-blue text-[15px] font-extrabold text-white shadow-ec-blue">
+      <Button type="button" size="lg" onClick={onClose} className="mt-4 w-full">
         {t('perms.done')}
-      </button>
+      </Button>
       <p className="mt-2.5 text-center text-[11.5px] font-medium text-ec-ink40">{t('perms.hint')}</p>
     </BottomSheet>
   )

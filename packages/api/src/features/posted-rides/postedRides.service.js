@@ -166,6 +166,10 @@ function createPostedRidesService({ repo, logger, uploads }) {
       if (!post) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
+      // You can't report your own post (§6 — authorization at the action point).
+      if (post.postedBy === userId) {
+        throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
+      }
       const screenshotUrl = screenshotKey
         ? (await uploads.verifyUpload({ userId, purpose: 'report_screenshot', key: screenshotKey })).key
         : null;

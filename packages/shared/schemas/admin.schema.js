@@ -4,6 +4,8 @@ const { z } = require('zod');
 const {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
+  UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
+  USER_REPORT_ACTION, ADMIN_USER_REPORTS,
 } = require('../constants/admin');
 const { VERIFICATION_STATUS } = require('../constants/enums');
 
@@ -90,6 +92,42 @@ const adminCityStringActionSchema = z
 
 const adminCityStringIdParamSchema = z.object({ id: z.string().uuid() });
 
+/** Offset pagination for the unresolved-rides queue (rides missing a pickup/drop city). */
+const adminUnresolvedRidesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_UNRESOLVED_RIDES.MAX_PAGE_SIZE).default(ADMIN_UNRESOLVED_RIDES.PAGE_SIZE),
+});
+
+/** Set a missing city (side + cityId both required) or hide the ride. */
+const adminUnresolvedRideActionSchema = z
+  .object({
+    action: z.enum([UNRESOLVED_RIDE_ACTION.SET_CITY, UNRESOLVED_RIDE_ACTION.HIDE]),
+    side: z.enum([UNRESOLVED_RIDE_SIDE.PICKUP, UNRESOLVED_RIDE_SIDE.DROP]).optional(),
+    cityId: z.string().uuid().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.action === UNRESOLVED_RIDE_ACTION.SET_CITY) {
+      if (!v.side) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['side'], message: 'side required when setting a city' });
+      if (!v.cityId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cityId'], message: 'cityId required when setting a city' });
+    }
+  });
+
+const adminUnresolvedRideIdParamSchema = z.object({ id: z.string().uuid() });
+
+/** Offset pagination for the user-reports queue (P13-13 #5). The queue is just the
+ * users with open (unreviewed) reports, so there's no open/resolved toggle. */
+const adminUserReportsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_USER_REPORTS.MAX_PAGE_SIZE).default(ADMIN_USER_REPORTS.PAGE_SIZE),
+});
+
+/** Reinstate the user (clear flaggedAt), or uphold the flag (keep them hidden). */
+const adminUserReportActionSchema = z.object({
+  action: z.enum([USER_REPORT_ACTION.REINSTATE, USER_REPORT_ACTION.UPHOLD]),
+});
+
+const adminUserReportUserIdParamSchema = z.object({ userId: z.string().uuid() });
+
 module.exports = {
   adminLoginSchema,
   adminVerificationsQuerySchema,
@@ -105,4 +143,10 @@ module.exports = {
   adminCityStringsQuerySchema,
   adminCityStringActionSchema,
   adminCityStringIdParamSchema,
+  adminUnresolvedRidesQuerySchema,
+  adminUnresolvedRideActionSchema,
+  adminUnresolvedRideIdParamSchema,
+  adminUserReportsQuerySchema,
+  adminUserReportActionSchema,
+  adminUserReportUserIdParamSchema,
 };

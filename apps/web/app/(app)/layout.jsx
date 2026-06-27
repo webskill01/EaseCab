@@ -2,6 +2,7 @@ import { getLocale } from 'next-intl/server'
 import { AuthGuard } from '@/features/auth/components/AuthGuard'
 import { TopBar } from '@/features/shell/components/TopBar'
 import { AppBottomNav } from '@/features/shell/components/AppBottomNav'
+import { PageTransition } from '@/features/shell/components/PageTransition'
 
 /**
  * Authenticated app shell. AuthGuard (client) gates the whole subtree on a
@@ -15,7 +16,9 @@ export default async function AppLayout({ children }) {
       <div className="flex h-[100dvh] flex-col bg-ec-bg">
         <TopBar locale={locale} />
         {/* min-h-0 lets a full-height child (the feed) own its own scroll region */}
-        <main className="flex min-h-0 flex-1 flex-col">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col">
+          <PageTransition>{children}</PageTransition>
+        </main>
         <AppBottomNav />
       </div>
     </AuthGuard>

@@ -99,7 +99,7 @@ export function useRidesFeed({ sub, cityId }) {
   }, [])
 
   const flushPending = useCallback(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0
+    if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     atTopRef.current = true
     setAtTop(true)
     setPending((p) => {

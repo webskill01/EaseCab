@@ -6,8 +6,10 @@ const NAV = [
   { href: '/', label: 'Dashboard' },
   { href: '/verifications', label: 'Verifications' },
   { href: '/reports', label: 'Reports' },
+  { href: '/user-reports', label: 'User Reports' },
   { href: '/users', label: 'Users' },
   { href: '/city-strings', label: 'City Strings' },
+  { href: '/unresolved-rides', label: 'Unresolved Rides' },
 ]
 
 export function Sidebar() {

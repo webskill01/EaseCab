@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { Pin, ChevR } from '@/components/ui/icons'
 
 const cityLabel = (id, name, raw) => name || raw || null
@@ -20,24 +21,30 @@ export function ParsePreview({ draft, onEdit }) {
   const to = cityLabel(draft.toCityId, draft.toCityName, draft.toCityRaw)
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="rounded-ec-card border border-ec-line bg-white p-4">
-        <h3 className="mb-3 text-[14px] font-extrabold text-ec-ink">{t('paste.previewTitle')}</h3>
-        <div className="flex items-center gap-2 text-[15px] font-bold text-ec-blueInk">
-          <span className="inline-flex text-ec-blue"><Pin size={16} /></span>
-          <span>{from || '—'}</span>
-          <span className="inline-flex text-ec-ink40"><ChevR size={14} /></span>
-          <span>{to || '—'}</span>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-3 pt-3">
+        <div className="rounded-ec-card border border-ec-line bg-white p-4">
+          <h3 className="mb-3 text-[14px] font-extrabold text-ec-ink">{t('paste.previewTitle')}</h3>
+          <div className="flex items-center gap-2 text-[15px] font-bold text-ec-blueInk">
+            <span className="inline-flex text-ec-blue"><Pin size={16} /></span>
+            <span>{from || '—'}</span>
+            <span className="inline-flex text-ec-ink40"><ChevR size={14} /></span>
+            <span>{to || '—'}</span>
+          </div>
+          <dl className="mt-3 flex flex-col gap-1.5 text-[13.5px]">
+            <Row label={t('post.vehicle')} value={draft.vehicleType || '—'} />
+            <Row label={t('post.contact')} value={draft.phone || '—'} />
+            <Row label={`${t('post.date')} / ${t('post.fare')}`} value={t('paste.noDate')} />
+          </dl>
         </div>
-        <dl className="mt-3 flex flex-col gap-1.5 text-[13.5px]">
-          <Row label={t('post.vehicle')} value={draft.vehicleType || '—'} />
-          <Row label={t('post.contact')} value={draft.phone || '—'} />
-          <Row label={`${t('post.date')} / ${t('post.fare')}`} value={t('paste.noDate')} />
-        </dl>
       </div>
-      <button type="button" onClick={onEdit} className="h-[52px] w-full rounded-xl bg-ec-blue text-[15px] font-extrabold text-white shadow-ec-blue">
-        {t('paste.continueToForm')}
-      </button>
+
+      {/* Pinned action bar — shrink-0 flex footer outside the scroll body (P13-1). */}
+      <div className="shrink-0 border-t border-ec-line bg-white px-4 py-3">
+        <Button type="button" size="lg" onClick={onEdit} className="w-full">
+          {t('paste.continueToForm')}
+        </Button>
+      </div>
     </div>
   )
 }

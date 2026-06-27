@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { OverlayHeader } from '@/components/ui/Overlay'
+import { Button } from '@/components/ui/button'
+import { List } from '@/components/ui/icons'
 import { DocStatusBadge } from './DocStatusBadge'
+import { InfoNote } from './InfoNote'
 import { KycUploader } from './KycUploader'
 import { useDriverVerify } from '../hooks/useDriverVerify'
 import { docState } from '../lib/verifyView'
@@ -19,6 +22,7 @@ export function DlVerify({ status }) {
   const dv = useDriverVerify()
   const [dlNumber, setDlNumber] = useState('')
   const [dob, setDob] = useState('')
+  const [imageAttached, setImageAttached] = useState(false)
   const valid = dlNumber.trim().length >= 5 && dlNumber.trim().length <= 16 && dob !== ''
   const submitted = Boolean(dv.dlResult) || status.dlSubmitted
 
@@ -26,6 +30,7 @@ export function DlVerify({ status }) {
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
       <OverlayHeader title={t('driver.dlTitle')} onBack={() => router.push('/verify?intent=driver')} backLabel={tc('actions.back')} />
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+        <InfoNote icon={<List size={16} />}>{t('driver.dlNote')}</InfoNote>
         <div className="flex items-center justify-between">
           <p className="text-[13px] font-medium text-ec-ink60">{t('driver.dlSubtitle')}</p>
           <DocStatusBadge stateKey={dv.dlResult ? 'submitted' : docState(status.dlSubmitted)} />
@@ -43,21 +48,21 @@ export function DlVerify({ status }) {
         )}
         {dv.dlErrorKey && <p className="text-[12.5px] font-semibold text-ec-danger">{t(dv.dlErrorKey)}</p>}
 
-        <button type="button" disabled={!valid || dv.dlSubmitting} onClick={() => dv.submitDl({ dlNumber, dob })} className="h-11 rounded-xl bg-ec-blue text-[14px] font-extrabold text-white shadow-ec-blue disabled:bg-ec-disabled disabled:shadow-none">
+        <Button type="button" size="lg" disabled={!valid || dv.dlSubmitting} onClick={() => dv.submitDl({ dlNumber, dob })} className="w-full">
           {dv.dlSubmitting ? t('driver.submitting') : t('driver.submit')}
-        </button>
+        </Button>
 
         {submitted && (
           <div className="flex flex-col gap-1.5">
-            <p className="text-[12.5px] font-bold text-ec-ink60">{t('driver.uploadOptional')}</p>
-            <KycUploader purpose="licence_image" label={t('driver.uploadDl')} />
+            <p className="text-[12.5px] font-bold text-ec-ink60">{t('driver.uploadRequired')}</p>
+            <KycUploader purpose="licence_image" label={t('driver.uploadDl')} onUploaded={() => setImageAttached(true)} />
           </div>
         )}
       </div>
 
       {submitted && (
         <div className="shrink-0 border-t border-ec-line bg-white p-3.5">
-          <button type="button" onClick={() => router.push('/profile')} className="h-[52px] w-full rounded-xl bg-ec-blueInk text-[15.5px] font-extrabold text-white">{t('driver.done')}</button>
+          <Button type="button" size="lg" disabled={!imageAttached} onClick={() => router.push('/verify?intent=center')} className="w-full">{t('driver.done')}</Button>
         </div>
       )}
     </div>

@@ -12,6 +12,7 @@ import { DlDetail } from './DlDetail'
 import { VehicleDetail } from './VehicleDetail'
 import { DlVerify } from './DlVerify'
 import { RcVerify } from './RcVerify'
+import { EditVerifyCenter } from './EditVerifyCenter'
 
 /**
  * /verify host (SCREENS §7). intent=driver → L2 hub; intent=dl/rc → the dedicated
@@ -28,14 +29,22 @@ export function VerifyScreen() {
 
   const status = profile?.verification ?? { dlSubmitted: false, rcSubmitted: false }
   if (intent === 'driver') return <VerificationTimeline profile={profile} />
+  if (intent === 'center') return <EditVerifyCenter />
   if (intent === 'aadhaar-detail') return <AadhaarDetail profile={profile} />
   if (intent === 'dl-detail') return <DlDetail profile={profile} />
   if (intent === 'rc-detail') return <VehicleDetail profile={profile} />
   if (intent === 'dl') return <DlVerify status={status} />
   if (intent === 'rc') return <RcVerify status={status} />
 
+  // intent=aadhaar-reverify forces the Aadhaar machine even when already verified (the
+  // "Verify again" action) — otherwise the already-verified short-circuit would bounce
+  // the user straight back out without a way to re-run it.
+  const forceReverify = intent === 'aadhaar-reverify'
   const alreadyVerified = Boolean(profile?.verification?.aadhaarVerified)
-  if (alreadyVerified || flow.phase === 'done') {
+  if (forceReverify && flow.phase === 'done') {
+    return <CompleteProfileStep verifiedName={flow.verifiedName} onDone={() => router.push('/verify?intent=center')} />
+  }
+  if (!forceReverify && (alreadyVerified || flow.phase === 'done')) {
     return <CompleteProfileStep verifiedName={flow.verifiedName} onDone={() => router.push('/profile')} />
   }
   if (flow.phase === 'otp') {

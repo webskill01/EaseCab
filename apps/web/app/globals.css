@@ -67,4 +67,20 @@
   html[lang='hi'] {
     font-family: var(--font-devanagari), var(--font-sans), sans-serif;
   }
+
+  /* Subtle, app-wide interaction feedback: smooth state transitions on every
+     interactive element + a gentle press on tap. Honours reduced-motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    button,
+    a,
+    [role='button'],
+    summary {
+      @apply transition-[transform,background-color,border-color,color,opacity,box-shadow] duration-150 ease-out;
+    }
+    button:not(:disabled):active,
+    a:not([aria-disabled='true']):active,
+    [role='button']:not([aria-disabled='true']):active {
+      transform: scale(0.97);
+    }
+  }
 }

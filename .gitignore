@@ -83,3 +83,6 @@ desktop.ini
 # Redis local dump
 dump.rdb
 *.rdb
+
+# Design prototype (reference only — runnable mockup, not app source)
+/EaseCab/

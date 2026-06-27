@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation } from '@tanstack/react-query'
+import { Button } from '@/components/ui/button'
 import { parsePost } from '../services/postApi'
 import { ParsePreview } from './ParsePreview'
 
@@ -33,33 +34,42 @@ export function PasteForm({ onEdit }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={6}
-        aria-label={t('paste.boxLabel')}
-        placeholder={t('paste.placeholder')}
-        className="w-full rounded-ec-card border border-ec-line bg-white p-4 text-[14px] font-semibold text-ec-ink outline-none"
-      />
-
-      {failed && (
-        <div className="flex flex-col items-center gap-2 rounded-xl bg-ec-sky p-3 text-center">
-          <p className="text-[13.5px] font-bold text-ec-blueInk">{t('paste.failed')}</p>
-          <button type="button" onClick={() => onEdit(null)} className="text-[13.5px] font-extrabold text-ec-blue underline">
-            {t('paste.useForm')}
-          </button>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-3 pt-3">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[14px] font-bold leading-snug text-ec-ink">{t('paste.prompt')}</p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={6}
+            aria-label={t('paste.boxLabel')}
+            placeholder={t('paste.placeholder')}
+            className="w-full rounded-ec-card border border-ec-line bg-white p-4 text-[14px] font-semibold text-ec-ink outline-none"
+          />
         </div>
-      )}
 
-      <button
-        type="button"
-        disabled={text.trim() === '' || parse.isPending}
-        onClick={() => parse.mutate(text.trim())}
-        className="h-[54px] w-full rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue disabled:bg-ec-disabled disabled:shadow-none"
-      >
-        {parse.isPending ? '…' : t('paste.read')}
-      </button>
+        {failed && (
+          <div className="flex flex-col items-center gap-2 rounded-xl bg-ec-sky p-3 text-center">
+            <p className="text-[13.5px] font-bold text-ec-blueInk">{t('paste.failed')}</p>
+            <button type="button" onClick={() => onEdit(null)} className="text-[13.5px] font-extrabold text-ec-blue underline">
+              {t('paste.useForm')}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Pinned action bar — shrink-0 flex footer outside the scroll body (P13-1). */}
+      <div className="shrink-0 border-t border-ec-line bg-white px-4 py-3">
+        <Button
+          type="button"
+          size="lg"
+          disabled={text.trim() === '' || parse.isPending}
+          onClick={() => parse.mutate(text.trim())}
+          className="w-full"
+        >
+          {parse.isPending ? '…' : t('paste.read')}
+        </Button>
+      </div>
     </div>
   )
 }

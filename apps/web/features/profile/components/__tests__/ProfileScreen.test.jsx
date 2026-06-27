@@ -33,10 +33,12 @@ describe('ProfileScreen', () => {
     renderWithIntl(<ProfileScreen />)
     expect(screen.getByText('3 cities')).toBeInTheDocument()
   })
-  it('renders stats, masked Aadhaar + verification cards when complete', () => {
+  it('renders stats + the Verification row marked Verified when complete', () => {
     useProfile.mockReturnValue({ data: PROFILE, isLoading: false, isError: false })
     renderWithIntl(<ProfileScreen />)
-    expect(screen.getByText(/1234/)).toBeInTheDocument()
+    expect(screen.getByText('Verification')).toBeInTheDocument() // group-A row label
+    // "Verified" appears twice when complete: header badge + Verification row value.
+    expect(screen.getAllByText('Verified')).toHaveLength(2)
     expect(screen.getByText('Mohali')).toBeInTheDocument() // working-city stat
     expect(screen.queryByText(/complete your profile to unlock/i)).not.toBeInTheDocument()
   })

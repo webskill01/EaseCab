@@ -20,7 +20,9 @@
   "time": {
     "justNow": "abhi",
     "minAgo": "{count} min pehle",
-    "hourAgo": "{count} ghante pehle"
+    "hourAgo": "{count} ghante pehle",
+    "today": "Aaj",
+    "tomorrow": "Kal"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -69,7 +71,13 @@
   "reveal": {
     "title": "Driver se contact",
     "callBtn": "Call",
-    "waBtn": "WhatsApp"
+    "waBtn": "WhatsApp",
+    "failTitle": "Number nahi mil saka",
+    "error": "Kuch galat ho gaya. Dobara try karein.",
+    "errorRate": "Aaj aapne bahut saare drivers se contact kar liya. Baad mein try karein.",
+    "errorGone": "Ye ride ab available nahi hai.",
+    "errorNetwork": "Connection nahi hai. Internet check karke dobara try karein.",
+    "retry": "Dobara try karein"
   },
   "report": {
     "title": "Ride report karein",
@@ -85,6 +93,10 @@
     "submit": "Report bhejein",
     "submitted": "Report bhej di gayi",
     "error": "Bhej nahi paaye. Dobara try karein.",
+    "errorSelf": "Aap apni hi post report nahi kar sakte.",
+    "errorRate": "Aaj aapne bahut zyada report kar di hain. Baad mein try karein.",
+    "errorGone": "Ye ride ab available nahi hai.",
+    "errorNetwork": "Connection nahi hai. Internet check karke dobara try karein.",
     "attach": "Screenshot add karein",
     "attaching": "Upload ho raha…",
     "attached": "Screenshot add ho gaya",

@@ -11,6 +11,7 @@ vi.mock('../DlDetail', () => ({ DlDetail: () => <div>dl-detail</div> }))
 vi.mock('../VehicleDetail', () => ({ VehicleDetail: () => <div>rc-detail</div> }))
 vi.mock('../DlVerify', () => ({ DlVerify: () => <div>dl-page</div> }))
 vi.mock('../RcVerify', () => ({ RcVerify: () => <div>rc-page</div> }))
+vi.mock('../EditVerifyCenter', () => ({ EditVerifyCenter: () => <div>edit-verify-center</div> }))
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { VerifyScreen } from '../VerifyScreen'
 
@@ -31,6 +32,11 @@ describe('VerifyScreen', () => {
     mockSearch = 'intent=driver'; useProfile.mockReturnValue(VER())
     renderWithIntl(<VerifyScreen />)
     expect(screen.getByText('timeline')).toBeInTheDocument()
+  })
+  it('intent=center → renders the Edit & Verify center', () => {
+    mockSearch = 'intent=center'; useProfile.mockReturnValue(VER())
+    renderWithIntl(<VerifyScreen />)
+    expect(screen.getByText('edit-verify-center')).toBeInTheDocument()
   })
   it('intent=aadhaar-detail → renders the Aadhaar record', () => {
     mockSearch = 'intent=aadhaar-detail'; useProfile.mockReturnValue(VER({ aadhaarVerified: true }))

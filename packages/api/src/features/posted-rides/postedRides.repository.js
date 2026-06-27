@@ -123,7 +123,8 @@ function createPostedRidesRepository({ prisma, redis }) {
      * (createdAt, id) in (createdAt DESC, id DESC) order.
      */
     async listActivePosts({ createdAt, id, cityId, limit }) {
-      const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() } };
+      // Exclude posts from auto-flagged (mass-reported) drivers pending admin review (P13-12 #5).
+      const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() }, poster: { flaggedAt: null } };
       // City lock matches the FROM (pickup) city only — same rule as the bot feed.
       if (cityId) where.fromCityId = cityId;
       if (createdAt && id) {
@@ -210,7 +211,7 @@ function createPostedRidesRepository({ prisma, redis }) {
 
     /** Existence check for the report path — null if the post is gone. */
     async findPostExists(id) {
-      return prisma.postedRide.findUnique({ where: { id }, select: { id: true } });
+      return prisma.postedRide.findUnique({ where: { id }, select: { id: true, postedBy: true } });
     },
 
     /** Write a user report against a posted ride (feeds the admin moderation queue, 24c). */

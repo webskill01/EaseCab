@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Whatsapp, Phone, Chat, ChevR } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
 import { openChat } from '@/features/chat/services/chatApi'
 import { RouteRow, StatusBadge } from './RideCard'
 import { ageMinFrom, relParts } from '../lib/rideView'
@@ -61,16 +62,20 @@ export function ContactedCard({ contact }) {
         {t('contacted.vehicle')} : <span className="font-extrabold text-ec-ink">{contact.vehicleType || t('contacted.any')}</span>
       </div>
       <div className="mt-2.5 flex gap-1.5">
-        <a href={waLink(contact.phone)} target="_blank" rel="noopener noreferrer" className="flex h-[42px] flex-1 items-center justify-center gap-1.5 rounded-[11px] bg-ec-wa text-[13.5px] font-bold text-white">
-          <Whatsapp size={17} />{t('contacted.whatsapp')}
-        </a>
-        <a href={`tel:${contact.phone}`} className="flex h-[42px] flex-1 items-center justify-center gap-1.5 rounded-[11px] bg-ec-blue text-[13.5px] font-bold text-white">
-          <Phone size={16} />{t('contacted.call')}
-        </a>
+        <Button asChild variant="wa" className="h-[42px] flex-1 gap-1.5 rounded-[11px] px-2 text-[13.5px] font-bold">
+          <a href={waLink(contact.phone)} target="_blank" rel="noopener noreferrer">
+            <Whatsapp size={17} />{t('contacted.whatsapp')}
+          </a>
+        </Button>
+        <Button asChild variant="primary" className="h-[42px] flex-1 gap-1.5 rounded-[11px] px-2 text-[13.5px] font-bold shadow-none">
+          <a href={`tel:${contact.phone}`}>
+            <Phone size={16} />{t('contacted.call')}
+          </a>
+        </Button>
         {verified && (
-          <button type="button" onClick={handleChat} disabled={opening || !contact.postedRideId} aria-label={t('contacted.chat')} className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-sky text-ec-blue disabled:opacity-50">
+          <Button type="button" variant="ghost" onClick={handleChat} disabled={opening || !contact.postedRideId} aria-label={t('contacted.chat')} className="h-[42px] w-[42px] rounded-[11px] bg-ec-sky text-ec-blue hover:bg-ec-sky">
             <Chat size={16} />
-          </button>
+          </Button>
         )}
       </div>
     </article>

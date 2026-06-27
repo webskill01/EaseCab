@@ -20,4 +20,18 @@ const reportCreateSchema = z
   })
   .strict();
 
-module.exports = { reportCreateSchema };
+/**
+ * Report a USER (verified poster) — reason + optional remark + optional screenshot.
+ * The target id is the route param. `screenshotKey` is an R2 key from a
+ * `report_screenshot` presigned upload; the server re-verifies it before storing
+ * (§8). `.strict()` rejects unknown keys.
+ */
+const userReportCreateSchema = z
+  .object({
+    reason: z.enum(Object.values(REPORT_REASON)),
+    remarks: z.string().trim().min(1).max(REPORT.REMARKS_MAX).optional(),
+    screenshotKey: z.string().trim().min(1).optional(),
+  })
+  .strict();
+
+module.exports = { reportCreateSchema, userReportCreateSchema };

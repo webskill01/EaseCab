@@ -20,7 +20,6 @@ import { ReportSheet } from './ReportSheet'
 import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
 import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
 import { NotificationPrePrompt } from '@/features/notifications/components/NotificationPrePrompt'
-import { DutyAlertsOverlay } from '@/features/notifications/components/DutyAlertsOverlay'
 import { permissionState, shouldShowPrePrompt } from '@/features/notifications/lib/pushFlow'
 import { isPrePromptDismissed, dismissPrePrompt } from '@/features/notifications/lib/pushStorage'
 
@@ -37,7 +36,6 @@ export function FeedScreen() {
   const [lockedCity, setLockedCity] = useState(null)
   const [contactRideVM, setContactRideVM] = useState(null)
   const [reportRideVM, setReportRideVM] = useState(null)
-  const [alertsOpen, setAlertsOpen] = useState(false)
 
   // Hydrate the persisted lock after mount (cookie read can't run on the server).
   useEffect(() => { setLockedCity(readCityLock()) }, [])
@@ -67,7 +65,7 @@ export function FeedScreen() {
       <div className="flex gap-3 bg-ec-bg px-4 pb-1 pt-2.5">
         <button
           type="button"
-          onClick={() => setAlertsOpen(true)}
+          onClick={() => router.push('/notifications')}
           className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-bold text-ec-blueInk shadow-ec-card"
         >
           <span className="inline-flex text-ec-blue"><BellEdit size={18} /></span>{t('filter.notifications')}
@@ -126,8 +124,6 @@ export function FeedScreen() {
       {reportRideVM && (
         <ReportSheet ride={reportRideVM} onClose={() => setReportRideVM(null)} />
       )}
-
-      {alertsOpen && <DutyAlertsOverlay onClose={() => setAlertsOpen(false)} />}
     </div>
   )
 }

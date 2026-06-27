@@ -11,3 +11,17 @@ export async function fetchPosterProfile(id) {
   const { data } = await apiFetch(`/users/${id}/profile`)
   return data
 }
+
+/**
+ * Report a user (P13-12 #5). Body = { reason, remarks?, screenshotKey? } (userReportCreateSchema).
+ * @param {string} id - reported user's UUID
+ * @param {{ reason: string, remarks?: string, screenshotKey?: string }} body
+ * @returns {Promise<{ reported: true, alreadyReported: boolean }>}
+ */
+export async function reportPoster(id, body) {
+  const { data } = await apiFetch(`/users/${id}/report`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return data
+}

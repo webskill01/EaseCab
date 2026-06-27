@@ -16,6 +16,42 @@ test('getProfile returns shaped profile with derived profileComplete', async () 
   assert.strictEqual(out.verification.aadhaarLast4, '1234');
 });
 
+test('getProfile derives per-doc status: latest submission wins, boolean is the fallback', async () => {
+  const repo = { getProfile: async () => ({
+    id: 'u1', phone: '+9199', name: 'Gur', aadhaarVerified: true,
+    dlSubmitted: true, rcSubmitted: true, verificationStatus: 'submitted',
+    languagesSpoken: [],
+    submissions: [
+      { docType: 'rc', status: 'rejected', rejectionReason: 'Blurry photo' },
+      { docType: 'dl', status: 'approved', rejectionReason: null },
+    ],
+  }) };
+  const out = await createMeService({ repo }).getProfile('u1');
+  assert.deepStrictEqual(out.verification.dl, { status: 'approved', rejectionReason: null });
+  assert.deepStrictEqual(out.verification.rc, { status: 'rejected', rejectionReason: 'Blurry photo' });
+})
+
+test('getProfile falls back to the submitted boolean when there is no submission row', async () => {
+  const repo = { getProfile: async () => ({
+    id: 'u1', phone: '+9199', languagesSpoken: [], aadhaarVerified: false,
+    dlSubmitted: true, rcSubmitted: false, verificationStatus: 'submitted', submissions: [],
+  }) };
+  const out = await createMeService({ repo }).getProfile('u1');
+  // Surepass-confirmed (submitted) reads as approved for the user's per-doc view.
+  assert.strictEqual(out.verification.dl.status, 'approved')
+  assert.strictEqual(out.verification.rc.status, 'none')
+})
+
+test('getProfile surfaces a Surepass-submitted document as approved (not pending)', async () => {
+  const repo = { getProfile: async () => ({
+    id: 'u1', phone: '+9199', languagesSpoken: [], aadhaarVerified: true,
+    dlSubmitted: true, rcSubmitted: true, verificationStatus: 'submitted',
+    submissions: [{ docType: 'dl', status: 'submitted', rejectionReason: null }],
+  }) };
+  const out = await createMeService({ repo }).getProfile('u1');
+  assert.strictEqual(out.verification.dl.status, 'approved')
+})
+
 test('updateProfile attaches DP via verifyUpload when dpKey present', async () => {
   const updates = [];
   const repo = { updateProfile: async (id, data) => { updates.push(data); return { id, ...data }; } };

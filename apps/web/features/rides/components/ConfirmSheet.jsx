@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
+import { Button } from '@/components/ui/button'
 import { Flag, Check } from '@/components/ui/icons'
 
 /**
@@ -22,12 +23,12 @@ export function ConfirmSheet({ title, body, confirmLabel, danger, onConfirm, onC
       />
       <div className="pb-2">
         <div className="flex gap-2.5">
-          <button type="button" onClick={onClose} className="h-[52px] flex-1 rounded-xl border-[1.5px] border-ec-line bg-white text-[15px] font-extrabold text-ec-ink">
+          <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
             {t('confirm.cancel')}
-          </button>
-          <button type="button" onClick={onConfirm} className={`h-[52px] flex-1 rounded-xl text-[15px] font-extrabold text-white ${danger ? 'bg-ec-danger' : 'bg-ec-blue shadow-ec-blue'}`}>
+          </Button>
+          <Button type="button" variant={danger ? 'danger' : 'primary'} size="lg" onClick={onConfirm} className="flex-1">
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </BottomSheet>

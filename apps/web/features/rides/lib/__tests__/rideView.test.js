@@ -1,8 +1,23 @@
 import { describe, it, expect } from 'vitest'
 import {
   ageMinFrom, statusOf, relParts, vehIconKey, cityLabel, stripUrls, pickCityName,
-  RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
+  rideDateParts, RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
 } from '../rideView'
+
+describe('rideDateParts', () => {
+  const now = new Date('2026-06-27T10:00:00.000Z').getTime()
+  it('returns today/tomorrow tokens for same/next day', () => {
+    expect(rideDateParts('2026-06-27T00:00:00.000Z', 'en', now)).toEqual({ key: 'today' })
+    expect(rideDateParts('2026-06-28T00:00:00.000Z', 'en', now)).toEqual({ key: 'tomorrow' })
+  })
+  it('formats other dates as DD Mon', () => {
+    expect(rideDateParts('2026-07-05T00:00:00.000Z', 'en', now)).toEqual({ text: '05 Jul' })
+  })
+  it('returns null for missing/invalid input', () => {
+    expect(rideDateParts(null, 'en', now)).toBeNull()
+    expect(rideDateParts('not-a-date', 'en', now)).toBeNull()
+  })
+})
 
 describe('pickCityName', () => {
   const loc = { pa: 'ਲੁਧਿਆਣਾ', hi: 'लुधियाना' }

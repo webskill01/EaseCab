@@ -31,8 +31,8 @@ export function EditProfileScreen() {
         </button>
         <div className="flex-1 text-[18px] font-extrabold tracking-tight text-ec-ink">{t('edit')}</div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        <ProfileForm initial={profileToForm(profile)} phone={profile.phone} onSubmit={(body) => update.save(body)} submitting={update.saving} errorKey={update.errorKey} />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <ProfileForm initial={profileToForm(profile)} phone={profile.phone} lockBaseCity pinnedFooter onSubmit={(body) => update.save(body)} submitting={update.saving} errorKey={update.errorKey} />
       </div>
     </div>
   )

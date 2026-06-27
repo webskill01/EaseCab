@@ -30,3 +30,61 @@ test('getPublicProfile throws NOT_FOUND when the repo returns null (absent/soft-
   const svc = createUsersService({ repo: { getPublicProfile: async () => null } });
   await assert.rejects(() => svc.getPublicProfile('missing'), /not found|NOT_FOUND/i);
 });
+
+// --- reportUser (P13-12 #5) -------------------------------------------------
+
+/** Repo stub recording calls; tweak per test. */
+function reportRepo(over = {}) {
+  const calls = { incr: 0, created: [], flagged: [] };
+  return {
+    calls,
+    userExists: async () => true,
+    incrReportCount: async () => { calls.incr += 1; return 1; },
+    createUserReport: async (a) => { calls.created.push(a); return { created: true }; },
+    countReporters: async () => 1,
+    flagUserIfUnflagged: async (id) => { calls.flagged.push(id); },
+    ...over,
+  };
+}
+
+test('reportUser rejects self-report with VALIDATION_ERROR', async () => {
+  const svc = createUsersService({ repo: reportRepo() });
+  await assert.rejects(() => svc.reportUser({ reporterId: 'u1', reportedUserId: 'u1', reason: 'spam' }), (e) => e.code === 'VALIDATION_ERROR');
+});
+
+test('reportUser throws NOT_FOUND for an unknown/deleted target', async () => {
+  const svc = createUsersService({ repo: reportRepo({ userExists: async () => false }) });
+  await assert.rejects(() => svc.reportUser({ reporterId: 'u1', reportedUserId: 'gone', reason: 'spam' }), (e) => e.code === 'NOT_FOUND');
+});
+
+test('reportUser throws RATE_LIMITED past the daily cap', async () => {
+  const svc = createUsersService({ repo: reportRepo({ incrReportCount: async () => 11 }) });
+  await assert.rejects(() => svc.reportUser({ reporterId: 'u1', reportedUserId: 'u2', reason: 'spam' }), (e) => e.code === 'RATE_LIMITED');
+});
+
+test('reportUser is idempotent on a duplicate (already reported, no flag)', async () => {
+  const repo = reportRepo({ createUserReport: async () => ({ created: false }) });
+  const out = await createUsersService({ repo }).reportUser({ reporterId: 'u1', reportedUserId: 'u2', reason: 'spam' });
+  assert.deepStrictEqual(out, { reported: true, alreadyReported: true });
+  assert.strictEqual(repo.calls.flagged.length, 0);
+});
+
+test('reportUser auto-flags the target once distinct reporters reach the threshold', async () => {
+  const repo = reportRepo({ countReporters: async () => 3 });
+  const out = await createUsersService({ repo }).reportUser({ reporterId: 'u9', reportedUserId: 'u2', reason: 'fake' });
+  assert.deepStrictEqual(out, { reported: true, alreadyReported: false });
+  assert.deepStrictEqual(repo.calls.flagged, ['u2']);
+});
+
+test('reportUser does NOT flag below the threshold', async () => {
+  const repo = reportRepo({ countReporters: async () => 2 });
+  await createUsersService({ repo }).reportUser({ reporterId: 'u9', reportedUserId: 'u2', reason: 'fake' });
+  assert.strictEqual(repo.calls.flagged.length, 0);
+});
+
+test('reportUser verifies a screenshotKey and stores the returned key (P13-13 #2)', async () => {
+  const repo = reportRepo();
+  const uploads = { verifyUpload: async ({ userId, purpose, key }) => { assert.strictEqual(userId, 'u9'); assert.strictEqual(purpose, 'report_screenshot'); return { key: `verified/${key}` }; } };
+  await createUsersService({ repo, uploads }).reportUser({ reporterId: 'u9', reportedUserId: 'u2', reason: 'fake', screenshotKey: 'reports/u9/x.jpg' });
+  assert.strictEqual(repo.calls.created[0].screenshotUrl, 'verified/reports/u9/x.jpg');
+});

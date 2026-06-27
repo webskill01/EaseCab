@@ -22,7 +22,8 @@
   },
   "paste": {
     "boxLabel": "Ride message paste karein",
-    "placeholder": "Yahan WhatsApp ride message paste karein…",
+    "prompt": "Apna ride message paste karo — hum padhke card bana denge.",
+    "placeholder": "Jaise: Ludhiana → Delhi · Innova · 7 AM · ₹6500 · 98765 43210",
     "read": "Message padhein",
     "previewTitle": "Humne yeh padha",
     "noDate": "— form mein bharein",

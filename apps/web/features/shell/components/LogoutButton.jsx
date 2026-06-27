@@ -1,10 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { logout } from '@/features/auth/services/authApi'
-import { unregisterToken } from '@/features/notifications/services/pushApi'
-import { getStoredToken, clearStoredToken } from '@/features/notifications/lib/pushStorage'
+import { useLogout } from '../hooks/useLogout'
 
 /**
  * Clears the session (and this device's push token) then sends the user to /login.
@@ -13,18 +10,8 @@ import { getStoredToken, clearStoredToken } from '@/features/notifications/lib/p
  * @param {{ variant?: 'text'|'danger' }} props
  */
 export function LogoutButton({ variant = 'text' }) {
-  const router = useRouter()
   const t = useTranslations('common')
-
-  async function onLogout() {
-    try {
-      const tok = getStoredToken()
-      if (tok) { await unregisterToken({ deviceToken: tok }).catch(() => {}); clearStoredToken() }
-      await logout()
-    } finally {
-      router.replace('/login')
-    }
-  }
+  const onLogout = useLogout()
 
   if (variant === 'danger') {
     return (

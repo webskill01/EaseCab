@@ -28,7 +28,8 @@ export function PostForm({ form, onChange, onSubmit, submitting }) {
   const onPhone = (e) => onChange({ phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-3 pt-3">
       {/* Route */}
       <section className={SECTION}>
         <div className="flex flex-col gap-2">
@@ -103,10 +104,12 @@ export function PostForm({ form, onChange, onSubmit, submitting }) {
       <p className="flex items-center justify-center gap-1.5 text-[12.5px] font-semibold text-ec-wa">
         <Shield size={14} />{t('post.verifiedNote')}
       </p>
+      </div>
 
-      {/* Sticky footer action bar (spec §6.12) — full-bleed white bar pinned to the
-          bottom of the scroll area, so the button never floats over the fields. */}
-      <div className="sticky bottom-0 -mx-4 -mb-4 mt-1 border-t border-ec-line bg-white px-4 py-3">
+      {/* Pinned action bar — a shrink-0 flex-child footer OUTSIDE the scroll body
+          (P13-1 root-cause fix). A sticky last-child had no room to pin against and
+          rode along with the content; a real flex footer always stays at the bottom. */}
+      <div className="shrink-0 border-t border-ec-line bg-white px-4 py-3">
         <button
           type="button"
           disabled={!postable || submitting}

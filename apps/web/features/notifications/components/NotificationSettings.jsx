@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { BellEdit, Pin, Trash } from '@/components/ui/icons'
 import { CityPicker } from '@/features/rides/components/CityPicker'
 import { usePushPreferences } from '../hooks/usePushPreferences'
@@ -56,14 +57,15 @@ export function NotificationSettings() {
       </div>
 
       {permissionState() !== 'granted' && (
-        <button
+        <Button
           type="button"
+          size="md"
           onClick={() => alerts.enable()}
           disabled={alerts.isEnabling}
-          className="mt-3 h-11 w-full rounded-xl bg-ec-blue text-[14px] font-extrabold text-white shadow-ec-blue disabled:opacity-60"
+          className="mt-3 w-full"
         >
           {tn('enable')}
-        </button>
+        </Button>
       )}
 
       <div className="mt-3">
@@ -71,11 +73,11 @@ export function NotificationSettings() {
         {cities.length === 0 ? (
           <p className="mt-1 text-[12px] font-medium text-ec-ink40">{t('notifications.cities.empty')}</p>
         ) : (
-          <ul className="mt-2 flex flex-wrap gap-2">
+          <ul className="mt-2 flex flex-col gap-2">
             {cities.map((c) => (
-              <li key={c.id} className="flex items-center gap-1.5 rounded-full bg-ec-sky px-3 py-1.5 text-[12px] font-bold text-ec-blue">
-                <Pin size={12} /> {c.name}
-                <button type="button" aria-label={t('notifications.cities.remove', { city: c.name })} onClick={() => removeCity(c.id)} className="text-ec-ink40 hover:text-ec-danger"><Trash size={12} /></button>
+              <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-ec-line bg-ec-sky px-3.5 py-3">
+                <span className="flex min-w-0 items-center gap-2 text-[14px] font-bold text-ec-blue"><Pin size={15} /> <span className="truncate">{c.name}</span></span>
+                <button type="button" aria-label={t('notifications.cities.remove', { city: c.name })} onClick={() => removeCity(c.id)} className="shrink-0 text-ec-ink40 hover:text-ec-danger"><Trash size={16} /></button>
               </li>
             ))}
           </ul>

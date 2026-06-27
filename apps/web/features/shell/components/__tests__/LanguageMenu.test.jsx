@@ -17,7 +17,8 @@ describe('LanguageMenu', () => {
     const user = userEvent.setup()
     renderWithIntl(<LanguageMenu current="en" />)
     await user.click(screen.getByRole('button', { name: /language/i }))
-    await user.click(screen.getByRole('menuitem', { name: 'हि' }))
+    // Dropdown rows are labelled by full language name (Hindi = हिन्दी).
+    await user.click(screen.getByRole('menuitem', { name: 'हिन्दी' }))
     expect(setLocale).toHaveBeenCalledWith('hi')
     expect(refresh).toHaveBeenCalled()
   })

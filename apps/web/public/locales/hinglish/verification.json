@@ -3,6 +3,7 @@
     "title": "Apni identity verify karo",
     "aadhaarLabel": "Aadhaar number",
     "aadhaarHint": "12 digits. Hum aapke Aadhaar-linked mobile par OTP bhejte hain (yeh aapke EaseCab number se alag ho sakta hai).",
+    "note": "Yeh confirm karne ke liye ki yeh aap hi ho, hum aapke Aadhaar-linked mobile par ek OTP bhejte hain.",
     "continue": "Aage badho",
     "otpTitle": "OTP daalo",
     "otpSentTo": "Aapke Aadhaar-linked mobile par bheja gaya",
@@ -26,10 +27,12 @@
     "subtitle": "Verified-driver badge paane ke liye apna licence aur vehicle add karo.",
     "dlTitle": "Driving licence",
     "dlSubtitle": "Apna DL number aur date of birth verify karo.",
+    "dlNote": "Apne licence ki details bilkul waise hi daalo jaise chhapi hain. Hum inhe RTO database se verify karte hain.",
     "dlNumber": "DL number",
     "dob": "Date of birth",
     "rcTitle": "Vehicle RC",
     "rcSubtitle": "Apni vehicle ka registration number verify karo.",
+    "rcNote": "Apni vehicle ka registration number daalo. Hum VAHAN database se RC details laate hain.",
     "rcNumber": "RC number",
     "submit": "Verify karo",
     "submitting": "Verify ho raha hai…",
@@ -39,6 +42,7 @@
     "rcVehicle": "{make} {model}",
     "rcReg": "Reg: {reg}",
     "uploadOptional": "Document ki photo add karo (optional)",
+    "uploadRequired": "Document ki clear photo add karo (zaroori)",
     "uploadDl": "Licence image upload karo",
     "uploadRc": "RC image upload karo",
     "docUploading": "Upload ho rahi hai…",
@@ -57,6 +61,7 @@
     "generic": "Kuch galat ho gaya. Phir try karo."
   },
   "timeline": {
+    "pageTitle": "Verification",
     "title": "Apni profile complete karein",
     "stepsDone": "{total} mein se {done} steps complete",
     "postUnlocked": "Posting unlock — Aadhaar + photo ho gaye",
@@ -87,5 +92,25 @@
     "typeLabel": "Type",
     "rcStatus": "RC status",
     "rcPrivacyNote": "Aapki RC VAHAN database se verify ki gayi. Hum sirf aapke vehicle ka make, model aur registration rakhte hain — owner, fuel ya doosre RC details nahi."
+  },
+  "center": {
+    "header": "Edit aur re-verify",
+    "completion": "Profile completion",
+    "allDone": "Sab kuch verified hai. Edit ya re-verify karne ke liye kisi bhi item par tap karein.",
+    "addPhotoNote": "100% tak pahunchne aur posting unlock karne ke liye profile photo add karein.",
+    "identitySection": "Identity aur documents",
+    "profileSection": "Profile details",
+    "rowAadhaar": "Aadhaar",
+    "rowDl": "Driving Licence",
+    "rowRc": "Vehicle RC",
+    "rowProfile": "Naam, photo aur bio",
+    "rowLanguages": "Aap jo languages bolte hain",
+    "rowWorkingCity": "Working city",
+    "addPhotoCta": "Profile photo add karein → 100%",
+    "help": "Help aur support",
+    "pending": "Pending",
+    "rejected": "Rejected",
+    "reasonLabel": "Reason: {reason}",
+    "rejectedNote": "Ek document reject hua — fix karke dobara submit karne ke liye us par tap karein."
   }
 }

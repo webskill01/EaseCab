@@ -1,7 +1,28 @@
 'use strict';
 
-const { isProfileComplete } = require('@easecab/shared');
+const { isProfileComplete, VERIFICATION_STATUS, VERIFICATION_DOC_TYPE } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
+
+/**
+ * Per-doc state for the verification UI. Prefer the latest submission row (it alone
+ * carries approved/rejected + the reason); fall back to the User boolean for legacy
+ * rows. Shape: { status: none|submitted|approved|rejected, rejectionReason }.
+ *
+ * A DL/RC is recorded as `submitted` the moment Surepass confirms it against the
+ * official DB — so for the user's per-doc view that reads as `approved` (verified),
+ * matching Aadhaar's instant-verified behaviour. The separate verified-driver BADGE
+ * stays admin-gated. An explicit admin `rejected` still wins.
+ */
+function docState(submissions, docType, submittedFlag) {
+  const latest = (submissions || []).find((s) => s.docType === docType);
+  const status = latest
+    ? latest.status
+    : (submittedFlag ? VERIFICATION_STATUS.SUBMITTED : VERIFICATION_STATUS.NONE);
+  if (status === VERIFICATION_STATUS.SUBMITTED) {
+    return { status: VERIFICATION_STATUS.APPROVED, rejectionReason: null };
+  }
+  return { status, rejectionReason: latest?.rejectionReason ?? null };
+}
 
 /** Upload purpose → the User column its verified value lands in (Step 21b). */
 const PURPOSE_FIELD = Object.freeze({
@@ -21,6 +42,9 @@ function toPublicProfile(u) {
       aadhaarVerified: u.aadhaarVerified, dlSubmitted: u.dlSubmitted, rcSubmitted: u.rcSubmitted,
       verificationStatus: u.verificationStatus, aadhaarLast4: u.aadhaarLast4 ?? null,
       carMake: u.carMake ?? null, carModel: u.carModel ?? null, carRegNo: u.carRegNo ?? null,
+      // Per-doc lifecycle (none|submitted|approved|rejected) + reason, for the verify UI.
+      dl: docState(u.submissions, VERIFICATION_DOC_TYPE.DL, u.dlSubmitted),
+      rc: docState(u.submissions, VERIFICATION_DOC_TYPE.RC, u.rcSubmitted),
     },
   };
 }

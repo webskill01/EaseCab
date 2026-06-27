@@ -7,7 +7,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 const submitRc = vi.fn()
 let dvState = { submitRc, rcResult: null, rcErrorKey: null, rcSubmitting: false }
 vi.mock('../../hooks/useDriverVerify', () => ({ useDriverVerify: () => dvState }))
-vi.mock('../KycUploader', () => ({ KycUploader: () => <div>kyc-uploader</div> }))
+vi.mock('../KycUploader', () => ({ KycUploader: ({ onUploaded }) => <button type="button" onClick={onUploaded}>mock-upload</button> }))
 import { RcVerify } from '../RcVerify'
 
 const NONE = { dlSubmitted: false, rcSubmitted: false }
@@ -25,12 +25,15 @@ describe('RcVerify', () => {
     expect(submitRc).toHaveBeenCalledWith('PB10AB1234')
   })
 
-  it('shows verified vehicle data + uploader + Done→/profile once submitted', () => {
+  it('gates Done on a mandatory image, then routes to the verify center once submitted', () => {
     dvState = { submitRc, rcResult: { make: 'Maruti', model: 'Dzire', regNo: 'PB10AB1234' }, rcErrorKey: null, rcSubmitting: false }
     renderWithIntl(<RcVerify status={NONE} />)
     expect(screen.getByText(/maruti dzire/i)).toBeInTheDocument()
-    expect(screen.getByText('kyc-uploader')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /done/i }))
-    expect(push).toHaveBeenCalledWith('/profile')
+    const done = screen.getByRole('button', { name: /done/i })
+    expect(done).toBeDisabled() // image is mandatory
+    fireEvent.click(screen.getByRole('button', { name: /mock-upload/i }))
+    expect(done).toBeEnabled()
+    fireEvent.click(done)
+    expect(push).toHaveBeenCalledWith('/verify?intent=center')
   })
 })

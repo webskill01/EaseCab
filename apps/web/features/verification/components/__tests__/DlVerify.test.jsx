@@ -7,7 +7,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 const submitDl = vi.fn()
 let dvState = { submitDl, dlResult: null, dlErrorKey: null, dlSubmitting: false }
 vi.mock('../../hooks/useDriverVerify', () => ({ useDriverVerify: () => dvState }))
-vi.mock('../KycUploader', () => ({ KycUploader: () => <div>kyc-uploader</div> }))
+vi.mock('../KycUploader', () => ({ KycUploader: ({ onUploaded }) => <button type="button" onClick={onUploaded}>mock-upload</button> }))
 import { DlVerify } from '../DlVerify'
 
 const NONE = { dlSubmitted: false, rcSubmitted: false }
@@ -26,12 +26,15 @@ describe('DlVerify', () => {
     expect(submitDl).toHaveBeenCalledWith({ dlNumber: 'PB1020201234', dob: '1990-01-01' })
   })
 
-  it('shows verified data + the image uploader + Done→/profile once submitted', () => {
+  it('gates Done on a mandatory image, then routes to the verify center once submitted', () => {
     dvState = { submitDl, dlResult: { validUpto: '2031-01-01', cov: 'LMV' }, dlErrorKey: null, dlSubmitting: false }
     renderWithIntl(<DlVerify status={NONE} />)
     expect(screen.getByText(/valid up to 2031-01-01/i)).toBeInTheDocument()
-    expect(screen.getByText('kyc-uploader')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /done/i }))
-    expect(push).toHaveBeenCalledWith('/profile')
+    const done = screen.getByRole('button', { name: /done/i })
+    expect(done).toBeDisabled() // image is mandatory
+    fireEvent.click(screen.getByRole('button', { name: /mock-upload/i }))
+    expect(done).toBeEnabled()
+    fireEvent.click(done)
+    expect(push).toHaveBeenCalledWith('/verify?intent=center')
   })
 })

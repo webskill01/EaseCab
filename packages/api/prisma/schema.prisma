@@ -302,6 +302,10 @@ model User {
   notifyBotRides     Boolean            @default(true) @map("notify_bot_rides")    // per-source push toggle: bot-feed rides
   notifyPostedRides  Boolean            @default(true) @map("notify_posted_rides") // per-source push toggle: app-posted verified rides
   lastKnownCity      String?            @map("last_known_city")
+  // Auto-set when ≥ USER_REPORT.AUTOHIDE_THRESHOLD distinct reporters flag this user
+  // (P13-12 #5). Non-null → their posted rides are hidden from the feed pending admin
+  // review. Cleared by an admin to reinstate.
+  flaggedAt          DateTime?          @map("flagged_at") @db.Timestamptz(6)
   isDeleted          Boolean            @default(false) @map("is_deleted")
   deletedAt          DateTime?          @map("deleted_at") @db.Timestamptz(6)
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -312,6 +316,8 @@ model User {
   postedRides       PostedRide[]
   contacts          RideContact[]
   reports           RideReport[]
+  reportsFiled      UserReport[]       @relation("UserReportReporter")
+  reportsReceived   UserReport[]       @relation("UserReportTarget")
   pushSubscriptions PushSubscription[]
   initiatedChats    Chat[]             @relation("ChatInitiator")
   postedChats       Chat[]             @relation("ChatPoster")
@@ -320,6 +326,7 @@ model User {
   blocksReceived    UserBlock[]        @relation("BlocksReceived")
 
   @@index([isDeleted])
+  @@index([flaggedAt])
   @@index([createdAt])
   // Push targeting (Step 15) does notification_cities && ARRAY[rideCityIds] on every
   // new-ride event — B-tree can't serve array-overlap, so GIN is required. Plain
@@ -494,6 +501,36 @@ model RideReport {
   @@map("ride_reports")
 }
 
+// A report filed against a USER (verified poster), not a ride (P13-12 #5). The
+// `@@unique([reporter, reported])` enforces one report per reporter per target — the
+// anti-duplicate guard, so a single account can't pile reports on one victim. A
+// per-reporter daily cap (Redis) bounds volume; ≥ AUTOHIDE_THRESHOLD distinct
+// reporters auto-sets the target's User.flaggedAt.
+model UserReport {
+  id             String        @id @default(uuid()) @db.Uuid
+  reporterId     String        @map("reporter_id") @db.Uuid
+  reportedUserId String        @map("reported_user_id") @db.Uuid
+  reason         ReportReason
+  remarks        String?
+  screenshotUrl  String?       @map("screenshot_url")
+  reviewedAt     DateTime?     @map("reviewed_at") @db.Timestamptz(6)
+  // Admin moderation verdict. reviewedBy → admin_users.id (never users — §6).
+  reviewedBy     String?       @map("reviewed_by") @db.Uuid
+  reviewAction   ReportAction? @map("review_action")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  reporter     User       @relation("UserReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User       @relation("UserReportTarget", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  reviewer     AdminUser? @relation(fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, reportedUserId])
+  @@index([reportedUserId])
+  @@index([reviewedAt])
+  @@index([reviewedBy])
+  @@index([createdAt])
+  @@map("user_reports")
+}
+
 // ---------------------------------------------------------------------------
 // CHAT (Postgres mirror of Firestore threads)
 // ---------------------------------------------------------------------------
@@ -594,6 +631,7 @@ model AdminUser {
 
   reviewedSubmissions VerificationSubmission[]
   reviewedReports     RideReport[]
+  reviewedUserReports UserReport[]
 
   @@map("admin_users")
 }

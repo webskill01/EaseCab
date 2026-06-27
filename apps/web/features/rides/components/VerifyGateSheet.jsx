@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
+import { Button } from '@/components/ui/button'
 import { Shield } from '@/components/ui/icons'
 
 /**
@@ -18,12 +19,12 @@ export function VerifyGateSheet({ onClose, onVerify }) {
     <BottomSheet onClose={onClose} label={t('gate.title')}>
       <SheetTitle icon={<Shield size={22} />} tone="blueInk" title={t('gate.title')} sub={t('gate.body')} />
       <div className="flex flex-col gap-2.5 pb-2">
-        <button type="button" onClick={onVerify} className="h-[52px] w-full rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue">
+        <Button type="button" size="lg" onClick={onVerify} className="w-full">
           {t('gate.cta')}
-        </button>
-        <button type="button" onClick={onClose} className="h-[46px] w-full rounded-xl bg-ec-bg text-[14.5px] font-bold text-ec-ink60">
+        </Button>
+        <Button type="button" variant="ghost" onClick={onClose} className="w-full bg-ec-bg font-bold text-ec-ink60">
           {t('gate.notNow')}
-        </button>
+        </Button>
       </div>
     </BottomSheet>
   )

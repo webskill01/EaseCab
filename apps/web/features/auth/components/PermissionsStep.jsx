@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { Pin, BellEdit, User, Battery, Lock, Check, Shield, ChevR } from '@/components/ui/icons'
 
 const ITEMS = [
@@ -73,31 +74,19 @@ export function PermissionsStep({ onContinue }) {
 
       <div className="border-t border-ec-line p-[22px]">
         {allOn ? (
-          <button
-            type="button"
-            onClick={onContinue}
-            className="flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-ec-blue text-[16px] font-extrabold text-white shadow-ec-blue"
-          >
+          <Button type="button" size="lg" onClick={onContinue} className="w-full">
             {t('perms.continue')}
             <ChevR size={18} />
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={grantAll}
-            className="flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-ec-blue text-[16px] font-extrabold text-white shadow-ec-blue"
-          >
+          <Button type="button" size="lg" onClick={grantAll} className="w-full">
             <Shield size={18} />
             {t('perms.allowAll')}
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
-          onClick={onContinue}
-          className="mt-2 h-10 w-full text-[13.5px] font-bold text-ec-ink40"
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={onContinue} className="mt-2 w-full font-bold text-ec-ink40">
           {t('perms.notNow')}
-        </button>
+        </Button>
       </div>
     </div>
   )

@@ -1,5 +1,7 @@
 'use strict';
 
+const { VERIFICATION_DOC_TYPE } = require('@easecab/shared');
+
 /** Snapshot columns that render a contacted card (never raw rawText/displayText). */
 const CONTACTED_SELECT = Object.freeze({
   id: true, source: true, fromCityName: true, toCityName: true,
@@ -41,9 +43,22 @@ function createMeRepository({ prisma }) {
       });
     },
 
-    /** Full profile + verification snapshot for the profile screen (Step 21b). */
+    /**
+     * Full profile + verification snapshot for the profile screen (Step 21b). Also pulls
+     * the latest DL/RC submission per doc so the client can show submitted/approved/
+     * rejected (the User dl/rcSubmitted booleans can't represent a rejection — admin
+     * review only stamps the submission row).
+     */
     async getProfile(userId) {
-      return prisma.user.findUnique({ where: { id: userId }, select: PROFILE_SELECT });
+      const [user, submissions] = await prisma.$transaction([
+        prisma.user.findUnique({ where: { id: userId }, select: PROFILE_SELECT }),
+        prisma.verificationSubmission.findMany({
+          where: { userId, docType: { in: [VERIFICATION_DOC_TYPE.DL, VERIFICATION_DOC_TYPE.RC] } },
+          orderBy: { createdAt: 'desc' },
+          select: { docType: true, status: true, rejectionReason: true },
+        }),
+      ]);
+      return user ? { ...user, submissions } : null;
     },
 
     /** Apply a validated profile patch; returns the refreshed profile snapshot. */

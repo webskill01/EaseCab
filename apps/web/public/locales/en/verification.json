@@ -3,6 +3,7 @@
     "title": "Verify your identity",
     "aadhaarLabel": "Aadhaar number",
     "aadhaarHint": "12 digits. We send an OTP to your Aadhaar-linked mobile (may differ from your EaseCab number).",
+    "note": "We send a one-time password to your Aadhaar-linked mobile to confirm it's you.",
     "continue": "Continue",
     "otpTitle": "Enter the OTP",
     "otpSentTo": "Sent to your Aadhaar-linked mobile",
@@ -26,10 +27,12 @@
     "subtitle": "Add your licence and vehicle to earn the verified-driver badge.",
     "dlTitle": "Driving licence",
     "dlSubtitle": "Verify your DL number and date of birth.",
+    "dlNote": "Enter your licence details exactly as printed. We verify them against the RTO database.",
     "dlNumber": "DL number",
     "dob": "Date of birth",
     "rcTitle": "Vehicle RC",
     "rcSubtitle": "Verify your vehicle's registration number.",
+    "rcNote": "Enter your vehicle's registration number. We fetch the RC details from the VAHAN database.",
     "rcNumber": "RC number",
     "submit": "Verify",
     "submitting": "Verifying…",
@@ -39,6 +42,7 @@
     "rcVehicle": "{make} {model}",
     "rcReg": "Reg: {reg}",
     "uploadOptional": "Add a photo of the document (optional)",
+    "uploadRequired": "Add a clear photo of the document (required)",
     "uploadDl": "Upload licence image",
     "uploadRc": "Upload RC image",
     "docUploading": "Uploading…",
@@ -57,6 +61,7 @@
     "generic": "Something went wrong. Please try again."
   },
   "timeline": {
+    "pageTitle": "Verification",
     "title": "Complete your profile",
     "stepsDone": "{done} of {total} steps completed",
     "postUnlocked": "Posting unlocked — Aadhaar + photo done",
@@ -87,5 +92,25 @@
     "typeLabel": "Type",
     "rcStatus": "RC status",
     "rcPrivacyNote": "Your RC was verified against the VAHAN database. We store only your vehicle's make, model and registration — not owner, fuel or other RC details."
+  },
+  "center": {
+    "header": "Edit & re-verify",
+    "completion": "Profile completion",
+    "allDone": "Everything's verified. Tap any item to edit or re-verify.",
+    "addPhotoNote": "Add a profile photo to reach 100% and unlock posting.",
+    "identitySection": "Identity & documents",
+    "profileSection": "Profile details",
+    "rowAadhaar": "Aadhaar",
+    "rowDl": "Driving Licence",
+    "rowRc": "Vehicle RC",
+    "rowProfile": "Name, photo & bio",
+    "rowLanguages": "Languages you speak",
+    "rowWorkingCity": "Working city",
+    "addPhotoCta": "Add profile photo → 100%",
+    "help": "Help & support",
+    "pending": "Pending",
+    "rejected": "Rejected",
+    "reasonLabel": "Reason: {reason}",
+    "rejectedNote": "A document was rejected — tap it to fix and re-submit."
   }
 }

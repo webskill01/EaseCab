@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Globe, ChevR } from '@/components/ui/icons'
-import { LOCALES, LOCALE_LABELS } from '@/i18n/config'
+import { Globe, ChevR, Check } from '@/components/ui/icons'
+import { LOCALES, LOCALE_LABELS, LOCALE_NAMES } from '@/i18n/config'
 import { setLocale } from '@/i18n/actions'
 
 /**
@@ -36,22 +36,30 @@ export function LanguageMenu({ current }) {
         <span className={`inline-flex transition-transform ${open ? 'rotate-180' : ''} text-ec-blue`}><ChevR size={13} /></span>
       </button>
       {open && (
-        <ul role="menu" className="absolute right-0 z-30 mt-1 w-28 rounded-md bg-white p-1 shadow-ec-float">
-          {LOCALES.map((l) => (
-            <li key={l}>
-              <button
-                type="button"
-                role="menuitem"
-                aria-label={LOCALE_LABELS[l]}
-                onClick={() => choose(l)}
-                className="flex w-full items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-ec-sky"
-              >
-                {LOCALE_LABELS[l]}
-                {l === current && <span className="text-ec-blue">✓</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          {/* Tapping anywhere off the menu collapses it (mirrors the in-app dropdowns). */}
+          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} aria-hidden="true" />
+          <ul role="menu" className="absolute right-0 z-30 mt-1 w-44 rounded-xl bg-white p-1 shadow-ec-float">
+          {LOCALES.map((l) => {
+            const active = l === current
+            return (
+              <li key={l}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  aria-label={LOCALE_NAMES[l]}
+                  onClick={() => choose(l)}
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left ${active ? 'bg-ec-sky' : 'hover:bg-ec-sky/60'}`}
+                >
+                  <span className={`inline-flex w-7 shrink-0 justify-center text-[12px] font-extrabold ${active ? 'text-ec-blue' : 'text-ec-ink40'}`}>{LOCALE_LABELS[l]}</span>
+                  <span className={`flex-1 text-[14px] ${active ? 'font-extrabold text-ec-blue' : 'font-semibold text-ec-ink'}`}>{LOCALE_NAMES[l]}</span>
+                  {active && <Check size={16} className="shrink-0 text-ec-blue" />}
+                </button>
+              </li>
+            )
+          })}
+          </ul>
+        </>
       )}
     </div>
   )

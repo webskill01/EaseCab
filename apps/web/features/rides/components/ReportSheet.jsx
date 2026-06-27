@@ -5,9 +5,11 @@ import { useTranslations } from 'next-intl'
 import { useMutation } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
+import { Button } from '@/components/ui/button'
 import { Flag, Check } from '@/components/ui/icons'
 // Generic R2 upload client (shared infra, lives under the profile feature).
 import { presignUpload, uploadToR2, dpPrecheck } from '@/features/profile/services/uploadsApi'
+import { reportErrorKey } from '@/lib/api/reportErrorKey'
 import { reportRide } from '../services/reportApi'
 
 // Mirrors @easecab/shared REPORT_REASON + sheets.jsx ReportSheet reason chips.
@@ -117,17 +119,19 @@ export function ReportSheet({ ride, onClose }) {
         )}
 
         {submit.isError && (
-          <p className="text-center text-[13px] font-bold text-ec-danger">{t('report.error')}</p>
+          <p className="text-center text-[13px] font-bold text-ec-danger">{t(`report.${reportErrorKey(submit.error)}`)}</p>
         )}
 
-        <button
+        <Button
           type="button"
+          variant="danger"
+          size="lg"
           disabled={!reason || submit.isPending}
           onClick={() => submit.mutate()}
-          className="h-[52px] w-full rounded-xl bg-ec-danger text-[15.5px] font-extrabold text-white disabled:bg-ec-disabled disabled:shadow-none"
+          className="w-full"
         >
           {submit.isPending ? '…' : t('report.submit')}
-        </button>
+        </Button>
       </div>
     </BottomSheet>
   )

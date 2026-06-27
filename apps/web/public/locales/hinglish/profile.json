@@ -14,9 +14,17 @@
     "vehicle": "Vehicle type",
     "languages": "Aap kaunsi languages bolte ho",
     "photo": "Profile photo",
-    "workingCityHint": "Jahan aap zyada duties lete ho — paas ki rides dikhane ke liye."
+    "workingCityHint": "Jahan aap zyada duties lete ho — paas ki rides dikhane ke liye.",
+    "baseCityFrom": "Aadhaar se"
   },
   "locked": "Locked",
+  "addLanguage": "Language add karein",
+  "removeLanguage": "Hatao",
+  "logout": {
+    "action": "Log out",
+    "title": "Log out karein?",
+    "body": "Nayi ride leads dekhne ke liye dobara sign-in karna hoga."
+  },
   "header": {
     "addPhoto": "PHOTO",
     "driver": "Driver"
@@ -30,14 +38,15 @@
     "tapHint": "Edit karne ke liye kisi stat par tap karo"
   },
   "about": {
-    "title": "Mere baare mein",
+    "title": "Baare mein",
     "edit": "Edit",
     "languages": "Boli jaane wali languages",
     "empty": "Ek chhota bio add karo taaki drivers aapki posts par bharosa karein."
   },
-  "support": "Help & Support",
+  "support": "Madad chahiye? Support se contact karo",
   "version": "EaseCab · v1.0.0",
   "dp": {
+    "caption": "Photo badlein · Profile photo",
     "add": "Photo add karo",
     "change": "Photo badlo",
     "uploading": "Upload ho rahi hai…",
@@ -65,9 +74,12 @@
     "notStarted": "Shuru nahi hua",
     "submitted": "Submit kiya",
     "verified": "Verified",
+    "pending": "Pending",
     "underReview": "Review mein"
   },
   "nav": {
+    "verification": "Verification",
+    "editReverify": "Edit & re-verify",
     "membership": "Membership",
     "membershipValue": {
       "trial": "Trial · {days} din baaki",
@@ -100,6 +112,7 @@
   },
   "deleteAccount": {
     "action": "Delete account",
+    "sub": "Apni profile aur data hamesha ke liye hatao",
     "title": "Apna account delete karein?",
     "body": "Aapki profile aur posts hat jaayengi. 30 din ke andar dobara sign-in karke sab kuch wapas pa sakte ho; uske baad hamesha ke liye delete ho jaayega.",
     "cancel": "Cancel",
@@ -118,6 +131,33 @@
     "error": "Yeh profile load nahi ho saki.",
     "aboutEmpty": "Abhi koi bio nahi.",
     "about": "{name} ke baare mein",
+    "report": {
+      "flag": "Is driver ko report karo",
+      "title": "Is driver ko report karo",
+      "reasonQ": "Aap inhe kyun report kar rahe ho?",
+      "reasons": {
+        "fake": "Fake profile",
+        "spam": "Spam",
+        "wrong_info": "Galat info",
+        "inappropriate": "Inappropriate",
+        "other": "Other"
+      },
+      "remarkPlaceholder": "Details add karo (optional)",
+      "attach": "Screenshot add karo",
+      "attaching": "Upload ho raha hai…",
+      "attached": "Screenshot add hua",
+      "attachError": "Attach nahi hua. Choti image try karo.",
+      "submit": "Report bhejo",
+      "submitting": "Bhej rahe hain…",
+      "submitted": "Report mil gayi",
+      "submittedSub": "Shukriya — hamari team is driver ko review karegi.",
+      "already": "Aap is driver ko pehle hi report kar chuke ho.",
+      "error": "Bhej nahi sake. Phir try karo.",
+      "errorSelf": "Aap apni hi profile report nahi kar sakte.",
+      "errorRate": "Aaj aapne bahut saare drivers report kar diye hain. Baad mein try karo.",
+      "errorGone": "Ye driver ab available nahi hai.",
+      "errorNetwork": "Connection nahi hai. Internet check karke dobara try karo."
+    },
     "stats": {
       "baseCity": "Base city",
       "aadhaar": "Aadhaar",
