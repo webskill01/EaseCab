@@ -12,6 +12,7 @@
 //
 // Exits 0 once the slot is paired + online; then `npm start` picks it up.
 
+const fs = require('node:fs');
 const path = require('node:path');
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
@@ -24,6 +25,30 @@ const logger = pino({ level: 'info' });
 const sessionPath = path.join(env.WA_SESSION_PATH, slot);
 const MAX_ATTEMPTS = 8;
 let attempts = 0;
+
+/**
+ * Poll creds.json until it holds a finalized login (registered || me.id), then
+ * exit 0. Guards against the async-write race that left a 0-byte creds.json.
+ * @param {number} [tries]
+ */
+function waitForCreds(tries = 0) {
+  let ok = false;
+  try {
+    const c = JSON.parse(fs.readFileSync(path.join(sessionPath, 'creds.json'), 'utf8'));
+    ok = Boolean(c.registered || (c.me && c.me.id));
+  } catch {
+    ok = false; // missing / half-written → keep waiting
+  }
+  if (ok) {
+    logger.info({ slot }, 'creds.json finalized — slot is paired; you can now run the bot');
+    process.exit(0);
+  }
+  if (tries >= 40) {
+    logger.error({ slot }, 'creds.json did not finalize within ~10s — re-run pairing');
+    process.exit(1);
+  }
+  setTimeout(() => waitForCreds(tries + 1), 250);
+}
 
 async function attempt() {
   attempts += 1;
@@ -38,8 +63,11 @@ async function attempt() {
       qrcode.generate(qr, { small: true });
     },
     onOpen: () => {
-      logger.info({ slot }, 'pairing complete — slot is paired and online; you can now run the bot');
-      process.exit(0);
+      // Baileys writes creds.json asynchronously; exiting on `open` races that
+      // write and can truncate creds.json to 0 bytes (slot then reads as unpaired).
+      // Wait until creds.json actually finalizes (registered || me.id) before exit.
+      logger.info({ slot }, 'connection open — waiting for creds.json to finalize...');
+      waitForCreds();
     },
     onClose: (code) => {
       // 401 = logged out (give up). Anything else mid-pairing (esp. 515

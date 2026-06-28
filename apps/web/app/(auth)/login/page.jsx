@@ -20,7 +20,7 @@ export default function LoginPage() {
   const s = useOtpLogin()
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col bg-white">
+    <main className="mx-auto flex min-h-[100svh] max-w-md flex-col bg-white">
       {s.phase === 'phone' && (
         <PhoneForm onSubmit={s.submitPhone} loading={s.loading} error={s.error} />
       )}

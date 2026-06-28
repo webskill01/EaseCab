@@ -23,10 +23,13 @@ function project(row, select) { if (!select) return row; const o = {}; for (cons
 function fakePrisma(rows = [], userRow = null) {
   const user = userRow ? { ...userRow } : null;
   return {
+    // getProfile reads user + verification submissions inside a $transaction.
+    async $transaction(ops) { return Promise.all(ops); },
     user: {
       async findUnique({ select }) { return user ? project(user, select) : null; },
       async update({ data, select }) { Object.assign(user, data); return project(user, select); },
     },
+    verificationSubmission: { async findMany() { return []; } },
     subscription: { async findUnique() { return null; } },
     rideContact: {
       async findMany({ where, take, select }) {
