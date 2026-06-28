@@ -6,11 +6,14 @@ const { env } = require('../../config/env.js');
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
-const { createAlerter } = require('@easecab/shared');
+const { createAlerter, createCityResolver, CITY_LLM } = require('@easecab/shared');
 const { createRideLifecycleRepository } = require('../../features/rides/rideLifecycle.repository');
 const { createRideLifecycleService } = require('../../features/rides/rideLifecycle.service');
 const { createBotHealthRepository } = require('../../features/botHealth/botHealth.repository');
 const { createStaleWatcher } = require('../../features/botHealth/staleWatcher.service');
+const { createCityLlm } = require('../features/cityBackfill/cityLlm');
+const { createCityBackfillRepository } = require('../features/cityBackfill/cityBackfill.repository');
+const { createCityBackfillService } = require('../features/cityBackfill/cityBackfill.service');
 
 // Aging cycle cadence. The thresholds are 5min/30min/12h, so a 60s tick keeps
 // transitions within ~60s of their mark — invisible at these scales. The same
@@ -42,10 +45,30 @@ async function main() {
     logger,
   });
 
-  // One cycle = ride transitions + a bot-feed staleness check.
+  // City LLM backfill (#14-6) — DORMANT unless GEMINI_API_KEY is set, so the demo
+  // box runs without it. Runs every Nth tick (not every 60s): it's an offline,
+  // batched sweep that resolves the residual unresolved_city_strings, writes `ai`
+  // aliases, and backfills live null-FK rides so the feed reflects them next fetch.
+  const backfill = env.GEMINI_API_KEY
+    ? createCityBackfillService({
+        repo: createCityBackfillRepository({ prisma }),
+        llm: createCityLlm({ apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL, logger }),
+        resolver: createCityResolver({ prisma, redis, logger }),
+        logger,
+      })
+    : null;
+  if (!backfill) logger.info('city LLM backfill inert (no GEMINI_API_KEY)');
+  let tick = 0;
+
+  // One cycle = ride transitions + a bot-feed staleness check (+ the periodic
+  // LLM backfill sweep on its slower cadence).
   const runCycle = async () => {
     await service.runTransitions();
     await staleWatcher.check();
+    if (backfill && tick % CITY_LLM.SWEEP_EVERY_TICKS === 0) {
+      await backfill.sweep();
+    }
+    tick += 1;
   };
 
   // Run once on boot so a restart catches up immediately, then on every tick.

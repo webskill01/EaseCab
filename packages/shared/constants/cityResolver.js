@@ -22,4 +22,30 @@ const RESOLVE_STATUS = Object.freeze({ RESOLVED: 'resolved', UNRESOLVED: 'unreso
 /** resolve() result.layer values (which layer produced a resolved hit). */
 const RESOLVE_LAYER = Object.freeze({ CACHE: 'cache', EXACT: 'exact', FUZZY: 'fuzzy' });
 
-module.exports = { CITY_RESOLVER, RESOLVE_STATUS, RESOLVE_LAYER };
+/**
+ * LLM backfill (Phase-14 #14-6). A periodic cron sweep hands the residual
+ * `unresolved_city_strings` (what cache/exact/fuzzy couldn't pin) to Google
+ * Gemini Flash (free tier) for a single batched, grounded resolution → writes a
+ * `city_alias` (source `ai`) + backfills the live null-FK rides. OFF the ingest
+ * hot path — zero feed/post latency. Provider is a stubbable injected boundary,
+ * so swapping to another model is a one-file change. Free tier (~15 RPM / 1500
+ * RPD) dwarfs this batched, periodic load.
+ *
+ * PII: ONLY normalized city fragments + the public city catalog are sent — never
+ * raw WA text / phone / name (CLAUDE.md §10). The service re-applies the
+ * PHONE_DIGIT_RUN scrub before every request as defense in depth.
+ */
+const CITY_LLM = Object.freeze({
+  // `*-latest` tracks Google's current free Flash; override via GEMINI_MODEL if
+  // they rename it. Gemini generateContent REST — called with global fetch (no SDK dep).
+  DEFAULT_MODEL: 'gemini-flash-latest',
+  API_BASE: 'https://generativelanguage.googleapis.com/v1beta/models',
+  BATCH_MAX: 50, // unresolved strings sent per sweep/call
+  MIN_OCCURRENCE: 1, // only sweep strings seen at least this many times
+  RIDE_BACKFILL_MAX: 200, // live null-FK rides re-resolved per sweep
+  REQUEST_TIMEOUT_MS: 30000,
+  MAX_OUTPUT_TOKENS: 4096,
+  SWEEP_EVERY_TICKS: 15, // cron ticks (60s each) between sweeps → ~15 min
+});
+
+module.exports = { CITY_RESOLVER, RESOLVE_STATUS, RESOLVE_LAYER, CITY_LLM };

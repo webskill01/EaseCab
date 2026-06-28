@@ -20,6 +20,12 @@ const envSchema = z.object({
   STALE_AFTER_MIN: z.coerce.number().int().positive().default(20),
   ACTIVE_HOUR_START_IST: z.coerce.number().int().min(0).max(23).default(6),
   ACTIVE_HOUR_END_IST: z.coerce.number().int().min(1).max(24).default(23),
+  // Gemini LLM city backfill (Phase-14 #14-6). OPTIONAL: when unset the cron's
+  // backfill sweep simply no-ops (dormant feature), so the demo box runs without
+  // it. Set GEMINI_API_KEY (free key from aistudio.google.com) to activate. The
+  // key is backend-only and never reaches any frontend bundle (CLAUDE.md §11).
+  GEMINI_API_KEY: z.string().min(1).optional(),
+  GEMINI_MODEL: z.string().min(1).optional(),
 });
 
 /**
