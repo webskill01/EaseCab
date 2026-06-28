@@ -16,9 +16,9 @@ function SubmissionBlock({ submission, onApprove, onReject }) {
   const { images } = submission
   return (
     <div className="rounded-md border border-ec-line p-3">
-      <div className="flex items-center justify-between">
-        <span className="rounded bg-muted px-2 py-0.5 text-xs font-semibold uppercase text-ec-ink">{submission.docType}</span>
-        <span className="text-sm text-ec-ink60">Verified name: <span className="text-ec-ink">{submission.verifiedName ?? '—'}</span></span>
+      <div className="flex items-start justify-between gap-2">
+        <span className="shrink-0 rounded bg-muted px-2 py-0.5 text-xs font-semibold uppercase text-ec-ink">{submission.docType}</span>
+        <span className="min-w-0 break-words text-right text-sm text-ec-ink60">Verified name: <span className="text-ec-ink">{submission.verifiedName ?? '—'}</span></span>
       </div>
 
       <div className="mt-2 flex flex-wrap gap-3">
@@ -56,13 +56,15 @@ export function VerificationCard({ group, onApprove, onReject, onBadge }) {
   const car = [user.carMake, user.carModel, user.carRegNo].filter(Boolean).join(' ') || '—'
   return (
     <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 break-words">
           <span className="text-sm font-medium text-ec-ink">{user.name ?? '—'}</span>
           <span className="ml-2 text-sm text-ec-ink60">{user.phoneMasked}</span>
           <span className="ml-2 text-xs text-ec-ink40">({submissions.length} doc{submissions.length === 1 ? '' : 's'})</span>
         </div>
-        <BadgeControl status={user.verificationStatus} onChange={(status) => onBadge(user.id, status)} />
+        <div className="shrink-0">
+          <BadgeControl status={user.verificationStatus} onChange={(status) => onBadge(user.id, status)} />
+        </div>
       </div>
 
       <p className="mt-1 text-sm text-ec-ink60">Car: <span className="text-ec-ink">{car}</span></p>

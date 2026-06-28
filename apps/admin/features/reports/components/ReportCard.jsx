@@ -9,8 +9,8 @@ export function ReportCard({ item, onAction }) {
   const route = target ? [target.fromCity, target.toCity].filter(Boolean).join(' → ') || '—' : 'target gone'
   return (
     <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 break-words">
           <span className="rounded bg-muted px-2 py-0.5 text-xs font-semibold uppercase text-ec-ink">
             {REASON_LABEL[item.reason] ?? item.reason}
           </span>
@@ -22,7 +22,7 @@ export function ReportCard({ item, onAction }) {
         </div>
       </div>
 
-      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-ec-ink60">
+      <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 break-words text-sm text-ec-ink60 sm:grid-cols-2">
         <div><dt className="inline">Route: </dt><dd className="inline text-ec-ink">{route}</dd></div>
         <div><dt className="inline">Ride status: </dt><dd className="inline text-ec-ink">{target?.status ?? '—'}</dd></div>
         {target?.displayText && <div className="col-span-2"><dt className="inline">Text: </dt><dd className="inline text-ec-ink">{target.displayText}</dd></div>}

@@ -12,13 +12,13 @@ export function UserReportCard({ item, onAction }) {
   const { user, reportCount, reports } = item
   return (
     <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 break-words">
           <span className="text-sm font-semibold text-ec-ink">{user.name ?? '—'}</span>
           {user.flagged && <span className="ml-2 rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Hidden</span>}
           <span className="ml-2 text-sm text-ec-ink60">{[user.baseCity, user.vehicleType].filter(Boolean).join(' · ') || '—'}</span>
         </div>
-        <span className="text-xs text-ec-ink60">{reportCount} report{reportCount === 1 ? '' : 's'}</span>
+        <span className="shrink-0 text-xs text-ec-ink60">{reportCount} report{reportCount === 1 ? '' : 's'}</span>
       </div>
 
       <ul className="mt-3 flex flex-col gap-2">
