@@ -11,7 +11,7 @@ const { AppError, ERROR_CODES, UPLOAD_PURPOSE, UPLOAD_MIME_EXT, UPLOAD_TIER } = 
  * MIME against the live object — never trusts the client).
  *
  * @param {object} deps
- * @param {{ presignPost: Function, headObject: Function, publicUrl: Function }} deps.r2
+ * @param {{ presignPut: Function, headObject: Function, publicUrl: Function }} deps.r2
  */
 function createUploadsService({ r2 }) {
   function policyFor(purpose) {
@@ -21,21 +21,20 @@ function createUploadsService({ r2 }) {
   }
 
   /**
-   * Issue a presigned POST for a new object. Key = `<prefix><userId>/<uuid>.<ext>`.
+   * Issue a presigned PUT for a new object. Key = `<prefix><userId>/<uuid>.<ext>`.
    * `stub` flags the demo/local R2 stub (no real bucket): the client uses it to skip
-   * the direct-to-R2 byte POST, since the stub's `headObject` accepts the key anyway.
+   * the direct-to-R2 byte PUT, since the stub's `headObject` accepts the key anyway.
    * Always false against real R2 in production.
-   * @returns {Promise<{ url: string, fields: object, key: string, publicUrl: string|null, stub: boolean }>}
+   * @returns {Promise<{ url: string, key: string, publicUrl: string|null, stub: boolean }>}
    */
   async function presign({ userId, purpose, contentType }) {
     const policy = policyFor(purpose);
     const ext = UPLOAD_MIME_EXT[contentType];
     if (!ext) throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR, 'unsupported content type');
     const key = `${policy.keyPrefix}${userId}/${crypto.randomUUID()}.${ext}`;
-    const { url, fields } = await r2.presignPost({ key, contentType, maxBytes: policy.maxBytes });
+    const { url } = await r2.presignPut({ key, contentType });
     return {
       url,
-      fields,
       key,
       publicUrl: policy.tier === UPLOAD_TIER.PUBLIC ? r2.publicUrl(key) : null,
       stub: r2.isStub === true,

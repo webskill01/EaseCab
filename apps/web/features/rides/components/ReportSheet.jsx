@@ -51,8 +51,8 @@ export function ReportSheet({ ride, onClose }) {
     if (dpPrecheck(file)) { setAttachError(true); return }
     setUploading(true)
     try {
-      const { url, fields, key, stub } = await presignUpload({ purpose: 'report_screenshot', contentType: file.type })
-      await uploadToR2({ url, fields, file, stub })
+      const { url, key, stub } = await presignUpload({ purpose: 'report_screenshot', contentType: file.type })
+      await uploadToR2({ url, file, stub })
       setScreenshotKey(key)
     } catch {
       setAttachError(true)

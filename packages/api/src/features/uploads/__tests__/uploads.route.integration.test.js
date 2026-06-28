@@ -18,7 +18,7 @@ const jwt = createJwt(CONFIG.jwt);
 const authCookie = `${AUTH_COOKIES.ACCESS_TOKEN}=${jwt.signAccess({ sub: 'u1', role: 'user' })}`;
 
 const fakeR2 = {
-  async presignPost({ key, contentType }) { return { url: 'https://r2/post', fields: { key, 'Content-Type': contentType } }; },
+  async presignPut({ key }) { return { url: `https://r2/put/${key}` }; },
   async headObject() { return { exists: true, size: 1024, contentType: 'image/jpeg' }; },
   publicUrl(key) { return `https://cdn.easecab.com/${key}`; },
 };
@@ -49,11 +49,11 @@ test('rejects a disallowed contentType for the purpose with 422', async () => {
   assert.strictEqual(res.status, 422);
 });
 
-test('returns a presigned POST (url + fields + namespaced key) on success', async () => {
+test('returns a presigned PUT url + namespaced key on success', async () => {
   const res = await request(appWith()).post('/api/v1/uploads/presign').set('Cookie', authCookie).send({ purpose: 'dp', contentType: 'image/jpeg' });
   assert.strictEqual(res.status, 200);
-  assert.strictEqual(res.body.data.url, 'https://r2/post');
   assert.ok(res.body.data.key.startsWith('dp/u1/'));
-  assert.ok(res.body.data.fields);
+  assert.strictEqual(res.body.data.url, `https://r2/put/${res.body.data.key}`);
+  assert.strictEqual(res.body.data.fields, undefined);
   assert.strictEqual(res.body.data.publicUrl, `https://cdn.easecab.com/${res.body.data.key}`);
 });

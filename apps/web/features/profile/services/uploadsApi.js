@@ -31,9 +31,9 @@ export function kycPrecheck(file) {
 }
 
 /**
- * Request a presigned POST policy for an upload purpose.
+ * Request a presigned PUT URL for an upload purpose.
  * @param {{purpose: string, contentType: string}} input
- * @returns {Promise<{url: string, fields: object, key: string, publicUrl: ?string, stub?: boolean}>}
+ * @returns {Promise<{url: string, key: string, publicUrl: ?string, stub?: boolean}>}
  */
 export async function presignUpload({ purpose, contentType }) {
   const { data } = await apiFetch('/uploads/presign', { method: 'POST', body: JSON.stringify({ purpose, contentType }) })
@@ -41,18 +41,16 @@ export async function presignUpload({ purpose, contentType }) {
 }
 
 /**
- * Upload bytes straight to R2 via the presigned POST (never through our API, §8/§12).
- * No credentials, no JSON content-type — R2 wants a raw multipart form.
- * When `stub` is set (local/demo R2 stub — no real bucket), there's nothing to POST
- * to, so we resolve immediately; the server's verify gate accepts the key. Never set
- * against real R2 in production.
- * @param {{url: string, fields: object, file: File, stub?: boolean}} input
+ * Upload bytes straight to R2 via the presigned PUT (never through our API, §8/§12).
+ * One PUT with the File as the raw body + the matching Content-Type header — R2 does
+ * NOT implement S3 POST Object (presigned-POST form upload → 501), so PUT is required.
+ * The Content-Type MUST equal what `presignUpload` was called with (it's a signed
+ * header). When `stub` is set (local/demo R2 stub — no real bucket), there's nothing
+ * to PUT to, so we resolve immediately; the server's verify gate accepts the key.
+ * @param {{url: string, file: File, stub?: boolean}} input
  */
-export async function uploadToR2({ url, fields, file, stub = false }) {
+export async function uploadToR2({ url, file, stub = false }) {
   if (stub) return
-  const form = new FormData()
-  Object.entries(fields).forEach(([k, v]) => form.append(k, v))
-  form.append('file', file)
-  const res = await fetch(url, { method: 'POST', body: form })
+  const res = await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
   if (!res.ok) throw new Error(`R2 upload failed (${res.status})`)
 }

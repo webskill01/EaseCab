@@ -114,7 +114,7 @@ const { createPasswordHasher } = require('./lib/passwordHasher');
  * @param {import('ioredis').Redis} [deps.pushSubscriber] - dedicated subscriber
  *   (a second `redis.duplicate()`) backing the live city-targeted push fan-out. The
  *   dispatcher starts only when BOTH pushSubscriber and pushSender are provided.
- * @param {{ presignPost, presignGet, headObject, publicUrl }} [deps.uploads] - injected
+ * @param {{ presignPut, presignGet, headObject, publicUrl }} [deps.uploads] - injected
  *   Cloudflare R2 boundary (Step 21a). Optional like chatStore/pushSender — only the
  *   uploads routes touch it, so harnesses that don't exercise uploads may omit it.
  * @returns {import('express').Express}

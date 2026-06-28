@@ -55,7 +55,7 @@ function fakeRedis() {
 
 /** R2 boundary stub — head returns a small in-policy image so verifyUpload passes. */
 const uploadsStub = {
-  presignPost: async () => ({ url: 'https://r2.example/post', fields: {} }),
+  presignPut: async () => ({ url: 'https://r2.example/put' }),
   presignGet: async () => 'https://r2.example/get',
   headObject: async () => ({ exists: true, size: 1024, contentType: 'image/jpeg' }),
   publicUrl: (k) => `https://r2.example/${k}`,

@@ -20,8 +20,8 @@ export function useKycUpload(purpose) {
     if (bad) { setErrorKey(bad); return false }
     setUploading(true)
     try {
-      const { url, fields, key, stub } = await presignUpload({ purpose, contentType: file.type })
-      await uploadToR2({ url, fields, file, stub })
+      const { url, key, stub } = await presignUpload({ purpose, contentType: file.type })
+      await uploadToR2({ url, file, stub })
       await attachImage({ purpose, key })
       setDone(true)
       return true

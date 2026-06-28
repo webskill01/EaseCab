@@ -6,8 +6,8 @@ const { createUploadsService } = require('../uploads.service');
 
 function fakeR2(overrides = {}) {
   return {
-    async presignPost({ key, contentType, maxBytes }) {
-      return { url: 'https://r2/post', fields: { key, 'Content-Type': contentType, maxBytes } };
+    async presignPut({ key, contentType }) {
+      return { url: `https://r2/put/${key}?ct=${encodeURIComponent(contentType)}` };
     },
     async headObject() { return { exists: true, size: 1024, contentType: 'image/jpeg' }; },
     publicUrl(key) { return `https://cdn.easecab.com/${key}`; },
@@ -15,13 +15,13 @@ function fakeR2(overrides = {}) {
   };
 }
 
-test('presign builds a user-namespaced key and returns url+fields+publicUrl for a public purpose', async () => {
+test('presign builds a user-namespaced key and returns the PUT url+publicUrl for a public purpose', async () => {
   const svc = createUploadsService({ r2: fakeR2() });
   const out = await svc.presign({ userId: 'u1', purpose: 'dp', contentType: 'image/jpeg' });
   assert.ok(out.key.startsWith('dp/u1/'));
   assert.match(out.key, /\.jpg$/);
-  assert.equal(out.url, 'https://r2/post');
-  assert.equal(out.fields.maxBytes, 5 * 1024 * 1024);
+  assert.equal(out.url, `https://r2/put/${out.key}?ct=image%2Fjpeg`);
+  assert.equal(out.fields, undefined);
   assert.equal(out.publicUrl, `https://cdn.easecab.com/${out.key}`);
 });
 

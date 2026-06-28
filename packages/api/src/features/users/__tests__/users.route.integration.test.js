@@ -40,7 +40,7 @@ function makeApp(users) {
     subscriber: { on() {}, subscribe: async () => {}, duplicate() { return this; }, disconnect() {} },
     razorpay: { async createOrder() { return { id: 'order_x' }; } },
     surepass: { async generateAadhaarOtp() { return {}; }, async submitAadhaarOtp() { return {}; }, async verifyDl() { return {}; }, async verifyRc() { return {}; } },
-    uploads: { presignPost: async () => ({}), presignGet: async () => '', headObject: async () => ({}), publicUrl: (k) => k },
+    uploads: { presignPut: async () => ({}), presignGet: async () => '', headObject: async () => ({}), publicUrl: (k) => k },
   });
 }
 

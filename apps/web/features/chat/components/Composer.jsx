@@ -38,8 +38,8 @@ export function Composer({ disabled, onSend, onSendImage }) {
     if (file.size > IMAGE_MAX_BYTES || !IMAGE_MIMES.includes(file.type)) { setAttachError(true); return }
     setUploading(true)
     try {
-      const { url, fields, key, publicUrl, stub } = await presignUpload({ purpose: 'chat_image', contentType: file.type })
-      await uploadToR2({ url, fields, file, stub })
+      const { url, key, publicUrl, stub } = await presignUpload({ purpose: 'chat_image', contentType: file.type })
+      await uploadToR2({ url, file, stub })
       await onSendImage({ key, previewUrl: publicUrl })
     } catch {
       setAttachError(true)
