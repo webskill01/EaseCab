@@ -30,12 +30,14 @@ module.exports = {
     },
     {
       name: 'easecab-api', // packages/api — Express + SSE (single instance: SSE broadcast is in-process)
-      script: 'packages/api/src/server.js',
+      script: 'src/server.js',
+      cwd: 'packages/api', // run from the package so ./.env resolves here (like cron/bot)
+      node_args: '--env-file-if-exists=.env', // load packages/api/.env — NODE_ENV comes from the file
       exec_mode: 'fork',
       instances: 1,
       max_memory_restart: '500M',
       autorestart: true,
-      env: { NODE_ENV: 'production', PORT: 4000 },
+      env: { PORT: 4000 }, // NODE_ENV left to .env: demo box = development (stubs), prod = production
     },
     {
       name: 'easecab-web', // apps/web — Next.js standalone build
