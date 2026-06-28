@@ -40,8 +40,10 @@ module.exports = {
       env: { PORT: 4000 }, // NODE_ENV left to .env: demo box = development (stubs), prod = production
     },
     {
-      name: 'easecab-web', // apps/web — Next.js standalone build
-      script: 'apps/web/server.js', // next build (standalone) output
+      name: 'easecab-web', // apps/web — Next.js production server (`next start`, port in the start script)
+      script: 'npm',
+      args: 'run start', // apps/web start = `next start -p 3000`; next is hoisted to root .bin, npm resolves it
+      cwd: 'apps/web',
       exec_mode: 'fork',
       instances: 1,
       max_memory_restart: '600M',
@@ -49,8 +51,10 @@ module.exports = {
       env: { NODE_ENV: 'production', PORT: 3000 },
     },
     {
-      name: 'easecab-admin', // apps/admin — Next.js standalone build
-      script: 'apps/admin/server.js',
+      name: 'easecab-admin', // apps/admin — Next.js production server (`next start -p 5000`)
+      script: 'npm',
+      args: 'run start',
+      cwd: 'apps/admin',
       exec_mode: 'fork',
       instances: 1,
       max_memory_restart: '400M',
