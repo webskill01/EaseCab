@@ -2,9 +2,9 @@
   "title": "Settings",
   "notifications": {
     "title": "Ride alerts",
-    "botRides": "Bot-feed ride alerts",
-    "botRidesHint": "New leads from the WhatsApp feed",
-    "postedRides": "Verified ride alerts",
+    "botRides": "Live rides",
+    "botRidesHint": "Fresh duties as they come in",
+    "postedRides": "Verified rides",
     "postedRidesHint": "Duties posted by verified drivers",
     "cities": {
       "title": "Alert cities",

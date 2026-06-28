@@ -23,15 +23,15 @@ describe('NotificationSettings', () => {
   it('renders both toggles reflecting prefs', () => {
     usePushPreferences.mockReturnValue(stub())
     renderWithIntl(<NotificationSettings />)
-    expect(screen.getByRole('switch', { name: 'Bot-feed ride alerts' })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('switch', { name: 'Verified ride alerts' })).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('switch', { name: 'Live rides' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('switch', { name: 'Verified rides' })).toHaveAttribute('aria-checked', 'false')
   })
 
   it('flips a toggle via update', () => {
     const update = vi.fn()
     usePushPreferences.mockReturnValue(stub({ update }))
     renderWithIntl(<NotificationSettings />)
-    fireEvent.click(screen.getByRole('switch', { name: 'Verified ride alerts' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Verified rides' }))
     expect(update).toHaveBeenCalledWith({ notifyPostedRides: true })
   })
 

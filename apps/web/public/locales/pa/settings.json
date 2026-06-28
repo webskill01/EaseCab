@@ -2,9 +2,9 @@
   "title": "ਸੈਟਿੰਗਾਂ",
   "notifications": {
     "title": "ਰਾਈਡ ਅਲਰਟ",
-    "botRides": "ਬੌਟ-ਫੀਡ ਰਾਈਡ ਅਲਰਟ",
-    "botRidesHint": "ਵਟਸਐਪ ਫੀਡ ਤੋਂ ਨਵੀਆਂ ਲੀਡਾਂ",
-    "postedRides": "ਵੈਰੀਫਾਈਡ ਰਾਈਡ ਅਲਰਟ",
+    "botRides": "ਲਾਈਵ ਰਾਈਡਾਂ",
+    "botRidesHint": "ਆਉਂਦੀਆਂ ਨਵੀਆਂ ਡਿਊਟੀਆਂ",
+    "postedRides": "ਵੈਰੀਫਾਈਡ ਰਾਈਡਾਂ",
     "postedRidesHint": "ਵੈਰੀਫਾਈਡ ਡਰਾਈਵਰਾਂ ਵੱਲੋਂ ਪੋਸਟ ਡਿਊਟੀਆਂ",
     "cities": {
       "title": "ਅਲਰਟ ਸ਼ਹਿਰ",

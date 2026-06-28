@@ -2,9 +2,9 @@
   "title": "सेटिंग्स",
   "notifications": {
     "title": "राइड अलर्ट",
-    "botRides": "बॉट-फ़ीड राइड अलर्ट",
-    "botRidesHint": "व्हाट्सऐप फ़ीड से नई लीड्स",
-    "postedRides": "वेरिफ़ाइड राइड अलर्ट",
+    "botRides": "लाइव राइड",
+    "botRidesHint": "आते ही ताज़ा ड्यूटी",
+    "postedRides": "वेरिफ़ाइड राइड",
     "postedRidesHint": "वेरिफ़ाइड ड्राइवरों द्वारा पोस्ट की गई ड्यूटी",
     "cities": {
       "title": "अलर्ट शहर",
