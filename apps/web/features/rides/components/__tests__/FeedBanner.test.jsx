@@ -11,6 +11,11 @@ describe('FeedBanner', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
+  it('renders nothing while membership is still loading (no expired flash)', () => {
+    const { container } = renderWithIntl(<FeedBanner membership={{ state: null }} onUpgrade={vi.fn()} />)
+    expect(container).toBeEmptyDOMElement()
+  })
+
   it('trial banner shows days left + Upgrade', async () => {
     const onUpgrade = vi.fn()
     const user = userEvent.setup()

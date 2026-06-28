@@ -26,9 +26,9 @@ export function ChatRow({ chat }) {
     <button
       type="button"
       onClick={() => router.push(`/messages/${chat.id}`)}
-      className="flex w-full items-center gap-3 border-b border-ec-line bg-white px-4 py-[13px] text-left"
+      className="flex w-full items-center gap-3 border-b border-ec-line bg-white px-4 py-[11px] text-left"
     >
-      <span className={`flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold ${chat.otherVerified ? 'bg-ec-blue text-white' : 'bg-ec-sky text-ec-blue'}`}>
+      <span className={`flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold ${chat.otherVerified ? 'bg-ec-blue text-white' : 'bg-ec-sky text-ec-blue'}`}>
         {(title || '?').slice(0, 1).toUpperCase()}
       </span>
       <span className="min-w-0 flex-1">

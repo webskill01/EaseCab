@@ -36,12 +36,12 @@ export function RouteRow({ from, to }) {
     <div className="flex items-end gap-2">
       <div className="min-w-0 flex-1">
         <div className="mb-px text-[11.5px] font-bold text-ec-ink60">{t('card.pickup')}</div>
-        <div className="truncate text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{from || t('card.unknownCity')}</div>
+        <div className="truncate text-[16px] font-extrabold leading-tight tracking-tight text-ec-ink">{from || t('card.unknownCity')}</div>
       </div>
       <div className="shrink-0 pb-px text-ec-blue"><Swap size={17} /></div>
       <div className="min-w-0 flex-1 text-right">
         <div className="mb-px text-[11.5px] font-bold text-ec-ink60">{t('card.drop')}</div>
-        <div className={`truncate text-[18px] font-extrabold leading-tight tracking-tight ${to ? 'text-ec-ink' : 'text-ec-ink40'}`}>{to || t('card.unknownCity')}</div>
+        <div className={`truncate text-[16px] font-extrabold leading-tight tracking-tight ${to ? 'text-ec-ink' : 'text-ec-ink40'}`}>{to || t('card.unknownCity')}</div>
       </div>
     </div>
   )
@@ -50,7 +50,7 @@ export function RouteRow({ from, to }) {
 /** WhatsApp / Call / Report. Disabled (dim) when a bot ride has aged to "booked". */
 function CardActions({ ride, disabled, onContact, onReport }) {
   const t = useTranslations('rides')
-  const btn = 'flex h-[42px] items-center justify-center gap-1.5 rounded-[11px] text-[13.5px] font-bold text-white'
+  const btn = 'flex h-[40px] items-center justify-center gap-1.5 rounded-[11px] text-[13.5px] font-bold text-white'
   return (
     <div className="flex gap-1.5">
       <button
@@ -73,7 +73,7 @@ function CardActions({ ride, disabled, onContact, onReport }) {
         type="button"
         onClick={() => onReport(ride)}
         aria-label={t('actions.report')}
-        className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-ec-dangerBg text-ec-danger"
+        className="flex h-[40px] w-[40px] items-center justify-center rounded-[11px] bg-ec-dangerBg text-ec-danger"
       >
         <Flag size={17} />
       </button>
@@ -88,7 +88,7 @@ function PosterRow({ ride }) {
   const router = useRouter()
   const initial = (ride.posterName || '?').trim().charAt(0).toUpperCase()
   return (
-    <div className="mt-2.5 flex items-center gap-2.5 border-t border-ec-line pt-2.5">
+    <div className="mt-2 flex items-center gap-2.5 border-t border-ec-line pt-2">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[15px] font-extrabold text-ec-blue">{initial}</span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
@@ -136,13 +136,13 @@ export function RideCard({ ride, now, onContact, onReport }) {
   return (
     <article
       data-status={display}
-      className={`relative rounded-ec-card border p-3.5 shadow-ec-card transition-opacity ${
+      className={`relative rounded-ec-card border p-3 shadow-ec-card transition-opacity ${
         verified ? 'border-ec-blue/20 bg-white' : 'border-ec-line bg-white'
       } ${booked ? 'opacity-[0.66] grayscale-[0.55]' : ''}`}
     >
-      {verified && <div className="absolute left-3.5 right-3.5 top-0 h-[3px] rounded-b-[3px] bg-ec-blue" />}
+      {verified && <div className="absolute left-3 right-3 top-0 h-[3px] rounded-b-[3px] bg-ec-blue" />}
 
-      <div className="mb-2.5 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between">
         <span className="text-[12px] font-semibold text-ec-ink60">
           {t('card.postedAt')} · <b className="font-bold text-ec-ink">{t(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
         </span>
@@ -153,7 +153,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
 
       {verified && ride.posterId ? <PosterRow ride={ride} /> : null}
 
-      <div className="mt-2.5 border-t border-ec-line pt-2.5">
+      <div className="mt-2 border-t border-ec-line pt-2">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] font-semibold text-ec-ink60">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <span className="inline-flex shrink-0 text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
@@ -171,7 +171,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
         ) : null}
       </div>
 
-      <div className="mt-2.5">
+      <div className="mt-2">
         <CardActions ride={ride} disabled={booked} onContact={onContact} onReport={onReport} />
       </div>
     </article>

@@ -6,7 +6,7 @@ import { CityPicker } from './CityPicker'
 import { VehicleChips } from './VehicleChips'
 import { isPostable, isFutureDateTime, todayStr } from '../lib/postForm'
 
-const SECTION = 'rounded-ec-card border border-ec-line bg-white p-4'
+const SECTION = 'rounded-ec-card border border-ec-line bg-white p-3.5'
 const FIELD = 'h-12 w-full rounded-xl border border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none'
 const LABEL = 'mb-1.5 block text-[12.5px] font-bold uppercase tracking-wide text-ec-ink40'
 
@@ -29,7 +29,7 @@ export function PostForm({ form, onChange, onSubmit, submitting }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-3 pt-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-2.5 pt-2.5">
       {/* Route */}
       <section className={SECTION}>
         <div className="flex flex-col gap-2">

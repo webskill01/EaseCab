@@ -43,7 +43,9 @@ export function FeedScreen() {
   const feed = useRidesFeed({ sub, cityId: lockedCity?.id ?? null })
 
   const membershipQuery = useQuery({ queryKey: ['membership'], queryFn: getMembership, staleTime: 300000 })
-  const membership = membershipView(membershipQuery.data)
+  // Until the query resolves, `data` is undefined → membershipView() would read it
+  // as EXPIRED and flash the red banner. Hold a neutral state while loading.
+  const membership = membershipQuery.data ? membershipView(membershipQuery.data) : { state: null }
 
   const pickCity = (city) => { writeCityLock(city); setLockedCity(city) }
   const goMembership = () => router.push('/membership')
@@ -80,7 +82,7 @@ export function FeedScreen() {
       <div
         ref={feed.scrollRef}
         onScroll={feed.onScroll}
-        className="relative flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-4"
+        className="relative flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4"
       >
         <NewRidesPill count={feed.atTop ? 0 : feed.pendingCount} onClick={feed.flushPending} />
         <div className="h-1.5 shrink-0" />

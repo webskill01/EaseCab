@@ -30,6 +30,10 @@ export function FeedBanner({ membership, onUpgrade }) {
     )
   }
 
+  // Anything that isn't TRIAL by here (active was caught above, plus the neutral
+  // loading state) renders no banner.
+  if (membership.state !== MEMBERSHIP_STATE.TRIAL) return null
+
   const days = membership.daysLeft ?? 0
   const pct = Math.max(8, Math.min(100, (days / 7) * 100))
   return (
