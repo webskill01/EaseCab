@@ -54,7 +54,11 @@
     "requiredBadge": "Photo required",
     "tooBig": "Photo must be under 5 MB",
     "badType": "Use a JPG, PNG or WebP image",
-    "failed": "Upload failed — try again"
+    "failed": "Upload failed — try again",
+    "cropTitle": "Adjust your photo",
+    "zoom": "Zoom",
+    "cropCancel": "Cancel",
+    "cropConfirm": "Use photo"
   },
   "completeness": {
     "title": "Complete your profile to unlock posting",

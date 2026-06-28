@@ -54,7 +54,11 @@
     "requiredBadge": "Photo zaroori",
     "tooBig": "Photo 5 MB se kam honi chahiye",
     "badType": "JPG, PNG ya WebP image use karo",
-    "failed": "Upload fail — phir try karo"
+    "failed": "Upload fail — phir try karo",
+    "cropTitle": "Apni photo adjust karo",
+    "zoom": "Zoom",
+    "cropCancel": "Cancel",
+    "cropConfirm": "Photo use karo"
   },
   "completeness": {
     "title": "Duty post karne ke liye apni profile poori karo",
