@@ -3,8 +3,6 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithIntl } from '@/test/intl'
 
-const refresh = vi.fn()
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
 vi.mock('@/i18n/actions', () => ({ setLocale: vi.fn() }))
 import { setLocale } from '@/i18n/actions'
 import { LanguageMenu } from '../LanguageMenu'
@@ -12,7 +10,7 @@ import { LanguageMenu } from '../LanguageMenu'
 beforeEach(() => vi.clearAllMocks())
 
 describe('LanguageMenu', () => {
-  it('opens and switches locale via the server action + refresh', async () => {
+  it('opens and switches locale via the server action (no client refresh — action revalidates)', async () => {
     setLocale.mockResolvedValue(undefined)
     const user = userEvent.setup()
     renderWithIntl(<LanguageMenu current="en" />)
@@ -20,6 +18,5 @@ describe('LanguageMenu', () => {
     // Dropdown rows are labelled by full language name (Hindi = हिन्दी).
     await user.click(screen.getByRole('menuitem', { name: 'हिन्दी' }))
     expect(setLocale).toHaveBeenCalledWith('hi')
-    expect(refresh).toHaveBeenCalled()
   })
 })

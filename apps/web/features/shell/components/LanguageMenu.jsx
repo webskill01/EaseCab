@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Globe, ChevR, Check } from '@/components/ui/icons'
 import { LOCALES, LOCALE_LABELS, LOCALE_NAMES } from '@/i18n/config'
@@ -9,18 +8,18 @@ import { setLocale } from '@/i18n/actions'
 
 /**
  * Top-bar language switcher. Writes the locale cookie via the setLocale server
- * action, then router.refresh() so the server layout re-reads the cookie and
- * re-renders messages + the script font. (CLAUDE.md §14.)
+ * action, which revalidatePath('/', 'layout')s so the server layout re-reads the
+ * cookie and re-renders messages + the script font. No client router.refresh():
+ * a second refresh races the action's revalidate and the switch lags a step behind
+ * on repeat changes. (CLAUDE.md §14.)
  */
 export function LanguageMenu({ current }) {
   const t = useTranslations('common')
-  const router = useRouter()
   const [open, setOpen] = useState(false)
 
   async function choose(locale) {
     setOpen(false)
     await setLocale(locale)
-    router.refresh()
   }
 
   return (

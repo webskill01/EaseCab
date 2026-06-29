@@ -8,8 +8,10 @@ import { setLocale } from '@/i18n/actions'
 
 /**
  * Full-screen language picker (profile.jsx LanguageScreen, §4.B) — its own route off the
- * profile hub. Writes the locale cookie via the setLocale server action, then refreshes
- * so the server layout re-reads it (messages + script font), and returns to /profile.
+ * profile hub. Writes the locale cookie via the setLocale server action (which
+ * revalidatePath('/', 'layout')s — that re-render is what applies the switch), then
+ * returns to /profile. No client router.refresh(): a second refresh races the action's
+ * revalidate and lands a stale RSC payload, so repeat switches lag a step behind.
  */
 export function LanguageScreen() {
   const t = useTranslations('profile')
@@ -20,7 +22,6 @@ export function LanguageScreen() {
   async function choose(locale) {
     await setLocale(locale)
     router.push('/profile')
-    router.refresh()
   }
 
   return (
