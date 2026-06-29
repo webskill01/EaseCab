@@ -56,6 +56,27 @@ export function relParts(ageMin) {
   return { key: 'hourAgo', count: Math.floor(ageMin / 60) }
 }
 
+/**
+ * History-only relative time (My Rides cards) — coarser & more human than the
+ * feed's per-minute granularity. Under 24h: hours, with minutes when non-zero
+ * ("3h" / "3h 20m"). 24h+: days, with hours when non-zero ("2d" / "2d 5h").
+ * Same i18n-token contract as relParts; compound forms add a `sub` count.
+ * @param {number} ageMin
+ * @returns {{ key: string, count?: number, sub?: number }}
+ */
+export function relPartsLong(ageMin) {
+  if (ageMin <= 0) return { key: 'justNow' }
+  if (ageMin < 60) return { key: 'minAgo', count: ageMin }
+  if (ageMin < 1440) {
+    const h = Math.floor(ageMin / 60)
+    const m = ageMin % 60
+    return m === 0 ? { key: 'hoursShort', count: h } : { key: 'hoursMinShort', count: h, sub: m }
+  }
+  const d = Math.floor(ageMin / 1440)
+  const h = Math.floor((ageMin % 1440) / 60)
+  return h === 0 ? { key: 'daysShort', count: d } : { key: 'daysHrShort', count: d, sub: h }
+}
+
 // next-intl locale → Intl BCP-47 tag for date formatting (all India locales).
 const DATE_LOCALE = Object.freeze({ en: 'en-IN', hinglish: 'en-IN', hi: 'hi-IN', pa: 'pa-IN' })
 
@@ -82,6 +103,25 @@ export function rideDateParts(date, locale = 'en', now = Date.now()) {
   if (days === 0) return { key: 'today' }
   if (days === 1) return { key: 'tomorrow' }
   return { text: new Intl.DateTimeFormat(DATE_LOCALE[locale] || 'en-IN', { day: '2-digit', month: 'short' }).format(t) }
+}
+
+/**
+ * Exact contact timestamp for the Contacted tab — "DD Mon, h:mm am/pm", locale-aware
+ * (hour12 across all India locales). An absolute stamp, NOT "2 days ago": a user who
+ * contacted 10+ rides in one day needs to pinpoint which ride a number belongs to,
+ * and relative time can't disambiguate that. Pure — caller passes useLocale().
+ * @param {?(Date|string|number)} date
+ * @param {string} [locale]
+ * @returns {?string}
+ */
+export function contactedStamp(date, locale = 'en') {
+  if (!date) return null
+  const t = date instanceof Date ? date.getTime() : new Date(date).getTime()
+  if (Number.isNaN(t)) return null
+  return new Intl.DateTimeFormat(DATE_LOCALE[locale] || 'en-IN', {
+    timeZone: 'Asia/Kolkata', // India-only app — pin to IST so the stamp matches the rest of the UI (i18n config)
+    day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true,
+  }).format(t)
 }
 
 // Vehicle-type enum label (@easecab/shared VEHICLE_TYPES) → glyph key for VehicleIcon.

@@ -25,6 +25,12 @@ describe('ContactedCard', () => {
     expect(push).toHaveBeenCalledWith('/u/u9')
   })
 
+  it('shows the exact contact date + time (IST), not a relative "days ago"', () => {
+    renderWithIntl(<ContactedCard contact={{ id: 'k5', kind: 'bot', from: 'A', to: 'B', phone: '+910000000000', contactedAt: '2026-06-01T00:00:00.000Z' }} />)
+    // 2026-06-01T00:00Z = 05:30 IST → "01 Jun, 5:30 am"
+    expect(screen.getByText(/01 Jun.*5:30/i)).toBeInTheDocument()
+  })
+
   it('a bot contact renders no poster row', () => {
     renderWithIntl(<ContactedCard contact={{ id: 'k4', kind: 'bot', from: 'A', to: 'B', phone: '+910000000000' }} />)
     expect(screen.queryByRole('button', { name: /view profile/i })).toBeNull()

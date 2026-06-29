@@ -168,17 +168,21 @@ test('a tampered cursor → 422 VALIDATION_ERROR', async () => {
 
 // ---- contact (soft gate) --------------------------------------------------
 
-test('POST /:id/contact with an active trial → 200 reveals the phone (idempotent on re-tap)', async () => {
+test('POST /:id/contact reveals the phone (no history); /contact/log records it (idempotent on re-tap)', async () => {
   const seed = { rides: [makeRide(R0)], subs: { [USER_ID]: { status: 'trial', trialExpiresAt: FUTURE, expiresAt: null } } };
   const { app } = makeApp(seed);
   const res = await request(app).post(`/api/v1/rides/${R0}/contact`).set('Cookie', authCookie).send();
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.body.data.phoneNumber, '+919876543210');
-  assert.ok(res.body.data.contactedAt);
+  assert.strictEqual(res.body.data.contactedAt, undefined); // reveal alone writes no history
 
-  const again = await request(app).post(`/api/v1/rides/${R0}/contact`).set('Cookie', authCookie).send();
+  const log = await request(app).post(`/api/v1/rides/${R0}/contact/log`).set('Cookie', authCookie).send();
+  assert.strictEqual(log.status, 200);
+  assert.ok(log.body.data.contactedAt);
+
+  const again = await request(app).post(`/api/v1/rides/${R0}/contact/log`).set('Cookie', authCookie).send();
   assert.strictEqual(again.status, 200); // upsert → no duplicate-key 500
-  assert.strictEqual(again.body.data.phoneNumber, '+919876543210');
+  assert.strictEqual(again.body.data.contactedAt, log.body.data.contactedAt); // same first-tap stamp
 });
 
 test('POST /:id/contact with an expired subscription → 403 SUBSCRIPTION_EXPIRED', async () => {

@@ -22,7 +22,11 @@
     "minAgo": "{count} मिनट पहले",
     "hourAgo": "{count} घंटे पहले",
     "today": "आज",
-    "tomorrow": "कल"
+    "tomorrow": "कल",
+    "hoursShort": "{count} घं पहले",
+    "hoursMinShort": "{count} घं {sub} मि पहले",
+    "daysShort": "{count} दि पहले",
+    "daysHrShort": "{count} दि {sub} घं पहले"
   },
   "actions": {
     "whatsapp": "WhatsApp",

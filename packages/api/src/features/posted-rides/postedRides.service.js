@@ -104,8 +104,9 @@ function createPostedRidesService({ repo, logger, uploads }) {
 
     /**
      * Reveal a poster's phone at the contact action point. Order: 404 if no active
-     * target → own-post shortcut (no gate/record) → subscription gate → rate limit
-     * → idempotent record + reveal.
+     * target → own-post shortcut (no gate) → subscription gate → rate limit → reveal.
+     * The reveal writes no history — peeking at a number must not fill the Contacted
+     * tab; the row lands only when the user taps Call/WhatsApp (logContactPost).
      */
     async contactPost({ userId, postedRideId }) {
       const post = await repo.findContactTarget(postedRideId);
@@ -113,7 +114,7 @@ function createPostedRidesService({ repo, logger, uploads }) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
       if (post.postedBy === userId) {
-        return { phoneNumber: post.phone, contactedAt: null };
+        return { phoneNumber: post.phone };
       }
       const sub = await repo.findSubscriptionByUserId(userId);
       if (!isSubscriptionActive(sub)) {
@@ -122,6 +123,26 @@ function createPostedRidesService({ repo, logger, uploads }) {
       const count = await repo.incrementContactCount(userId, CONTACT_RATE_LIMIT.WINDOW_SEC);
       if (count > CONTACT_RATE_LIMIT.MAX_PER_WINDOW) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
+      return { phoneNumber: post.phone };
+    },
+
+    /**
+     * Record an actual contact (user tapped Call/WhatsApp) on a verified post into
+     * the Contacted tab. No re-gate / no rate-limit burn (the reveal already did),
+     * leaks no phone. Own-post taps record nothing — you don't "contact" yourself.
+     * 404s if the post closed between peek and tap. Idempotent via the upsert.
+     *
+     * @param {{ userId: string, postedRideId: string }} args
+     * @returns {Promise<{ contactedAt: Date|null }>}
+     */
+    async logContactPost({ userId, postedRideId }) {
+      const post = await repo.findContactTarget(postedRideId);
+      if (!post) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      }
+      if (post.postedBy === userId) {
+        return { contactedAt: null };
       }
       const snapshot = {
         source: CONTACT_SOURCE.POSTED,
@@ -132,8 +153,7 @@ function createPostedRidesService({ repo, logger, uploads }) {
         posterId: post.postedBy ?? null, // backs the Contacted card's profile link
         posterName: post.poster?.name ?? null,
       };
-      const { contactedAt } = await repo.recordContact(userId, postedRideId, snapshot);
-      return { phoneNumber: post.phone, contactedAt };
+      return repo.recordContact(userId, postedRideId, snapshot);
     },
 
     /** Owner marks a post done. NOT_FOUND if they don't own it / it isn't active. */

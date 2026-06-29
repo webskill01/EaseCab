@@ -62,10 +62,12 @@ function createRidesService({ repo, uploads }) {
     /**
      * Reveal a ride's phone at the contact action point, behind the soft gate.
      * Order matters: 404 if the ride is gone (before consulting the subscription),
-     * then the gate, then record + reveal. Idempotent via the repo upsert.
+     * then the gate, then the reveal. The reveal does NOT write history — opening
+     * the sheet just to peek at the number must not pollute the Contacted tab; the
+     * row is written only when the user actually taps Call/WhatsApp (logContactRide).
      *
      * @param {{ userId: string, rideId: string }} args
-     * @returns {Promise<{ phoneNumber: string, contactedAt: Date }>}
+     * @returns {Promise<{ phoneNumber: string }>}
      */
     async contactRide({ userId, rideId }) {
       const ride = await repo.findRideContactTarget(rideId);
@@ -78,10 +80,29 @@ function createRidesService({ repo, uploads }) {
       }
       // Throttle reveals so a subscribed account can't enumerate every ride's phone
       // (security-review H1). Counted on the reveal path only — gated/404 calls leak
-      // no phone, so they don't burn the budget.
+      // no phone, so they don't burn the budget. The log call below doesn't count.
       const count = await repo.incrementContactCount(userId, CONTACT_RATE_LIMIT.WINDOW_SEC);
       if (count > CONTACT_RATE_LIMIT.MAX_PER_WINDOW) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      }
+      return { phoneNumber: ride.phoneNumber };
+    },
+
+    /**
+     * Record an actual contact (user tapped Call/WhatsApp) into the Contacted tab.
+     * No subscription re-gate and no rate-limit burn: those guarded the reveal that
+     * had to precede this, and this writes nothing the user couldn't already see —
+     * it leaks no phone. Re-fetches the ride to snapshot server-authoritative fields
+     * (never trust the client) and 404s if it was hard-deleted between peek and tap.
+     * Idempotent via the repo upsert, so Call-then-WhatsApp keeps the first timestamp.
+     *
+     * @param {{ userId: string, rideId: string }} args
+     * @returns {Promise<{ contactedAt: Date }>}
+     */
+    async logContactRide({ userId, rideId }) {
+      const ride = await repo.findRideContactTarget(rideId);
+      if (!ride) {
+        throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
       const snapshot = {
         source: CONTACT_SOURCE.BOT,
@@ -90,8 +111,7 @@ function createRidesService({ repo, uploads }) {
         vehicleType: ride.vehicleType ?? null,
         revealedPhone: ride.phoneNumber,
       };
-      const { contactedAt } = await repo.recordContact(userId, rideId, snapshot);
-      return { phoneNumber: ride.phoneNumber, contactedAt };
+      return repo.recordContact(userId, rideId, snapshot);
     },
 
     /**

@@ -23,9 +23,15 @@ export async function listRides(params = {}) {
   return { rides: data.rides, nextCursor: meta?.nextCursor ?? null }
 }
 
-/** Reveal a bot ride's phone at the action point. @returns {Promise<{phoneNumber, contactedAt}>} */
+/** Reveal a bot ride's phone at the action point (no history write). @returns {Promise<{phoneNumber}>} */
 export async function contactRide(rideId) {
   const { data } = await apiFetch(`/rides/${rideId}/contact`, { method: 'POST' })
+  return data
+}
+
+/** Record a bot-ride contact in the Contacted tab — fired on the Call/WhatsApp tap. */
+export async function logContactRide(rideId) {
+  const { data } = await apiFetch(`/rides/${rideId}/contact/log`, { method: 'POST' })
   return data
 }
 
@@ -35,9 +41,15 @@ export async function listVerifiedRides(params = {}) {
   return { posts: data.posts, nextCursor: meta?.nextCursor ?? null }
 }
 
-/** Reveal a verified post's phone at the action point. */
+/** Reveal a verified post's phone at the action point (no history write). */
 export async function contactVerifiedRide(postedRideId) {
   const { data } = await apiFetch(`/posted-rides/${postedRideId}/contact`, { method: 'POST' })
+  return data
+}
+
+/** Record a verified-post contact in the Contacted tab — fired on the Call/WhatsApp tap. */
+export async function logContactVerifiedRide(postedRideId) {
+  const { data } = await apiFetch(`/posted-rides/${postedRideId}/contact/log`, { method: 'POST' })
   return data
 }
 

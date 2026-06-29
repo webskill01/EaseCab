@@ -75,6 +75,13 @@ function createRidesRouter({ service, feed, requireAuth }) {
     sendSuccess(res, { data });
   });
 
+  // POST /api/v1/rides/:id/contact/log — record the contact into the Contacted tab,
+  // fired only when the user taps Call/WhatsApp (not on opening the reveal sheet).
+  router.post('/:id/contact/log', validate(rideIdParamSchema, 'params'), async (req, res) => {
+    const data = await service.logContactRide({ userId: req.user.id, rideId: req.valid.params.id });
+    sendSuccess(res, { data });
+  });
+
   // POST /api/v1/rides/:id/report — file a report against a bot ride (admin queue, 24c).
   router.post('/:id/report', validate(rideIdParamSchema, 'params'), validate(reportCreateSchema), async (req, res) => {
     const data = await service.reportRide({ userId: req.user.id, rideId: req.valid.params.id, ...req.valid.body });

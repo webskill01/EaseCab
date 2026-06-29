@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Check, Trash, Chat, Swap } from '@/components/ui/icons'
 import { RouteRow } from './RideCard'
-import { ageMinFrom, relParts } from '../lib/rideView'
+import { ageMinFrom, relPartsLong } from '../lib/rideView'
 import { repostDraftFromPost } from '../lib/postForm'
 import { saveRepostDraft } from '../lib/repostDraft'
 
@@ -33,7 +33,7 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
   const tr = useTranslations('rides')
   const router = useRouter()
   const active = post.status === 'active'
-  const rel = relParts(ageMinFrom(post.createdAt))
+  const rel = relPartsLong(ageMinFrom(post.createdAt))
   const onRepost = () => {
     // sourceId rides along so the Post screen can delete this stale original once the
     // repost is published — keeps the verified feed to one fresh listing, not a dupe.
@@ -50,7 +50,7 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
     >
       <div className="mb-2.5 flex items-center justify-between">
         <span className="text-[12px] font-semibold text-ec-ink60">
-          {t('posted.postedAt')} · <b className="font-bold text-ec-ink">{tr(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
+          {t('posted.postedAt')} · <b className="font-bold text-ec-ink">{tr(`time.${rel.key}`, { count: rel.count ?? 0, sub: rel.sub ?? 0 })}</b>
         </span>
         <div className="flex items-center gap-2">
           {active && (

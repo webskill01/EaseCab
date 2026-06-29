@@ -7,7 +7,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button } from '@/components/ui/button'
 import { Crown, Whatsapp, Phone, Swap, Check, Ban } from '@/components/ui/icons'
-import { contactRide, contactVerifiedRide } from '../services/ridesApi'
+import { contactRide, contactVerifiedRide, logContactRide, logContactVerifiedRide } from '../services/ridesApi'
 import { MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { RIDE_KIND } from '../lib/rideView'
 
@@ -61,11 +61,21 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
   const t = useTranslations('rides')
   const qc = useQueryClient()
   const reveal = useMutation({
+    // Reveal only shows the number — it no longer writes history, so the Contacted
+    // tab isn't touched here. The row is logged on the actual Call/WhatsApp tap below.
     mutationFn: () => (ride.kind === RIDE_KIND.VERIFIED ? contactVerifiedRide(ride.id) : contactRide(ride.id)),
-    // The contact is snapshotted server-side immediately; refresh the Contacted tab
-    // so it shows up right away rather than after the 60s stale window (#13).
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['contacted'] }),
   })
+
+  // Fire-and-forget on the Call/WhatsApp tap: record the contact, then refresh the
+  // Contacted tab. The deep link navigates regardless — a failed log just means the
+  // ride isn't listed, never a blocked call. Idempotent server-side (Call+WhatsApp
+  // = one row), so tapping both is fine.
+  const logContact = () => {
+    const log = ride.kind === RIDE_KIND.VERIFIED ? logContactVerifiedRide : logContactRide
+    log(ride.id)
+      .then(() => qc.invalidateQueries({ queryKey: ['contacted'] }))
+      .catch(() => {})
+  }
 
   const gatedOut =
     membershipState === MEMBERSHIP_STATE.EXPIRED ||
@@ -126,12 +136,12 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
         </div>
         <div className="flex gap-2">
           <Button asChild size="lg" variant="wa" className={`flex-1 ${phone ? '' : 'pointer-events-none bg-ec-disabled'}`}>
-            <a href={phone ? waLink(phone) : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!phone}>
+            <a href={phone ? waLink(phone) : undefined} onClick={logContact} target="_blank" rel="noopener noreferrer" aria-disabled={!phone}>
               <Whatsapp size={18} />{t('reveal.waBtn')}
             </a>
           </Button>
           <Button asChild size="lg" variant="primary" className={`flex-1 ${phone ? '' : 'pointer-events-none bg-ec-disabled shadow-none'}`}>
-            <a href={phone ? `tel:${phone}` : undefined} aria-disabled={!phone}>
+            <a href={phone ? `tel:${phone}` : undefined} onClick={logContact} aria-disabled={!phone}>
               <Phone size={17} />{t('reveal.callBtn')}
             </a>
           </Button>

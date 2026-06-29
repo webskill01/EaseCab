@@ -115,7 +115,6 @@ test('contactPost: own post returns phone without gate/record', async () => {
   const svc = createPostedRidesService({ repo: baseRepo({ target: { id: 'p1', phone: '+919876543210', postedBy: 'u1' } }) });
   const out = await svc.contactPost({ userId: 'u1', postedRideId: 'p1' });
   assert.equal(out.phoneNumber, '+919876543210');
-  assert.equal(out.contactedAt, null);
 });
 
 test('contactPost: SUBSCRIPTION_EXPIRED when not subscribed', async () => {
@@ -128,16 +127,17 @@ test('contactPost: RATE_LIMITED when over the window cap', async () => {
   await assert.rejects(() => svc.contactPost({ userId: 'u1', postedRideId: 'p1' }), code('RATE_LIMITED'));
 });
 
-test('contactPost: reveals phone + records when subscribed and under cap', async () => {
-  const svc = createPostedRidesService({ repo: baseRepo({ target: { id: 'p1', phone: '+919876543210', postedBy: 'u9' }, sub: ACTIVE_SUB, count: 1 }) });
-  const out = await svc.contactPost({ userId: 'u1', postedRideId: 'p1' });
+test('contactPost: reveals phone without recording when subscribed and under cap', async () => {
+  const repo = baseRepo({ target: { id: 'p1', phone: '+919876543210', postedBy: 'u9' }, sub: ACTIVE_SUB, count: 1 });
+  repo.recordContact = async () => assert.fail('reveal must not record — only logContactPost writes history');
+  const out = await createPostedRidesService({ repo }).contactPost({ userId: 'u1', postedRideId: 'p1' });
   assert.equal(out.phoneNumber, '+919876543210');
-  assert.ok(out.contactedAt);
+  assert.equal(out.contactedAt, undefined);
 });
 
-test('contactPost records a posted-source snapshot for a subscribed contacter', async () => {
+test('logContactPost records a posted-source snapshot on the Call/WhatsApp tap', async () => {
   const recorded = [];
-  const repo = baseRepo({ sub: ACTIVE_SUB, count: 1 });
+  const repo = baseRepo({});
   repo.findContactTarget = async () => ({
     id: 'p1', phone: '+919811111111', postedBy: 'owner', vehicleType: 'Innova',
     fromCityRaw: null, toCityRaw: 'manali',
@@ -145,14 +145,26 @@ test('contactPost records a posted-source snapshot for a subscribed contacter', 
     poster: { name: 'Harman' },
   });
   repo.recordContact = async (userId, postedRideId, snapshot) => { recorded.push(snapshot); return { contactedAt: new Date() }; };
-  const out = await createPostedRidesService({ repo }).contactPost({ userId: 'u1', postedRideId: 'p1' });
-  assert.equal(out.phoneNumber, '+919811111111');
+  const out = await createPostedRidesService({ repo }).logContactPost({ userId: 'u1', postedRideId: 'p1' });
+  assert.ok(out.contactedAt);
   // toCityName is the raw 'manali' — no resolved name, mirrors fromCity.canonicalName ?? fromCityRaw.
   assert.deepEqual(recorded[0], {
     source: 'posted', fromCityName: 'Mohali', toCityName: 'manali',
     vehicleType: 'Innova', revealedPhone: '+919811111111',
     posterId: 'owner', posterName: 'Harman',
   });
+});
+
+test('logContactPost: own post records nothing (you do not contact yourself)', async () => {
+  const repo = baseRepo({ target: { id: 'p1', phone: '+91x', postedBy: 'u1' } });
+  repo.recordContact = async () => assert.fail('must not record an own-post tap');
+  const out = await createPostedRidesService({ repo }).logContactPost({ userId: 'u1', postedRideId: 'p1' });
+  assert.equal(out.contactedAt, null);
+});
+
+test('logContactPost: NOT_FOUND when the post closed between peek and tap', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ target: null }) });
+  await assert.rejects(() => svc.logContactPost({ userId: 'u1', postedRideId: 'p1' }), code('NOT_FOUND'));
 });
 
 test('closePost / removePost: NOT_FOUND when nothing was updated (non-owner)', async () => {

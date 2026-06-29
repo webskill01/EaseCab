@@ -120,18 +120,17 @@ test('listFeed throws VALIDATION_ERROR on a bad cursor', async () => {
   await assert.rejects(svc.listFeed({ limit: 5, cursor: 'garbage!!!' }), (e) => e.code === ERROR_CODES.VALIDATION_ERROR);
 });
 
-test('contactRide reveals the phone + records contact when the gate passes', async () => {
+test('contactRide reveals the phone without writing history (the tap logs it, not the peek)', async () => {
   const calls = {};
   const repo = {
     findRideContactTarget: async (id) => { calls.target = id; return { id, phoneNumber: '+919876543210' }; },
     findSubscriptionByUserId: async (uid) => { calls.sub = uid; return { status: 'trial', trialExpiresAt: FUTURE }; },
     incrementContactCount: async () => 1,
-    recordContact: async (uid, rid) => { calls.record = [uid, rid]; return { contactedAt: new Date('2026-06-01T00:00:00.000Z') }; },
+    recordContact: async () => assert.fail('reveal must not record — only logContactRide writes history'),
   };
   const out = await createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' });
   assert.strictEqual(out.phoneNumber, '+919876543210');
-  assert.strictEqual(out.contactedAt.toISOString(), '2026-06-01T00:00:00.000Z');
-  assert.deepStrictEqual(calls.record, ['u1', 'r1']);
+  assert.strictEqual(out.contactedAt, undefined);
 });
 
 test('contactRide throws NOT_FOUND for a missing ride and never consults the gate', async () => {
@@ -170,7 +169,7 @@ test('contactRide throws RATE_LIMITED past the per-user reveal cap (no record/re
   );
 });
 
-test('contactRide records a bot-source snapshot (route, vehicle, revealed phone)', async () => {
+test('logContactRide records a bot-source snapshot (route, vehicle, revealed phone)', async () => {
   const recorded = [];
   const repo = {
     findRideContactTarget: async () => ({
@@ -178,16 +177,22 @@ test('contactRide records a bot-source snapshot (route, vehicle, revealed phone)
       pickupRaw: 'ldh', dropRaw: null,
       pickupCity: { canonicalName: 'Ludhiana' }, dropCity: null,
     }),
-    findSubscriptionByUserId: async () => ({ status: 'active', expiresAt: FUTURE, trialExpiresAt: null }),
-    incrementContactCount: async () => 1,
-    recordContact: async (userId, rideId, snapshot) => { recorded.push({ userId, rideId, snapshot }); return { contactedAt: new Date() }; },
+    recordContact: async (userId, rideId, snapshot) => { recorded.push({ userId, rideId, snapshot }); return { contactedAt: new Date('2026-06-01T00:00:00.000Z') }; },
   };
-  const out = await createRidesService({ repo }).contactRide({ userId: 'u1', rideId: 'r1' });
-  assert.strictEqual(out.phoneNumber, '+919876500000');
-  assert.deepStrictEqual(recorded[0].snapshot, {
-    source: 'bot', fromCityName: 'Ludhiana', toCityName: null,
-    vehicleType: 'Sedan', revealedPhone: '+919876500000',
+  const out = await createRidesService({ repo }).logContactRide({ userId: 'u1', rideId: 'r1' });
+  assert.strictEqual(out.contactedAt.toISOString(), '2026-06-01T00:00:00.000Z');
+  assert.deepStrictEqual(recorded[0], {
+    userId: 'u1', rideId: 'r1',
+    snapshot: { source: 'bot', fromCityName: 'Ludhiana', toCityName: null, vehicleType: 'Sedan', revealedPhone: '+919876500000' },
   });
+});
+
+test('logContactRide throws NOT_FOUND when the ride was deleted between peek and tap', async () => {
+  const repo = {
+    findRideContactTarget: async () => null,
+    recordContact: async () => assert.fail('must not record a gone ride'),
+  };
+  await assert.rejects(createRidesService({ repo }).logContactRide({ userId: 'u1', rideId: 'gone' }), (e) => e.code === ERROR_CODES.NOT_FOUND);
 });
 
 test('reportRide writes a report when the ride exists', async () => {

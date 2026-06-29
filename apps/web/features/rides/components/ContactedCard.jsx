@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Whatsapp, Phone, Chat, ChevR } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { openChat } from '@/features/chat/services/chatApi'
 import { RouteRow, StatusBadge } from './RideCard'
-import { ageMinFrom, relParts } from '../lib/rideView'
+import { contactedStamp } from '../lib/rideView'
 
 /** wa.me wants digits only. */
 function waLink(phone) { return `https://wa.me/${String(phone).replace(/[^\d]/g, '')}` }
@@ -20,10 +20,11 @@ function waLink(phone) { return `https://wa.me/${String(phone).replace(/[^\d]/g,
 export function ContactedCard({ contact }) {
   const t = useTranslations('mine')
   const tr = useTranslations('rides')
+  const locale = useLocale()
   const router = useRouter()
   const [opening, setOpening] = useState(false)
   const verified = contact.kind === 'verified'
-  const rel = relParts(ageMinFrom(contact.contactedAt))
+  const stamp = contactedStamp(contact.contactedAt, locale)
 
   const handleChat = async () => {
     if (!contact.postedRideId || opening) return
@@ -38,7 +39,7 @@ export function ContactedCard({ contact }) {
   return (
     <article className="rounded-ec-card border border-ec-line bg-white p-3.5 shadow-ec-card">
       <div className="mb-2.5 flex items-center justify-between">
-        <span className="text-[12px] font-semibold text-ec-ink60">{tr(`time.${rel.key}`, { count: rel.count ?? 0 })}</span>
+        <span className="text-[12px] font-semibold text-ec-ink60">{stamp || '—'}</span>
         {verified
           ? <StatusBadge status="verified" />
           : <span className="text-[11px] font-extrabold uppercase tracking-wide text-ec-ink40">{t('contacted.ridesLabel')}</span>}

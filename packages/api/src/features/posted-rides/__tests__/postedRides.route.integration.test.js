@@ -131,6 +131,13 @@ test('POST /:id/contact → 200 reveals phone for a subscribed contacter', async
   assert.equal(res.body.data.phoneNumber, '+919876500000');
 });
 
+test('POST /:id/contact/log → 200 records the contact on the Call/WhatsApp tap', async () => {
+  const app = makeApp({ posts: [{ id: UUID(2), postedBy: 'u9', status: 'active', expiresAt: FUTURE, createdAt: new Date(), phone: '+919876500000' }], subs: { u1: ACTIVE_SUB } });
+  const res = await request(app).post(`/api/v1/posted-rides/${UUID(2)}/contact/log`).set('Cookie', cookieFor('u1'));
+  assert.equal(res.status, 200);
+  assert.ok(res.body.data.contactedAt);
+});
+
 test('POST /:id/contact → 403 SUBSCRIPTION_EXPIRED without a subscription', async () => {
   const app = makeApp({ posts: [{ id: UUID(3), postedBy: 'u9', status: 'active', expiresAt: FUTURE, createdAt: new Date(), phone: '+91x' }] });
   const res = await request(app).post(`/api/v1/posted-rides/${UUID(3)}/contact`).set('Cookie', cookieFor('u1'));

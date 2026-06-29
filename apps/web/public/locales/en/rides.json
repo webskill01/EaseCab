@@ -22,7 +22,11 @@
     "minAgo": "{count} min ago",
     "hourAgo": "{count} h ago",
     "today": "Today",
-    "tomorrow": "Tomorrow"
+    "tomorrow": "Tomorrow",
+    "hoursShort": "{count}h ago",
+    "hoursMinShort": "{count}h {sub}m ago",
+    "daysShort": "{count}d ago",
+    "daysHrShort": "{count}d {sub}h ago"
   },
   "actions": {
     "whatsapp": "WhatsApp",

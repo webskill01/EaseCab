@@ -22,7 +22,11 @@
     "minAgo": "{count} min pehle",
     "hourAgo": "{count} ghante pehle",
     "today": "Aaj",
-    "tomorrow": "Kal"
+    "tomorrow": "Kal",
+    "hoursShort": "{count}h pehle",
+    "hoursMinShort": "{count}h {sub}m pehle",
+    "daysShort": "{count}d pehle",
+    "daysHrShort": "{count}d {sub}h pehle"
   },
   "actions": {
     "whatsapp": "WhatsApp",
