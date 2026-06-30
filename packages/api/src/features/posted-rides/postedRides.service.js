@@ -86,9 +86,9 @@ function createPostedRidesService({ repo, logger, uploads }) {
     },
 
     /** One page of the public posted-rides feed, newest first. */
-    async listFeed({ limit, cursor, cityId }) {
+    async listFeed({ limit, cursor, cityIds }) {
       const key = cursor ? decodeCursor(cursor) : {};
-      const rows = await repo.listActivePosts({ createdAt: key.receivedAt, id: key.id, cityId, limit });
+      const rows = await repo.listActivePosts({ createdAt: key.receivedAt, id: key.id, cityIds, limit });
       const hasMore = rows.length > limit;
       const page = hasMore ? rows.slice(0, limit) : rows;
       const last = page[page.length - 1];

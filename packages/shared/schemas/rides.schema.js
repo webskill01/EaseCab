@@ -18,9 +18,15 @@ const ridesListQuerySchema = z.object({
     .max(RIDES_FEED.MAX_LIMIT)
     .default(RIDES_FEED.DEFAULT_LIMIT),
   cursor: z.string().min(1).optional(),
-  // Live city-filter lock (Step 18): keep only rides whose PICKUP city matches (10.1-a —
-  // was pickup-or-drop). A City UUID from the /cities typeahead; omitted = unfiltered feed.
-  cityId: z.string().uuid().optional(),
+  // Live city-filter lock (Step 18, multi-select): a comma-separated list of City
+  // UUIDs from the /cities typeahead. Keep only rides whose PICKUP city is in the set
+  // (10.1-a — pickup, not drop). Empty/omitted = unfiltered feed.
+  cityIds: z
+    .preprocess(
+      (v) => (typeof v === 'string' ? v.split(',').filter(Boolean) : v),
+      z.array(z.string().uuid()).max(RIDES_FEED.MAX_CITY_FILTER),
+    )
+    .optional(),
 });
 
 /** Ride id path param — must be a UUID (matches Ride.id @db.Uuid). */

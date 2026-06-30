@@ -31,9 +31,9 @@ export function toBotVM(r) {
  * @param {?string} cityId - the locked City id, or null/undefined for "All"
  * @returns {boolean}
  */
-export function matchesCity(vm, cityId) {
-  if (!cityId) return true
-  return vm.cityIds.includes(cityId)
+export function matchesCity(vm, cityIds) {
+  if (!cityIds || cityIds.length === 0) return true
+  return cityIds.some((id) => vm.cityIds.includes(id))
 }
 
 /** @param {object} p - a public posted-ride row from /posted-rides/mine (My Rides → Posted) */

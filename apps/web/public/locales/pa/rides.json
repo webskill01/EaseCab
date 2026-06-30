@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "rides": "ਰਾਈਡਾਂ",
+    "rides": "ਲਾਈਵ ਰਾਈਡਾਂ",
     "verified": "ਵੈਰੀਫਾਈਡ ਰਾਈਡਾਂ"
   },
   "card": {
@@ -41,7 +41,9 @@
     "searchCity": "ਸ਼ਹਿਰ ਲੱਭੋ…",
     "noResults": "ਕੋਈ ਸ਼ਹਿਰ ਨਹੀਂ ਮਿਲਿਆ",
     "quickPick": "ਸ਼ਹਿਰ ਚੁਣੋ",
-    "myLocation": "ਮੇਰੀ ਲੋਕੇਸ਼ਨ"
+    "myLocation": "ਮੇਰੀ ਲੋਕੇਸ਼ਨ",
+    "citiesSelected": "{count} ਸ਼ਹਿਰ",
+    "clear": "ਫਿਲਟਰ ਹਟਾਓ"
   },
   "banner": {
     "freeTrial": "ਫ੍ਰੀ ਟ੍ਰਾਇਲ",

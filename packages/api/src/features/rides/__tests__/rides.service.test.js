@@ -107,12 +107,12 @@ test('listFeed passes the decoded cursor key through to the repo', async () => {
   assert.strictEqual(seen.receivedAt.toISOString(), '2026-06-01T09:00:00.000Z');
 });
 
-test('listFeed forwards the optional cityId filter to the repo', async () => {
+test('listFeed forwards the optional cityIds filter to the repo', async () => {
   let seen;
   const repo = { listVisibleRides: async (args) => { seen = args; return []; } };
   const svc = createRidesService({ repo });
-  await svc.listFeed({ limit: 5, cityId: 'city-uuid-1' });
-  assert.strictEqual(seen.cityId, 'city-uuid-1');
+  await svc.listFeed({ limit: 5, cityIds: ['city-uuid-1', 'city-uuid-2'] });
+  assert.deepStrictEqual(seen.cityIds, ['city-uuid-1', 'city-uuid-2']);
 });
 
 test('listFeed throws VALIDATION_ERROR on a bad cursor', async () => {

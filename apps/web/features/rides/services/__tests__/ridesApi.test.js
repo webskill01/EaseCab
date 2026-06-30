@@ -7,10 +7,10 @@ import { listRides, contactRide, listVerifiedRides, contactVerifiedRide } from '
 beforeEach(() => vi.clearAllMocks())
 
 describe('ridesApi', () => {
-  it('listRides builds the query from cursor + cityId + limit', async () => {
+  it('listRides builds the query from cursor + cityIds + limit', async () => {
     apiFetch.mockResolvedValue({ data: { rides: [{ id: 'r1' }] }, meta: { nextCursor: 'cur2' } })
-    const out = await listRides({ cursor: 'cur1', cityId: 'c9', limit: 20 })
-    expect(apiFetch).toHaveBeenCalledWith('/rides?limit=20&cursor=cur1&cityId=c9')
+    const out = await listRides({ cursor: 'cur1', cityIds: ['c9', 'c7'], limit: 20 })
+    expect(apiFetch).toHaveBeenCalledWith('/rides?limit=20&cursor=cur1&cityIds=c9%2Cc7')
     expect(out).toEqual({ rides: [{ id: 'r1' }], nextCursor: 'cur2' })
   })
 
@@ -30,8 +30,8 @@ describe('ridesApi', () => {
 
   it('listVerifiedRides hits /posted-rides and unwraps posts', async () => {
     apiFetch.mockResolvedValue({ data: { posts: [{ id: 'p1' }] }, meta: { nextCursor: null } })
-    const out = await listVerifiedRides({ cityId: 'c9' })
-    expect(apiFetch).toHaveBeenCalledWith('/posted-rides?cityId=c9')
+    const out = await listVerifiedRides({ cityIds: ['c9'] })
+    expect(apiFetch).toHaveBeenCalledWith('/posted-rides?cityIds=c9')
     expect(out).toEqual({ posts: [{ id: 'p1' }], nextCursor: null })
   })
 

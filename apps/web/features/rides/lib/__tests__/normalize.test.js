@@ -18,12 +18,13 @@ describe('matchesCity', () => {
   it('passes everything when there is no lock', () => {
     expect(matchesCity(vm, null)).toBe(true)
     expect(matchesCity(vm, undefined)).toBe(true)
+    expect(matchesCity(vm, [])).toBe(true)
   })
-  it('keeps rides touching the locked city on pickup or drop, drops others', () => {
-    expect(matchesCity(vm, 'c1')).toBe(true)
-    expect(matchesCity(vm, 'c2')).toBe(true)
-    expect(matchesCity(vm, 'c9')).toBe(false)
-    expect(matchesCity({ cityIds: [] }, 'c1')).toBe(false)
+  it('keeps rides touching ANY locked city, drops others', () => {
+    expect(matchesCity(vm, ['c1'])).toBe(true)
+    expect(matchesCity(vm, ['c9', 'c2'])).toBe(true) // matches on c2
+    expect(matchesCity(vm, ['c9'])).toBe(false)
+    expect(matchesCity({ cityIds: [] }, ['c1'])).toBe(false)
   })
 })
 

@@ -122,11 +122,11 @@ function createPostedRidesRepository({ prisma, redis }) {
      * the service can detect a further page. Cursor excludes everything at/before
      * (createdAt, id) in (createdAt DESC, id DESC) order.
      */
-    async listActivePosts({ createdAt, id, cityId, limit }) {
+    async listActivePosts({ createdAt, id, cityIds, limit }) {
       // Exclude posts from auto-flagged (mass-reported) drivers pending admin review (P13-12 #5).
       const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() }, poster: { flaggedAt: null } };
-      // City lock matches the FROM (pickup) city only — same rule as the bot feed.
-      if (cityId) where.fromCityId = cityId;
+      // City lock matches the FROM (pickup) city only — same rule as the bot feed. Multi-select.
+      if (cityIds && cityIds.length > 0) where.fromCityId = { in: cityIds };
       if (createdAt && id) {
         where.OR = [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }];
       }

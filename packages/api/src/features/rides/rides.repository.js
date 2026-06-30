@@ -58,19 +58,19 @@ function createRidesRepository({ prisma, redis }) {
      * @param {object} args
      * @param {Date} [args.receivedAt] - cursor key (omit for the first page)
      * @param {string} [args.id] - cursor key (omit for the first page)
-     * @param {string} [args.cityId] - live city-filter lock; keep only rides whose
-     *   PICKUP city equals this (SCREENS §2). Omit for the unfiltered feed.
+     * @param {string[]} [args.cityIds] - live multi-select city-filter lock; keep only
+     *   rides whose PICKUP city is in this set (SCREENS §2). Empty/omit = unfiltered.
      * @param {number} args.limit - page size (the +1 is added here)
      * @returns {Promise<object[]>} up to limit+1 public ride rows
      */
-    async listVisibleRides({ receivedAt, id, cityId, limit }) {
+    async listVisibleRides({ receivedAt, id, cityIds, limit }) {
       const where = {
         status: { in: VISIBLE_STATUSES },
         expiresAt: { gt: new Date() },
       };
       // Live city lock = match the PICKUP city only (drivers filter by where the
       // ride starts, SCREENS §2). Flat field, so it ANDs with the cursor cleanly.
-      if (cityId) where.pickupCityId = cityId;
+      if (cityIds && cityIds.length > 0) where.pickupCityId = { in: cityIds };
       // Strict "older than the cursor" in (receivedAt DESC, id DESC) order.
       if (receivedAt && id) {
         where.OR = [{ receivedAt: { lt: receivedAt } }, { receivedAt, id: { lt: id } }];

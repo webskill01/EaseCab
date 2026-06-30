@@ -46,12 +46,12 @@ function createRidesService({ repo, uploads }) {
      * throws VALIDATION_ERROR), fetches limit+1 to learn whether more remain, and
      * emits the next cursor only when there is a further page.
      *
-     * @param {{ limit: number, cursor?: string, cityId?: string }} query
+     * @param {{ limit: number, cursor?: string, cityIds?: string[] }} query
      * @returns {Promise<{ rides: object[], nextCursor: ?string }>}
      */
-    async listFeed({ limit, cursor, cityId }) {
+    async listFeed({ limit, cursor, cityIds }) {
       const key = cursor ? decodeCursor(cursor) : {};
-      const rows = await repo.listVisibleRides({ ...key, cityId, limit });
+      const rows = await repo.listVisibleRides({ ...key, cityIds, limit });
       const hasMore = rows.length > limit;
       const page = hasMore ? rows.slice(0, limit) : rows;
       const last = page[page.length - 1];

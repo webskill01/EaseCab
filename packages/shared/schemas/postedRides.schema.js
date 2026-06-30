@@ -3,6 +3,7 @@
 const { z } = require('zod');
 const { VEHICLE_TYPES } = require('../constants/vehicles');
 const { POSTED_RIDES } = require('../constants/postedRides');
+const { RIDES_FEED } = require('../constants/rides');
 
 // Indian E.164 — mirrors auth.schema (the single phone shape across the app).
 const IN_MOBILE = /^\+91[6-9]\d{9}$/;
@@ -39,8 +40,14 @@ const postedRideParseSchema = z
 const postedRidesListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(POSTED_RIDES.FEED.MAX_LIMIT).default(POSTED_RIDES.FEED.DEFAULT_LIMIT),
   cursor: z.string().min(1).optional(),
-  // Live city-filter lock (Step 18): keep only posts touching this City UUID.
-  cityId: z.string().uuid().optional(),
+  // Live city-filter lock (Step 18, multi-select): comma-separated City UUIDs; keep
+  // only posts whose FROM city is in the set. Empty/omitted = unfiltered feed.
+  cityIds: z
+    .preprocess(
+      (v) => (typeof v === 'string' ? v.split(',').filter(Boolean) : v),
+      z.array(z.string().uuid()).max(RIDES_FEED.MAX_CITY_FILTER),
+    )
+    .optional(),
 });
 
 /** Posted-ride id path param — must be a UUID (matches PostedRide.id @db.Uuid). */

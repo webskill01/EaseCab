@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "rides": "राइड्स",
+    "rides": "लाइव राइड्स",
     "verified": "वेरिफाइड राइड्स"
   },
   "card": {
@@ -41,7 +41,9 @@
     "searchCity": "शहर खोजें…",
     "noResults": "कोई शहर नहीं मिला",
     "quickPick": "शहर चुनें",
-    "myLocation": "मेरी लोकेशन"
+    "myLocation": "मेरी लोकेशन",
+    "citiesSelected": "{count} शहर",
+    "clear": "फ़िल्टर हटाएं"
   },
   "banner": {
     "freeTrial": "फ्री ट्रायल",

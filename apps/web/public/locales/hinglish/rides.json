@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "rides": "Rides",
+    "rides": "Live Rides",
     "verified": "Verified Rides"
   },
   "card": {
@@ -41,7 +41,9 @@
     "searchCity": "Shehar dhoondo…",
     "noResults": "Koi shehar nahi mila",
     "quickPick": "Shehar chuno",
-    "myLocation": "Meri location"
+    "myLocation": "Meri location",
+    "citiesSelected": "{count} shehar",
+    "clear": "Filter hatao"
   },
   "banner": {
     "freeTrial": "Free trial",

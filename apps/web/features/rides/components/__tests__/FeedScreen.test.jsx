@@ -12,7 +12,7 @@ vi.mock('../../hooks/useRidesFeed', () => ({
     flushPending: () => {}, isReconnecting: false,
   }),
 }))
-vi.mock('../../lib/cityLock', () => ({ readCityLock: () => null, writeCityLock: vi.fn() }))
+vi.mock('../../lib/cityLock', () => ({ readCityLock: () => [], writeCityLock: vi.fn() }))
 vi.mock('@/features/subscription/services/subscriptionApi', () => ({ getMembership: vi.fn().mockResolvedValue({}) }))
 vi.mock('@/features/notifications/hooks/useRideViewTracker', () => ({
   useRideViewTracker: () => ({ observe: () => {}, viewedCount: 3 }),

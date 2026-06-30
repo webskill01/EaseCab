@@ -33,21 +33,31 @@ export function FeedScreen() {
   const router = useRouter()
   const t = useTranslations('rides')
   const [sub, setSub] = useState(FEED_SUB.RIDES)
-  const [lockedCity, setLockedCity] = useState(null)
+  const [selectedCities, setSelectedCities] = useState([])
   const [contactRideVM, setContactRideVM] = useState(null)
   const [reportRideVM, setReportRideVM] = useState(null)
 
   // Hydrate the persisted lock after mount (cookie read can't run on the server).
-  useEffect(() => { setLockedCity(readCityLock()) }, [])
+  useEffect(() => { setSelectedCities(readCityLock()) }, [])
 
-  const feed = useRidesFeed({ sub, cityId: lockedCity?.id ?? null })
+  const feed = useRidesFeed({ sub, cityIds: selectedCities.map((c) => c.id) })
 
   const membershipQuery = useQuery({ queryKey: ['membership'], queryFn: getMembership, staleTime: 300000 })
   // Until the query resolves, `data` is undefined → membershipView() would read it
   // as EXPIRED and flash the red banner. Hold a neutral state while loading.
   const membership = membershipQuery.data ? membershipView(membershipQuery.data) : { state: null }
 
-  const pickCity = (city) => { writeCityLock(city); setLockedCity(city) }
+  // Multi-select: toggle a city in/out of the lock; "All cities" clears the whole set.
+  const toggleCity = (city) => {
+    setSelectedCities((prev) => {
+      const next = prev.some((c) => c.id === city.id)
+        ? prev.filter((c) => c.id !== city.id)
+        : [...prev, { id: city.id, name: city.name }]
+      writeCityLock(next)
+      return next
+    })
+  }
+  const clearCities = () => { writeCityLock([]); setSelectedCities([]) }
   const goMembership = () => router.push('/membership')
 
   // Push pre-prompt (Step 23): count viewed cards; once enough are seen and the OS
@@ -73,7 +83,7 @@ export function FeedScreen() {
           <span className="inline-flex text-ec-blue"><BellEdit size={18} /></span>{t('filter.notifications')}
         </button>
         <div className="flex-1">
-          <CityFilter locked={lockedCity} onPick={pickCity} />
+          <CityFilter selected={selectedCities} onToggle={toggleCity} onClear={clearCities} />
         </div>
       </div>
       <SubTabs sub={sub} onChange={setSub} />

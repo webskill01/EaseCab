@@ -3,12 +3,13 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithIntl } from '@/test/intl'
 
-// The overlay owns the search/list; stub it to a button that picks a fixed city so
-// the CityFilter trigger test stays focused on open + onPick wiring.
+// The overlay owns the search/list; stub it to buttons that toggle/clear so the
+// CityFilter trigger test stays focused on open + multi-select wiring.
 vi.mock('../AllLocationsOverlay', () => ({
-  AllLocationsOverlay: ({ onPick, onClose }) => (
+  AllLocationsOverlay: ({ onToggle, onClear, onClose }) => (
     <div role="dialog">
-      <button type="button" onClick={() => { onPick({ id: 'c9', name: 'Mohali' }); onClose() }}>pick-mohali</button>
+      <button type="button" onClick={() => onToggle({ id: 'c9', name: 'Mohali' })}>toggle-mohali</button>
+      <button type="button" onClick={onClear}>clear-all</button>
       <button type="button" onClick={onClose}>close-overlay</button>
     </div>
   ),
@@ -16,19 +17,42 @@ vi.mock('../AllLocationsOverlay', () => ({
 import { CityFilter } from '../CityFilter'
 
 describe('CityFilter', () => {
-  it('shows the locked city name on the trigger', () => {
-    renderWithIntl(<CityFilter locked={{ id: 'c1', name: 'Ludhiana' }} onPick={vi.fn()} />)
+  it('shows the single locked city name on the trigger', () => {
+    renderWithIntl(<CityFilter selected={[{ id: 'c1', name: 'Ludhiana' }]} onToggle={vi.fn()} onClear={vi.fn()} />)
     expect(screen.getByRole('button', { name: /ludhiana/i })).toBeInTheDocument()
   })
 
-  it('opens the All Locations overlay and forwards the picked city', async () => {
-    const onPick = vi.fn()
+  it('shows an "N cities" count when more than one is selected', () => {
+    renderWithIntl(
+      <CityFilter
+        selected={[{ id: 'c1', name: 'Ludhiana' }, { id: 'c2', name: 'Mohali' }]}
+        onToggle={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('2 cities')).toBeInTheDocument()
+  })
+
+  it('opens the overlay and forwards a toggled city', async () => {
+    const onToggle = vi.fn()
     const user = userEvent.setup()
-    renderWithIntl(<CityFilter locked={null} onPick={onPick} />)
+    renderWithIntl(<CityFilter selected={[]} onToggle={onToggle} onClear={vi.fn()} />)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /filter by city/i }))
-    await user.click(screen.getByText('pick-mohali'))
-    expect(onPick).toHaveBeenCalledWith({ id: 'c9', name: 'Mohali' })
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument() // closed after pick
+    await user.click(screen.getByText('toggle-mohali'))
+    expect(onToggle).toHaveBeenCalledWith({ id: 'c9', name: 'Mohali' })
+  })
+
+  it('hides the clear button when nothing is selected', () => {
+    renderWithIntl(<CityFilter selected={[]} onToggle={vi.fn()} onClear={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: /clear filter/i })).not.toBeInTheDocument()
+  })
+
+  it('shows the clear button when filtered and fires onClear', async () => {
+    const onClear = vi.fn()
+    const user = userEvent.setup()
+    renderWithIntl(<CityFilter selected={[{ id: 'c1', name: 'Ludhiana' }]} onToggle={vi.fn()} onClear={onClear} />)
+    await user.click(screen.getByRole('button', { name: /clear filter/i }))
+    expect(onClear).toHaveBeenCalled()
   })
 })

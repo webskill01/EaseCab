@@ -33,7 +33,7 @@ beforeEach(() => { vi.clearAllMocks(); captured = { onRide: null, enabled: null 
 describe('useRidesFeed', () => {
   it('loads + normalizes the initial bot page', async () => {
     listRides.mockResolvedValue({ rides: [botRow('r1'), botRow('r2')], nextCursor: null })
-    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityId: null }), { wrapper })
+    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityIds: [] }), { wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(result.current.rides.map((r) => r.id)).toEqual(['r1', 'r2'])
     expect(result.current.rides[0]).toMatchObject({ kind: 'bot', from: 'Amritsar', to: 'Delhi' })
@@ -42,7 +42,7 @@ describe('useRidesFeed', () => {
 
   it('prepends a matching live ride at top, drops a non-matching one under a city lock', async () => {
     listRides.mockResolvedValue({ rides: [botRow('r1')], nextCursor: null })
-    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityId: 'c1' }), { wrapper })
+    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityIds: ['c1'] }), { wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     // touches c1 → kept
     act(() => captured.onRide(botRow('live1', { pickupCityId: 'c1', dropCityId: 'c9' })))
@@ -53,7 +53,7 @@ describe('useRidesFeed', () => {
 
   it('queues live rides (not prepended) once scrolled down, surfacing a pending count', async () => {
     listRides.mockResolvedValue({ rides: [botRow('r1')], nextCursor: null })
-    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityId: null }), { wrapper })
+    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityIds: [] }), { wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     act(() => result.current.onScroll({ target: { scrollTop: 500 } })) // scroll away from top
     act(() => captured.onRide(botRow('live1')))
@@ -66,7 +66,7 @@ describe('useRidesFeed', () => {
 
   it('verified tab is query-only (SSE disabled) and unwraps posts', async () => {
     listVerifiedRides.mockResolvedValue({ posts: [{ id: 'p1', fromCityName: 'Patiala', toCityName: 'Delhi', fromCityId: 'c1', toCityId: 'c2', vehicleType: 'Innova', notes: 'x', createdAt: new Date().toISOString(), status: 'active' }], nextCursor: null })
-    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.VERIFIED, cityId: null }), { wrapper })
+    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.VERIFIED, cityIds: [] }), { wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(result.current.rides[0]).toMatchObject({ kind: 'verified', id: 'p1', from: 'Patiala' })
     expect(captured.enabled).toBe(false)

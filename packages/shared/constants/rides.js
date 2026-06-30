@@ -20,6 +20,7 @@ const RIDE_TIMING = Object.freeze({
 const RIDES_FEED = Object.freeze({
   DEFAULT_LIMIT: 20, // page size when the client omits `limit`
   MAX_LIMIT: 50, // hard ceiling so a client can't request an unbounded page
+  MAX_CITY_FILTER: 25, // max cities a multi-select feed filter can lock to at once
 });
 
 /**

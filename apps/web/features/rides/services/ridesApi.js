@@ -7,12 +7,12 @@ import { env } from '@/config/env'
  * Phone is never in a list payload — `contact*` is the sole reveal (after the gate).
  */
 
-/** Build the `?limit&cursor&cityId` query string, omitting empty params. */
-function feedQuery({ cursor, cityId, limit } = {}) {
+/** Build the `?limit&cursor&cityIds` query string, omitting empty params. */
+function feedQuery({ cursor, cityIds, limit } = {}) {
   const p = new URLSearchParams()
   if (limit) p.set('limit', String(limit))
   if (cursor) p.set('cursor', cursor)
-  if (cityId) p.set('cityId', cityId)
+  if (cityIds && cityIds.length > 0) p.set('cityIds', cityIds.join(','))
   const qs = p.toString()
   return qs ? `?${qs}` : ''
 }

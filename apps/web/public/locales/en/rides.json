@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "rides": "Rides",
+    "rides": "Live Rides",
     "verified": "Verified Rides"
   },
   "card": {
@@ -41,7 +41,9 @@
     "searchCity": "Search cities…",
     "noResults": "No cities found",
     "quickPick": "Filter by city",
-    "myLocation": "My location"
+    "myLocation": "My location",
+    "citiesSelected": "{count} cities",
+    "clear": "Clear filter"
   },
   "banner": {
     "freeTrial": "Free trial",

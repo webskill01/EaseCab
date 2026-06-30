@@ -31,14 +31,19 @@ function mergeDedup(extra, base) {
  *
  * @param {object} args
  * @param {string} args.sub - FEED_SUB value
- * @param {?string} args.cityId - locked City id (null = All)
+ * @param {string[]} args.cityIds - locked City ids ([] = All)
  */
-export function useRidesFeed({ sub, cityId }) {
+export function useRidesFeed({ sub, cityIds }) {
   const isVerified = sub === FEED_SUB.VERIFIED
 
+  // Stable key + array identity from the (possibly new-each-render) cityIds prop, so
+  // the query, the reset effect, and the live filter don't churn on every render.
+  const cityKey = (cityIds || []).join(',')
+  const ids = useMemo(() => (cityKey ? cityKey.split(',') : []), [cityKey])
+
   const query = useQuery({
-    queryKey: ['feed', sub, cityId ?? 'all'],
-    queryFn: () => (isVerified ? listVerifiedRides({ cityId }) : listRides({ cityId })),
+    queryKey: ['feed', sub, cityKey || 'all'],
+    queryFn: () => (isVerified ? listVerifiedRides({ cityIds: ids }) : listRides({ cityIds: ids })),
     staleTime: 0, // SSE-driven (§15)
   })
 
@@ -61,7 +66,7 @@ export function useRidesFeed({ sub, cityId }) {
     setPending([])
     setAtTop(true)
     atTopRef.current = true
-  }, [sub, cityId])
+  }, [sub, cityKey])
 
   // Age tick — cards recompute fresh/booked from receivedAt vs `now`.
   useEffect(() => {
@@ -73,11 +78,11 @@ export function useRidesFeed({ sub, cityId }) {
   // (at top) or queue (scrolled down) so the user's scroll position is never yanked.
   const handleLiveRide = useCallback((raw) => {
     const vm = toBotVM(raw)
-    if (!matchesCity(vm, cityId)) return
+    if (!matchesCity(vm, ids)) return
     setNow(Date.now())
     if (atTopRef.current) setExtra((e) => [vm, ...e].slice(0, LIVE_CAP))
     else setPending((p) => [vm, ...p].slice(0, PENDING_CAP))
-  }, [cityId])
+  }, [ids])
 
   const streamStatus = useRideStream({
     url: RIDES_STREAM_URL,

@@ -93,15 +93,15 @@ test('listMine: surfaces each post chat count from _count (0 when absent)', asyn
   assert.equal(posts[1].chatCount, 0);
 });
 
-test('listFeed: forwards the optional cityId filter and maps city names', async () => {
+test('listFeed: forwards the optional cityIds filter and maps city names', async () => {
   let seen;
   const repo = baseRepo();
   repo.listActivePosts = async (args) => {
     seen = args;
     return [{ id: 'p1', fromCity: { canonicalName: 'Patiala' }, toCity: { canonicalName: 'Delhi' }, status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date() }];
   };
-  const out = await createPostedRidesService({ repo }).listFeed({ limit: 10, cityId: 'c-uuid' });
-  assert.equal(seen.cityId, 'c-uuid');
+  const out = await createPostedRidesService({ repo }).listFeed({ limit: 10, cityIds: ['c-uuid'] });
+  assert.deepEqual(seen.cityIds, ['c-uuid']);
   assert.equal(out.posts[0].fromCityName, 'Patiala');
   assert.equal(out.posts[0].toCityName, 'Delhi');
 });

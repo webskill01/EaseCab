@@ -59,21 +59,21 @@ test('listVisibleRides adds the keyset OR clause only when a cursor is given', a
   assert.strictEqual(prisma.calls.findMany.take, 6);
 });
 
-test('listVisibleRides with cityId only filters by PICKUP city (no cursor)', async () => {
+test('listVisibleRides with cityIds only filters by PICKUP city (no cursor)', async () => {
   const prisma = fakePrisma();
   const repo = createRidesRepository({ prisma });
-  await repo.listVisibleRides({ cityId: 'c-uuid', limit: 10 });
-  assert.strictEqual(prisma.calls.findMany.where.pickupCityId, 'c-uuid');
+  await repo.listVisibleRides({ cityIds: ['c-uuid', 'c-uuid-2'], limit: 10 });
+  assert.deepStrictEqual(prisma.calls.findMany.where.pickupCityId, { in: ['c-uuid', 'c-uuid-2'] });
   assert.strictEqual('OR' in prisma.calls.findMany.where, false);
 });
 
-test('listVisibleRides with BOTH cursor + cityId: pickup field ANDs with the cursor OR', async () => {
+test('listVisibleRides with BOTH cursor + cityIds: pickup field ANDs with the cursor OR', async () => {
   const prisma = fakePrisma();
   const repo = createRidesRepository({ prisma });
   const receivedAt = new Date('2026-06-01T10:00:00.000Z');
-  await repo.listVisibleRides({ receivedAt, id: 'r1', cityId: 'c-uuid', limit: 5 });
+  await repo.listVisibleRides({ receivedAt, id: 'r1', cityIds: ['c-uuid'], limit: 5 });
   const w = prisma.calls.findMany.where;
-  assert.strictEqual(w.pickupCityId, 'c-uuid');
+  assert.deepStrictEqual(w.pickupCityId, { in: ['c-uuid'] });
   assert.deepStrictEqual(w.OR, [
     { receivedAt: { lt: receivedAt } },
     { receivedAt, id: { lt: 'r1' } },

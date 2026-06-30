@@ -9,7 +9,7 @@ describe('SubTabs', () => {
     const onChange = vi.fn()
     const user = userEvent.setup()
     renderWithIntl(<SubTabs sub="rides" onChange={onChange} />)
-    expect(screen.getByRole('tab', { name: 'Rides' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Live Rides' })).toHaveAttribute('aria-selected', 'true')
     await user.click(screen.getByRole('tab', { name: /verified rides/i }))
     expect(onChange).toHaveBeenCalledWith('verified')
   })
