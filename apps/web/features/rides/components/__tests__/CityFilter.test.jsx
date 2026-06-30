@@ -43,16 +43,17 @@ describe('CityFilter', () => {
     expect(onToggle).toHaveBeenCalledWith({ id: 'c9', name: 'Mohali' })
   })
 
-  it('hides the clear button when nothing is selected', () => {
-    renderWithIntl(<CityFilter selected={[]} onToggle={vi.fn()} onClear={vi.fn()} />)
+  it('has no clear control on the feed page itself (clearing lives in the overlay)', () => {
+    renderWithIntl(<CityFilter selected={[{ id: 'c1', name: 'Ludhiana' }]} onToggle={vi.fn()} onClear={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /clear filter/i })).not.toBeInTheDocument()
   })
 
-  it('shows the clear button when filtered and fires onClear', async () => {
+  it('forwards onClear into the overlay (its "All cities" reset)', async () => {
     const onClear = vi.fn()
     const user = userEvent.setup()
     renderWithIntl(<CityFilter selected={[{ id: 'c1', name: 'Ludhiana' }]} onToggle={vi.fn()} onClear={onClear} />)
-    await user.click(screen.getByRole('button', { name: /clear filter/i }))
+    await user.click(screen.getByRole('button', { name: /ludhiana/i }))
+    await user.click(screen.getByText('clear-all'))
     expect(onClear).toHaveBeenCalled()
   })
 })
