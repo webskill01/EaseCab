@@ -100,8 +100,15 @@ test('dispatchForRide: sends source-specific copy + data, dedupes cities', async
   assert.deepEqual(repo.calls.find[0].cityIds, [CITY]); // deduped
   assert.equal(repo.calls.find[0].source, 'posted');
   const sent = sender.calls[0];
-  assert.equal(sent.notification.title, 'New verified ride in your city');
-  assert.deepEqual(sent.data, { type: 'new_ride', source: 'posted', rideId: 'r9' });
+  assert.equal(sent.notification, undefined); // data-only: no notification block
+  assert.deepEqual(sent.data, {
+    type: 'new_ride',
+    source: 'posted',
+    rideId: 'r9',
+    title: 'Verified ride in your city ✅',
+    body: 'A verified driver just posted — tap to view and contact.',
+    url: '/feed',
+  });
   assert.deepEqual(out, { targeted: 2, successCount: 2, pruned: 0 });
 });
 

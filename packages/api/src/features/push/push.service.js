@@ -70,10 +70,12 @@ function createPushService({ repo, pushSender }) {
       if (ids.length === 0) return empty;
       const tokens = await repo.findTargetTokens({ cityIds: ids, source });
       if (tokens.length === 0) return empty;
+      // Data-only payload: title/body travel in `data` so FCM does NOT auto-display
+      // a second (icon-less) notification — the service worker renders the only one.
+      const copy = PUSH.NOTIFICATION[source];
       const { successCount, staleTokens } = await pushSender.sendToTokens({
         tokens,
-        notification: PUSH.NOTIFICATION[source],
-        data: { type: PUSH.TYPE, source, rideId },
+        data: { type: PUSH.TYPE, source, rideId, title: copy.title, body: copy.body, url: PUSH.CLICK_PATH },
       });
       const pruned = staleTokens.length > 0 ? await repo.pruneTokens(staleTokens) : 0;
       return { targeted: tokens.length, successCount, pruned };

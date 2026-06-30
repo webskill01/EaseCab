@@ -14,14 +14,15 @@ const PUSH = Object.freeze({
   TOKENS_PER_MULTICAST: 500, // FCM sendEachForMulticast hard cap — chunk above this
   DEVICE_TOKEN_MAX: 4096, // FCM tokens are ~150+ chars; bound generously
   TYPE: 'new_ride', // data.type for client deep-link routing
+  CLICK_PATH: '/feed', // where a notification tap opens the app
   NOTIFICATION: Object.freeze({
     bot: Object.freeze({
-      title: 'New ride in your city',
-      body: 'A new ride matching your cities is available on EaseCab.',
+      title: 'New ride in your city 🚕',
+      body: 'Tap to view the route and contact the customer now.',
     }),
     posted: Object.freeze({
-      title: 'New verified ride in your city',
-      body: 'A verified driver just posted a ride matching your cities.',
+      title: 'Verified ride in your city ✅',
+      body: 'A verified driver just posted — tap to view and contact.',
     }),
   }),
 });

@@ -22,8 +22,7 @@ function isStaleTokenError(err) {
  * @param {{ projectId: string, clientEmail: string, privateKey: string }} creds
  * @returns {{ sendToTokens(args: {
  *   tokens: string[],
- *   notification: { title: string, body: string },
- *   data?: Record<string, string|number>,
+ *   data: Record<string, string|number>,
  * }): Promise<{ successCount: number, staleTokens: string[] }> }}
  */
 function createPushSender({ projectId, clientEmail, privateKey }) {
@@ -42,20 +41,23 @@ function createPushSender({ projectId, clientEmail, privateKey }) {
 
   return {
     /**
-     * Send one notification to many device tokens, chunked to FCM's multicast cap.
-     * Returns the success count + the tokens FCM reported as permanently invalid so
-     * the caller can prune them. A per-token failure never throws.
+     * Send one DATA-ONLY message to many device tokens, chunked to FCM's multicast
+     * cap. Data-only (no `notification` field) is deliberate: on web it stops FCM from
+     * auto-rendering a second, icon-less notification — the service worker's
+     * onBackgroundMessage is the sole renderer. Returns the success count + the tokens
+     * FCM reported as permanently invalid so the caller can prune them. Never throws
+     * per token.
      */
-    async sendToTokens({ tokens, notification, data }) {
+    async sendToTokens({ tokens, data }) {
       // FCM data values must all be strings.
-      const stringData = data
-        ? Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)]))
-        : undefined;
+      const stringData = Object.fromEntries(
+        Object.entries(data || {}).map(([k, v]) => [k, String(v)]),
+      );
       let successCount = 0;
       const staleTokens = [];
       for (let i = 0; i < tokens.length; i += PUSH.TOKENS_PER_MULTICAST) {
         const batch = tokens.slice(i, i + PUSH.TOKENS_PER_MULTICAST);
-        const res = await messaging.sendEachForMulticast({ tokens: batch, notification, data: stringData });
+        const res = await messaging.sendEachForMulticast({ tokens: batch, data: stringData });
         successCount += res.successCount;
         res.responses.forEach((r, idx) => {
           if (!r.success && isStaleTokenError(r.error)) staleTokens.push(batch[idx]);

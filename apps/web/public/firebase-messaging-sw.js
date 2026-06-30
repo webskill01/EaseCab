@@ -14,11 +14,37 @@ firebase.initializeApp({
   appId: p.get('appId'),
 })
 
+// Backend sends DATA-ONLY messages, so onBackgroundMessage is the SOLE renderer —
+// no duplicate, icon-less notification from FCM's auto-display. Title/body/url ride
+// in payload.data. `tag` collapses repeat alerts of the same source instead of
+// stacking; the action + body-tap both deep-link via the notificationclick handler.
 firebase.messaging().onBackgroundMessage((payload) => {
-  const n = payload.notification || {}
-  self.registration.showNotification(n.title || 'EaseCab', {
-    body: n.body || '',
+  const d = payload.data || {}
+  self.registration.showNotification(d.title || 'EaseCab', {
+    body: d.body || '',
     icon: '/icons/icon-192.png',
-    data: payload.data || {},
+    badge: '/icons/icon-96.png',
+    tag: d.source ? `ride-${d.source}` : 'ride',
+    renotify: true,
+    data: { url: d.url || '/feed' },
+    actions: [{ action: 'view', title: 'View ride' }],
   })
+})
+
+// Tapping the notification (or its "View ride" action) must OPEN the app — focus an
+// existing window if one is open, otherwise launch a new one at the deep-link.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = (event.notification.data && event.notification.data.url) || '/feed'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ('focus' in w) {
+          if ('navigate' in w) w.navigate(url).catch(() => {})
+          return w.focus()
+        }
+      }
+      return self.clients.openWindow(url)
+    }),
+  )
 })
