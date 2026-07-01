@@ -37,14 +37,28 @@ export function CatchingUp() {
   )
 }
 
-/** Genuinely-empty feed (distinct from "catching up"). */
-export function EmptyFeed() {
+/**
+ * Genuinely-empty feed (distinct from "catching up"). When a city filter is active the
+ * copy explains it's specific to the picked cities and offers a one-tap way back to all
+ * cities — so an empty filtered result never reads as "the app is broken".
+ * @param {{ filtered?: boolean, onClear?: () => void }} props
+ */
+export function EmptyFeed({ filtered = false, onClear }) {
   const t = useTranslations('rides')
   return (
     <div className="my-6 flex flex-col items-center gap-2 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><Info size={22} /></div>
-      <div className="text-[15px] font-extrabold text-ec-ink">{t('states.empty')}</div>
-      <div className="max-w-[260px] text-[13px] font-medium text-ec-ink60">{t('states.emptySub')}</div>
+      <div className="text-[15px] font-extrabold text-ec-ink">{filtered ? t('states.emptyFiltered') : t('states.empty')}</div>
+      <div className="max-w-[280px] text-[13px] font-medium text-ec-ink60">{filtered ? t('states.emptyFilteredSub') : t('states.emptySub')}</div>
+      {filtered && onClear && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mt-2 rounded-xl bg-ec-blue px-4 py-2.5 text-[13.5px] font-extrabold text-white shadow-ec-blue"
+        >
+          {t('states.emptyShowAll')}
+        </button>
+      )}
     </div>
   )
 }

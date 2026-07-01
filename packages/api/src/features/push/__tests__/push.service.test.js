@@ -105,11 +105,24 @@ test('dispatchForRide: sends source-specific copy + data, dedupes cities', async
     type: 'new_ride',
     source: 'posted',
     rideId: 'r9',
-    title: 'Verified ride in your city ✅',
-    body: 'A verified driver just posted — tap to view and contact.',
+    title: '✅ Verified ride mili!',
+    // pickup === drop (same CITY) → single-city route prepended to the Hinglish body
+    body: 'City-1111 · Verified driver ne abhi post ki — tap karke dekho aur contact karo.',
     url: '/feed',
   });
   assert.deepEqual(out, { targeted: 2, successCount: 2, pruned: 0 });
+});
+
+test('dispatchForRide: names the pickup→drop route in the body', async () => {
+  const A = '22222222-2222-4222-8222-222222222222';
+  const B = '33333333-3333-4333-8333-333333333333';
+  const repo = fakeRepo({
+    tokens: ['t1'],
+    cityNames: [{ id: A, name: 'Amritsar' }, { id: B, name: 'Delhi' }],
+  });
+  const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 1, staleTokens: [] }; } };
+  await createPushService({ repo, pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [A, B] });
+  assert.match(sender.calls[0].data.body, /^Amritsar → Delhi · /);
 });
 
 test('dispatchForRide: prunes the tokens FCM reports as dead', async () => {

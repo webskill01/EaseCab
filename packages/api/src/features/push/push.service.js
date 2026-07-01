@@ -70,12 +70,19 @@ function createPushService({ repo, pushSender }) {
       if (ids.length === 0) return empty;
       const tokens = await repo.findTargetTokens({ cityIds: ids, source });
       if (tokens.length === 0) return empty;
+      // Resolve the ride's pickup→drop names so the notification names the actual route
+      // ("Amritsar → Delhi · …") instead of a generic line. cityIds arrives as
+      // [pickup, drop]; fall back gracefully when only one resolves or both are equal.
+      const nameById = new Map((await repo.listCitiesByIds(ids)).map((c) => [c.id, c.name]));
+      const [from, to] = (cityIds || []).map((id) => nameById.get(id));
+      const route = from && to && from !== to ? `${from} → ${to}` : (from || to || '');
       // Data-only payload: title/body travel in `data` so FCM does NOT auto-display
       // a second (icon-less) notification — the service worker renders the only one.
       const copy = PUSH.NOTIFICATION[source];
+      const body = route ? `${route} · ${copy.body}` : copy.body;
       const { successCount, staleTokens } = await pushSender.sendToTokens({
         tokens,
-        data: { type: PUSH.TYPE, source, rideId, title: copy.title, body: copy.body, url: PUSH.CLICK_PATH },
+        data: { type: PUSH.TYPE, source, rideId, title: copy.title, body, url: PUSH.CLICK_PATH },
       });
       const pruned = staleTokens.length > 0 ? await repo.pruneTokens(staleTokens) : 0;
       return { targeted: tokens.length, successCount, pruned };

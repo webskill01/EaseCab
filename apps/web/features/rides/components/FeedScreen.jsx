@@ -106,7 +106,7 @@ export function FeedScreen() {
         ) : feed.isError ? (
           <CatchingUp />
         ) : feed.isEmpty ? (
-          <EmptyFeed />
+          <EmptyFeed filtered={selectedCities.length > 0} onClear={clearCities} />
         ) : (
           <>
             {feed.isReconnecting && <CatchingUp />}

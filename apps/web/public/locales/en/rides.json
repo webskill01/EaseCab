@@ -63,7 +63,10 @@
     "emptySub": "New duties will appear here live.",
     "catchingUp": "Live feed catching up…",
     "catchingUpSub": "Hang tight — new rides are on the way.",
-    "reconnecting": "Reconnecting…"
+    "reconnecting": "Reconnecting…",
+    "emptyFiltered": "No rides in these cities yet",
+    "emptyFilteredSub": "We're still fetching duties for your selected cities. Try another city or view all cities.",
+    "emptyShowAll": "Show all cities"
   },
   "gate": {
     "contactTitle": "Subscribe to contact",

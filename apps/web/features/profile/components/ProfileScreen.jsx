@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { Shield, Crown, BellEdit, ChevR, Pin, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock, Ban, Bolt } from '@/components/ui/icons'
@@ -64,6 +64,21 @@ export function ProfileScreen() {
   const { prefs: pushPrefs } = usePushPreferences()
   const alertCityCount = pushPrefs?.notificationCities?.length ?? 0
 
+  // Restore scroll on return (open a row → route away → Back): the screen remounts and
+  // would otherwise jump to the top. Persist scrollTop per-scroll, restore once the
+  // profile has loaded and the scroll container exists. ponytail: sessionStorage, not a
+  // router-cache scroll manager — the app router resets scroll on every navigation.
+  const scrollRef = useRef(null)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const saved = sessionStorage.getItem('ec:profileScroll')
+    if (saved) el.scrollTop = Number(saved)
+    const onScroll = () => sessionStorage.setItem('ec:profileScroll', String(el.scrollTop))
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [profile])
+
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
   if (isError || !profile) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
 
@@ -82,7 +97,7 @@ export function ProfileScreen() {
   const memTint = memTone && (memTone === 'danger' ? 'text-ec-danger' : memTone === 'success' ? 'text-ec-successTx' : 'text-ec-warning')
 
   return (
-    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-ec-bg p-4">
+    <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-ec-bg p-4">
       {/* ① Header card — tap anywhere to edit */}
       <button type="button" onClick={goEdit} className="flex w-full items-center gap-3.5 rounded-2xl border border-ec-line bg-white p-4 text-left shadow-ec-card">
         {profile.profilePicUrl ? (

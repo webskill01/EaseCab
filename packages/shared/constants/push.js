@@ -5,9 +5,10 @@
  * opt-in list on the user) is the targeting key; PUSH_SOURCE discriminates which
  * per-source toggle a new-ride event honours (notifyBotRides / notifyPostedRides).
  *
- * Notification copy is English-only for the MVP — server-side push localization
- * (per-user locale) is deferred; the JSX-only i18n rule (CLAUDE.md §14) does not
- * cover server-sent payloads. The client routes on `data.type` + `data.rideId`.
+ * Copy is Hinglish (widest reach for our driver base); per-user locale push is
+ * deferred. `body` is the action tail — the push service prepends the ride's actual
+ * route ("Amritsar → Delhi · …") when the city names resolve. The client routes on
+ * `data.type` + `data.rideId`.
  */
 const PUSH = Object.freeze({
   NOTIFICATION_CITIES_MAX: 25, // cap a user's opt-in city list
@@ -17,12 +18,12 @@ const PUSH = Object.freeze({
   CLICK_PATH: '/feed', // where a notification tap opens the app
   NOTIFICATION: Object.freeze({
     bot: Object.freeze({
-      title: 'New ride in your city 🚕',
-      body: 'Tap to view the route and contact the customer now.',
+      title: '🚕 Nayi ride aa gayi!',
+      body: 'Abhi route dekho aur customer se turant baat karo.',
     }),
     posted: Object.freeze({
-      title: 'Verified ride in your city ✅',
-      body: 'A verified driver just posted — tap to view and contact.',
+      title: '✅ Verified ride mili!',
+      body: 'Verified driver ne abhi post ki — tap karke dekho aur contact karo.',
     }),
   }),
 });

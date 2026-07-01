@@ -22,7 +22,7 @@ const cropped = await sharp(MASTER).trim({ background: '#ffffff', threshold: 12 
 // mark isn't edge-to-edge (was too zoomed-in / cropped-feeling). resize to the inner
 // box, then extend the white margin back out to the full tile.
 for (const size of SIZES) {
-  const pad = Math.round(size * 0.12)
+  const pad = Math.round(size * 0.16)
   const inner = size - pad * 2
   await sharp(cropped)
     .resize(inner, inner, { fit: 'contain', background: WHITE })
@@ -40,11 +40,13 @@ await sharp(cropped)
   .png()
   .toFile(path.join(OUT, 'apple-touch-icon.png'))
 
-// maskable 512 — Android crops to a circle/squircle, so keep the mark inside the
-// ~80% safe zone (410 + 51*2 = 512) on a seamless white field.
+// maskable 512 — Android's ADAPTIVE LAUNCHER icon comes from this one and crops it to a
+// circle/squircle, so the mark must sit well inside the safe zone or it looks zoomed-in
+// and clipped on the home screen. Keep the mark at ~60% (310 + 101*2 = 512) of the tile
+// on a seamless white field so the launcher shows it with real breathing room.
 await sharp(cropped)
-  .resize(410, 410, { fit: 'contain', background: WHITE })
-  .extend({ top: 51, bottom: 51, left: 51, right: 51, background: WHITE })
+  .resize(310, 310, { fit: 'contain', background: WHITE })
+  .extend({ top: 101, bottom: 101, left: 101, right: 101, background: WHITE })
   .flatten({ background: WHITE })
   .png()
   .toFile(path.join(OUT, 'icon-512-maskable.png'))

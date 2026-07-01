@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { ChevL } from '@/components/ui/icons'
 
 /**
@@ -12,11 +12,28 @@ import { ChevL } from '@/components/ui/icons'
  * @param {{ onClose: () => void, label?: string, children: React.ReactNode }} props
  */
 export function Overlay({ onClose, label, children }) {
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  // Trap the hardware/browser Back button: the overlay is client state, not a route,
+  // so without a history entry Back would pop the app's own history and EXIT (TWA).
+  // Push one entry on open; Back fires popstate → close. If we instead close via the
+  // chevron/Escape, consume the entry we added so Back stays consistent.
+  useEffect(() => {
+    window.history.pushState({ __ecOverlay: true }, '')
+    const onPop = () => onCloseRef.current()
+    window.addEventListener('popstate', onPop)
+    return () => {
+      window.removeEventListener('popstate', onPop)
+      if (window.history.state && window.history.state.__ecOverlay) window.history.back()
+    }
+  }, [])
 
   return (
     <div role="dialog" aria-modal="true" aria-label={label} className="fixed inset-0 z-50 flex flex-col bg-ec-bg animate-ec-slide-in">

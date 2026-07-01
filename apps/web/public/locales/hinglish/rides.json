@@ -63,7 +63,10 @@
     "emptySub": "Nayi duties yahan live aayengi.",
     "catchingUp": "Feed update ho rahi hai…",
     "catchingUpSub": "Nayi duties yahan live aayengi.",
-    "reconnecting": "Dobara connect ho raha hai…"
+    "reconnecting": "Dobara connect ho raha hai…",
+    "emptyFiltered": "In cities mein abhi koi ride nahi",
+    "emptyFilteredSub": "Aapke chune shehron ki rides fetch ho rahi hain. Koi aur city chuno ya saare shehar dekho.",
+    "emptyShowAll": "Saare shehar dekho"
   },
   "gate": {
     "contactTitle": "Contact ke liye subscribe karein",

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 import { Overlay, OverlayHeader } from '@/components/ui/Overlay'
-import { Search, Steer, Check } from '@/components/ui/icons'
+import { Search, Steer, Check, Pin, X } from '@/components/ui/icons'
 import { allCities } from '../services/citiesApi'
 import { useNearestCity } from '@/features/notifications/hooks/useNearestCity'
 import { LOCATION_CHIPS, cityToView, filterCities, groupCitiesByLetter } from '../lib/allLocations'
@@ -63,22 +63,36 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
           />
         </div>
 
-        {/* Reset / clear. Stays visible whenever a filter is active (was hidden behind the
-            search gate AND labelled only "All cities", so users read it as "vanished").
-            No filter → "All cities" show-all indicator; filtered → an explicit "Clear
-            filter" action with the active count. */}
-        {(!none || !searching) && (
-          <button
-            type="button"
-            onClick={onClear}
-            className={`mt-3 flex h-12 w-full items-center gap-2.5 rounded-xl px-3.5 text-[14.5px] ${none ? 'bg-ec-sky font-extrabold text-ec-blue' : 'border border-ec-blue/40 bg-ec-sky/40 font-extrabold text-ec-blue'}`}
-          >
-            <span className="inline-flex text-ec-blue"><Steer size={16} /></span>
-            <span className="flex-1 text-left">{none ? t('filter.allCities') : t('filter.clear')}</span>
-            {none
-              ? <span className="inline-flex text-ec-blue"><Check size={15} /></span>
-              : <span className="text-[12.5px] font-extrabold text-ec-blue">{selected.length}</span>}
-          </button>
+        {/* Reset / clear. No filter → single "All cities" show-all indicator. Filtered →
+            a 2-col row: left shows the active city count, right is a filled Clear button
+            with a cross so its purpose is unmistakable (users couldn't find the old one). */}
+        {none ? (
+          !searching && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="mt-3 flex h-12 w-full items-center gap-2.5 rounded-xl bg-ec-sky px-3.5 text-[14.5px] font-extrabold text-ec-blue"
+            >
+              <span className="inline-flex text-ec-blue"><Steer size={16} /></span>
+              <span className="flex-1 text-left">{t('filter.allCities')}</span>
+              <span className="inline-flex text-ec-blue"><Check size={15} /></span>
+            </button>
+          )
+        ) : (
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
+            <div className="flex h-12 items-center justify-center gap-2 rounded-xl border border-ec-line bg-white text-[14px] font-extrabold text-ec-blueInk">
+              <span className="inline-flex text-ec-blue"><Pin size={16} /></span>
+              {t('filter.citiesSelected', { count: selected.length })}
+            </div>
+            <button
+              type="button"
+              onClick={onClear}
+              className="flex h-12 items-center justify-center gap-2 rounded-xl bg-ec-blue text-[14px] font-extrabold text-white shadow-ec-blue"
+            >
+              <span className="inline-flex"><X size={16} /></span>
+              {t('filter.clear')}
+            </button>
+          </div>
         )}
 
         {!searching && (
