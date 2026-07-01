@@ -21,6 +21,7 @@ const enable = vi.fn()
 vi.mock('@/features/notifications/hooks/useEnableAlerts', () => ({
   useEnableAlerts: () => ({ enable, isEnabling: false }),
 }))
+vi.mock('@/features/notifications/hooks/useSyncPushToken', () => ({ useSyncPushToken: () => {} }))
 
 import { FeedScreen } from '../FeedScreen'
 

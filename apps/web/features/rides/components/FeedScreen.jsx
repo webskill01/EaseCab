@@ -19,6 +19,7 @@ import { ContactSheet } from './ContactSheet'
 import { ReportSheet } from './ReportSheet'
 import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
 import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
+import { useSyncPushToken } from '@/features/notifications/hooks/useSyncPushToken'
 import { NotificationPrePrompt } from '@/features/notifications/components/NotificationPrePrompt'
 import { permissionState, shouldShowPrePrompt } from '@/features/notifications/lib/pushFlow'
 import { isPrePromptDismissed, dismissPrePrompt } from '@/features/notifications/lib/pushStorage'
@@ -64,6 +65,7 @@ export function FeedScreen() {
   // permission is still undecided, surface the soft pre-prompt. Either action closes it.
   const [prePromptOpen, setPrePromptOpen] = useState(true)
   const alerts = useEnableAlerts()
+  useSyncPushToken() // re-mint + re-register the token on load when permission is already granted
   const tracker = useRideViewTracker({ enabled: prePromptOpen })
   const showPrePrompt =
     prePromptOpen &&
