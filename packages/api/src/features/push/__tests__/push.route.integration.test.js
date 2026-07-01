@@ -148,7 +148,7 @@ test('LIVE dispatch: a bot-ride event pushes to opted-in users\' tokens', async 
   assert.deepEqual(sent[0].tokens, ['tok-live']);
   assert.equal(sent[0].data.source, 'bot');
   assert.equal(sent[0].notification, undefined); // data-only payload
-  assert.equal(sent[0].data.title, 'New ride in your city 🚕');
+  assert.equal(sent[0].data.title, '🚕 Nayi ride aa gayi!');
 });
 
 test('LIVE dispatch: a posted-ride event uses the posted toggle + copy', async () => {
@@ -162,5 +162,5 @@ test('LIVE dispatch: a posted-ride event uses the posted toggle + copy', async (
   assert.equal(sent.length, 1);
   assert.equal(sent[0].data.source, 'posted');
   assert.equal(sent[0].notification, undefined); // data-only payload
-  assert.equal(sent[0].data.title, 'Verified ride in your city ✅');
+  assert.equal(sent[0].data.title, '✅ Verified ride mili!');
 });
