@@ -18,10 +18,15 @@ await mkdir(OUT, { recursive: true })
 // not a postage-stamp logo. threshold absorbs JPEG edge noise around pure white.
 const cropped = await sharp(MASTER).trim({ background: '#ffffff', threshold: 12 }).toBuffer()
 
-// "any" icons — flatten the cropped mark on white, contained, near edge-to-edge.
+// "any" icons — flatten the cropped mark on white with ~12% padding each side so the
+// mark isn't edge-to-edge (was too zoomed-in / cropped-feeling). resize to the inner
+// box, then extend the white margin back out to the full tile.
 for (const size of SIZES) {
+  const pad = Math.round(size * 0.12)
+  const inner = size - pad * 2
   await sharp(cropped)
-    .resize(size, size, { fit: 'contain', background: WHITE })
+    .resize(inner, inner, { fit: 'contain', background: WHITE })
+    .extend({ top: pad, bottom: pad, left: pad, right: pad, background: WHITE })
     .flatten({ background: WHITE })
     .png()
     .toFile(path.join(OUT, `icon-${size}.png`))

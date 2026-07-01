@@ -14,6 +14,14 @@ firebase.initializeApp({
   appId: p.get('appId'),
 })
 
+// Take over the moment a new version is deployed. WITHOUT this the browser default
+// keeps the OLD worker running until every app window closes — and a TWA almost never
+// fully closes, so a shipped push fix never activates (the stale worker keeps rendering
+// the old duplicate/blank notification). skipWaiting + clients.claim make each deploy
+// the sole live renderer immediately.
+self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+
 // Backend sends DATA-ONLY messages, so onBackgroundMessage is the SOLE renderer —
 // no duplicate, icon-less notification from FCM's auto-display. Title/body/url ride
 // in payload.data. `tag` collapses repeat alerts of the same source instead of

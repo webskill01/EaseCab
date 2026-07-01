@@ -25,12 +25,17 @@ describe('AllLocationsOverlay', () => {
     expect(screen.getByText('A')).toBeInTheDocument() // Ambala letter tile
   })
 
-  it('clears the lock via "All cities"', async () => {
+  it('clears the lock via the "Clear filter" button when filtered', async () => {
     const onClear = vi.fn()
     const user = userEvent.setup()
     renderWithIntl(<AllLocationsOverlay selected={[{ id: 'c1', name: 'Chandigarh' }]} onClose={vi.fn()} onToggle={vi.fn()} onClear={onClear} />)
-    await user.click(await screen.findByRole('button', { name: /all cities/i }))
+    await user.click(await screen.findByRole('button', { name: /clear filter/i }))
     expect(onClear).toHaveBeenCalled()
+  })
+
+  it('shows the "All cities" show-all row when nothing is selected', async () => {
+    renderWithIntl(<AllLocationsOverlay selected={[]} onClose={vi.fn()} onToggle={vi.fn()} onClear={vi.fn()} />)
+    expect(await screen.findByRole('button', { name: /all cities/i })).toBeInTheDocument()
   })
 
   it('toggles a city without closing (multi-select)', async () => {

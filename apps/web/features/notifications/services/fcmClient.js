@@ -37,6 +37,7 @@ export async function requestPermissionAndToken() {
   try {
     const reg = await navigator.serviceWorker.register(swUrl(), {
       scope: '/firebase-cloud-messaging-push-scope',
+      updateViaCache: 'none', // always revalidate the SW script so deployed fixes are picked up, not HTTP-cached
     })
     const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: reg })
     return { permission: 'granted', token }

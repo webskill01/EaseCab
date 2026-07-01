@@ -63,18 +63,26 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
           />
         </div>
 
+        {/* Reset / clear. Stays visible whenever a filter is active (was hidden behind the
+            search gate AND labelled only "All cities", so users read it as "vanished").
+            No filter → "All cities" show-all indicator; filtered → an explicit "Clear
+            filter" action with the active count. */}
+        {(!none || !searching) && (
+          <button
+            type="button"
+            onClick={onClear}
+            className={`mt-3 flex h-12 w-full items-center gap-2.5 rounded-xl px-3.5 text-[14.5px] ${none ? 'bg-ec-sky font-extrabold text-ec-blue' : 'border border-ec-blue/40 bg-ec-sky/40 font-extrabold text-ec-blue'}`}
+          >
+            <span className="inline-flex text-ec-blue"><Steer size={16} /></span>
+            <span className="flex-1 text-left">{none ? t('filter.allCities') : t('filter.clear')}</span>
+            {none
+              ? <span className="inline-flex text-ec-blue"><Check size={15} /></span>
+              : <span className="text-[12.5px] font-extrabold text-ec-blue">{selected.length}</span>}
+          </button>
+        )}
+
         {!searching && (
           <>
-            <button
-              type="button"
-              onClick={onClear}
-              className={`mt-3 flex h-12 w-full items-center gap-2.5 rounded-xl px-3.5 text-[14.5px] ${none ? 'bg-ec-sky font-extrabold text-ec-blue' : 'border border-ec-line bg-white font-semibold text-ec-ink'}`}
-            >
-              <span className={`inline-flex ${none ? 'text-ec-blue' : 'text-ec-ink40'}`}><Steer size={16} /></span>
-              <span className="flex-1 text-left">{t('filter.allCities')}</span>
-              {none && <span className="inline-flex text-ec-blue"><Check size={15} /></span>}
-            </button>
-
             <p className="mb-2.5 mt-4 text-[12.5px] font-bold text-ec-ink60">{t('filter.quickPick')}</p>
             <div className="grid grid-cols-2 gap-2.5">
               {LOCATION_CHIPS.map((ch) => {
