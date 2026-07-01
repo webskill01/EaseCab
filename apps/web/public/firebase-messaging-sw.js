@@ -1,7 +1,7 @@
 /* eslint-disable */
-// FCM-only background-message worker (EaseCab Step 23). Deliberately minimal and
-// separate from the Step-25 app-shell/offline service worker. Config is passed as
-// query params at registration (all public values) so this static file stays generic.
+// FCM push worker (EaseCab Step 23). Deliberately minimal and separate from the
+// Step-25 app-shell/offline worker. Config is passed as query params at registration
+// (all public values) so this static file stays generic.
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js')
 
@@ -17,30 +17,43 @@ firebase.initializeApp({
 // Take over the moment a new version is deployed. WITHOUT this the browser default
 // keeps the OLD worker running until every app window closes — and a TWA almost never
 // fully closes, so a shipped push fix never activates (the stale worker keeps rendering
-// the old duplicate/blank notification). skipWaiting + clients.claim make each deploy
-// the sole live renderer immediately.
+// the old duplicate notification). skipWaiting + clients.claim make each deploy the
+// sole live renderer immediately.
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
 
-// Backend sends DATA-ONLY messages, so onBackgroundMessage is the SOLE renderer —
-// no duplicate, icon-less notification from FCM's auto-display. Title/body/url ride
-// in payload.data. `tag` collapses repeat alerts of the same source instead of
-// stacking; the action + body-tap both deep-link via the notificationclick handler.
-firebase.messaging().onBackgroundMessage((payload) => {
-  const d = payload.data || {}
-  // MUST return the promise: the FCM SW SDK awaits this callback inside the push
-  // event's waitUntil. Without the return the event settles before showNotification
-  // renders, so Chrome's userVisibleOnly rule fires its own generic "site updated in
-  // the background" notification (icon-less) alongside ours — the duplicate.
-  return self.registration.showNotification(d.title || 'EaseCab', {
-    body: d.body || '',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-96.png',
-    tag: d.source ? `ride-${d.source}` : 'ride',
-    renotify: true,
-    data: { url: d.url || '/feed' },
-    actions: [{ action: 'view', title: 'View ride' }],
-  })
+// We deliberately DO NOT call firebase.messaging()/onBackgroundMessage. That SDK path
+// installs its own push handler that (a) defers to a foreground client without showing a
+// notification and (b) doesn't reliably render inside the push event's lifetime — either
+// case leaves the event settling with nothing shown, so Chrome fires its own generic
+// "This site has been updated in the background" notification (icon-less) ALONGSIDE ours.
+// Owning the raw `push` event and awaiting showNotification inside waitUntil guarantees
+// exactly one notification, shown within the event, in both foreground and background.
+// (getToken lives client-side and only needs this worker's push subscription, not the
+// SDK's SW message handler — so dropping it costs nothing.)
+//
+// Backend sends DATA-ONLY messages; FCM wraps the custom map under `.data` (older/edge
+// deliveries put it at the top level — handle both). `tag` collapses repeat alerts of
+// the same source; the action + body-tap both deep-link via the notificationclick handler.
+self.addEventListener('push', (event) => {
+  let d = {}
+  try {
+    const payload = event.data ? event.data.json() : {}
+    d = payload.data || payload || {}
+  } catch (_) {
+    d = {} // unparseable payload — still show a generic tap-through rather than nothing
+  }
+  event.waitUntil(
+    self.registration.showNotification(d.title || 'EaseCab', {
+      body: d.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-96.png',
+      tag: d.source ? `ride-${d.source}` : 'ride',
+      renotify: true,
+      data: { url: d.url || '/feed' },
+      actions: [{ action: 'view', title: 'View ride' }],
+    }),
+  )
 })
 
 // Tapping the notification (or its "View ride" action) must OPEN the app — focus an
