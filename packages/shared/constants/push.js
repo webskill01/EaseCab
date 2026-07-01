@@ -18,7 +18,7 @@ const PUSH = Object.freeze({
   CLICK_PATH: '/feed', // where a notification tap opens the app
   NOTIFICATION: Object.freeze({
     bot: Object.freeze({
-      title: '🚕 Nayi ride aa gayi!',
+      title: '🚕 Nayi duty available!',
       body: 'Abhi route dekho aur customer se turant baat karo.',
     }),
     posted: Object.freeze({

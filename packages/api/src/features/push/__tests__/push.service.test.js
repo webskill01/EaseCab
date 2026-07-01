@@ -122,6 +122,7 @@ test('dispatchForRide: names the pickup→drop route in the body', async () => {
   });
   const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 1, staleTokens: [] }; } };
   await createPushService({ repo, pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [A, B] });
+  assert.deepEqual(repo.calls.find[0].cityIds, [A]); // targets PICKUP only — drop (B) never triggers
   assert.match(sender.calls[0].data.body, /^Amritsar → Delhi · /);
 });
 

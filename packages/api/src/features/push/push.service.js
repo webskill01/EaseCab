@@ -65,15 +65,18 @@ function createPushService({ repo, pushSender }) {
      * shouldn't on the happy path.)
      */
     async dispatchForRide({ source, rideId, cityIds }) {
-      const ids = [...new Set((cityIds || []).filter(Boolean))];
+      const all = (cityIds || []).filter(Boolean);
       const empty = { targeted: 0, successCount: 0, pruned: 0 };
-      if (ids.length === 0) return empty;
-      const tokens = await repo.findTargetTokens({ cityIds: ids, source });
+      // Targeting is PICKUP-only (cityIds[0]) to mirror the feed filter — a driver's
+      // opted-in city must match the ride's PICKUP; the drop city never triggers an alert.
+      const pickupId = all[0];
+      if (!pickupId) return empty;
+      const tokens = await repo.findTargetTokens({ cityIds: [pickupId], source });
       if (tokens.length === 0) return empty;
       // Resolve the ride's pickup→drop names so the notification names the actual route
-      // ("Amritsar → Delhi · …") instead of a generic line. cityIds arrives as
-      // [pickup, drop]; fall back gracefully when only one resolves or both are equal.
-      const nameById = new Map((await repo.listCitiesByIds(ids)).map((c) => [c.id, c.name]));
+      // ("Amritsar → Delhi · …") instead of a generic line — display only, both cities.
+      // cityIds arrives as [pickup, drop]; fall back gracefully when only one resolves.
+      const nameById = new Map((await repo.listCitiesByIds([...new Set(all)])).map((c) => [c.id, c.name]));
       const [from, to] = (cityIds || []).map((id) => nameById.get(id));
       const route = from && to && from !== to ? `${from} → ${to}` : (from || to || '');
       // Data-only payload: title/body travel in `data` so FCM does NOT auto-display
