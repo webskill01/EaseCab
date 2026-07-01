@@ -12,6 +12,6 @@ describe('pwaMeta', () => {
   it('exposes apple-touch + theme metadata', () => {
     expect(metadataIcons.apple).toBe('/icons/apple-touch-icon.png')
     expect(appleWebApp).toMatchObject({ capable: true, title: 'EaseCab' })
-    expect(THEME_COLOR).toBe('#4D8DF6')
+    expect(THEME_COLOR).toBe('#12233F')
   })
 })

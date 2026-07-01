@@ -2,7 +2,10 @@
  * Shared PWA metadata (Step 25). Single source of truth for icon paths + brand
  * colors, consumed by app/manifest.js and app/layout.jsx so the two never drift.
  */
-export const THEME_COLOR = '#4D8DF6'
+// Deep navy for the standalone/TWA chrome (status + nav bar outside the app window) —
+// darker & low-saturation so the OS bars recede instead of competing with the UI. The
+// bright brand blue (#4D8DF6) stays the in-app accent (tailwind ec-blue).
+export const THEME_COLOR = '#12233F'
 export const BACKGROUND_COLOR = '#FFFFFF'
 export const ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512]
 
