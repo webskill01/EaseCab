@@ -28,7 +28,11 @@ self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim(
 // stacking; the action + body-tap both deep-link via the notificationclick handler.
 firebase.messaging().onBackgroundMessage((payload) => {
   const d = payload.data || {}
-  self.registration.showNotification(d.title || 'EaseCab', {
+  // MUST return the promise: the FCM SW SDK awaits this callback inside the push
+  // event's waitUntil. Without the return the event settles before showNotification
+  // renders, so Chrome's userVisibleOnly rule fires its own generic "site updated in
+  // the background" notification (icon-less) alongside ours — the duplicate.
+  return self.registration.showNotification(d.title || 'EaseCab', {
     body: d.body || '',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-96.png',
