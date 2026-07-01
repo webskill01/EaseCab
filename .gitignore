@@ -9,6 +9,12 @@ docs/
 # Raw design handoff bundle — kept on disk for reference; canonical SoT is docs/design/ (also ignored)
 design_handoff_easecab/
 
+# TWA / Play Store signing bundle — keystore + passwords + app binaries. NEVER commit.
+EaseCab - Google Play package/
+*.keystore
+*.aab
+*.apk
+
 # Build outputs
 .next/
 out/

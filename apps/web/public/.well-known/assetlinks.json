@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.easecab.app",
+      "sha256_cert_fingerprints": [
+        "A2:86:03:AA:64:D9:07:14:92:44:23:7D:02:CE:AD:8F:1B:FF:CB:2D:DB:D8:EA:8C:62:16:CB:A2:25:86:9D:90"
+      ]
+    }
+  }
+]
