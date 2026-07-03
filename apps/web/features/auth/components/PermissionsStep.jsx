@@ -3,27 +3,53 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { Pin, BellEdit, User, Battery, Lock, Check, Shield, ChevR } from '@/components/ui/icons'
+import { Pin, BellEdit, Lock, Check, Shield, ChevR } from '@/components/ui/icons'
+import { requestPermissionAndToken } from '@/features/notifications/services/fcmClient'
+import { getCurrentPosition } from '@/features/notifications/services/geoClient'
 
 const ITEMS = [
-  ['location', Pin],
   ['notifications', BellEdit],
-  ['contacts', User],
-  ['background', Battery],
+  ['location', Pin],
 ]
 
 /**
- * Onboarding step 3 — app permissions (docs/design/SCREENS.md §1/§10, prototype
- * login.jsx PermissionsStep). UI-only for now: toggling marks intent and "Allow all"
- * selects everything; the real OS permission prompts (notifications/location) are wired
- * in the dedicated push flow (Step 23). Both "Allow all → Continue" and "Not now" advance.
+ * Onboarding step 3 — app permissions (docs/design/SCREENS.md §1/§10). Notifications
+ * and location only, and each tap fires the REAL OS prompt. Token registration is not
+ * done here: once the OS permission is granted, useSyncPushToken mints + registers the
+ * FCM token on the first feed load. Both "Allow all → Continue" and "Not now" advance.
  * @param {{ onContinue: () => void }} props
  */
 export function PermissionsStep({ onContinue }) {
   const t = useTranslations('auth')
   const [granted, setGranted] = useState({})
+  const [busy, setBusy] = useState(false)
   const allOn = ITEMS.every(([k]) => granted[k])
-  const grantAll = () => setGranted({ location: true, notifications: true, contacts: true, background: true })
+
+  const request = {
+    notifications: async () => {
+      const { permission } = await requestPermissionAndToken()
+      if (permission === 'granted') setGranted((g) => ({ ...g, notifications: true }))
+    },
+    location: async () => {
+      try {
+        await getCurrentPosition()
+        setGranted((g) => ({ ...g, location: true }))
+      } catch (err) {
+        // code 1 = PERMISSION_DENIED; unavailable/timeout still means permission granted
+        if (err?.code && err.code !== 1) setGranted((g) => ({ ...g, location: true }))
+      }
+    },
+  }
+
+  const fire = async (keys) => {
+    if (busy) return
+    setBusy(true)
+    try {
+      for (const key of keys) await request[key]()
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col bg-white">
@@ -42,7 +68,7 @@ export function PermissionsStep({ onContinue }) {
             <button
               key={key}
               type="button"
-              onClick={() => setGranted((g) => ({ ...g, [key]: !g[key] }))}
+              onClick={() => !on && fire([key])}
               className={`flex w-full items-center gap-3 rounded-2xl border-[1.5px] p-3.5 text-left ${
                 on ? 'border-ec-success/40 bg-ec-successBg/50' : 'border-ec-line bg-white'
               }`}
@@ -79,7 +105,13 @@ export function PermissionsStep({ onContinue }) {
             <ChevR size={18} />
           </Button>
         ) : (
-          <Button type="button" size="lg" onClick={grantAll} className="w-full">
+          <Button
+            type="button"
+            size="lg"
+            disabled={busy}
+            onClick={() => fire(ITEMS.filter(([k]) => !granted[k]).map(([k]) => k))}
+            className="w-full"
+          >
             <Shield size={18} />
             {t('perms.allowAll')}
           </Button>
