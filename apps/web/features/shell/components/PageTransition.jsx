@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 
 /** Bottom-nav destinations — independent top-level tabs, NOT a drill-down. Switching
  * between them is a direct redirect, so it gets no entrance animation. */
-const TOP_LEVEL = new Set(['/feed', '/mine', '/post', '/profile', '/messages'])
+const TOP_LEVEL = new Set(['/feed', '/mine', '/post', '/profile'])
 
 /**
  * Drill-down page entrance: sub-pages opened from a tab (verify, notifications, edit,

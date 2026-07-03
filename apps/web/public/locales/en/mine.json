@@ -10,11 +10,9 @@
     "vehicle": "Vehicle",
     "any": "Any",
     "postedAt": "Posted",
-    "chat": "Chat",
     "markDone": "Mark done",
     "delete": "Delete",
-    "repost": "Repost",
-    "viewChats": "View chats"
+    "repost": "Repost"
   },
   "contacted": {
     "label": "Contacted",
@@ -22,7 +20,6 @@
     "any": "Any",
     "whatsapp": "WhatsApp",
     "call": "Call",
-    "chat": "Chat",
     "ridesLabel": "Rides"
   },
   "confirm": {

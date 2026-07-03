@@ -11,9 +11,7 @@
     "markDone": "ਮੁਕੰਮਲ ਕਰੋ",
     "delete": "ਮਿਟਾਓ",
     "repost": "ਮੁੜ ਪੋਸਟ ਕਰੋ",
-    "viewChats": "ਚੈਟ ਵੇਖੋ",
-    "postedAt": "ਪੋਸਟ",
-    "chat": "ਚੈਟ"
+    "postedAt": "ਪੋਸਟ"
   },
   "contacted": {
     "label": "ਸੰਪਰਕ ਕੀਤਾ",
@@ -21,7 +19,6 @@
     "any": "ਕੋਈ ਵੀ",
     "whatsapp": "ਵਟਸਐਪ",
     "call": "ਕਾਲ",
-    "chat": "ਚੈਟ",
     "ridesLabel": "ਰਾਈਡਾਂ"
   },
   "confirm": {

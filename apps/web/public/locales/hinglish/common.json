@@ -7,8 +7,22 @@
     "retry": "Dobara try karein",
     "back": "Back"
   },
-  "shell": { "support": "Support", "logout": "Log out", "language": "Bhasha", "chats": "Chats" },
-  "nav": { "rides": "Rides", "post": "Post duty", "mine": "My Rides", "profile": "Profile" },
-  "placeholder": { "soon": "Jaldi aa raha hai — agle step mein" },
-  "feed": { "title": "Live duties", "comingSoon": "Aapki live ride feed yahan dikhegi." }
+  "shell": {
+    "support": "Support",
+    "logout": "Log out",
+    "language": "Bhasha"
+  },
+  "nav": {
+    "rides": "Rides",
+    "post": "Post duty",
+    "mine": "My Rides",
+    "profile": "Profile"
+  },
+  "placeholder": {
+    "soon": "Jaldi aa raha hai — agle step mein"
+  },
+  "feed": {
+    "title": "Live duties",
+    "comingSoon": "Aapki live ride feed yahan dikhegi."
+  }
 }

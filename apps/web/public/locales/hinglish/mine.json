@@ -11,9 +11,7 @@
     "markDone": "Mark done",
     "delete": "Delete",
     "repost": "Repost",
-    "viewChats": "Chat dekho",
-    "postedAt": "Posted",
-    "chat": "Chat"
+    "postedAt": "Posted"
   },
   "contacted": {
     "label": "Contacted",
@@ -21,7 +19,6 @@
     "any": "Koi bhi",
     "whatsapp": "WhatsApp",
     "call": "Call",
-    "chat": "Chat",
     "ridesLabel": "Rides"
   },
   "confirm": {

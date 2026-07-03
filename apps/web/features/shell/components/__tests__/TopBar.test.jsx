@@ -7,10 +7,10 @@ vi.mock('@/i18n/actions', () => ({ setLocale: vi.fn() }))
 import { TopBar } from '../TopBar'
 
 describe('TopBar', () => {
-  it('shows the brand, Chats, language switcher and Support — and NO logout (logout lives on Profile)', () => {
+  it('shows the brand, language switcher and Support — and NO chats or logout', () => {
     renderWithIntl(<TopBar locale="en" />)
     expect(screen.getByText('EaseCab')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /chats/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /chats/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /language/i })).toBeInTheDocument()
     // Support is an anchor (opens WhatsApp / mailto), so it carries the link role.
     expect(screen.getByRole('link', { name: /support/i })).toBeInTheDocument()

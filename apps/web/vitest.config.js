@@ -32,7 +32,6 @@ export default defineConfig({
         'features/auth/lib/firebaseClient.js',
         'features/auth/services/otpClient.js',
         'features/subscription/services/razorpayClient.js',
-        'features/chat/services/firestoreClient.js',
         'features/notifications/services/fcmClient.js',
         'features/notifications/services/geoClient.js',
         'features/pwa/services/swClient.js',

@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { Whatsapp, Phone, Chat, ChevR } from '@/components/ui/icons'
+import { Whatsapp, Phone, ChevR } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
-import { openChat } from '@/features/chat/services/chatApi'
 import { RouteRow, StatusBadge } from './RideCard'
 import { contactedStamp } from '../lib/rideView'
 
@@ -14,7 +12,7 @@ function waLink(phone) { return `https://wa.me/${String(phone).replace(/[^\d]/g,
 
 /**
  * My Rides → Contacted card. Phone is already revealed (snapshot), so Call/WhatsApp
- * are direct deep links — no re-gate. Verified contacts open the 1:1 chat (Step 22).
+ * are direct deep links — no re-gate.
  * @param {{ contact: object }} props
  */
 export function ContactedCard({ contact }) {
@@ -22,20 +20,9 @@ export function ContactedCard({ contact }) {
   const tr = useTranslations('rides')
   const locale = useLocale()
   const router = useRouter()
-  const [opening, setOpening] = useState(false)
   const verified = contact.kind === 'verified'
   const stamp = contactedStamp(contact.contactedAt, locale)
 
-  const handleChat = async () => {
-    if (!contact.postedRideId || opening) return
-    setOpening(true)
-    try {
-      const chat = await openChat(contact.postedRideId)
-      router.push(`/messages/${chat.id}`)
-    } catch {
-      setOpening(false)
-    }
-  }
   return (
     <article className="rounded-ec-card border border-ec-line bg-white p-3.5 shadow-ec-card">
       <div className="mb-2.5 flex items-center justify-between">
@@ -73,11 +60,6 @@ export function ContactedCard({ contact }) {
             <Phone size={16} />{t('contacted.call')}
           </a>
         </Button>
-        {verified && (
-          <Button type="button" variant="ghost" onClick={handleChat} disabled={opening || !contact.postedRideId} aria-label={t('contacted.chat')} className="h-[42px] w-[42px] rounded-[11px] bg-ec-sky text-ec-blue hover:bg-ec-sky">
-            <Chat size={16} />
-          </Button>
-        )}
       </div>
     </article>
   )

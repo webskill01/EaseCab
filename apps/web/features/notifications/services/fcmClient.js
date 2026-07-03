@@ -3,7 +3,7 @@ import { getFirebaseMessaging } from '@/features/auth/lib/firebaseClient'
 import { env } from '@/config/env'
 
 /**
- * FCM web boundary (Step 23) — mirrors otpClient/firestoreClient. In E2E mode
+ * FCM web boundary (Step 23) — mirrors otpClient. In E2E mode
  * (NEXT_PUBLIC_E2E) the real SDK + OS prompts are replaced by `window.__ecFcmSeam`,
  * which the specs drive deterministically. Returns `{ permission, token }`.
  */
