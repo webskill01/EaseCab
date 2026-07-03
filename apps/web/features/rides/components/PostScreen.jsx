@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { Check } from '@/components/ui/icons'
+import { SuccessBadge } from '@/components/ui/SuccessBadge'
 import { PostForm } from './PostForm'
 import { PasteForm } from './PasteForm'
 import { VerifyGateSheet } from './VerifyGateSheet'
@@ -64,9 +64,16 @@ export function PostScreen() {
   if (post.posted) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 bg-ec-bg px-6 text-center">
-        <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-ec-wa text-white"><Check size={44} /></div>
-        <h2 className="text-[20px] font-extrabold text-ec-ink">{t('success.title')}</h2>
-        <button type="button" onClick={() => router.push('/mine')} className="h-[52px] w-full max-w-[320px] rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue">
+        <SuccessBadge circleClass="bg-ec-wa text-white" ringClass="border-ec-wa/50" tick={44} />
+        <h2 className="animate-ec-rise text-[20px] font-extrabold text-ec-ink motion-reduce:animate-none" style={{ animationDelay: '0.25s' }}>
+          {t('success.title')}
+        </h2>
+        <button
+          type="button"
+          onClick={() => router.push('/mine')}
+          className="h-[52px] w-full max-w-[320px] animate-ec-rise rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue motion-reduce:animate-none"
+          style={{ animationDelay: '0.4s' }}
+        >
           {t('success.viewMine')}
         </button>
       </div>

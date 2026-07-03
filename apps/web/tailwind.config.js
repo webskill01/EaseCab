@@ -97,6 +97,11 @@ module.exports = {
           '0%': { strokeDashoffset: '1' },
           '100%': { strokeDashoffset: '0' },
         },
+        // Celebration ripple: a ring expands out of the badge and fades as the tick draws.
+        'ec-ring': {
+          '0%': { transform: 'scale(0.7)', opacity: '0.55' },
+          '100%': { transform: 'scale(1.65)', opacity: '0' },
+        },
         // Full-cover overlay screens slide in from the right (design-spec §6.12).
         'ec-slide-in': {
           '0%': { transform: 'translateX(100%)' },
@@ -130,6 +135,10 @@ module.exports = {
       animation: {
         'ec-pop': 'ec-pop 0.45s cubic-bezier(0.16,1,0.3,1) both',
         'ec-draw': 'ec-draw 0.4s ease-out 0.28s both',
+        'ec-ring': 'ec-ring 0.7s ease-out 0.3s both',
+        // Staggered success-screen content: same rise as ec-page-rise but with `both`
+        // fill so delayed items start hidden (pair with an inline animationDelay).
+        'ec-rise': 'ec-page-rise 0.4s cubic-bezier(0.16,1,0.3,1) both',
         'ec-slide-in': 'ec-slide-in 0.22s ease both',
         'ec-scrim-in': 'ec-scrim-in 0.2s ease-out both',
         // Soft overshoot easing so the panel settles naturally, not a hard stop.
