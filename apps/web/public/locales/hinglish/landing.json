@@ -1,0 +1,55 @@
+{
+  "header": {
+    "open": "App kholo"
+  },
+  "hero": {
+    "badge": "Punjab · Haryana · Delhi NCR",
+    "title": "Taxi duty ki fresh leads, ek hi live feed mein",
+    "subtitle": "EaseCab sainkdon WhatsApp groups ki ride leads ko ek saaf, real-time feed mein laata hai. City se filter karo, poster ko seedha call karo, duty book karo.",
+    "ctaApp": "Web app kholo",
+    "playSoon": "Jald aa raha hai",
+    "playOn": "Get it on",
+    "playStore": "Google Play",
+    "trial": "7 din free trial · phir sirf ₹149/mahina"
+  },
+  "mock": {
+    "fresh": "Fresh",
+    "call": "Call",
+    "justNow": "abhi",
+    "minAgo": "4 min pehle"
+  },
+  "features": {
+    "title": "Drivers ke liye bana hai, passengers ke liye nahi",
+    "live": {
+      "title": "Live feed",
+      "body": "Nayi lead aate hi dikhti hai — 50 WhatsApp group scroll karne ki zaroorat nahi."
+    },
+    "city": {
+      "title": "Sirf aapke cities",
+      "body": "Pickup city se filter karo taaki wahi duty dikhe jo aap le sakte ho."
+    },
+    "direct": {
+      "title": "Seedha contact",
+      "body": "Ek tap mein poster ko call ya WhatsApp karo. Na koi bichauliya, na commission."
+    },
+    "post": {
+      "title": "Apni duty post karo",
+      "body": "Duty deni hai? Ek baar post karo aur hazaaron drivers tak turant pahuncho."
+    }
+  },
+  "languages": {
+    "title": "Aapki bhasha bolta hai",
+    "body": "EaseCab ko English, ਪੰਜਾਬੀ, हिन्दी ya Hinglish mein use karo — kabhi bhi switch karo."
+  },
+  "ios": {
+    "title": "iPhone pe ho? EaseCab ko home screen pe add karo",
+    "step1": "Safari mein easecab.com kholo",
+    "step2": "Share button pe tap karo",
+    "step3": "\"Add to Home Screen\" pe tap karo"
+  },
+  "footer": {
+    "tagline": "North India ke drivers aur vendors ke liye taxi ride leads.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions"
+  }
+}

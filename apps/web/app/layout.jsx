@@ -6,6 +6,7 @@ import { PwaRegister } from '@/features/pwa/components/PwaRegister'
 import Providers from './providers'
 
 export const metadata = {
+  metadataBase: new URL('https://easecab.com'),
   title: 'EaseCab — Taxi Ride Leads',
   description:
     'Real-time taxi ride leads for drivers and vendors across Punjab, Haryana, and Delhi NCR.',

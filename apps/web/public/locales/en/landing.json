@@ -1,0 +1,55 @@
+{
+  "header": {
+    "open": "Open App"
+  },
+  "hero": {
+    "badge": "Punjab · Haryana · Delhi NCR",
+    "title": "Fresh taxi duty leads, live in one feed",
+    "subtitle": "EaseCab brings ride leads from hundreds of WhatsApp groups into one clean, real-time feed. Filter by city, call the poster directly, book the duty.",
+    "ctaApp": "Open the web app",
+    "playSoon": "Coming soon on",
+    "playOn": "Get it on",
+    "playStore": "Google Play",
+    "trial": "7-day free trial · then just ₹149/month"
+  },
+  "mock": {
+    "fresh": "Fresh",
+    "call": "Call",
+    "justNow": "just now",
+    "minAgo": "4 min ago"
+  },
+  "features": {
+    "title": "Built for drivers, not passengers",
+    "live": {
+      "title": "Live feed",
+      "body": "New leads appear the moment they drop — no scrolling through 50 WhatsApp groups."
+    },
+    "city": {
+      "title": "Your cities only",
+      "body": "Filter leads by pickup city so you only see duties you can actually take."
+    },
+    "direct": {
+      "title": "Direct contact",
+      "body": "One tap to call or WhatsApp the poster. No middleman, no commission."
+    },
+    "post": {
+      "title": "Post your own duty",
+      "body": "Have a duty to give? Post it once and reach thousands of drivers instantly."
+    }
+  },
+  "languages": {
+    "title": "Speaks your language",
+    "body": "Use EaseCab in English, Punjabi, Hindi, or Hinglish — switch anytime."
+  },
+  "ios": {
+    "title": "On iPhone? Add EaseCab to your home screen",
+    "step1": "Open easecab.com in Safari",
+    "step2": "Tap the Share button",
+    "step3": "Tap \"Add to Home Screen\""
+  },
+  "footer": {
+    "tagline": "Taxi ride leads for drivers and vendors across North India.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions"
+  }
+}

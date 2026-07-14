@@ -19,11 +19,12 @@ export default getRequestConfig(async () => {
   const membership = (await import(`../public/locales/${locale}/membership.json`)).default
   const settings = (await import(`../public/locales/${locale}/settings.json`)).default
   const notifications = (await import(`../public/locales/${locale}/notifications.json`)).default
+  const landing = (await import(`../public/locales/${locale}/landing.json`)).default
   return {
     // next-intl v4 requires an explicit timeZone, else it logs ENVIRONMENT_FALLBACK
     // and risks server/client markup mismatches. EaseCab is India-only (§1).
     timeZone: 'Asia/Kolkata',
     locale,
-    messages: { common, auth, rides, mine, post, profile, verification, membership, settings, notifications },
+    messages: { common, auth, rides, mine, post, profile, verification, membership, settings, notifications, landing },
   }
 })
