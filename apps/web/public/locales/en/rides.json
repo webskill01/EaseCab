@@ -75,7 +75,10 @@
     "renew": "Renew now",
     "notNow": "Not now",
     "perMonth": "/month",
-    "planNote": "Full access to every feature."
+    "planNote": "Full access to every feature.",
+    "verifyTitle": "Get verified to contact",
+    "verifyBody": "Complete Aadhaar verification to contact verified drivers.",
+    "verifyCta": "Verify now"
   },
   "reveal": {
     "title": "Contact driver",
@@ -86,7 +89,8 @@
     "errorRate": "You've contacted too many drivers today. Please try again later.",
     "errorGone": "This ride is no longer available.",
     "errorNetwork": "No connection. Check your internet and try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "advanceWarning": "Never pay any advance to a driver you don't know or trust. EaseCab only shares leads — it never handles payments."
   },
   "report": {
     "title": "Report ride",

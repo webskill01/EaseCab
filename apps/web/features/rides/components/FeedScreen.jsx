@@ -132,6 +132,7 @@ export function FeedScreen() {
           membershipState={membership.state}
           onClose={() => setContactRideVM(null)}
           onUpgrade={() => { setContactRideVM(null); goMembership() }}
+          onVerify={() => { setContactRideVM(null); router.push('/verify?intent=l1') }}
         />
       )}
 

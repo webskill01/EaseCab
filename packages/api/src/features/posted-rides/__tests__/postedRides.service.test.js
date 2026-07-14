@@ -117,6 +117,17 @@ test('contactPost: own post returns phone without gate/record', async () => {
   assert.equal(out.phoneNumber, '+919876543210');
 });
 
+test('contactPost: VERIFICATION_REQUIRED when picker is not L1-verified (same gate as posting)', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ target: { id: 'p1', phone: '+91x', postedBy: 'u9' }, flags: { ...L1_OK, aadhaarVerified: false } }) });
+  await assert.rejects(() => svc.contactPost({ userId: 'u1', postedRideId: 'p1' }), code('VERIFICATION_REQUIRED'));
+});
+
+test('contactPost: own post is exempt from the verification gate', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ target: { id: 'p1', phone: '+919876543210', postedBy: 'u1' }, flags: { ...L1_OK, aadhaarVerified: false } }) });
+  const out = await svc.contactPost({ userId: 'u1', postedRideId: 'p1' });
+  assert.equal(out.phoneNumber, '+919876543210');
+});
+
 test('contactPost: SUBSCRIPTION_EXPIRED when not subscribed', async () => {
   const svc = createPostedRidesService({ repo: baseRepo({ target: { id: 'p1', phone: '+91...', postedBy: 'u9' }, sub: null }) });
   await assert.rejects(() => svc.contactPost({ userId: 'u1', postedRideId: 'p1' }), code('SUBSCRIPTION_EXPIRED'));

@@ -104,9 +104,10 @@ function createPostedRidesService({ repo, logger, uploads }) {
 
     /**
      * Reveal a poster's phone at the contact action point. Order: 404 if no active
-     * target → own-post shortcut (no gate) → subscription gate → rate limit → reveal.
-     * The reveal writes no history — peeking at a number must not fill the Contacted
-     * tab; the row lands only when the user taps Call/WhatsApp (logContactPost).
+     * target → own-post shortcut (no gate) → verification gate (same L1 KYC as posting)
+     * → subscription gate → rate limit → reveal. The reveal writes no history — peeking
+     * at a number must not fill the Contacted tab; the row lands only when the user taps
+     * Call/WhatsApp (logContactPost).
      */
     async contactPost({ userId, postedRideId }) {
       const post = await repo.findContactTarget(postedRideId);
@@ -115,6 +116,12 @@ function createPostedRidesService({ repo, logger, uploads }) {
       }
       if (post.postedBy === userId) {
         return { phoneNumber: post.phone };
+      }
+      // Picking a verified ride requires the same L1 KYC (Aadhaar + complete profile)
+      // as posting one — verified drivers only contact verified drivers.
+      const flags = await repo.getUserKycFlags(userId);
+      if (!hasSubmittedKyc(flags)) {
+        throw AppError.fromCode(ERROR_CODES.VERIFICATION_REQUIRED);
       }
       const sub = await repo.findSubscriptionByUserId(userId);
       if (!isSubscriptionActive(sub)) {

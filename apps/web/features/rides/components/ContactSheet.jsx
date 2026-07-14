@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button } from '@/components/ui/button'
-import { Crown, Whatsapp, Phone, Swap, Check, Ban } from '@/components/ui/icons'
+import { Crown, Whatsapp, Phone, Swap, Check, Ban, Shield } from '@/components/ui/icons'
 import { contactRide, contactVerifiedRide, logContactRide, logContactVerifiedRide } from '../services/ridesApi'
 import { MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { RIDE_KIND } from '../lib/rideView'
@@ -56,8 +56,9 @@ function RouteLine({ ride }) {
  * @param {string} props.membershipState - MEMBERSHIP_STATE value
  * @param {() => void} props.onClose
  * @param {() => void} props.onUpgrade
+ * @param {() => void} props.onVerify - route to L1 verification (verified-ride pick gate)
  */
-export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
+export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVerify }) {
   const t = useTranslations('rides')
   const qc = useQueryClient()
   const reveal = useMutation({
@@ -109,6 +110,25 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
     )
   }
 
+  // Picking a verified ride needs the same L1 KYC as posting one — the server returns
+  // VERIFICATION_REQUIRED for an unverified user, so route them to verification.
+  if (reveal.error?.code === 'VERIFICATION_REQUIRED') {
+    return (
+      <BottomSheet onClose={onClose} label={t('gate.verifyTitle')}>
+        <SheetTitle icon={<Shield size={22} />} tone="blueInk" title={t('gate.verifyTitle')} sub={t('gate.verifyBody')} />
+        <div className="flex flex-col gap-2.5 pb-2">
+          <RouteLine ride={ride} />
+          <Button type="button" size="lg" onClick={onVerify} className="w-full">
+            {t('gate.verifyCta')}
+          </Button>
+          <Button type="button" variant="ghost" onClick={onClose} className="w-full bg-ec-bg font-bold text-ec-ink60">
+            {t('gate.notNow')}
+          </Button>
+        </div>
+      </BottomSheet>
+    )
+  }
+
   // Non-subscription failure (404 / contact cap / network) — gatedOut already handled
   // the subscription case above, so a remaining error means the reveal genuinely failed.
   if (reveal.isError) {
@@ -130,6 +150,11 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade }) {
     <BottomSheet onClose={onClose} label={t('reveal.title')}>
       <SheetTitle icon={<Check size={22} />} tone="success" title={t('reveal.title')} />
       <div className="flex flex-col gap-3 pb-2">
+        {/* Fraud warning — shown every time before the number/Call/WhatsApp are usable. */}
+        <p role="alert" className="flex items-start gap-2 rounded-ec-card bg-ec-dangerBg px-3.5 py-2.5 text-[12.5px] font-bold leading-snug text-ec-danger">
+          <span className="mt-px shrink-0"><Ban size={15} /></span>
+          {t('reveal.advanceWarning')}
+        </p>
         <RouteLine ride={ride} />
         <div className="rounded-ec-card border border-ec-line bg-ec-bg py-3 text-center text-[20px] font-extrabold tracking-tight text-ec-ink">
           {phone || '…'}

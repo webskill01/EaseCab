@@ -8,7 +8,7 @@ vi.mock('../../services/ridesApi', () => ({
   contactRide: vi.fn(), contactVerifiedRide: vi.fn(),
   logContactRide: vi.fn(), logContactVerifiedRide: vi.fn(),
 }))
-import { contactRide, logContactRide } from '../../services/ridesApi'
+import { contactRide, contactVerifiedRide, logContactRide } from '../../services/ridesApi'
 import { ContactSheet } from '../ContactSheet'
 import { MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 
@@ -39,6 +39,18 @@ describe('ContactSheet', () => {
     expect(contactRide).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('link', { name: /call/i })).toHaveAttribute('href', 'tel:+919876543210')
     expect(screen.getByRole('link', { name: /whatsapp/i })).toHaveAttribute('href', 'https://wa.me/919876543210')
+    // Fraud warning is present on every reveal, before Call/WhatsApp are used.
+    expect(screen.getByRole('alert')).toHaveTextContent(/advance/i)
+  })
+
+  it('verified ride: an unverified picker sees the verify gate (VERIFICATION_REQUIRED)', async () => {
+    contactVerifiedRide.mockRejectedValue({ code: 'VERIFICATION_REQUIRED' })
+    const onVerify = vi.fn()
+    const user = userEvent.setup()
+    renderSheet(<ContactSheet ride={{ id: 'v1', kind: 'verified' }} membershipState={MEMBERSHIP_STATE.TRIAL} onClose={vi.fn()} onUpgrade={vi.fn()} onVerify={onVerify} />)
+    await waitFor(() => expect(screen.getByText(/verified to contact/i)).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: /verify now/i }))
+    expect(onVerify).toHaveBeenCalled()
   })
 
   it('records history only on the Call/WhatsApp tap — opening to peek does not', async () => {

@@ -75,7 +75,10 @@
     "renew": "Abhi renew karein",
     "notNow": "Abhi nahi",
     "perMonth": "/month",
-    "planNote": "Har feature tak puri access."
+    "planNote": "Har feature tak puri access.",
+    "verifyTitle": "Contact karne ke liye verify karein",
+    "verifyBody": "Verified drivers se contact karne ke liye Aadhaar verification poora karein.",
+    "verifyCta": "Abhi verify karein"
   },
   "reveal": {
     "title": "Driver se contact",
@@ -86,7 +89,8 @@
     "errorRate": "Aaj aapne bahut saare drivers se contact kar liya. Baad mein try karein.",
     "errorGone": "Ye ride ab available nahi hai.",
     "errorNetwork": "Connection nahi hai. Internet check karke dobara try karein.",
-    "retry": "Dobara try karein"
+    "retry": "Dobara try karein",
+    "advanceWarning": "Jis driver ko aap nahi jaante ya trust nahi karte, use kabhi advance payment na karein. EaseCab sirf leads deta hai, payment handle nahi karta."
   },
   "report": {
     "title": "Ride report karein",
