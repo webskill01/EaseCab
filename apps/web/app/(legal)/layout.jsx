@@ -22,6 +22,9 @@ export default function LegalLayout({ children }) {
           <Link href="/terms" className="hover:text-gray-600">
             Terms &amp; Conditions
           </Link>
+          <Link href="/delete-account" className="hover:text-gray-600">
+            Delete Account
+          </Link>
           <span>support@easecab.com</span>
         </div>
       </footer>

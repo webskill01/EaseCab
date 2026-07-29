@@ -128,7 +128,6 @@ export default function TermsAndConditions() {
         <li>Automated deduplication to reduce repeated leads</li>
         <li>City-based filtering and targeted push notifications for new leads</li>
         <li>In-app contact (phone number reveal) for subscribed and verified users</li>
-        <li>1:1 in-app chat between verified users on a confirmed ride contact</li>
         <li>KYC-backed trust badges for identity-verified members</li>
         <li>Ability to post your own rides (24-hour visibility)</li>
       </ul>
@@ -177,7 +176,7 @@ export default function TermsAndConditions() {
         </li>
         <li>Attempt to reverse engineer, decompile, or circumvent any platform security measure</li>
         <li>Submit false or fraudulent KYC documents</li>
-        <li>Harass, threaten, or abuse other users through in-app chat</li>
+        <li>Harass, threaten, or abuse other users</li>
         <li>Use the platform for any purpose that violates Indian law</li>
         <li>Resell, redistribute, or commercially exploit ride lead data</li>
       </ul>

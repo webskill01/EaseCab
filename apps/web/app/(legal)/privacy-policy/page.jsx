@@ -66,14 +66,7 @@ export default function PrivacyPolicy() {
         status, plan period, and anonymised Razorpay transaction identifiers.
       </p>
 
-      <h3>2.6 Chat Messages</h3>
-      <p>
-        In-app chat messages between verified users are stored in Firebase Firestore. Messages are
-        associated with a specific ride contact and are automatically made read-only when the
-        related ride expires.
-      </p>
-
-      <h3>2.7 Usage Data</h3>
+      <h3>2.6 Usage Data</h3>
       <p>
         We collect standard server logs including IP address, device type, operating system,
         browser/app version, pages visited, ride cards viewed, and actions taken. Logs are used
@@ -88,7 +81,6 @@ export default function PrivacyPolicy() {
         <li>Verify your identity through KYC to enable ride posting and the verified trust badge</li>
         <li>Process your subscription payment and manage access</li>
         <li>Send city-targeted push notifications for new ride leads (with your permission)</li>
-        <li>Enable in-app 1:1 chat with other verified users on a confirmed ride</li>
         <li>Detect and prevent fraud, abuse, spam, and duplicate ride leads</li>
         <li>Improve the platform through aggregated, anonymised analytics</li>
         <li>Respond to your support requests</li>
@@ -100,9 +92,8 @@ export default function PrivacyPolicy() {
       </p>
       <ul>
         <li>
-          <strong>Firebase (Google)</strong> — Phone OTP authentication, in-app chat (Firestore),
-          and push notifications (FCM). Google&apos;s Privacy Policy applies to data processed by
-          Firebase.
+          <strong>Firebase (Google)</strong> — Phone OTP authentication and push notifications
+          (FCM). Google&apos;s Privacy Policy applies to data processed by Firebase.
         </li>
         <li>
           <strong>Razorpay</strong> — Subscription payment processing. Razorpay&apos;s Privacy
@@ -113,8 +104,8 @@ export default function PrivacyPolicy() {
           processes identity documents under its own data handling policy.
         </li>
         <li>
-          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures, KYC-related
-          uploads, and chat image attachments. Files are served via time-limited presigned URLs only
+          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures and
+          KYC-related uploads. Files are served via time-limited presigned URLs only
           — the storage bucket is never publicly accessible.
         </li>
         <li>
@@ -135,10 +126,6 @@ export default function PrivacyPolicy() {
         <li>
           <strong>KYC document data:</strong> retained for 90 days after verification is confirmed,
           then permanently deleted.
-        </li>
-        <li>
-          <strong>Chat messages:</strong> retained while the associated ride contact is active;
-          automatically purged when the ride expires.
         </li>
         <li>
           <strong>Ride lead data:</strong> ride leads are automatically hard-deleted 12 hours after
