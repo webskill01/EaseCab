@@ -108,13 +108,6 @@ export default function PrivacyPolicy() {
           KYC-related uploads. Files are served via time-limited presigned URLs only
           — the storage bucket is never publicly accessible.
         </li>
-        <li>
-          <strong>PostHog</strong> — Aggregated, anonymised product analytics. No personally
-          identifiable information is transmitted to PostHog.
-        </li>
-        <li>
-          <strong>Sentry</strong> — Application error monitoring. Error reports do not contain PII.
-        </li>
       </ul>
 
       <h2>5. Data Retention</h2>
