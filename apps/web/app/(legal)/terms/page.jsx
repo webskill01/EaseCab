@@ -64,8 +64,7 @@ export default function TermsAndConditions() {
       <p>
         To post your own ride leads, you must complete identity verification (KYC) by submitting at
         least one of the following. Identity verification is <strong>not</strong> required to view
-        contact details on ride leads — viewing contacts requires only an active trial or paid
-        subscription.
+        contact details on ride leads — viewing contacts requires only an active paid membership.
       </p>
       <ul>
         <li>Aadhaar OTP verification</li>
@@ -83,16 +82,16 @@ export default function TermsAndConditions() {
       </p>
 
       <h2>5. Subscription and Pricing</h2>
-      <h3>5.1 Free Trial</h3>
+      <h3>5.1 Free Access</h3>
       <p>
-        New accounts receive a <strong>7-day free trial</strong> with full access to all platform
-        features. No payment is required during the trial.
+        Viewing the ride leads feed and posting your own ride leads are <strong>free</strong> and
+        require no payment. Posting requires identity verification (see section 4).
       </p>
 
-      <h3>5.2 Paid Subscription</h3>
+      <h3>5.2 Paid Membership</h3>
       <p>
-        After the trial period, continued access to contact features and posting requires a paid
-        subscription at <strong>₹149 per month</strong> on a 30-day rolling basis.
+        Revealing a poster&apos;s contact number requires a paid membership at{' '}
+        <strong>₹149 per 30 days</strong> on a rolling basis.
       </p>
 
       <h3>5.3 Renewal and Stacking</h3>
@@ -153,7 +152,7 @@ export default function TermsAndConditions() {
       </p>
       <ul>
         <li>
-          <strong>Viewing a contact number:</strong> requires an active trial or paid subscription
+          <strong>Viewing a contact number:</strong> requires an active paid membership
         </li>
         <li>
           <strong>Posting a ride:</strong> requires identity verification (at least one KYC document

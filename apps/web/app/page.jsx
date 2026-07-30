@@ -5,7 +5,7 @@ import { FeatureGrid, LanguageStrip, IosInstall, LandingFooter } from '@/feature
 export const metadata = {
   title: 'EaseCab — Live Taxi Ride Leads for Drivers | Punjab, Haryana, Delhi NCR',
   description:
-    'Fresh taxi duty leads from hundreds of WhatsApp groups in one real-time feed. Filter by city, call the poster directly — no middleman, no commission. 7-day free trial, then ₹149/month.',
+    'Fresh taxi duty leads from hundreds of WhatsApp groups in one real-time feed. Filter by city, call the poster directly — no middleman, no commission. Browsing is free; ₹149/month to contact.',
   keywords: [
     'taxi duty', 'taxi ride leads', 'cab duty app', 'taxi driver app India',
     'Punjab taxi', 'Haryana taxi', 'Delhi NCR taxi', 'one way duty', 'return duty',
