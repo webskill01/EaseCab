@@ -10,7 +10,8 @@
     "playSoon": "ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ",
     "playOn": "ਪਾਓ",
     "playStore": "Google Play",
-    "trial": "ਬਰਾਉਜ਼ ਮੁਫ਼ਤ · ਸੰਪਰਕ ਲਈ ₹149/ਮਹੀਨਾ"
+    "trial": "ਬਰਾਉਜ਼ ਮੁਫ਼ਤ · ਸੰਪਰਕ ਲਈ ₹149/ਮਹੀਨਾ",
+    "operatedBy": "ਸੰਚਾਲਕ"
   },
   "mock": {
     "fresh": "ਨਵੀਂ",
@@ -51,5 +52,12 @@
     "tagline": "ਉੱਤਰੀ ਭਾਰਤ ਦੇ ਡਰਾਈਵਰਾਂ ਅਤੇ ਵੈਂਡਰਾਂ ਲਈ ਟੈਕਸੀ ਰਾਈਡ ਲੀਡਾਂ।",
     "privacy": "ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ",
     "terms": "ਨਿਯਮ ਅਤੇ ਸ਼ਰਤਾਂ"
+  },
+  "contact": {
+    "title": "ਸਾਡਾ ਰਜਿਸਟਰਡ ਦਫ਼ਤਰ",
+    "officeLabel": "ਰਜਿਸਟਰਡ ਦਫ਼ਤਰ",
+    "emailLabel": "ਈਮੇਲ",
+    "directions": "Google Maps ਵਿੱਚ ਖੋਲ੍ਹੋ",
+    "mapTitle": "Google Maps ਉੱਤੇ EaseCab ਦਫ਼ਤਰ ਦਾ ਟਿਕਾਣਾ"
   }
 }

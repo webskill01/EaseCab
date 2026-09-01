@@ -1,5 +1,6 @@
 import { LandingHeader, LandingHero } from '@/features/landing/components/LandingHero'
-import { FeatureGrid, LanguageStrip, IosInstall, LandingFooter } from '@/features/landing/components/LandingSections'
+import { FeatureGrid, LanguageStrip, IosInstall, ContactSection, LandingFooter } from '@/features/landing/components/LandingSections'
+import { COMPANY } from '@/config/company'
 
 /** Public marketing landing (Step 27b). The app itself lives at /feed — PWA/TWA start_url stays /feed. */
 export const metadata = {
@@ -24,6 +25,25 @@ export const metadata = {
   twitter: { card: 'summary', title: 'EaseCab — Live Taxi Ride Leads for Drivers' },
 }
 
+const ORG_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: COMPANY.brand,
+  legalName: COMPANY.legalName,
+  url: 'https://easecab.com',
+  logo: 'https://easecab.com/icons/icon-512.png',
+  email: COMPANY.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: COMPANY.address.street,
+    addressLocality: COMPANY.address.city,
+    addressRegion: COMPANY.address.state,
+    postalCode: COMPANY.address.postalCode,
+    addressCountry: 'IN',
+  },
+  hasMap: COMPANY.mapsUrl,
+}
+
 const JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'MobileApplication',
@@ -41,12 +61,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-ec-bg">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }} />
       <LandingHeader />
       <main>
         <LandingHero />
         <FeatureGrid />
         <LanguageStrip />
         <IosInstall />
+        <ContactSection />
       </main>
       <LandingFooter />
     </div>

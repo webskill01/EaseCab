@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { getTranslations, getLocale } from 'next-intl/server'
 import { Bolt, Phone } from '@/components/ui/icons'
 import { LanguageMenu } from '@/features/shell/components/LanguageMenu'
+import { COMPANY } from '@/config/company'
 
 /** Play Store listing URL — fill in once the app is live (Step 27c), badge turns into a link. */
 export const PLAY_STORE_URL = null
@@ -16,7 +17,12 @@ export async function LandingHeader() {
         <div className="flex items-center gap-2.5">
           {/* ponytail: current app icon as logo — swap file when the final logo lands */}
           <Image src="/icons/icon-96.png" alt="EaseCab logo" width={36} height={36} className="rounded-[10px]" />
-          <span className="text-[19px] font-extrabold tracking-tight text-ec-ink">EaseCab</span>
+          <span className="leading-tight">
+            <span className="block text-[19px] font-extrabold tracking-tight text-ec-ink">{COMPANY.brand}</span>
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-ec-ink40">
+              Mobility Solutions Pvt. Ltd.
+            </span>
+          </span>
         </div>
         <div className="flex items-center gap-2.5">
           <LanguageMenu current={locale} />
@@ -55,6 +61,9 @@ export async function LandingHero() {
           <PlayBadge label={PLAY_STORE_URL ? t('hero.playOn') : t('hero.playSoon')} store={t('hero.playStore')} />
         </div>
         <p className="mt-4 text-[14px] font-semibold text-ec-ink40">{t('hero.trial')}</p>
+        <p className="mt-2 text-[13px] font-semibold text-ec-ink60">
+          {t('hero.operatedBy')} <span className="text-ec-ink">{COMPANY.legalName}</span>
+        </p>
       </div>
       <PhoneMockup />
     </section>

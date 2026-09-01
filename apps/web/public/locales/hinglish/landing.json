@@ -10,7 +10,8 @@
     "playSoon": "Jald aa raha hai",
     "playOn": "Get it on",
     "playStore": "Google Play",
-    "trial": "Browse free · contact ke liye ₹149/mahina"
+    "trial": "Browse free · contact ke liye ₹149/mahina",
+    "operatedBy": "Operated by"
   },
   "mock": {
     "fresh": "Fresh",
@@ -51,5 +52,12 @@
     "tagline": "North India ke drivers aur vendors ke liye taxi ride leads.",
     "privacy": "Privacy Policy",
     "terms": "Terms & Conditions"
+  },
+  "contact": {
+    "title": "Hamara registered office",
+    "officeLabel": "Registered office",
+    "emailLabel": "Email",
+    "directions": "Google Maps mein kholo",
+    "mapTitle": "Google Maps pe EaseCab office ki location"
   }
 }

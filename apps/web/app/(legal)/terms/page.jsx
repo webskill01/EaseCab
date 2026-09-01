@@ -1,3 +1,5 @@
+import { COMPANY } from '@/config/company'
+
 export const metadata = {
   title: 'Terms & Conditions — EaseCab',
 }
@@ -276,6 +278,10 @@ export default function TermsAndConditions() {
       <h2>18. Contact Us</h2>
       <p>For questions, support, or concerns related to these Terms:</p>
       <p>
+        <strong>Entity:</strong> {COMPANY.legalName}
+        <br />
+        <strong>Registered office:</strong> {COMPANY.addressLines.join(', ')}
+        <br />
         <strong>Email:</strong> support@easecab.com
         <br />
         <strong>Platform:</strong> easecab.com

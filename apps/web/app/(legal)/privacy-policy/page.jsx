@@ -1,3 +1,5 @@
+import { COMPANY } from '@/config/company'
+
 export const metadata = {
   title: 'Privacy Policy — EaseCab',
 }
@@ -197,6 +199,10 @@ export default function PrivacyPolicy() {
         at:
       </p>
       <p>
+        <strong>Entity:</strong> {COMPANY.legalName}
+        <br />
+        <strong>Registered office:</strong> {COMPANY.addressLines.join(', ')}
+        <br />
         <strong>Email:</strong> support@easecab.com
         <br />
         <strong>Platform:</strong> easecab.com
