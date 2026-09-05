@@ -10,9 +10,7 @@ docs/
 design_handoff_easecab/
 
 # TWA / Play Store signing bundle — keystore + passwords + app binaries. NEVER commit.
-EaseCab - Google Play package/
-EaseCab - Google Play package v2/
-EaseCab - Google Play package v3/
+EaseCab - Google Play package*/
 *.keystore
 *.aab
 *.apk
