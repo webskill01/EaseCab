@@ -22,13 +22,18 @@ const ITEMS = [
 export function PermissionsStep({ onContinue }) {
   const t = useTranslations('auth')
   const [granted, setGranted] = useState({})
+  const [denied, setDenied] = useState({})
   const [busy, setBusy] = useState(false)
   const allOn = ITEMS.every(([k]) => granted[k])
+  // A blocked permission can only be re-enabled in browser settings, so a denial has
+  // to advance the step too — otherwise the user is stuck on a button that does nothing.
+  const allDone = ITEMS.every(([k]) => granted[k] || denied[k])
 
   const request = {
     notifications: async () => {
       const { permission } = await requestPermissionAndToken()
       if (permission === 'granted') setGranted((g) => ({ ...g, notifications: true }))
+      else setDenied((d) => ({ ...d, notifications: true }))
     },
     location: async () => {
       try {
@@ -37,6 +42,7 @@ export function PermissionsStep({ onContinue }) {
       } catch (err) {
         // code 1 = PERMISSION_DENIED; unavailable/timeout still means permission granted
         if (err?.code && err.code !== 1) setGranted((g) => ({ ...g, location: true }))
+        else setDenied((d) => ({ ...d, location: true }))
       }
     },
   }
@@ -64,6 +70,7 @@ export function PermissionsStep({ onContinue }) {
       <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-[22px] pb-2 pt-[18px]">
         {ITEMS.map(([key, Icon]) => {
           const on = granted[key]
+          const blocked = denied[key]
           return (
             <button
               key={key}
@@ -85,6 +92,9 @@ export function PermissionsStep({ onContinue }) {
                 <p className="mt-0.5 text-[12px] font-medium leading-snug text-ec-ink60">
                   {t(`perms.items.${key}.desc`)}
                 </p>
+                {blocked && (
+                  <p className="mt-1 text-[11.5px] font-bold leading-snug text-ec-warning">{t('perms.blocked')}</p>
+                )}
               </div>
               <div
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-white ${
@@ -99,7 +109,7 @@ export function PermissionsStep({ onContinue }) {
       </div>
 
       <div className="border-t border-ec-line p-[22px]">
-        {allOn ? (
+        {allDone ? (
           <Button type="button" size="lg" onClick={onContinue} className="w-full">
             {t('perms.continue')}
             <ChevR size={18} />

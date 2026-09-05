@@ -38,15 +38,21 @@ describe('PermissionsStep', () => {
     expect(onContinue).toHaveBeenCalledTimes(1)
   })
 
-  it('a denied prompt keeps the item off (no Continue)', async () => {
+  it('a denied prompt shows the blocked hint and still advances', async () => {
+    // A blocked permission can only be re-enabled in browser settings, so the step
+    // must not trap the user behind an "Allow all" button that can never succeed.
     requestPermissionAndToken.mockResolvedValue({ permission: 'denied', token: null })
     getCurrentPosition.mockRejectedValue({ code: 1 }) // PERMISSION_DENIED
+    const onContinue = vi.fn()
     const user = userEvent.setup()
-    renderWithIntl(<PermissionsStep onContinue={vi.fn()} />)
+    renderWithIntl(<PermissionsStep onContinue={onContinue} />)
 
     await user.click(screen.getByRole('button', { name: /allow all/i }))
     await waitFor(() => expect(getCurrentPosition).toHaveBeenCalled())
-    expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument()
+    expect(screen.getAllByText(/blocked in your browser settings/i)).toHaveLength(2)
+
+    await user.click(await screen.findByRole('button', { name: /continue/i }))
+    expect(onContinue).toHaveBeenCalledTimes(1)
   })
 
   it('Not now advances without granting', async () => {
