@@ -5,6 +5,7 @@ export default function sitemap() {
     { url: 'https://easecab.com/privacy-policy', changeFrequency: 'yearly', priority: 0.3 },
     { url: 'https://easecab.com/terms', changeFrequency: 'yearly', priority: 0.3 },
     { url: 'https://easecab.com/refunds', changeFrequency: 'yearly', priority: 0.3 },
+    { url: 'https://easecab.com/contact', changeFrequency: 'yearly', priority: 0.3 },
     { url: 'https://easecab.com/delete-account', changeFrequency: 'yearly', priority: 0.3 },
   ]
 }

@@ -152,6 +152,7 @@ export async function LandingFooter() {
             <Link href="/privacy-policy" className="transition-colors hover:text-ec-ink">{t('footer.privacy')}</Link>
             <Link href="/terms" className="transition-colors hover:text-ec-ink">{t('footer.terms')}</Link>
             <Link href="/refunds" className="transition-colors hover:text-ec-ink">{t('footer.refunds')}</Link>
+            <Link href="/contact" className="transition-colors hover:text-ec-ink">{t('footer.contact')}</Link>
           </div>
           <a href={`mailto:${COMPANY.email}`} className="transition-colors hover:text-ec-ink">{COMPANY.email}</a>
         </div>

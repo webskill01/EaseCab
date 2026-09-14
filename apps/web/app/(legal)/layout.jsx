@@ -23,6 +23,9 @@ export default function LegalLayout({ children }) {
           <Link href="/terms" className="hover:text-gray-600">
             Terms &amp; Conditions
           </Link>
+          <Link href="/contact" className="hover:text-gray-600">
+            Contact Us
+          </Link>
           <Link href="/refunds" className="hover:text-gray-600">
             Refunds
           </Link>
