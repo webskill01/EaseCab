@@ -51,12 +51,14 @@
   "footer": {
     "tagline": "North India ke drivers aur vendors ke liye taxi ride leads.",
     "privacy": "Privacy Policy",
-    "terms": "Terms & Conditions"
+    "terms": "Terms & Conditions",
+    "refunds": "Refund Policy"
   },
   "contact": {
     "title": "Hamara registered office",
     "officeLabel": "Registered office",
     "emailLabel": "Email",
+    "phoneLabel": "Phone",
     "directions": "Google Maps mein kholo",
     "mapTitle": "Google Maps pe EaseCab office ki location"
   }

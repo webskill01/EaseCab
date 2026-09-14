@@ -51,12 +51,14 @@
   "footer": {
     "tagline": "Taxi ride leads for drivers and vendors across North India.",
     "privacy": "Privacy Policy",
-    "terms": "Terms & Conditions"
+    "terms": "Terms & Conditions",
+    "refunds": "Refund Policy"
   },
   "contact": {
     "title": "Our registered office",
     "officeLabel": "Registered office",
     "emailLabel": "Email",
+    "phoneLabel": "Phone",
     "directions": "Open in Google Maps",
     "mapTitle": "EaseCab office location on Google Maps"
   }

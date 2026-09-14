@@ -282,7 +282,9 @@ export default function TermsAndConditions() {
         <br />
         <strong>Registered office:</strong> {COMPANY.addressLines.join(', ')}
         <br />
-        <strong>Email:</strong> support@easecab.com
+        <strong>Email:</strong> {COMPANY.email}
+        <br />
+        <strong>Phone:</strong> {COMPANY.phoneDisplay}
         <br />
         <strong>Platform:</strong> easecab.com
       </p>

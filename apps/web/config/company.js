@@ -17,8 +17,12 @@ const ADDRESS_QUERY = encodeURIComponent(
 
 export const COMPANY = Object.freeze({
   brand: 'EaseCab',
-  legalName: 'Easecab Mobility Solutions Pvt. Ltd.',
+  legalName: 'Easecab Mobility Solutions Private Limited',
   email: 'support@easecab.com',
+  /** E.164 for tel: links. */
+  phone: '+916284992669',
+  /** Grouped for display. */
+  phoneDisplay: '+91 62849 92669',
   address: ADDRESS,
   /** Two display lines, in postal order. */
   addressLines: Object.freeze([

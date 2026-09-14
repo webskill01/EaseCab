@@ -51,12 +51,14 @@
   "footer": {
     "tagline": "उत्तर भारत के ड्राइवरों और वेंडरों के लिए टैक्सी राइड लीड्स।",
     "privacy": "प्राइवेसी पॉलिसी",
-    "terms": "नियम व शर्तें"
+    "terms": "नियम व शर्तें",
+    "refunds": "रिफंड नीति"
   },
   "contact": {
     "title": "हमारा पंजीकृत कार्यालय",
     "officeLabel": "पंजीकृत कार्यालय",
     "emailLabel": "ईमेल",
+    "phoneLabel": "फोन",
     "directions": "Google Maps में खोलें",
     "mapTitle": "Google Maps पर EaseCab कार्यालय का स्थान"
   }

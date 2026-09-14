@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { COMPANY } from '@/config/company'
 
 export default function LegalLayout({ children }) {
   return (
@@ -22,10 +23,14 @@ export default function LegalLayout({ children }) {
           <Link href="/terms" className="hover:text-gray-600">
             Terms &amp; Conditions
           </Link>
+          <Link href="/refunds" className="hover:text-gray-600">
+            Refunds
+          </Link>
           <Link href="/delete-account" className="hover:text-gray-600">
             Delete Account
           </Link>
-          <span>support@easecab.com</span>
+          <span>{COMPANY.email}</span>
+          <span>{COMPANY.phoneDisplay}</span>
         </div>
       </footer>
     </div>

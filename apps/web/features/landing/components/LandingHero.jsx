@@ -20,7 +20,7 @@ export async function LandingHeader() {
           <span className="leading-tight">
             <span className="block text-[19px] font-extrabold tracking-tight text-ec-ink">{COMPANY.brand}</span>
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-ec-ink40">
-              Mobility Solutions Pvt. Ltd.
+              Mobility Solutions Private Limited
             </span>
           </span>
         </div>

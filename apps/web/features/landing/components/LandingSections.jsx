@@ -103,6 +103,10 @@ export async function ContactSection() {
               <span className="font-extrabold text-ec-ink">{t('contact.emailLabel')}: </span>
               <a href={`mailto:${COMPANY.email}`} className="text-ec-blue hover:underline">{COMPANY.email}</a>
             </p>
+            <p className="mt-1.5 text-[15px] text-ec-ink60">
+              <span className="font-extrabold text-ec-ink">{t('contact.phoneLabel')}: </span>
+              <a href={`tel:${COMPANY.phone}`} className="text-ec-blue hover:underline">{COMPANY.phoneDisplay}</a>
+            </p>
             <a
               href={COMPANY.mapsUrl}
               target="_blank"
@@ -147,6 +151,7 @@ export async function LandingFooter() {
           <div className="flex gap-5">
             <Link href="/privacy-policy" className="transition-colors hover:text-ec-ink">{t('footer.privacy')}</Link>
             <Link href="/terms" className="transition-colors hover:text-ec-ink">{t('footer.terms')}</Link>
+            <Link href="/refunds" className="transition-colors hover:text-ec-ink">{t('footer.refunds')}</Link>
           </div>
           <a href={`mailto:${COMPANY.email}`} className="transition-colors hover:text-ec-ink">{COMPANY.email}</a>
         </div>
