@@ -22,5 +22,19 @@
   "error": {
     "geo": "Couldn't get your location.",
     "noCity": "No nearby city found."
+  },
+  "permHelp": {
+    "title": "{perm} is turned off",
+    "intro": "You blocked this earlier, so EaseCab can't ask again. Turn it back on in 3 quick steps:",
+    "step1": "Open your phone's Settings → Apps → EaseCab",
+    "step2": "Tap Permissions → {perm}",
+    "step3": "Choose Allow, then come back here",
+    "browser": "Using EaseCab in Chrome? Tap the icon left of the address bar → Permissions.",
+    "retry": "I've turned it on",
+    "later": "Not now",
+    "perm": {
+      "notifications": "Notifications",
+      "location": "Location"
+    }
   }
 }

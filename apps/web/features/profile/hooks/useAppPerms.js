@@ -28,7 +28,14 @@ export function useAppPerms() {
     }
   }, [])
 
-  useEffect(() => { readPush(); readLocation() }, [readPush, readLocation])
+  useEffect(() => {
+    const read = () => { readPush(); readLocation() }
+    read()
+    // Coming back from phone Settings after un-blocking: refresh without a reload.
+    const onVisible = () => { if (document.visibilityState === 'visible') read() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [readPush, readLocation])
 
   const requestPush = useCallback(async () => {
     await requestPermissionAndToken() // surfaces the OS prompt (reused from notifications)

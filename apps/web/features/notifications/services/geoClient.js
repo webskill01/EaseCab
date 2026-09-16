@@ -2,6 +2,19 @@
  * Geolocation boundary (Step 23). Resolves `{ lat, lng }` or rejects. E2E mode
  * uses `window.__ecGeoSeam`. The OS prompt fires inside getCurrentPosition.
  */
+/**
+ * True when location is explicitly blocked (browsers won't re-prompt). Best-effort:
+ * browsers without the Permissions API report false, so callers just fail quietly as before.
+ * @returns {Promise<boolean>}
+ */
+export async function geoDenied() {
+  try {
+    return (await navigator.permissions.query({ name: 'geolocation' })).state === 'denied'
+  } catch {
+    return false
+  }
+}
+
 export function getCurrentPosition() {
   if (process.env.NEXT_PUBLIC_E2E === 'true') return window.__ecGeoSeam.getCurrentPosition()
   return new Promise((resolve, reject) => {

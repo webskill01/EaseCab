@@ -8,6 +8,7 @@ import { CityPicker } from '@/features/rides/components/CityPicker'
 import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
 import { permissionState } from '../lib/pushFlow'
+import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
 
 // Design-spec §7.3 "up to 5 city slots". Always ≤ the server cap (25), so valid.
 const ALERT_CITIES_MAX = 5
@@ -42,6 +43,7 @@ export function DutyAlertsOverlay({ onClose }) {
   // impossible, so the toggle can never flip on and we must tell the user where to fix it
   // (10.1-b: the toggle silently snapping back read as "won't activate").
   const [blocked, setBlocked] = useState(false)
+  const [help, setHelp] = useState(false)
 
   // Seed local slots + the master-toggle state once preferences arrive.
   useEffect(() => {
@@ -72,6 +74,7 @@ export function DutyAlertsOverlay({ onClose }) {
       // Denied/unsupported can't be re-prompted — surface the "blocked" hint instead of
       // silently snapping the toggle back off (10.1-b).
       setBlocked(!granted)
+      if (!granted && res.permission === 'denied') setHelp(true) // can't re-prompt — show how to fix
       if (granted && res.city && !ids.has(res.city.id) && slots.length < ALERT_CITIES_MAX) {
         setSlots((cur) => [...cur, { id: res.city.id, name: res.city.canonicalName }])
       }
@@ -93,10 +96,11 @@ export function DutyAlertsOverlay({ onClose }) {
           <Toggle on={notifOn} onChange={toggleNotif} label={t('dutyAlerts.notifLabel')} />
         </div>
         {blocked && (
-          <p role="alert" className="mt-2 rounded-xl bg-ec-warnBg px-3.5 py-2.5 text-[12.5px] font-semibold leading-snug text-ec-amberTx">
+          <button type="button" role="alert" onClick={() => setHelp(true)} className="mt-2 w-full rounded-xl bg-ec-warnBg px-3.5 py-2.5 text-left text-[12.5px] font-semibold leading-snug text-ec-amberTx">
             {t('dutyAlerts.blockedHint')}
-          </p>
+          </button>
         )}
+        {help && <PermBlockedSheet kind={BLOCKED_PERM.NOTIFICATIONS} onRetry={() => toggleNotif(true)} onClose={() => setHelp(false)} />}
 
         <div className="mt-5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-[16px] font-extrabold text-ec-ink">

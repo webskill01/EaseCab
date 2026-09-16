@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { prewarmOtp } from '@/features/auth/services/otpClient'
 import { useOtpLogin } from '@/features/auth/hooks/useOtpLogin'
 import { PhoneForm } from '@/features/auth/components/PhoneForm'
 import { OtpForm } from '@/features/auth/components/OtpForm'
@@ -18,6 +20,7 @@ const STEPS = ['phone', 'otp', 'perms']
 export default function LoginPage() {
   useTranslations('auth')
   const s = useOtpLogin()
+  useEffect(() => { prewarmOtp() }, [])
 
   return (
     <main className="mx-auto flex min-h-[100svh] max-w-md flex-col bg-white">

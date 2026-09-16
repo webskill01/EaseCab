@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Pin, BellEdit, Lock, Check, Shield, ChevR } from '@/components/ui/icons'
 import { requestPermissionAndToken } from '@/features/notifications/services/fcmClient'
 import { getCurrentPosition } from '@/features/notifications/services/geoClient'
+import { PermBlockedSheet } from '@/features/notifications/components/PermBlockedSheet'
 
 const ITEMS = [
   ['notifications', BellEdit],
@@ -24,6 +25,7 @@ export function PermissionsStep({ onContinue }) {
   const [granted, setGranted] = useState({})
   const [denied, setDenied] = useState({})
   const [busy, setBusy] = useState(false)
+  const [help, setHelp] = useState(null) // key of a blocked permission whose fix dialog is open
   const allOn = ITEMS.every(([k]) => granted[k])
   // A blocked permission can only be re-enabled in browser settings, so a denial has
   // to advance the step too — otherwise the user is stuck on a button that does nothing.
@@ -33,7 +35,10 @@ export function PermissionsStep({ onContinue }) {
     notifications: async () => {
       const { permission } = await requestPermissionAndToken()
       if (permission === 'granted') setGranted((g) => ({ ...g, notifications: true }))
-      else setDenied((d) => ({ ...d, notifications: true }))
+      else {
+        if (denied.notifications) setHelp('notifications') // tapped again while blocked
+        setDenied((d) => ({ ...d, notifications: true }))
+      }
     },
     location: async () => {
       try {
@@ -42,7 +47,10 @@ export function PermissionsStep({ onContinue }) {
       } catch (err) {
         // code 1 = PERMISSION_DENIED; unavailable/timeout still means permission granted
         if (err?.code && err.code !== 1) setGranted((g) => ({ ...g, location: true }))
-        else setDenied((d) => ({ ...d, location: true }))
+        else {
+          if (denied.location) setHelp('location') // tapped again while blocked
+          setDenied((d) => ({ ...d, location: true }))
+        }
       }
     },
   }
@@ -130,6 +138,7 @@ export function PermissionsStep({ onContinue }) {
           {t('perms.notNow')}
         </Button>
       </div>
+      {help && <PermBlockedSheet kind={help} onRetry={() => fire([help])} onClose={() => setHelp(null)} />}
     </div>
   )
 }

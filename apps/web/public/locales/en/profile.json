@@ -112,7 +112,8 @@
     "blocked": "Blocked",
     "phoneHint": "Phone settings",
     "done": "Done",
-    "hint": "You can change these anytime in your phone settings"
+    "hint": "You can change these anytime in your phone settings",
+    "fix": "Fix"
   },
   "deleteAccount": {
     "action": "Delete account",

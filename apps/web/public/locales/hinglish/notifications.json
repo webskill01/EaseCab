@@ -22,5 +22,19 @@
   "error": {
     "geo": "Aapki location nahi mili.",
     "noCity": "Paas koi city nahi mili."
+  },
+  "permHelp": {
+    "title": "{perm} band hai",
+    "intro": "Aapne pehle ise block kiya tha, isliye EaseCab dobara nahi pooch sakta. 3 steps mein wapas chalu karein:",
+    "step1": "Phone ki Settings → Apps → EaseCab kholein",
+    "step2": "Permissions → {perm} par tap karein",
+    "step3": "Allow chunein, phir yahan wapas aayein",
+    "browser": "Chrome mein use kar rahe hain? Address bar ke left wale icon par tap karein → Permissions.",
+    "retry": "Maine chalu kar diya",
+    "later": "Abhi nahi",
+    "perm": {
+      "notifications": "Notifications",
+      "location": "Location"
+    }
   }
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { BellEdit, Pin, Trash } from '@/components/ui/icons'
@@ -8,6 +9,8 @@ import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
 import { useNearestCity } from '../hooks/useNearestCity'
 import { permissionState } from '../lib/pushFlow'
+import { geoDenied } from '../services/geoClient'
+import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
 
 // SCREENS §6 "up to 5 city slots" (visual SoT). Always ≤ the server cap (25), so valid.
 const ALERT_CITIES_MAX = 5
@@ -33,6 +36,7 @@ export function NotificationSettings() {
   const { prefs, isLoading, isError, update } = usePushPreferences()
   const alerts = useEnableAlerts()
   const nearest = useNearestCity()
+  const [help, setHelp] = useState(null) // BLOCKED_PERM while the fix dialog is open
 
   if (isLoading) return <div className="text-ec-ink40">…</div>
   if (isError || !prefs) return <p className="text-[13px] font-semibold text-ec-danger">{t('error.load')}</p>
@@ -46,6 +50,7 @@ export function NotificationSettings() {
   const useMyLocation = async () => {
     const city = await nearest.locate()
     if (city) addCity({ id: city.id, name: city.canonicalName })
+    else if (await geoDenied()) setHelp(BLOCKED_PERM.LOCATION)
   }
 
   return (
@@ -60,7 +65,7 @@ export function NotificationSettings() {
         <Button
           type="button"
           size="md"
-          onClick={() => alerts.enable()}
+          onClick={() => (permissionState() === 'denied' ? setHelp(BLOCKED_PERM.NOTIFICATIONS) : alerts.enable())}
           disabled={alerts.isEnabling}
           className="mt-3 w-full"
         >
@@ -98,6 +103,13 @@ export function NotificationSettings() {
           </div>
         )}
       </div>
+      {help && (
+        <PermBlockedSheet
+          kind={help}
+          onRetry={help === BLOCKED_PERM.LOCATION ? useMyLocation : () => alerts.enable()}
+          onClose={() => setHelp(null)}
+        />
+      )}
     </section>
   )
 }

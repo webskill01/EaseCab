@@ -112,7 +112,8 @@
     "blocked": "Blocked",
     "phoneHint": "Phone settings",
     "done": "Done",
-    "hint": "Aap inhe kabhi bhi apni phone settings me badal sakte ho"
+    "hint": "Aap inhe kabhi bhi apni phone settings me badal sakte ho",
+    "fix": "Theek karein"
   },
   "deleteAccount": {
     "action": "Delete account",

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Lock, Pin, BellEdit, Battery, Check } from '@/components/ui/icons'
 import { PERM } from '../lib/appPerms'
 import { useAppPerms } from '../hooks/useAppPerms'
+import { PermBlockedSheet, BLOCKED_PERM } from '@/features/notifications/components/PermBlockedSheet'
 
 /** Left icon tile — green/filled once granted, sky/outline otherwise (mockup PermsSheet). */
 function PermTile({ icon, granted }) {
@@ -22,7 +24,7 @@ function PermTile({ icon, granted }) {
  * GRANTED shows a check; PROMPT shows an Allow button; DENIED/UNSUPPORTED are read-only
  * with a hint (a denied web permission can't be re-prompted; battery has no web API).
  */
-function PermRow({ icon, title, sub, state, hint, onAllow }) {
+function PermRow({ icon, title, sub, state, hint, onAllow, onFix }) {
   const t = useTranslations('profile')
   const granted = state === PERM.GRANTED
   return (
@@ -37,6 +39,10 @@ function PermRow({ icon, title, sub, state, hint, onAllow }) {
       ) : state === PERM.PROMPT && onAllow ? (
         <Button type="button" size="sm" onClick={onAllow} className="h-auto shrink-0 rounded-[10px] px-3.5 py-2 text-[12.5px]">
           {t('perms.allow')}
+        </Button>
+      ) : state === PERM.DENIED && onFix ? (
+        <Button type="button" size="sm" variant="outline" onClick={onFix} className="h-auto shrink-0 rounded-[10px] px-3.5 py-2 text-[12.5px]">
+          {t('perms.fix')}
         </Button>
       ) : (
         <span className="shrink-0 text-[11.5px] font-bold text-ec-ink40">{hint}</span>
@@ -54,14 +60,16 @@ function PermRow({ icon, title, sub, state, hint, onAllow }) {
 export function AppPermsSheet({ onClose }) {
   const t = useTranslations('profile')
   const { push, location, requestPush, requestLocation } = useAppPerms()
+  const [help, setHelp] = useState(null) // BLOCKED_PERM value while the fix dialog is open
   const blockedHint = (state) => (state === PERM.DENIED ? t('perms.blocked') : t('perms.phoneHint'))
   return (
+    <>
     <BottomSheet onClose={onClose} label={t('perms.title')}>
       <SheetTitle icon={<Lock size={20} />} tone="sky" title={t('perms.title')} sub={t('perms.sub')} />
 
       <div className="flex flex-col gap-2.5">
-        <PermRow icon={<Pin size={20} />} title={t('perms.location')} sub={t('perms.locationSub')} state={location} hint={blockedHint(location)} onAllow={requestLocation} />
-        <PermRow icon={<BellEdit size={20} />} title={t('perms.push')} sub={t('perms.pushSub')} state={push} hint={blockedHint(push)} onAllow={requestPush} />
+        <PermRow icon={<Pin size={20} />} title={t('perms.location')} sub={t('perms.locationSub')} state={location} hint={blockedHint(location)} onAllow={requestLocation} onFix={() => setHelp(BLOCKED_PERM.LOCATION)} />
+        <PermRow icon={<BellEdit size={20} />} title={t('perms.push')} sub={t('perms.pushSub')} state={push} hint={blockedHint(push)} onAllow={requestPush} onFix={() => setHelp(BLOCKED_PERM.NOTIFICATIONS)} />
         <PermRow icon={<Battery size={20} />} title={t('perms.battery')} sub={t('perms.batterySub')} state={PERM.UNSUPPORTED} hint={t('perms.phoneHint')} />
       </div>
 
@@ -70,5 +78,14 @@ export function AppPermsSheet({ onClose }) {
       </Button>
       <p className="mt-2.5 text-center text-[11.5px] font-medium text-ec-ink40">{t('perms.hint')}</p>
     </BottomSheet>
+    {/* Sibling, not child: the sheet panel's transform would trap a nested fixed dialog. */}
+    {help && (
+      <PermBlockedSheet
+        kind={help}
+        onRetry={help === BLOCKED_PERM.LOCATION ? requestLocation : requestPush}
+        onClose={() => setHelp(null)}
+      />
+    )}
+    </>
   )
 }
