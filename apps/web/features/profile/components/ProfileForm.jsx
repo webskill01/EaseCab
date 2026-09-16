@@ -60,10 +60,15 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
           </div>
         </div>
       ) : (
-        <label className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <span className="text-[13px] font-bold text-ec-ink60">{t('fields.baseCity')}</span>
-          <input className={field} value={f.baseCity} onChange={(e) => set({ baseCity: e.target.value })} aria-label={t('fields.baseCity')} />
-        </label>
+          {/* Same city dropdown as working city, so base city is a real city, not free text. */}
+          <CityPicker
+            label={t('fields.baseCity')}
+            value={f.baseCity ? { id: null, name: f.baseCity } : null}
+            onPick={(c) => set({ baseCity: c.name })}
+          />
+        </div>
       )}
 
       {/* Working city — typeahead picker (mockup uses a city dropdown), so it resolves
@@ -127,7 +132,7 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
             {PROFILE_LANGUAGES.map((l) => {
               const on = f.languages.includes(l)
               return (
-                <button key={l} type="button" aria-pressed={on} onClick={() => toggleLang(l)}
+                <button key={l} type="button" aria-pressed={on} onClick={() => { toggleLang(l); setLangOpen(false) }}
                   className={`flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-bold ${on ? 'bg-ec-sky text-ec-blue' : 'border-[1.5px] border-ec-line text-ec-ink'}`}>
                   {l}{on && <Check size={14} className="text-ec-blue" />}
                 </button>

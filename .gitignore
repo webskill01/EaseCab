@@ -92,3 +92,4 @@ dump.rdb
 
 # Design prototype (reference only — runnable mockup, not app source)
 /EaseCab/
+.claude/skills/

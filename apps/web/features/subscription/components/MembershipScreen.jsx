@@ -84,7 +84,9 @@ export function MembershipScreen() {
         : t('expired.note')
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-ec-bg p-4">
+    // Block + space-y, not flex-col: flex children with overflow-hidden (PlanCard) get
+    // min-height:0 and shrink, so on short screens the plan card was cut off.
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-ec-bg p-4">
       <h1 className="text-[20px] font-extrabold text-ec-ink">{t('title')}</h1>
 
       {checkout.succeeded ? (
