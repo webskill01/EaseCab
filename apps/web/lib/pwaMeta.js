@@ -6,7 +6,9 @@
 // darker & low-saturation so the OS bars recede instead of competing with the UI. The
 // bright brand blue (#4D8DF6) stays the in-app accent (tailwind ec-blue).
 export const THEME_COLOR = '#12233F'
-export const BACKGROUND_COLOR = '#FFFFFF'
+// Splash background = the app icon's own blue, so the launch logo blends in instead of
+// sitting as a blue tile on white. The TWA splash must use the same value at build time.
+export const BACKGROUND_COLOR = '#2C67E7'
 export const ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512]
 
 /** Full manifest icon array: one "any" icon per size + a dedicated maskable 512. */

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { Steer, ChevL } from '@/components/ui/icons'
+import Image from 'next/image'
+import { ChevL } from '@/components/ui/icons'
 
 /**
  * Onboarding step 2 — OTP (docs/design/SCREENS.md §1, prototype login.jsx OtpStep).
@@ -45,9 +46,7 @@ export function OtpForm({ phone, onSubmit, onChangeNumber, loading, error }) {
 
       {/* compact brandmark */}
       <div className="mt-2 flex items-center gap-[11px]">
-        <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[13px] bg-ec-blue text-white shadow-ec-blue">
-          <Steer size={27} />
-        </div>
+        <Image src="/icons/icon-192.png" alt="EaseCab" width={46} height={46} priority className="shrink-0 rounded-[13px] shadow-ec-blue" />
         <div>
           <p className="text-[18px] font-extrabold leading-none tracking-tight text-ec-ink">{t('brand.name')}</p>
           <p className="mt-[3px] text-[11.5px] font-semibold text-ec-ink40">{t('brand.tagline')}</p>

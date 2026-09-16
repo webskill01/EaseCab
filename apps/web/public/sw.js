@@ -2,7 +2,8 @@
 // EaseCab app-shell service worker (Step 25). Hand-rolled; owns scope '/'. The
 // FCM worker (firebase-messaging-sw.js) is registered at a narrower scope
 // (/firebase-cloud-messaging-push-scope) so the two coexist without clashing.
-const CACHE = 'easecab-shell-v1'
+// v2: purges RSC payloads the v1 catch-all cached (stale language after a switch).
+const CACHE = 'easecab-shell-v2'
 const OFFLINE_URL = '/offline'
 // Only precache URLs guaranteed to exist (icons cache lazily at runtime so a
 // not-yet-generated icon can never fail install via addAll).
@@ -47,7 +48,10 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Static GET: cache-first with runtime fill.
+  // Static GET: cache-first with runtime fill — immutable assets ONLY. Everything else
+  // (RSC payloads `?_rsc=`, locale-dependent data) must hit the network: caching an RSC
+  // payload served the old language after a switch until a hard refresh.
+  if (!/^\/(_next\/static|icons|images)\//.test(url.pathname)) return
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached
