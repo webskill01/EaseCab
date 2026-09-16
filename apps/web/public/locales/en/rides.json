@@ -10,7 +10,9 @@
     "postedAt": "Posted",
     "viewProfile": "View Profile",
     "verifiedDriver": "Verified Driver",
-    "unknownCity": "—"
+    "unknownCity": "—",
+    "yearsExp": "{count} yrs exp",
+    "aadhaarVerified": "Aadhaar verified"
   },
   "status": {
     "fresh": "Fresh",
@@ -22,11 +24,7 @@
     "minAgo": "{count} min ago",
     "hourAgo": "{count} h ago",
     "today": "Today",
-    "tomorrow": "Tomorrow",
-    "hoursShort": "{count}h ago",
-    "hoursMinShort": "{count}h {sub}m ago",
-    "daysShort": "{count}d ago",
-    "daysHrShort": "{count}d {sub}h ago"
+    "tomorrow": "Tomorrow"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -90,7 +88,9 @@
     "errorGone": "This ride is no longer available.",
     "errorNetwork": "No connection. Check your internet and try again.",
     "retry": "Try again",
-    "advanceWarning": "Never pay any advance to a driver you don't know or trust. EaseCab only shares leads — it never handles payments."
+    "advanceWarning": "Never pay any advance to a driver you don't know or trust. EaseCab only shares leads — it never handles payments.",
+    "warningTitle": "Never pay any advance",
+    "numberLabel": "Contact number"
   },
   "report": {
     "title": "Report ride",

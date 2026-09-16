@@ -44,9 +44,12 @@ describe('RideCard', () => {
 
   it('verified ride with a poster shows the poster block and links to their profile', async () => {
     const user = userEvent.setup()
-    const ride = botRide({ kind: 'verified', status: 'verified', posterId: 'u9', posterName: 'Gurpreet', posterBaseCity: 'Patiala', verifiedDriver: true })
+    const ride = botRide({ kind: 'verified', status: 'verified', posterId: 'u9', posterName: 'Gurpreet', posterBaseCity: 'Patiala', verifiedDriver: true, posterPhotoUrl: 'https://cdn/dp.jpg', posterExperience: 6, posterAadhaarVerified: true })
     renderWithIntl(<RideCard ride={ride} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
     expect(screen.getByText('Gurpreet')).toBeInTheDocument()
+    expect(document.querySelector('img[src="https://cdn/dp.jpg"]')).not.toBeNull()
+    expect(screen.getByText('Aadhaar verified')).toBeInTheDocument()
+    expect(screen.getByText('Patiala · 6 yrs exp')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /view profile/i }))
     expect(push).toHaveBeenCalledWith('/u/u9')
   })

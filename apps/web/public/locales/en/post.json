@@ -32,10 +32,19 @@
     "useForm": "Use the form instead"
   },
   "gate": {
-    "title": "Get verified to post",
-    "body": "Complete Aadhaar verification to post duties to the feed.",
-    "cta": "Verify now",
-    "notNow": "Not now"
+    "title": "Complete your profile to post",
+    "body": "Only verified members can post duties. Finish these 2 steps first:",
+    "stepAadhaar": "Aadhaar verification",
+    "stepAadhaarSub": "Quick OTP check on your Aadhaar-linked mobile",
+    "stepProfile": "Complete profile",
+    "stepProfileSub": "Photo, name, about you, base city, vehicle and language",
+    "done": "Done",
+    "pending": "Pending",
+    "ctaAadhaar": "Verify Aadhaar",
+    "ctaProfile": "Complete profile",
+    "notNow": "Not now",
+    "banner": "Verify Aadhaar and complete your profile to post duties.",
+    "bannerCta": "See steps"
   },
   "success": {
     "title": "Duty posted",

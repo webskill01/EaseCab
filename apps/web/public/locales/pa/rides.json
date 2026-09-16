@@ -10,7 +10,9 @@
     "postedAt": "ਪੋਸਟ",
     "viewProfile": "ਪ੍ਰੋਫਾਈਲ",
     "verifiedDriver": "ਵੈਰੀਫਾਈਡ ਡਰਾਈਵਰ",
-    "unknownCity": "—"
+    "unknownCity": "—",
+    "yearsExp": "{count} ਸਾਲ ਤਜਰਬਾ",
+    "aadhaarVerified": "ਆਧਾਰ ਪ੍ਰਮਾਣਿਤ"
   },
   "status": {
     "fresh": "ਨਵੀਂ",
@@ -22,11 +24,7 @@
     "minAgo": "{count} ਮਿੰਟ ਪਹਿਲਾਂ",
     "hourAgo": "{count} ਘੰਟੇ ਪਹਿਲਾਂ",
     "today": "ਅੱਜ",
-    "tomorrow": "ਕੱਲ੍ਹ",
-    "hoursShort": "{count} ਘੰ ਪਹਿਲਾਂ",
-    "hoursMinShort": "{count} ਘੰ {sub} ਮਿੰ ਪਹਿਲਾਂ",
-    "daysShort": "{count} ਦਿਨ ਪਹਿਲਾਂ",
-    "daysHrShort": "{count} ਦਿਨ {sub} ਘੰ ਪਹਿਲਾਂ"
+    "tomorrow": "ਕੱਲ੍ਹ"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -90,7 +88,9 @@
     "errorGone": "ਇਹ ਰਾਈਡ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।",
     "errorNetwork": "ਕੋਈ ਕਨੈਕਸ਼ਨ ਨਹੀਂ। ਆਪਣਾ ਇੰਟਰਨੈੱਟ ਜਾਂਚੋ ਅਤੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
     "retry": "ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
-    "advanceWarning": "ਜਿਸ ਡਰਾਈਵਰ ਨੂੰ ਤੁਸੀਂ ਨਹੀਂ ਜਾਣਦੇ ਜਾਂ ਭਰੋਸਾ ਨਹੀਂ, ਉਸ ਨੂੰ ਕਦੇ ਵੀ ਐਡਵਾਂਸ ਭੁਗਤਾਨ ਨਾ ਕਰੋ। EaseCab ਸਿਰਫ਼ ਲੀਡ ਦਿੰਦਾ ਹੈ, ਭੁਗਤਾਨ ਨਹੀਂ ਸੰਭਾਲਦਾ।"
+    "advanceWarning": "ਜਿਸ ਡਰਾਈਵਰ ਨੂੰ ਤੁਸੀਂ ਨਹੀਂ ਜਾਣਦੇ ਜਾਂ ਭਰੋਸਾ ਨਹੀਂ, ਉਸ ਨੂੰ ਕਦੇ ਵੀ ਐਡਵਾਂਸ ਭੁਗਤਾਨ ਨਾ ਕਰੋ। EaseCab ਸਿਰਫ਼ ਲੀਡ ਦਿੰਦਾ ਹੈ, ਭੁਗਤਾਨ ਨਹੀਂ ਸੰਭਾਲਦਾ।",
+    "warningTitle": "ਕਦੇ ਵੀ ਐਡਵਾਂਸ ਪੇਮੈਂਟ ਨਾ ਕਰੋ",
+    "numberLabel": "ਸੰਪਰਕ ਨੰਬਰ"
   },
   "report": {
     "title": "ਰਾਈਡ ਦੀ ਰਿਪੋਰਟ ਕਰੋ",

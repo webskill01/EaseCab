@@ -131,6 +131,15 @@ module.exports = {
           '0%': { transform: 'translateY(0)' },
           '100%': { transform: 'translateY(100%)' },
         },
+        // Centered dialog variant: small scale + fade (contact popup).
+        'ec-dialog-in': {
+          '0%': { transform: 'scale(0.94)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'ec-dialog-out': {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '100%': { transform: 'scale(0.96)', opacity: '0' },
+        },
       },
       animation: {
         'ec-pop': 'ec-pop 0.45s cubic-bezier(0.16,1,0.3,1) both',
@@ -145,6 +154,8 @@ module.exports = {
         'ec-sheet-up': 'ec-sheet-up 0.28s cubic-bezier(0.16,1,0.3,1) both',
         'ec-scrim-out': 'ec-scrim-out 0.2s ease-in both',
         'ec-sheet-down': 'ec-sheet-down 0.24s cubic-bezier(0.4,0,1,1) both',
+        'ec-dialog-in': 'ec-dialog-in 0.22s cubic-bezier(0.16,1,0.3,1) both',
+        'ec-dialog-out': 'ec-dialog-out 0.16s ease-in both',
         // In-flow page entrance (no fill-mode, so it ends at transform:none and never
         // becomes a containing block for fixed-position sheets/overlays inside the page).
         'ec-page-rise': 'ec-page-rise 0.2s ease-out',

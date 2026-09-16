@@ -10,7 +10,8 @@ const POSTED_PUBLIC_SELECT = Object.freeze({
   postedBy: true,
   // Verified-driver poster block on the feed card (dirA). Name is public (§3.10 —
   // PII is phone/Aadhaar, not display name); flags derive the Verified badge.
-  poster: { select: { name: true, baseCity: true, aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true } },
+  // profilePicUrl is the public-tier DP URL (never a private KYC key); experience is a public profile stat.
+  poster: { select: { name: true, baseCity: true, profilePicUrl: true, experience: true, aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true } },
   fromCityId: true,
   toCityId: true,
   fromCityRaw: true,

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { X } from '@/components/ui/icons'
 
 /**
  * Bottom-sheet host (appshell.jsx SheetHost) — the soft-gate surface (§ soft gate).
@@ -11,9 +12,11 @@ import { useCallback, useEffect, useState } from 'react'
  * sheet mirrors the slide-in instead of snapping away. The caller still controls mount
  * via conditional rendering.
  *
- * @param {{ onClose: () => void, label?: string, children: React.ReactNode }} props
+ * `centered` renders the same host as a centered dialog card (scale-fade, no grabber).
+ *
+ * @param {{ onClose: () => void, label?: string, centered?: boolean, closeLabel?: string, children: React.ReactNode }} props
  */
-export function BottomSheet({ onClose, label, children }) {
+export function BottomSheet({ onClose, label, centered = false, closeLabel, children }) {
   const [closing, setClosing] = useState(false)
   // Animate the exit, then unmount on animationend. When motion is reduced the panel
   // has no exit animation (so animationend never fires) — close immediately instead.
@@ -35,7 +38,7 @@ export function BottomSheet({ onClose, label, children }) {
   const onPanelAnimEnd = () => { if (closing) onClose() }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className={`fixed inset-0 z-50 flex flex-col ${centered ? 'items-center justify-center px-4' : 'justify-end'}`}>
       <div
         className={`absolute inset-0 bg-ec-ink/45 motion-reduce:animate-none ${closing ? 'animate-ec-scrim-out' : 'animate-ec-scrim-in'}`}
         onClick={requestClose}
@@ -46,9 +49,18 @@ export function BottomSheet({ onClose, label, children }) {
         aria-modal="true"
         aria-label={label}
         onAnimationEnd={onPanelAnimEnd}
-        className={`relative max-h-[88%] overflow-y-auto rounded-t-[22px] bg-white px-[18px] pb-5 pt-2.5 shadow-[0_-10px_40px_rgba(15,23,42,0.2)] motion-reduce:animate-none ${closing ? 'animate-ec-sheet-down' : 'animate-ec-sheet-up'}`}
+        className={
+          centered
+            ? `relative max-h-[88%] w-full max-w-sm overflow-y-auto rounded-[22px] bg-white p-[18px] shadow-[0_20px_60px_rgba(15,23,42,0.3)] motion-reduce:animate-none ${closing ? 'animate-ec-dialog-out' : 'animate-ec-dialog-in'}`
+            : `relative max-h-[88%] overflow-y-auto rounded-t-[22px] bg-white px-[18px] pb-5 pt-2.5 shadow-[0_-10px_40px_rgba(15,23,42,0.2)] motion-reduce:animate-none ${closing ? 'animate-ec-sheet-down' : 'animate-ec-sheet-up'}`
+        }
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-[3px] bg-ec-line" />
+        {!centered && <div className="mx-auto mb-4 h-1 w-10 rounded-[3px] bg-ec-line" />}
+        {centered && closeLabel && (
+          <button type="button" onClick={requestClose} aria-label={closeLabel} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ec-bg text-ec-ink60">
+            <X size={16} />
+          </button>
+        )}
         {children}
       </div>
     </div>

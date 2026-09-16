@@ -10,7 +10,9 @@
     "postedAt": "पोस्ट",
     "viewProfile": "प्रोफ़ाइल",
     "verifiedDriver": "वेरिफाइड ड्राइवर",
-    "unknownCity": "—"
+    "unknownCity": "—",
+    "yearsExp": "{count} साल अनुभव",
+    "aadhaarVerified": "आधार सत्यापित"
   },
   "status": {
     "fresh": "नई",
@@ -22,11 +24,7 @@
     "minAgo": "{count} मिनट पहले",
     "hourAgo": "{count} घंटे पहले",
     "today": "आज",
-    "tomorrow": "कल",
-    "hoursShort": "{count} घं पहले",
-    "hoursMinShort": "{count} घं {sub} मि पहले",
-    "daysShort": "{count} दि पहले",
-    "daysHrShort": "{count} दि {sub} घं पहले"
+    "tomorrow": "कल"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -90,7 +88,9 @@
     "errorGone": "यह राइड अब उपलब्ध नहीं है।",
     "errorNetwork": "कोई कनेक्शन नहीं। अपना इंटरनेट जांचें और फिर कोशिश करें।",
     "retry": "फिर कोशिश करें",
-    "advanceWarning": "जिस ड्राइवर को आप नहीं जानते या जिस पर भरोसा नहीं, उसे कभी एडवांस पेमेंट न करें। EaseCab सिर्फ़ लीड देता है, पेमेंट नहीं संभालता।"
+    "advanceWarning": "जिस ड्राइवर को आप नहीं जानते या जिस पर भरोसा नहीं, उसे कभी एडवांस पेमेंट न करें। EaseCab सिर्फ़ लीड देता है, पेमेंट नहीं संभालता।",
+    "warningTitle": "कभी भी एडवांस पेमेंट न करें",
+    "numberLabel": "संपर्क नंबर"
   },
   "report": {
     "title": "राइड रिपोर्ट करें",

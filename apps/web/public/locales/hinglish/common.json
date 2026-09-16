@@ -5,7 +5,8 @@
     "continue": "Continue karein",
     "cancel": "Cancel karein",
     "retry": "Dobara try karein",
-    "back": "Back"
+    "back": "Back",
+    "close": "Band karein"
   },
   "shell": {
     "support": "Support",

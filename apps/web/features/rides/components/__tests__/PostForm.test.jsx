@@ -21,6 +21,13 @@ describe('PostForm', () => {
     expect(screen.getByRole('button', { name: /post ride/i })).toBeDisabled()
   })
 
+  it('a gated (ineligible) user can tap Post on an empty form so the gate opens', () => {
+    const onSubmit = vi.fn()
+    renderWithIntl(<PostForm form={emptyForm()} onChange={() => {}} onSubmit={onSubmit} submitting={false} gated />)
+    fireEvent.click(screen.getByRole('button', { name: /post ride/i }))
+    expect(onSubmit).toHaveBeenCalled()
+  })
+
   it('enables Post and fires onSubmit when the form is complete', () => {
     const onSubmit = vi.fn()
     renderWithIntl(<PostForm form={FULL} onChange={() => {}} onSubmit={onSubmit} submitting={false} />)

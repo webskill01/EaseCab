@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button } from '@/components/ui/button'
-import { Crown, Whatsapp, Phone, Swap, Check, Ban, Shield } from '@/components/ui/icons'
+import { Crown, Whatsapp, Phone, Swap, Ban, Shield, Warning } from '@/components/ui/icons'
 import { contactRide, contactVerifiedRide, logContactRide, logContactVerifiedRide } from '../services/ridesApi'
 import { MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { RIDE_KIND } from '../lib/rideView'
@@ -60,6 +60,7 @@ function RouteLine({ ride }) {
  */
 export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVerify }) {
   const t = useTranslations('rides')
+  const tc = useTranslations('common')
   const qc = useQueryClient()
   const reveal = useMutation({
     // Reveal only shows the number — it no longer writes history, so the Contacted
@@ -91,7 +92,7 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVeri
 
   if (gatedOut) {
     return (
-      <BottomSheet onClose={onClose} label={t('gate.contactTitle')}>
+      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('gate.contactTitle')}>
         <SheetTitle icon={<Crown size={22} />} tone="blue" title={t('gate.contactTitle')} sub={t('gate.contactSub')} />
         <div className="flex flex-col gap-3 pb-2">
           <RouteLine ride={ride} />
@@ -114,7 +115,7 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVeri
   // VERIFICATION_REQUIRED for an unverified user, so route them to verification.
   if (reveal.error?.code === 'VERIFICATION_REQUIRED') {
     return (
-      <BottomSheet onClose={onClose} label={t('gate.verifyTitle')}>
+      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('gate.verifyTitle')}>
         <SheetTitle icon={<Shield size={22} />} tone="blueInk" title={t('gate.verifyTitle')} sub={t('gate.verifyBody')} />
         <div className="flex flex-col gap-2.5 pb-2">
           <RouteLine ride={ride} />
@@ -133,7 +134,7 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVeri
   // the subscription case above, so a remaining error means the reveal genuinely failed.
   if (reveal.isError) {
     return (
-      <BottomSheet onClose={onClose} label={t('reveal.failTitle')}>
+      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('reveal.failTitle')}>
         <SheetTitle icon={<Ban size={22} />} tone="danger" title={t('reveal.failTitle')} sub={t(`reveal.${contactErrorKey(reveal.error)}`)} />
         <div className="flex flex-col gap-3 pb-2">
           <RouteLine ride={ride} />
@@ -147,18 +148,28 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVeri
 
   const phone = reveal.data?.phoneNumber
   return (
-    <BottomSheet onClose={onClose} label={t('reveal.title')}>
-      <SheetTitle icon={<Check size={22} />} tone="success" title={t('reveal.title')} />
-      <div className="flex flex-col gap-3 pb-2">
-        {/* Fraud warning — shown every time before the number/Call/WhatsApp are usable. */}
-        <p role="alert" className="flex items-start gap-2 rounded-ec-card bg-ec-dangerBg px-3.5 py-2.5 text-[12.5px] font-bold leading-snug text-ec-danger">
-          <span className="mt-px shrink-0"><Ban size={15} /></span>
-          {t('reveal.advanceWarning')}
-        </p>
+    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('reveal.title')}>
+      <h2 className="pr-9 text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{t('reveal.title')}</h2>
+      <div className="mt-3.5 flex flex-col gap-3">
         <RouteLine ride={ride} />
-        <div className="rounded-ec-card border border-ec-line bg-ec-bg py-3 text-center text-[20px] font-extrabold tracking-tight text-ec-ink">
-          {phone || '…'}
+
+        <div className="flex items-center gap-3 rounded-ec-card border border-ec-line px-3.5 py-2.5">
+          <span className="inline-flex text-ec-ink40"><Phone size={18} /></span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11.5px] font-semibold text-ec-ink40">{t('reveal.numberLabel')}</p>
+            <p className="text-[15.5px] font-bold tracking-wide text-ec-ink">{phone || '…'}</p>
+          </div>
         </div>
+
+        {/* Fraud warning — shown every time before Call/WhatsApp are usable. */}
+        <div role="alert" className="flex items-start gap-2.5 rounded-ec-card border border-ec-warning/40 bg-ec-warnBg px-3.5 py-3">
+          <span className="mt-0.5 shrink-0 text-ec-warning"><Warning size={20} /></span>
+          <div>
+            <p className="text-[13.5px] font-extrabold text-ec-amberTx">{t('reveal.warningTitle')}</p>
+            <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-ec-amberTx/90">{t('reveal.advanceWarning')}</p>
+          </div>
+        </div>
+
         <div className="flex gap-2">
           <Button asChild size="lg" variant="wa" className={`flex-1 ${phone ? '' : 'pointer-events-none bg-ec-disabled'}`}>
             <a href={phone ? waLink(phone) : undefined} onClick={logContact} target="_blank" rel="noopener noreferrer" aria-disabled={!phone}>

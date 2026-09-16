@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  ageMinFrom, statusOf, relParts, relPartsLong, contactedStamp, vehIconKey, cityLabel, stripUrls, pickCityName,
+  ageMinFrom, statusOf, relParts, historyStamp, vehIconKey, cityLabel, stripUrls, pickCityName,
   rideDateParts, RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
 } from '../rideView'
 
@@ -89,26 +89,14 @@ describe('relParts', () => {
   })
 })
 
-describe('relPartsLong', () => {
-  it('coarsens history ages to hours(+min) under 24h, days(+hours) over', () => {
-    expect(relPartsLong(0)).toEqual({ key: 'justNow' })
-    expect(relPartsLong(45)).toEqual({ key: 'minAgo', count: 45 })
-    expect(relPartsLong(180)).toEqual({ key: 'hoursShort', count: 3 }) // exact 3h
-    expect(relPartsLong(200)).toEqual({ key: 'hoursMinShort', count: 3, sub: 20 }) // 3h 20m
-    expect(relPartsLong(1439)).toEqual({ key: 'hoursMinShort', count: 23, sub: 59 })
-    expect(relPartsLong(1440)).toEqual({ key: 'daysShort', count: 1 }) // exact 1d
-    expect(relPartsLong(1440 + 300)).toEqual({ key: 'daysHrShort', count: 1, sub: 5 }) // 1d 5h
-  })
-})
-
-describe('contactedStamp', () => {
+describe('historyStamp', () => {
   it('formats an absolute IST date + time, null for missing/invalid', () => {
     // 2026-06-01T00:00Z = 05:30 IST
-    const s = contactedStamp('2026-06-01T00:00:00.000Z', 'en')
+    const s = historyStamp('2026-06-01T00:00:00.000Z', 'en')
     expect(s).toMatch(/01 Jun/)
     expect(s).toMatch(/5:30/)
-    expect(contactedStamp(null)).toBeNull()
-    expect(contactedStamp('not-a-date')).toBeNull()
+    expect(historyStamp(null)).toBeNull()
+    expect(historyStamp('not-a-date')).toBeNull()
   })
 })
 

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { Swap, Shield, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
+import { Swap, Shield, Check, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
 import { statusOf, relParts, ageMinFrom, vehIconKey, pickCityName, rideDateParts, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
 /** Status pill — Fresh (green dot) / Likely-booked (blue dot) / Verified (shield). */
@@ -81,23 +81,37 @@ function CardActions({ ride, disabled, onContact, onReport }) {
   )
 }
 
-/** Verified-ride poster block (dirA): initials avatar + name + Verified-driver line,
- * with a "View profile" button → /u/[id]. Only rendered when the ride carries a posterId. */
+/** Verified-ride poster block (dirA): profile photo (initial fallback) + name + trust line
+ * (Aadhaar verified · base city · experience), with a "View profile" button → /u/[id].
+ * Only rendered when the ride carries a posterId. */
 function PosterRow({ ride }) {
   const t = useTranslations('rides')
   const router = useRouter()
   const initial = (ride.posterName || '?').trim().charAt(0).toUpperCase()
+  const meta = [
+    ride.posterBaseCity,
+    ride.posterExperience != null ? t('card.yearsExp', { count: ride.posterExperience }) : null,
+  ].filter(Boolean).join(' · ')
   return (
-    <div className="mt-2 flex items-center gap-2.5 border-t border-ec-line pt-2">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[15px] font-extrabold text-ec-blue">{initial}</span>
+    <div className="mt-2 flex items-center gap-2.5 border-t border-ec-line pt-2.5">
+      {ride.posterPhotoUrl ? (
+        // Public-tier R2 DP URL; raw <img> like the other avatar surfaces (no next/image remote config).
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={ride.posterPhotoUrl} alt="" loading="lazy" className="h-11 w-11 shrink-0 rounded-full border-2 border-ec-sky object-cover" />
+      ) : (
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ec-sky text-[16px] font-extrabold text-ec-blue">{initial}</span>
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-[13.5px] font-extrabold text-ec-ink">{ride.posterName || '—'}</span>
-          {ride.verifiedDriver && <span className="inline-flex text-ec-success"><Shield size={13} /></span>}
+          <span className="truncate text-[14px] font-extrabold text-ec-ink">{ride.posterName || '—'}</span>
+          {ride.verifiedDriver && <span className="inline-flex shrink-0 text-ec-success" title={t('card.verifiedDriver')}><Shield size={14} /></span>}
         </div>
-        <div className="truncate text-[11.5px] font-medium text-ec-ink60">
-          {[ride.posterBaseCity, ride.verifiedDriver ? t('card.verifiedDriver') : null].filter(Boolean).join(' · ')}
-        </div>
+        {ride.posterAadhaarVerified && (
+          <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-ec-successBg px-1.5 py-px text-[10.5px] font-extrabold text-ec-successTx">
+            <Check size={11} />{t('card.aadhaarVerified')}
+          </span>
+        )}
+        {meta && <div className="mt-0.5 truncate text-[11.5px] font-medium text-ec-ink60">{meta}</div>}
       </div>
       <button
         type="button"

@@ -20,10 +20,12 @@ const LABEL = 'mb-1.5 block text-[12.5px] font-bold uppercase tracking-wide text
  * @param {(patch: object) => void} props.onChange
  * @param {() => void} props.onSubmit
  * @param {boolean} props.submitting
+ * @param {boolean} [props.gated] - ineligible to post: keep the button live so a tap opens the gate
  */
-export function PostForm({ form, onChange, onSubmit, submitting }) {
+export function PostForm({ form, onChange, onSubmit, submitting, gated = false }) {
   const t = useTranslations('post')
-  const postable = isPostable(form)
+  // Gated users get a tappable button even on an empty form — the tap explains the gate.
+  const postable = gated || isPostable(form)
   const pastSlot = Boolean(form.date && form.time && !isFutureDateTime(form.date, form.time))
   const onPhone = (e) => onChange({ phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
 

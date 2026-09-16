@@ -79,6 +79,9 @@ export function toVerifiedVM(p) {
     posterId: p.posterId ?? null, // backs the card's "View profile" link → /u/[id]
     posterName: p.posterName ?? null,
     posterBaseCity: p.posterBaseCity ?? null,
+    posterPhotoUrl: p.posterPhotoUrl ?? null,
+    posterExperience: p.posterExperience ?? null,
+    posterAadhaarVerified: p.posterAadhaarVerified ?? false,
     verifiedDriver: p.verifiedDriver ?? false,
     from: cityLabel(p.fromCityName, p.fromCityRaw),
     to: cityLabel(p.toCityName, p.toCityRaw),

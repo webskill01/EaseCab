@@ -7,6 +7,8 @@ import { Overlay, OverlayHeader } from '@/components/ui/Overlay'
 import { Search, Steer, Check, Pin, X } from '@/components/ui/icons'
 import { allCities } from '../services/citiesApi'
 import { useNearestCity } from '@/features/notifications/hooks/useNearestCity'
+import { geoDenied } from '@/features/notifications/services/geoClient'
+import { PermBlockedSheet, BLOCKED_PERM } from '@/features/notifications/components/PermBlockedSheet'
 import { LOCATION_CHIPS, cityToView, filterCities, groupCitiesByLetter } from '../lib/allLocations'
 
 /**
@@ -28,6 +30,7 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
   const locale = useLocale()
   const [q, setQ] = useState('')
   const nearest = useNearestCity()
+  const [geoHelp, setGeoHelp] = useState(false)
 
   const { data: cities = [], isLoading } = useQuery({ queryKey: ['allCities'], queryFn: allCities, staleTime: 300000 })
 
@@ -46,6 +49,7 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
   const useMyLocation = async () => {
     const city = await nearest.locate()
     if (city && !isOn(city.id)) toggle({ id: city.id, name: city.canonicalName })
+    else if (!city && (await geoDenied())) setGeoHelp(true) // blocked: explain instead of doing nothing
   }
 
   return (
@@ -166,6 +170,7 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
           )}
         </div>
       </div>
+      {geoHelp && <PermBlockedSheet kind={BLOCKED_PERM.LOCATION} onRetry={useMyLocation} onClose={() => setGeoHelp(false)} />}
     </Overlay>
   )
 }

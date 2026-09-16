@@ -1,10 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Check, Trash, Swap } from '@/components/ui/icons'
 import { RouteRow } from './RideCard'
-import { ageMinFrom, relPartsLong } from '../lib/rideView'
+import { historyStamp } from '../lib/rideView'
 import { repostDraftFromPost } from '../lib/postForm'
 import { saveRepostDraft } from '../lib/repostDraft'
 
@@ -29,10 +29,11 @@ function StatusPill({ active, label }) {
  */
 export function MyPostedCard({ post, onMarkDone, onDelete }) {
   const t = useTranslations('mine')
-  const tr = useTranslations('rides')
   const router = useRouter()
   const active = post.status === 'active'
-  const rel = relPartsLong(ageMinFrom(post.createdAt))
+  const locale = useLocale()
+  // Exact posted date + time (IST), same as the Contacted tab — not a relative "ago".
+  const stamp = historyStamp(post.createdAt, locale)
   const onRepost = () => {
     // sourceId rides along so the Post screen can delete this stale original once the
     // repost is published — keeps the verified feed to one fresh listing, not a dupe.
@@ -49,7 +50,7 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
     >
       <div className="mb-2.5 flex items-center justify-between">
         <span className="text-[12px] font-semibold text-ec-ink60">
-          {t('posted.postedAt')} · <b className="font-bold text-ec-ink">{tr(`time.${rel.key}`, { count: rel.count ?? 0, sub: rel.sub ?? 0 })}</b>
+          {t('posted.postedAt')} · <b className="font-bold text-ec-ink">{stamp || '—'}</b>
         </span>
         <div className="flex items-center gap-2">
           {active && (

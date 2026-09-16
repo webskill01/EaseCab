@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Whatsapp, Phone, ChevR } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { RouteRow, StatusBadge } from './RideCard'
-import { contactedStamp } from '../lib/rideView'
+import { historyStamp } from '../lib/rideView'
 
 /** wa.me wants digits only. */
 function waLink(phone) { return `https://wa.me/${String(phone).replace(/[^\d]/g, '')}` }
@@ -21,12 +21,14 @@ export function ContactedCard({ contact }) {
   const locale = useLocale()
   const router = useRouter()
   const verified = contact.kind === 'verified'
-  const stamp = contactedStamp(contact.contactedAt, locale)
+  const stamp = historyStamp(contact.contactedAt, locale)
 
   return (
     <article className="rounded-ec-card border border-ec-line bg-white p-3.5 shadow-ec-card">
       <div className="mb-2.5 flex items-center justify-between">
-        <span className="text-[12px] font-semibold text-ec-ink60">{stamp || '—'}</span>
+        <span className="text-[12px] font-semibold text-ec-ink60">
+          {t('contacted.label')} · <b className="font-bold text-ec-ink">{stamp || '—'}</b>
+        </span>
         {verified
           ? <StatusBadge status="verified" />
           : <span className="text-[11px] font-extrabold uppercase tracking-wide text-ec-ink40">{t('contacted.ridesLabel')}</span>}

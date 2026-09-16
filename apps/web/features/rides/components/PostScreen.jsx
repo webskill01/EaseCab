@@ -7,7 +7,8 @@ import { useTranslations } from 'next-intl'
 import { SuccessBadge } from '@/components/ui/SuccessBadge'
 import { PostForm } from './PostForm'
 import { PasteForm } from './PasteForm'
-import { VerifyGateSheet } from './VerifyGateSheet'
+import { VerifyGateSheet, postEligibility } from './VerifyGateSheet'
+import { Shield, ChevR } from '@/components/ui/icons'
 import { usePostRide } from '../hooks/usePostRide'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { emptyForm, draftToForm } from '../lib/postForm'
@@ -30,6 +31,10 @@ export function PostScreen() {
   const [repostSourceId, setRepostSourceId] = useState(null)
   const post = usePostRide()
   const { data: profile } = useProfile()
+  const [gateOpen, setGateOpen] = useState(false)
+  // Unknown until the profile loads — don't flash the gate; the server 403 still backs it.
+  const gated = Boolean(profile) && !postEligibility(profile).eligible
+  const submit = () => (gated ? setGateOpen(true) : post.submit(form))
 
   // Repost hand-off: a draft stashed by My Rides' Repost chip prefills from/to/
   // vehicle/fare once on mount (then it's consumed). Runs before the phone effect
@@ -106,6 +111,15 @@ export function PostScreen() {
         </div>
       </div>
 
+      {gated && (
+        <button type="button" onClick={() => setGateOpen(true)}
+          className="mx-4 mt-3 flex items-center gap-2.5 rounded-xl border border-ec-warning/40 bg-ec-warnBg px-3.5 py-3 text-left">
+          <span className="shrink-0 text-ec-warning"><Shield size={20} /></span>
+          <span className="flex-1 text-[13px] font-bold leading-snug text-ec-amberTx">{t('gate.banner')}</span>
+          <span className="flex shrink-0 items-center text-[12.5px] font-extrabold text-ec-blue">{t('gate.bannerCta')}<ChevR size={15} /></span>
+        </button>
+      )}
+
       {post.error && (
         <p className="mx-4 mt-3 rounded-xl bg-ec-dangerBg px-3 py-2.5 text-center text-[13px] font-bold text-ec-danger">{t('error.generic')}</p>
       )}
@@ -118,8 +132,9 @@ export function PostScreen() {
           <PostForm
             form={form}
             onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
-            onSubmit={() => post.submit(form)}
+            onSubmit={submit}
             submitting={post.submitting}
+            gated={gated}
           />
         ) : (
           <PasteForm
@@ -128,8 +143,12 @@ export function PostScreen() {
         )}
       </div>
 
-      {post.gated && (
-        <VerifyGateSheet onClose={post.closeGate} onVerify={() => router.push('/verify?intent=l1')} />
+      {(gateOpen || post.gated) && (
+        <VerifyGateSheet
+          profile={profile}
+          onClose={() => { setGateOpen(false); post.closeGate() }}
+          onGo={(path) => router.push(path)}
+        />
       )}
     </div>
   )

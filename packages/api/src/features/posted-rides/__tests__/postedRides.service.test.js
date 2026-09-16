@@ -65,7 +65,7 @@ test('toPublicPostedRide: surfaces joined canonical city names, null when absent
   const named = toPublicPostedRide({
     id: 'p1', postedBy: 'u1', fromCityId: 'c1', toCityId: 'c2', fromCityRaw: 'patiala', toCityRaw: 'delhi',
     fromCity: { canonicalName: 'Patiala' }, toCity: { canonicalName: 'Delhi' },
-    poster: { name: 'Gurpreet', baseCity: 'Patiala', aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true },
+    poster: { name: 'Gurpreet', baseCity: 'Patiala', profilePicUrl: 'https://cdn/dp.jpg', experience: 6, aadhaarVerified: true, dlSubmitted: true, rcSubmitted: true },
     status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date(), phone: '+919876543210',
   });
   assert.equal(named.fromCityName, 'Patiala');
@@ -74,12 +74,17 @@ test('toPublicPostedRide: surfaces joined canonical city names, null when absent
   assert.equal(named.posterId, 'u1');
   assert.equal(named.posterName, 'Gurpreet');
   assert.equal(named.posterBaseCity, 'Patiala');
+  assert.equal(named.posterPhotoUrl, 'https://cdn/dp.jpg');
+  assert.equal(named.posterExperience, 6);
+  assert.equal(named.posterAadhaarVerified, true);
   assert.equal(named.verifiedDriver, true);
   const bare = toPublicPostedRide({ id: 'p2', fromCity: null, status: 'active', isClosed: false, createdAt: new Date(), expiresAt: new Date() });
   assert.equal(bare.fromCityName, null);
   assert.equal(bare.toCityName, null);
   assert.equal(bare.posterId, null);
   assert.equal(bare.posterName, null);
+  assert.equal(bare.posterPhotoUrl, null);
+  assert.equal(bare.posterAadhaarVerified, false);
   assert.equal(bare.verifiedDriver, false); // no poster join → not a verified driver
 });
 

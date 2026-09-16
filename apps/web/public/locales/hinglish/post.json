@@ -32,10 +32,19 @@
     "useForm": "Iske bajaye form use karein"
   },
   "gate": {
-    "title": "Post karne ke liye verify karein",
-    "body": "Feed mein duties post karne ke liye Aadhaar verification poora karein.",
-    "cta": "Abhi verify karein",
-    "notNow": "Abhi nahi"
+    "title": "Post karne ke liye profile poori karein",
+    "body": "Sirf verified members hi duties post kar sakte hain. Pehle ye 2 steps poore karein:",
+    "stepAadhaar": "Aadhaar verification",
+    "stepAadhaarSub": "Aadhaar-linked mobile par chhota sa OTP check",
+    "stepProfile": "Profile poori karein",
+    "stepProfileSub": "Photo, naam, apne baare mein, base city, gaadi aur bhasha",
+    "done": "Ho gaya",
+    "pending": "Baaki hai",
+    "ctaAadhaar": "Aadhaar verify karein",
+    "ctaProfile": "Profile poori karein",
+    "notNow": "Abhi nahi",
+    "banner": "Duties post karne ke liye Aadhaar verify karein aur profile poori karein.",
+    "bannerCta": "Steps dekhein"
   },
   "success": {
     "title": "Duty post ho gayi",
