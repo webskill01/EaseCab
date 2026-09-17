@@ -250,7 +250,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     // Inbound fleet peer API — mounted only when FLEET_SYNC_TOKEN is set.
     if (config.fleet && config.fleet.syncToken) {
       v1.use('/fleet', createFleetSyncRouter({
-        service: adminBotFiltersService, repo: adminBotFiltersRepo, token: config.fleet.syncToken, logger,
+        service: adminBotFiltersService, repo: adminBotFiltersRepo, token: config.fleet.syncToken, redis, logger,
       }));
     }
 

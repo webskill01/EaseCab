@@ -3,7 +3,8 @@
 const crypto = require('node:crypto');
 const express = require('express');
 const { z } = require('zod');
-const { FLEET_FIELDS, HTTP_STATUS } = require('@easecab/shared');
+const { FLEET_FIELDS, FLEET_SYNC_AUTH, HTTP_STATUS, redisKey } = require('@easecab/shared');
+const { fixedWindowIncr } = require('../../lib/rateLimit');
 
 // The fleet panel protocol (control-panel/server.js), byte-for-byte in shape.
 // DELIBERATE EXCEPTION to the { success, data, error, meta } envelope (CLAUDE.md
@@ -28,23 +29,36 @@ function tokenMatches(given, expected) {
  * can list EaseCab in its peers.json as `https://api.easecab.com/api/v1/fleet`.
  * Writes arriving here are applied with `{ mirror: false }` — the sending panel
  * already replays to its own peers. Auth: x-token === FLEET_SYNC_TOKEN (admin role).
- * ponytail: no Redis rate limit — the 32+ char token is the gate; add one if this is ever abused.
+ * Rate limit (CLAUDE.md §6): an IP with FLEET_SYNC_AUTH.MAX_FAILURES bad tokens in the window gets 429,
+ * checked BEFORE the token so a blocked guesser can't land a hit.
  *
  * @param {object} deps
  * @param {ReturnType<import('../admin/adminBotFilters.service').createAdminBotFiltersService>} deps.service
  * @param {ReturnType<import('../admin/adminBotFilters.repository').createAdminBotFiltersRepository>} deps.repo
  * @param {string} deps.token
+ * @param {import('ioredis').Redis} deps.redis
  * @param {{ error: Function }} deps.logger
  * @returns {import('express').Router}
  */
-function createFleetSyncRouter({ service, repo, token, logger }) {
+function createFleetSyncRouter({ service, repo, token, redis, logger }) {
   const router = express.Router();
 
-  router.use((req, res, next) => {
-    if (!tokenMatches(req.headers['x-token'], token)) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Invalid or missing token' });
+  router.use(async (req, res, next) => {
+    try {
+      const failKey = redisKey('fleet', 'auth-fail', req.ip);
+      if (Number(await redis.get(failKey)) >= FLEET_SYNC_AUTH.MAX_FAILURES) {
+        return res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({ error: 'Too many failed attempts' });
+      }
+      if (!tokenMatches(req.headers['x-token'], token)) {
+        await fixedWindowIncr(redis, failKey, FLEET_SYNC_AUTH.WINDOW_SEC);
+        logger.warn({ ip: req.ip }, 'fleet sync: rejected token');
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Invalid or missing token' });
+      }
+      return next();
+    } catch (err) {
+      logger.error({ err: err.message }, 'fleet sync auth check failed');
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal error' });
     }
-    return next();
   });
 
   // Wrap a handler: Zod-validate the body, answer fleet-shaped errors, never leak internals.

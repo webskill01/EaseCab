@@ -67,4 +67,9 @@ const FLEET_FIELDS = Object.freeze({
   ignoreIfContains: Object.freeze({ list: BOT_FILTER_LIST.IGNORE_KEYWORD, addPath: '/api/block/ignore', bodyKey: 'phrase' }),
 });
 
-module.exports = { KNOWN_BRANDINGS, BOT_FILTER_LIST, BOT_FILTER_REQUIRED_LISTS, BOT_FILTER_NUMBER_LISTS, FLEET_FIELDS };
+/** Inbound fleet API: after MAX_FAILURES bad tokens from one IP, refuse it for the rest of the window. */
+const FLEET_SYNC_AUTH = Object.freeze({ MAX_FAILURES: 20, WINDOW_SEC: 3600 });
+
+module.exports = {
+  KNOWN_BRANDINGS, BOT_FILTER_LIST, BOT_FILTER_REQUIRED_LISTS, BOT_FILTER_NUMBER_LISTS, FLEET_FIELDS, FLEET_SYNC_AUTH,
+};

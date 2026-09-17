@@ -166,7 +166,7 @@ test('FLEET_PEERS defaults to [] and parses a JSON peer list', () => {
 });
 
 test('FLEET_PEERS rejects bad JSON or a bad peer, naming the var only', () => {
-  for (const bad of ['not json', '[{"name":"x","url":"nope","token":"t"}]']) {
+  for (const bad of ['not json', '[{"name":"x","url":"nope","token":"t"}]', '[{"name":"x","url":"http://p.example","token":"t"}]']) {
     const r = parseServerEnv({ ...BASE, FLEET_PEERS: bad });
     assert.equal(r.success, false);
     assert.ok(r.errors.some((e) => e.startsWith('FLEET_PEERS')));

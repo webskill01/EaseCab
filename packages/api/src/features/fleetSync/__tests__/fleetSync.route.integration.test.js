@@ -72,6 +72,16 @@ test('rejects a missing or wrong token in the fleet error shape', async () => {
   assert.deepStrictEqual(res.body, { error: 'Invalid or missing token' });
 });
 
+test('an IP over the failed-token limit gets 429 even with the right token', async () => {
+  const blocked = { ...fakeRedis(), async get() { return '20'; } };
+  const res = await request(buildApp({
+    prisma, redis: blocked, logger: pino({ level: 'silent' }), config: CONFIG,
+    identity: { verifyOtpToken: async () => ({}), mintCustomToken: async () => 'ct' },
+    subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'o' }; } }, surepass,
+  })).get('/api/v1/fleet/api/bots').set('x-token', TOKEN);
+  assert.strictEqual(res.status, 429);
+});
+
 test('is not mounted without FLEET_SYNC_TOKEN', async () => {
   const res = await request(app({ ...CONFIG, fleet: { peers: [] } })).get('/api/v1/fleet/api/bots').set('x-token', TOKEN);
   assert.strictEqual(res.status, 404);

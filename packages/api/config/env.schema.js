@@ -127,7 +127,7 @@ const serverEnvSchema = envSchema.extend({
     })
     .pipe(z.array(z.object({
       name: z.string().min(1),
-      url: z.string().url(),
+      url: z.string().url().startsWith('https://', 'must be https (the peer token travels in a header)'),
       token: z.string().min(1),
       headers: z.record(z.string()).optional(),
     }))),
