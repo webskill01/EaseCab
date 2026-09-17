@@ -146,6 +146,13 @@ export default function TermsAndConditions() {
         Ride leads are sourced from user-generated WhatsApp messages. EaseCab is not responsible
         for the accuracy of lead details posted by third parties.
       </p>
+      <p>
+        EaseCab does not collect fares, commissions or advances and is not a party to any
+        arrangement between users. Do not pay advance commission to any agent or driver. After
+        completing a duty, drivers are responsible for collecting the fare directly from the
+        customer in cash or UPI. EaseCab is not responsible for any fraud, loss or dispute arising
+        from such dealings.
+      </p>
 
       <h2>8. Soft Gate Policy</h2>
       <p>

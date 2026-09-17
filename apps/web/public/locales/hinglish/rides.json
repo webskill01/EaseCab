@@ -88,8 +88,9 @@
     "errorGone": "Ye ride ab available nahi hai.",
     "errorNetwork": "Connection nahi hai. Internet check karke dobara try karein.",
     "retry": "Dobara try karein",
-    "advanceWarning": "Jis driver ko aap nahi jaante ya trust nahi karte, use kabhi advance payment na karein. EaseCab sirf leads deta hai, payment handle nahi karta.",
-    "warningTitle": "Kabhi advance payment na karein",
+    "advanceWarning": "Kisi bhi agent ya driver ko advance commission na dein. EaseCab sirf leads deta hai aur kisi bhi fraud ke liye zimmedaar nahi hai.",
+    "fareNote": "Duty poori hone par kiraya customer se seedha cash ya UPI mein lein.",
+    "warningTitle": "Saavdhan: koi advance payment nahi",
     "numberLabel": "Contact number"
   },
   "report": {

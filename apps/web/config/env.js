@@ -15,8 +15,8 @@ const schema = z.object({
   NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1),
   NEXT_PUBLIC_FIREBASE_VAPID_KEY: z.string().min(1),
   // Support contact (top-bar headset → WhatsApp, else email). WhatsApp number is
-  // digits only incl. country code, e.g. 919876543210. Both optional.
-  NEXT_PUBLIC_SUPPORT_WHATSAPP: z.string().regex(/^\d{10,15}$/).optional(),
+  // digits only incl. country code. Defaults to the company support line (COMPANY.phone).
+  NEXT_PUBLIC_SUPPORT_WHATSAPP: z.string().regex(/^\d{10,15}$/).default('916284992669'),
   NEXT_PUBLIC_SUPPORT_EMAIL: z.string().email().default('support@easecab.com'),
 })
 

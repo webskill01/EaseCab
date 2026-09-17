@@ -88,8 +88,9 @@
     "errorGone": "This ride is no longer available.",
     "errorNetwork": "No connection. Check your internet and try again.",
     "retry": "Try again",
-    "advanceWarning": "Never pay any advance to a driver you don't know or trust. EaseCab only shares leads — it never handles payments.",
-    "warningTitle": "Never pay any advance",
+    "advanceWarning": "Never pay advance commission to any agent or driver. EaseCab only shares leads and is not responsible for any fraud.",
+    "fareNote": "After the duty, collect your fare directly from the customer in cash or UPI.",
+    "warningTitle": "Stay alert: no advance payments",
     "numberLabel": "Contact number"
   },
   "report": {

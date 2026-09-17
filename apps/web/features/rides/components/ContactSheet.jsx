@@ -167,6 +167,7 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVeri
           <div>
             <p className="text-[13.5px] font-extrabold text-ec-amberTx">{t('reveal.warningTitle')}</p>
             <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-ec-amberTx/90">{t('reveal.advanceWarning')}</p>
+            <p className="mt-1 text-[12.5px] font-semibold leading-snug text-ec-amberTx/90">{t('reveal.fareNote')}</p>
           </div>
         </div>
 
