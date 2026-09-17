@@ -38,10 +38,15 @@ const POSTED_RIDES_NEW_CHANNEL = redisKey('posted-rides', 'new');
 // write (Phase 17.4); easecab-bot reloads its filter lists on each message.
 const BOT_FILTERS_CHANGED_CHANNEL = redisKey('bot', 'filters', 'changed');
 
+// Pub/sub channel: the admin API publishes here after any wa_groups on/off change
+// (Phase 18); easecab-bot reloads which groups it ingests.
+const BOT_GROUPS_CHANGED_CHANNEL = redisKey('bot', 'groups', 'changed');
+
 module.exports = {
   REDIS_PREFIX,
   redisKey,
   RIDES_NEW_CHANNEL,
   POSTED_RIDES_NEW_CHANNEL,
   BOT_FILTERS_CHANGED_CHANNEL,
+  BOT_GROUPS_CHANGED_CHANNEL,
 };

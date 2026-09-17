@@ -37,6 +37,10 @@ const ADMIN_CITY_STRINGS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 /** Bot filter editor (Phase 17.4). VALUE_MAX bounds a single entry (db-review L1). */
 const ADMIN_BOT_FILTERS = Object.freeze({ PAGE_SIZE: 50, MAX_PAGE_SIZE: 200, VALUE_MAX: 500 });
 
+/** WhatsApp groups page (Phase 18). STATUS filters the list by ingest switch. */
+const ADMIN_WA_GROUPS = Object.freeze({ PAGE_SIZE: 50, MAX_PAGE_SIZE: 200 });
+const WA_GROUP_STATUS = Object.freeze({ ALL: 'all', ON: 'on', OFF: 'off' });
+
 /** Unresolved-rides queue verbs: `set_city` fills a missing pickup/drop FK on a
  * live bot ride; `hide` takes the ride down (RideStatus.hidden). */
 const UNRESOLVED_RIDE_ACTION = Object.freeze({ SET_CITY: 'set_city', HIDE: 'hide' });
@@ -57,7 +61,7 @@ const ADMIN_USER_REPORTS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 
 module.exports = {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
-  USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS,
+  USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
   USER_REPORT_ACTION, ADMIN_USER_REPORTS,
 };

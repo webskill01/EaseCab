@@ -12,11 +12,6 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   // Shared VPS Redis (localhost-bound); keys namespaced under `easecab:`.
   REDIS_URL: z.string().url(),
-  // WhatsApp group(s) whose messages the bot ingests, comma-separated `<id>@g.us`.
-  WA_TARGET_GROUP_JID: z
-    .string()
-    .transform((s) => s.split(',').map((t) => t.trim()).filter(Boolean))
-    .refine((arr) => arr.length > 0, { message: 'must list at least one group JID' }),
   // Baileys auth-state ROOT directory; each slot gets a `<path>/<slot>` subdir.
   WA_SESSION_PATH: z.string().min(1).default('./.wa-session'),
   // Number-pool slot labels (opaque, NOT phone numbers — no PII), priority order.

@@ -27,7 +27,7 @@ function run(env) {
 test('exits non-zero and names a missing var without leaking values', () => {
   const r = run({ PATH: process.env.PATH });
   assert.strictEqual(r.ok, false);
-  assert.match(r.stderr, /WA_TARGET_GROUP_JID/);
+  assert.match(r.stderr, /DATABASE_URL/);
   // No secret/connection values must appear in operator output.
   assert.ok(!/postgresql:\/\//.test(r.stderr));
   assert.ok(!/redis:\/\//.test(r.stderr));
@@ -38,7 +38,6 @@ test('loads cleanly when every required var is valid', () => {
     PATH: process.env.PATH,
     DATABASE_URL: 'postgresql://u:p@host:6543/db',
     REDIS_URL: 'redis://127.0.0.1:6379',
-    WA_TARGET_GROUP_JID: '120363000000000000@g.us',
   });
   assert.strictEqual(r.ok, true);
 });

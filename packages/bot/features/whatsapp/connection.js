@@ -7,6 +7,7 @@ const {
   fetchLatestBaileysVersion,
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
+const { toGroupRecord } = require('../groups/groupStore');
 
 /**
  * Pull plain text out of a Baileys message node. Handles the two text-bearing
@@ -38,7 +39,8 @@ function extractText(message) {
  *
  * @param {object} deps
  * @param {string} deps.sessionPath - this slot's multi-file auth-state dir
- * @param {string[]} deps.targetGroupJids - the group JIDs we ingest from
+ * @param {{ shouldIngest: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, record: (groups: object[]) => Promise<void> }} deps.groups
+ *   - group store (Phase 18): which groups to ingest + where discovered groups are saved
  * @param {(msg: {text: string, senderJid: string, groupId: string, groupName?: string}) => Promise<unknown>} deps.onMessage
  * @param {() => void} [deps.onOpen] - called once the connection is open
  * @param {(code: number|undefined) => void} [deps.onClose] - called after cleanup on close, with the disconnect status code
@@ -46,12 +48,11 @@ function extractText(message) {
  * @param {{ info: Function, warn: Function, error: Function }} deps.logger
  * @returns {Promise<object>} the live socket (caller may end it on timeout/shutdown)
  */
-async function createConnection({ sessionPath, targetGroupJids, onMessage, onOpen, onClose, onQr, logger }) {
+async function createConnection({ sessionPath, groups, onMessage, onOpen, onClose, onQr, logger }) {
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
   // Pin the current WhatsApp Web build — a stale hardcoded version makes WA reject
   // the handshake with a 405 ("connection failure"). Required for every connect.
   const { version } = await fetchLatestBaileysVersion();
-  const groupNames = new Map(); // jid → cached group subject, filled on connect
   let closed = false; // guard so we report close exactly once
 
   const sock = makeWASocket({
@@ -73,15 +74,14 @@ async function createConnection({ sessionPath, targetGroupJids, onMessage, onOpe
     if (update.qr && onQr) onQr(update.qr);
     if (connection === 'open') {
       logger.info('WA connection open');
-      for (const gid of targetGroupJids) {
-        try {
-          const meta = await sock.groupMetadata(gid);
-          if (meta && meta.subject) groupNames.set(gid, meta.subject);
-        } catch (err) {
-          logger.warn({ err: err.message }, 'could not fetch target group metadata');
-        }
-      }
       if (onOpen) onOpen();
+      // Discover every joined group in ONE call (per-group groupMetadata shares the
+      // send rate budget and would trip rate-overlimit at ~300 groups). Saved in the
+      // background so a slow DB never delays the connection.
+      sock.groupFetchAllParticipating()
+        .then((all) => groups.record(Object.values(all || {}).map(toGroupRecord)))
+        .then(() => logger.info('wa groups recorded'))
+        .catch((err) => logger.warn({ err: err.message }, 'could not fetch joined groups'));
     } else if (connection === 'close') {
       if (closed) return; // ignore duplicate close events
       closed = true;
@@ -96,6 +96,7 @@ async function createConnection({ sessionPath, targetGroupJids, onMessage, onOpe
         sock.ev.removeAllListeners('connection.update');
         sock.ev.removeAllListeners('creds.update');
         sock.ev.removeAllListeners('messages.upsert');
+        sock.ev.removeAllListeners('groups.upsert');
         sock.end(undefined);
       } catch {
         // socket may already be torn down — nothing to do
@@ -104,16 +105,22 @@ async function createConnection({ sessionPath, targetGroupJids, onMessage, onOpe
     }
   });
 
+  // Joined a new group while connected → record it (ingest already applies: default ON).
+  sock.ev.on('groups.upsert', (joined) => {
+    groups.record((joined || []).map(toGroupRecord))
+      .catch((err) => logger.warn({ err: err.message }, 'could not record joined group'));
+  });
+
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return; // ignore history/append syncs
     for (const m of messages) {
       const jid = m.key && m.key.remoteJid;
-      if (!targetGroupJids.includes(jid) || m.key.fromMe) continue;
+      if (!groups.shouldIngest(jid) || m.key.fromMe) continue;
       const text = extractText(m.message);
       if (!text) continue;
       const senderJid = m.key.participant || jid;
       try {
-        await onMessage({ text, senderJid, groupId: jid, groupName: groupNames.get(jid) });
+        await onMessage({ text, senderJid, groupId: jid, groupName: groups.nameOf(jid) });
       } catch (err) {
         // onMessage (processMessage) is contracted never to throw; guard anyway
         // so one bad message can never tear down the listener.

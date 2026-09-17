@@ -5,7 +5,7 @@ const {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
-  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS,
+  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
 } = require('../constants/admin');
 const { BOT_FILTER_LIST } = require('../constants/botFilters');
 const { VERIFICATION_STATUS } = require('../constants/enums');
@@ -145,10 +145,33 @@ const adminBotFilterCreateSchema = z.object({
 
 const adminBotFilterIdParamSchema = z.object({ id: z.string().uuid() });
 
+/** WhatsApp groups list (Phase 18): search by name/JID, filter by ingest switch. */
+const adminWaGroupsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_WA_GROUPS.MAX_PAGE_SIZE).default(ADMIN_WA_GROUPS.PAGE_SIZE),
+  q: z.string().trim().min(1).max(100).optional(),
+  status: z.enum(Object.values(WA_GROUP_STATUS)).default(WA_GROUP_STATUS.ALL),
+});
+
+/** Switch one group's ingest on/off. */
+const adminWaGroupToggleSchema = z.object({ enabled: z.boolean() });
+
+/** Switch many groups at once — every group, or only those matching `q`. */
+const adminWaGroupBulkSchema = z.object({
+  enabled: z.boolean(),
+  q: z.string().trim().min(1).max(100).optional(),
+});
+
+const adminWaGroupIdParamSchema = z.object({ id: z.string().uuid() });
+
 module.exports = {
   adminBotFiltersQuerySchema,
   adminBotFilterCreateSchema,
   adminBotFilterIdParamSchema,
+  adminWaGroupsQuerySchema,
+  adminWaGroupToggleSchema,
+  adminWaGroupBulkSchema,
+  adminWaGroupIdParamSchema,
   adminLoginSchema,
   adminVerificationsQuerySchema,
   adminReviewActionSchema,

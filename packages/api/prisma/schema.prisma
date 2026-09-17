@@ -253,6 +253,21 @@ model BotFilterEntry {
   @@map("bot_filter_entries")
 }
 
+// WhatsApp groups the bot's number is in (Phase 18). The bot upserts every group it
+// sees on connect / on join; admins switch ingest per group. Default ON: a group is
+// read unless enabled=false, so groups the bot has not recorded yet are read too.
+model WaGroup {
+  id           String   @id @default(uuid()) @db.Uuid
+  jid          String   @unique // e.g. 120363...@g.us
+  name         String?
+  participants Int?
+  enabled      Boolean  @default(true)
+  lastSeenAt   DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6) // last time the bot saw it joined
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("wa_groups")
+}
+
 // ---------------------------------------------------------------------------
 // POSTED RIDES (app-native, verified)
 // ---------------------------------------------------------------------------

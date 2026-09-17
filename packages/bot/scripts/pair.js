@@ -54,7 +54,8 @@ async function attempt() {
   attempts += 1;
   await createConnection({
     sessionPath,
-    targetGroupJids: env.WA_TARGET_GROUP_JID,
+    // Pairing ingests and records nothing — the running bot discovers groups on connect.
+    groups: { shouldIngest: () => false, nameOf: () => undefined, record: async () => {} },
     onMessage: async () => {}, // pairing only — ingest nothing
     logger,
     onQr: (qr) => {

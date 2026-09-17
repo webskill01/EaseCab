@@ -71,6 +71,9 @@ const { createAdminBotFiltersRepository } = require('./features/admin/adminBotFi
 const { createAdminBotFiltersService } = require('./features/admin/adminBotFilters.service');
 const { createAdminBotFiltersRouter } = require('./features/admin/adminBotFilters.route');
 const { createFleetSyncRouter } = require('./features/fleetSync/fleetSync.route');
+const { createAdminWaGroupsRepository } = require('./features/admin/adminWaGroups.repository');
+const { createAdminWaGroupsService } = require('./features/admin/adminWaGroups.service');
+const { createAdminWaGroupsRouter } = require('./features/admin/adminWaGroups.route');
 const { createFleetMirror } = require('./lib/fleetMirror');
 const { createAdminUnresolvedRidesRepository } = require('./features/admin/adminUnresolvedRides.repository');
 const { createAdminUnresolvedRidesService } = require('./features/admin/adminUnresolvedRides.service');
@@ -247,6 +250,12 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
       fleet: fleetPeers.length > 0 ? createFleetMirror({ peers: fleetPeers }) : undefined,
     });
     v1.use('/admin/bot-filters', createAdminBotFiltersRouter({ service: adminBotFiltersService, requireAdmin }));
+    // WhatsApp groups (Phase 18): switch which groups easecab-bot reads rides from.
+    const adminWaGroupsService = createAdminWaGroupsService({
+      repo: createAdminWaGroupsRepository({ prisma }), redis, logger,
+    });
+    v1.use('/admin/wa-groups', createAdminWaGroupsRouter({ service: adminWaGroupsService, requireAdmin }));
+
     // Inbound fleet peer API — mounted only when FLEET_SYNC_TOKEN is set.
     if (config.fleet && config.fleet.syncToken) {
       v1.use('/fleet', createFleetSyncRouter({
