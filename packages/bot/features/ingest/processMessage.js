@@ -7,6 +7,7 @@ const { extractCities } = require('./extractCities');
 const { extractVehicle } = require('./extractVehicle');
 const { maskPhone } = require('./maskPhone');
 const { fingerprint } = require('./fingerprint');
+const { stripBranding } = require('./stripBranding');
 
 /**
  * Discriminants for a message's outcome. A `saved` result uses SAVED; every
@@ -33,7 +34,7 @@ const REASON = Object.freeze({
  * @param {{ resolve: (raw: string) => Promise<{status: string, cityId: ?string}> }} deps.resolver
  * @param {{ isDuplicate: (fp: string) => Promise<boolean>, saveRide: (d: object) => Promise<object> }} deps.repository
  * @param {string[]} deps.cityNames - DB-loaded city vocabulary (canonical + aliases)
- * @param {{ rideKeywords: string[], ignoreKeywords: string[], blockedPhoneNumbers: string[], blockedSenders: string[] }} deps.filters
+ * @param {{ rideKeywords: string[], ignoreKeywords: string[], blockedPhoneNumbers: string[], blockedSenders: string[], knownBrandings?: string[] }} deps.filters
  * @param {{ record: () => Promise<void> }} [deps.heartbeat] - ingestion heartbeat; fired only on a successful save (Phase 2.5 6b)
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
  * @returns {(msg: {text: string, senderJid: string, groupId?: string, groupName?: string, botId?: string}) => Promise<{saved: boolean, reason: string, ride?: object}>}
@@ -66,7 +67,10 @@ function createProcessMessage({ resolver, repository, cityNames, filters, heartb
 
   return async function processMessage(msg) {
     try {
-      const { text, senderJid, groupId, groupName, botId } = msg;
+      const { senderJid, groupId, groupName, botId } = msg;
+      // Fleet bots post into the source group with a trailing stamp; drop it
+      // before anything else so it neither shows in the feed nor splits dedup.
+      const text = stripBranding(msg.text, filters.knownBrandings);
 
       if (isBlockedSender(senderJid, filters.blockedSenders)) {
         return { saved: false, reason: REASON.BLOCKED_SENDER };

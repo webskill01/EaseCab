@@ -67,6 +67,11 @@ const { createAdminUsersRouter } = require('./features/admin/adminUsers.route');
 const { createAdminCityStringsRepository } = require('./features/admin/adminCityStrings.repository');
 const { createAdminCityStringsService } = require('./features/admin/adminCityStrings.service');
 const { createAdminCityStringsRouter } = require('./features/admin/adminCityStrings.route');
+const { createAdminBotFiltersRepository } = require('./features/admin/adminBotFilters.repository');
+const { createAdminBotFiltersService } = require('./features/admin/adminBotFilters.service');
+const { createAdminBotFiltersRouter } = require('./features/admin/adminBotFilters.route');
+const { createFleetSyncRouter } = require('./features/fleetSync/fleetSync.route');
+const { createFleetMirror } = require('./lib/fleetMirror');
 const { createAdminUnresolvedRidesRepository } = require('./features/admin/adminUnresolvedRides.repository');
 const { createAdminUnresolvedRidesService } = require('./features/admin/adminUnresolvedRides.service');
 const { createAdminUnresolvedRidesRouter } = require('./features/admin/adminUnresolvedRides.route');
@@ -232,6 +237,22 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
     const adminCityStringsRepo = createAdminCityStringsRepository({ prisma });
     const adminCityStringsService = createAdminCityStringsService({ repo: adminCityStringsRepo });
     v1.use('/admin/city-strings', createAdminCityStringsRouter({ service: adminCityStringsService, citiesService, requireAdmin }));
+
+    // Bot filter editor (Phase 17.4): writes notify easecab-bot to hot-reload, and
+    // blocks are replayed to the fleet control panels in config.fleet.peers (17.5).
+    const adminBotFiltersRepo = createAdminBotFiltersRepository({ prisma });
+    const fleetPeers = (config.fleet && config.fleet.peers) || [];
+    const adminBotFiltersService = createAdminBotFiltersService({
+      repo: adminBotFiltersRepo, redis, logger,
+      fleet: fleetPeers.length > 0 ? createFleetMirror({ peers: fleetPeers }) : undefined,
+    });
+    v1.use('/admin/bot-filters', createAdminBotFiltersRouter({ service: adminBotFiltersService, requireAdmin }));
+    // Inbound fleet peer API — mounted only when FLEET_SYNC_TOKEN is set.
+    if (config.fleet && config.fleet.syncToken) {
+      v1.use('/fleet', createFleetSyncRouter({
+        service: adminBotFiltersService, repo: adminBotFiltersRepo, token: config.fleet.syncToken, logger,
+      }));
+    }
 
     // Unresolved-rides queue — live bot rides the CityResolver left without a
     // pickup/drop city; admin fills the missing FK (reusing the /cities picker) or

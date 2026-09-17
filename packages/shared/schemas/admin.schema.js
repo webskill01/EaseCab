@@ -5,8 +5,9 @@ const {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
-  USER_REPORT_ACTION, ADMIN_USER_REPORTS,
+  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS,
 } = require('../constants/admin');
+const { BOT_FILTER_LIST } = require('../constants/botFilters');
 const { VERIFICATION_STATUS } = require('../constants/enums');
 
 /**
@@ -128,7 +129,26 @@ const adminUserReportActionSchema = z.object({
 
 const adminUserReportUserIdParamSchema = z.object({ userId: z.string().uuid() });
 
+/** Bot filter list query (Phase 17.4): one list at a time, optional substring search. */
+const adminBotFiltersQuerySchema = z.object({
+  list: z.enum(Object.values(BOT_FILTER_LIST)),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_BOT_FILTERS.MAX_PAGE_SIZE).default(ADMIN_BOT_FILTERS.PAGE_SIZE),
+  q: z.string().trim().min(1).max(100).optional(),
+});
+
+/** Add an entry. For phone/sender lists `value` may be a comma/space list of numbers. */
+const adminBotFilterCreateSchema = z.object({
+  list: z.enum(Object.values(BOT_FILTER_LIST)),
+  value: z.string().trim().min(1).max(ADMIN_BOT_FILTERS.VALUE_MAX),
+});
+
+const adminBotFilterIdParamSchema = z.object({ id: z.string().uuid() });
+
 module.exports = {
+  adminBotFiltersQuerySchema,
+  adminBotFilterCreateSchema,
+  adminBotFilterIdParamSchema,
   adminLoginSchema,
   adminVerificationsQuerySchema,
   adminReviewActionSchema,

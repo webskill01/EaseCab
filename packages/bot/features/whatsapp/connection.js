@@ -38,7 +38,7 @@ function extractText(message) {
  *
  * @param {object} deps
  * @param {string} deps.sessionPath - this slot's multi-file auth-state dir
- * @param {string} deps.targetGroupJid - the only group JID we ingest from
+ * @param {string[]} deps.targetGroupJids - the group JIDs we ingest from
  * @param {(msg: {text: string, senderJid: string, groupId: string, groupName?: string}) => Promise<unknown>} deps.onMessage
  * @param {() => void} [deps.onOpen] - called once the connection is open
  * @param {(code: number|undefined) => void} [deps.onClose] - called after cleanup on close, with the disconnect status code
@@ -46,12 +46,12 @@ function extractText(message) {
  * @param {{ info: Function, warn: Function, error: Function }} deps.logger
  * @returns {Promise<object>} the live socket (caller may end it on timeout/shutdown)
  */
-async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen, onClose, onQr, logger }) {
+async function createConnection({ sessionPath, targetGroupJids, onMessage, onOpen, onClose, onQr, logger }) {
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
   // Pin the current WhatsApp Web build — a stale hardcoded version makes WA reject
   // the handshake with a 405 ("connection failure"). Required for every connect.
   const { version } = await fetchLatestBaileysVersion();
-  let groupName; // cached subject of the target group, filled on connect
+  const groupNames = new Map(); // jid → cached group subject, filled on connect
   let closed = false; // guard so we report close exactly once
 
   const sock = makeWASocket({
@@ -73,11 +73,13 @@ async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen
     if (update.qr && onQr) onQr(update.qr);
     if (connection === 'open') {
       logger.info('WA connection open');
-      try {
-        const meta = await sock.groupMetadata(targetGroupJid);
-        groupName = meta && meta.subject;
-      } catch (err) {
-        logger.warn({ err: err.message }, 'could not fetch target group metadata');
+      for (const gid of targetGroupJids) {
+        try {
+          const meta = await sock.groupMetadata(gid);
+          if (meta && meta.subject) groupNames.set(gid, meta.subject);
+        } catch (err) {
+          logger.warn({ err: err.message }, 'could not fetch target group metadata');
+        }
       }
       if (onOpen) onOpen();
     } else if (connection === 'close') {
@@ -106,12 +108,12 @@ async function createConnection({ sessionPath, targetGroupJid, onMessage, onOpen
     if (type !== 'notify') return; // ignore history/append syncs
     for (const m of messages) {
       const jid = m.key && m.key.remoteJid;
-      if (jid !== targetGroupJid || m.key.fromMe) continue;
+      if (!targetGroupJids.includes(jid) || m.key.fromMe) continue;
       const text = extractText(m.message);
       if (!text) continue;
       const senderJid = m.key.participant || jid;
       try {
-        await onMessage({ text, senderJid, groupId: jid, groupName });
+        await onMessage({ text, senderJid, groupId: jid, groupName: groupNames.get(jid) });
       } catch (err) {
         // onMessage (processMessage) is contracted never to throw; guard anyway
         // so one bad message can never tear down the listener.

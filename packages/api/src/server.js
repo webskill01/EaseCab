@@ -66,6 +66,8 @@ async function main() {
       // stub demo mode → the service skips signature verification (see subscription.service).
       stub: serverEnv.RAZORPAY_STUB,
     },
+    // Fleet control-panel peer sync (Phase 17.5).
+    fleet: { syncToken: serverEnv.FLEET_SYNC_TOKEN, peers: serverEnv.FLEET_PEERS },
   };
 
   const identity = createFirebaseIdentity({

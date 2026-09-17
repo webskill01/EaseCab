@@ -7,4 +7,5 @@
 module.exports = {
   ...require('./extractCities'),
   ...require('./extractPhone'),
+  ...require('./parseNumbers'),
 };

@@ -54,7 +54,7 @@ async function attempt() {
   attempts += 1;
   await createConnection({
     sessionPath,
-    targetGroupJid: env.WA_TARGET_GROUP_JID,
+    targetGroupJids: env.WA_TARGET_GROUP_JID,
     onMessage: async () => {}, // pairing only — ingest nothing
     logger,
     onQr: (qr) => {

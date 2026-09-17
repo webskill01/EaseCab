@@ -24,7 +24,7 @@ const { nextDelayMs } = require('./backoff');
  *
  * @param {object} deps
  * @param {string[]} deps.slots - all configured slot labels (for UNREGISTERED marking)
- * @param {string} deps.targetGroupJid
+ * @param {string[]} deps.targetGroupJids
  * @param {Function} deps.onMessage - the ingest orchestrator (processMessage)
  * @param {{info:Function,warn:Function,error:Function}} deps.logger
  * @param {{hset:Function}} deps.redis - ioredis (slot-state mirror)
@@ -36,7 +36,7 @@ const { nextDelayMs } = require('./backoff');
  */
 function createNumberPool({
   slots,
-  targetGroupJid,
+  targetGroupJids,
   onMessage,
   logger,
   redis,
@@ -99,7 +99,7 @@ function createNumberPool({
     try {
       currentSock = await connectionFactory({
         sessionPath: registry.sessionDirFor(slot),
-        targetGroupJid,
+        targetGroupJids,
         onMessage: trackedOnMessage,
         logger,
         onOpen: () => {

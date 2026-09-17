@@ -10,6 +10,7 @@ const NAV = [
   { href: '/users', label: 'Users' },
   { href: '/city-strings', label: 'City Strings' },
   { href: '/unresolved-rides', label: 'Unresolved Rides' },
+  { href: '/bot-filters', label: 'Bot Filters' },
 ]
 
 export function Sidebar() {

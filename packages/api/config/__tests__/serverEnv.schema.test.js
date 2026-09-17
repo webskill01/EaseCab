@@ -158,3 +158,22 @@ test('serverEnvSchema requires ADMIN_JWT secrets ≥32 chars and defaults the TT
   assert.equal(missing.success, false);
   assert.ok(missing.errors.some((e) => e.startsWith('ADMIN_JWT_REFRESH_SECRET')));
 });
+
+test('FLEET_PEERS defaults to [] and parses a JSON peer list', () => {
+  assert.deepEqual(parseServerEnv(BASE).data.FLEET_PEERS, []);
+  const peers = [{ name: 'fleet', url: 'https://control.example.com', token: 'tok' }];
+  assert.deepEqual(parseServerEnv({ ...BASE, FLEET_PEERS: JSON.stringify(peers) }).data.FLEET_PEERS, peers);
+});
+
+test('FLEET_PEERS rejects bad JSON or a bad peer, naming the var only', () => {
+  for (const bad of ['not json', '[{"name":"x","url":"nope","token":"t"}]']) {
+    const r = parseServerEnv({ ...BASE, FLEET_PEERS: bad });
+    assert.equal(r.success, false);
+    assert.ok(r.errors.some((e) => e.startsWith('FLEET_PEERS')));
+  }
+});
+
+test('FLEET_SYNC_TOKEN is optional but floored at 32 chars', () => {
+  assert.equal(parseServerEnv(BASE).data.FLEET_SYNC_TOKEN, undefined);
+  assert.equal(parseServerEnv({ ...BASE, FLEET_SYNC_TOKEN: 'short' }).success, false);
+});

@@ -109,6 +109,28 @@ const serverEnvSchema = envSchema.extend({
   R2_BUCKET: z.string().min(1),
   R2_PUBLIC_BASE_URL: z.string().url(),
   R2_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+  // Fleet peer sync (Phase 17.5). FLEET_SYNC_TOKEN is what fleet control panels send
+  // as x-token when mirroring a block to us; unset → the inbound /fleet API is not
+  // mounted. FLEET_PEERS is a JSON array of panels we mirror admin blocks to:
+  // [{"name":"fleet","url":"https://control.example.com","token":"<its admin token>"}].
+  FLEET_SYNC_TOKEN: z.string().min(32).optional(),
+  FLEET_PEERS: z
+    .string()
+    .default('[]')
+    .transform((s, ctx) => {
+      try {
+        return JSON.parse(s);
+      } catch {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'must be a JSON array' });
+        return z.NEVER;
+      }
+    })
+    .pipe(z.array(z.object({
+      name: z.string().min(1),
+      url: z.string().url(),
+      token: z.string().min(1),
+      headers: z.record(z.string()).optional(),
+    }))),
 });
 
 /**

@@ -141,3 +141,12 @@ test('a heartbeat failure does not break a successful save', async () => {
   const r = await pm(msg());
   assert.strictEqual(r.saved, true);
 });
+
+test('strips the fleet stamp before saving and fingerprinting', async () => {
+  const pm = createProcessMessage(baseDeps());
+  const plain = await pm(msg());
+  const stamped = await pm(msg({ text: 'delhi to chandigarh 9876543210\n- 🚨 Forwarded Duty 🚨' }));
+  assert.strictEqual(stamped.ride.rawText, 'delhi to chandigarh 9876543210');
+  assert.ok(!stamped.ride.displayText.includes('Forwarded'));
+  assert.strictEqual(stamped.ride.fingerprint, plain.ride.fingerprint);
+});

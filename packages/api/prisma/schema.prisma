@@ -11,8 +11,8 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL") // pooled (pgBouncer / transaction mode) — app runtime
-  directUrl  = env("DIRECT_URL")   // direct (session mode) — migrations only
-  extensions = [pg_trgm]           // fuzzy city-string matching (CityResolverService layer 3)
+  directUrl  = env("DIRECT_URL") // direct (session mode) — migrations only
+  extensions = [pg_trgm] // fuzzy city-string matching (CityResolverService layer 3)
 }
 
 // ---------------------------------------------------------------------------
@@ -111,6 +111,14 @@ enum AdminRole {
   reviewer
 }
 
+enum BotFilterList {
+  ride_keyword // accept signal
+  ignore_keyword // reject signal (strict free/khali set lives here)
+  blocked_phone // spammer number seen in message text
+  blocked_sender // spammer sender JID (last 10 digits)
+  branding // fleet "Forwarded Duty" stamp stripped before fingerprinting
+}
+
 // ---------------------------------------------------------------------------
 // CITY RESOLUTION
 // ---------------------------------------------------------------------------
@@ -131,12 +139,12 @@ model City {
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  aliases          CityAlias[]
-  unresolvedHints  UnresolvedCityString[]
-  pickupRides      Ride[]        @relation("RidePickupCity")
-  dropRides        Ride[]        @relation("RideDropCity")
-  fromPostedRides  PostedRide[]  @relation("PostedRideFromCity")
-  toPostedRides    PostedRide[]  @relation("PostedRideToCity")
+  aliases         CityAlias[]
+  unresolvedHints UnresolvedCityString[]
+  pickupRides     Ride[]                 @relation("RidePickupCity")
+  dropRides       Ride[]                 @relation("RideDropCity")
+  fromPostedRides PostedRide[]           @relation("PostedRideFromCity")
+  toPostedRides   PostedRide[]           @relation("PostedRideToCity")
 
   @@unique([canonicalName, state]) // natural key — idempotent seeding
   @@index([state])
@@ -187,26 +195,26 @@ model UnresolvedCityString {
 
 model Ride {
   id              String     @id @default(uuid()) @db.Uuid
-  rawText         String     @map("raw_text")                 // original WA message
-  displayText     String     @map("display_text")             // phone masked with ████
+  rawText         String     @map("raw_text") // original WA message
+  displayText     String     @map("display_text") // phone masked with ████
   pickupCityId    String?    @map("pickup_city_id") @db.Uuid
   dropCityId      String?    @map("drop_city_id") @db.Uuid
   pickupRaw       String?    @map("pickup_raw")
   dropRaw         String?    @map("drop_raw")
-  phoneNumber     String     @map("phone_number")             // never exposed without active sub
+  phoneNumber     String     @map("phone_number") // never exposed without active sub
   vehicleType     String?    @map("vehicle_type")
   sourceGroupId   String?    @map("source_group_id")
   sourceGroupName String?    @map("source_group_name")
   botId           String?    @map("bot_id")
-  fingerprint     String                                       // dedup key (lives with row until hard delete)
+  fingerprint     String // dedup key (lives with row until hard delete)
   status          RideStatus @default(fresh)
   receivedAt      DateTime   @default(now()) @map("received_at") @db.Timestamptz(6)
-  expiresAt       DateTime   @map("expires_at") @db.Timestamptz(6)   // 30 min — feed removal
+  expiresAt       DateTime   @map("expires_at") @db.Timestamptz(6) // 30 min — feed removal
   dbDeleteAt      DateTime   @map("db_delete_at") @db.Timestamptz(6) // 12h — hard delete
   createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  pickupCity City? @relation("RidePickupCity", fields: [pickupCityId], references: [id], onDelete: SetNull)
-  dropCity   City? @relation("RideDropCity", fields: [dropCityId], references: [id], onDelete: SetNull)
+  pickupCity City?         @relation("RidePickupCity", fields: [pickupCityId], references: [id], onDelete: SetNull)
+  dropCity   City?         @relation("RideDropCity", fields: [dropCityId], references: [id], onDelete: SetNull)
   contacts   RideContact[]
   reports    RideReport[]
 
@@ -231,6 +239,18 @@ model RideFingerprint {
 
   @@index([expiresAt])
   @@map("ride_fingerprints")
+}
+
+// Bot message filters (Phase 17.3). One row per entry so the admin panel edits
+// entries individually; the bot hot-reloads on BOT_FILTERS_CHANGED_CHANNEL.
+model BotFilterEntry {
+  id        String        @id @default(uuid()) @db.Uuid
+  list      BotFilterList
+  value     String
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([list, value]) // leading `list` column also serves per-list reads
+  @@map("bot_filter_entries")
 }
 
 // ---------------------------------------------------------------------------
@@ -289,17 +309,17 @@ model User {
   verificationStatus VerificationStatus @default(none) @map("verification_status")
   licenseUrl         String?            @map("license_url")
   rcUrl              String?            @map("rc_url")
-  bio                String?            @map("bio")                       // L1 profile-completeness blurb (Step 21b)
-  experience         Int?               @map("experience")                // years of driving experience (profile stat, Batch D)
-  workingCity        String?            @map("working_city")              // operational city, distinct from base (Batch D)
-  carMake            String?            @map("car_make")                  // from RC verify (Step 21b)
+  bio                String?            @map("bio") // L1 profile-completeness blurb (Step 21b)
+  experience         Int?               @map("experience") // years of driving experience (profile stat, Batch D)
+  workingCity        String?            @map("working_city") // operational city, distinct from base (Batch D)
+  carMake            String?            @map("car_make") // from RC verify (Step 21b)
   carModel           String?            @map("car_model")
   carRegNo           String?            @map("car_reg_no")
-  carFrontUrl        String?            @map("car_front_url")             // public-tier car image (Step 21b)
+  carFrontUrl        String?            @map("car_front_url") // public-tier car image (Step 21b)
   carBackUrl         String?            @map("car_back_url")
-  aadhaarLast4       String?            @map("aadhaar_last4")             // masked display only — full number never stored (§10)
+  aadhaarLast4       String?            @map("aadhaar_last4") // masked display only — full number never stored (§10)
   notificationCities String[]           @map("notification_cities") // City UUIDs the user opted into (Step 15 push targeting key)
-  notifyBotRides     Boolean            @default(true) @map("notify_bot_rides")    // per-source push toggle: bot-feed rides
+  notifyBotRides     Boolean            @default(true) @map("notify_bot_rides") // per-source push toggle: bot-feed rides
   notifyPostedRides  Boolean            @default(true) @map("notify_posted_rides") // per-source push toggle: app-posted verified rides
   lastKnownCity      String?            @map("last_known_city")
   // Auto-set when ≥ USER_REPORT.AUTOHIDE_THRESHOLD distinct reporters flag this user
@@ -310,20 +330,20 @@ model User {
   deletedAt          DateTime?          @map("deleted_at") @db.Timestamptz(6)
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  subscription      Subscription?
-  payments          Payment[]
+  subscription            Subscription?
+  payments                Payment[]
   verificationSubmissions VerificationSubmission[]
-  postedRides       PostedRide[]
-  contacts          RideContact[]
-  reports           RideReport[]
-  reportsFiled      UserReport[]       @relation("UserReportReporter")
-  reportsReceived   UserReport[]       @relation("UserReportTarget")
-  pushSubscriptions PushSubscription[]
-  initiatedChats    Chat[]             @relation("ChatInitiator")
-  postedChats       Chat[]             @relation("ChatPoster")
-  sentMessages      ChatMessage[]
-  blocksMade        UserBlock[]        @relation("BlocksMade")
-  blocksReceived    UserBlock[]        @relation("BlocksReceived")
+  postedRides             PostedRide[]
+  contacts                RideContact[]
+  reports                 RideReport[]
+  reportsFiled            UserReport[]             @relation("UserReportReporter")
+  reportsReceived         UserReport[]             @relation("UserReportTarget")
+  pushSubscriptions       PushSubscription[]
+  initiatedChats          Chat[]                   @relation("ChatInitiator")
+  postedChats             Chat[]                   @relation("ChatPoster")
+  sentMessages            ChatMessage[]
+  blocksMade              UserBlock[]              @relation("BlocksMade")
+  blocksReceived          UserBlock[]              @relation("BlocksReceived")
 
   @@index([isDeleted])
   @@index([flaggedAt])
@@ -394,30 +414,30 @@ model Payment {
 // ---------------------------------------------------------------------------
 
 model VerificationSubmission {
-  id           String              @id @default(uuid()) @db.Uuid
-  userId       String              @map("user_id") @db.Uuid
-  docType      VerificationDocType @map("doc_type")
+  id              String              @id @default(uuid()) @db.Uuid
+  userId          String              @map("user_id") @db.Uuid
+  docType         VerificationDocType @map("doc_type")
   // Step 12 only ever writes `submitted`; the Step-24 admin flow moves it to
   // approved/rejected (review columns added by that step's forward migration).
-  status       VerificationStatus  @default(submitted)
+  status          VerificationStatus  @default(submitted)
   // Surepass client/transaction id for audit + dispute. The raw Aadhaar/DL/RC
   // NUMBER is never stored (CLAUDE.md §10 PII) — only the vendor reference + the
   // verified holder name for the admin to match against.
-  surepassRef  String?             @map("surepass_ref")
-  verifiedName String?             @map("verified_name")
+  surepassRef     String?             @map("surepass_ref")
+  verifiedName    String?             @map("verified_name")
   // Admin review audit (Step 24b). Step 12 writes null; the admin queue stamps these
   // on approve/reject. reviewedBy → admin_users.id (never users — §6).
-  reviewedBy      String?          @map("reviewed_by") @db.Uuid
-  reviewedAt      DateTime?        @map("reviewed_at") @db.Timestamptz(6)
-  rejectionReason String?          @map("rejection_reason")
-  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  reviewedBy      String?             @map("reviewed_by") @db.Uuid
+  reviewedAt      DateTime?           @map("reviewed_at") @db.Timestamptz(6)
+  rejectionReason String?             @map("rejection_reason")
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Cascade (db-review GATE, user sign-off 2026-06-02): KYC PII should not outlive
   // the user — the 30-day hard-delete cron purges submissions with the user. Differs
   // from payments' Restrict (no financial/GST retention duty on KYC). The service
   // never calls user.delete() directly — only the soft-delete path (db-review H2).
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   // SetNull (Step 24b): retain the audit row if the reviewing admin is later removed.
   reviewer AdminUser? @relation(fields: [reviewedBy], references: [id], onDelete: SetNull)
 
@@ -438,8 +458,8 @@ model VerificationSubmission {
 model RideContact {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
-  rideId       String?  @map("ride_id") @db.Uuid          // bot ride (SetNull on hard-delete)
-  postedRideId String?  @map("posted_ride_id") @db.Uuid   // verified ride (SetNull on hard-delete)
+  rideId       String?  @map("ride_id") @db.Uuid // bot ride (SetNull on hard-delete)
+  postedRideId String?  @map("posted_ride_id") @db.Uuid // verified ride (SetNull on hard-delete)
   contactedAt  DateTime @default(now()) @map("contacted_at") @db.Timestamptz(6)
 
   // Snapshot captured at reveal time so the "Contacted" list survives the source
@@ -474,19 +494,19 @@ model RideContact {
 // ---------------------------------------------------------------------------
 
 model RideReport {
-  id           String       @id @default(uuid()) @db.Uuid
-  reporterId   String       @map("reporter_id") @db.Uuid
-  rideId       String?      @map("ride_id") @db.Uuid
-  postedRideId String?      @map("posted_ride_id") @db.Uuid
-  reason       ReportReason
-  remarks      String?
+  id            String        @id @default(uuid()) @db.Uuid
+  reporterId    String        @map("reporter_id") @db.Uuid
+  rideId        String?       @map("ride_id") @db.Uuid
+  postedRideId  String?       @map("posted_ride_id") @db.Uuid
+  reason        ReportReason
+  remarks       String?
   // Holds an R2 object KEY, not a URL (the admin API presigns it on read).
-  screenshotKey String?     @map("screenshot_url")
-  reviewedAt   DateTime?    @map("reviewed_at") @db.Timestamptz(6)
+  screenshotKey String?       @map("screenshot_url")
+  reviewedAt    DateTime?     @map("reviewed_at") @db.Timestamptz(6)
   // Admin moderation verdict (Step 24c). reviewedBy → admin_users.id (never users — §6).
   reviewedBy    String?       @map("reviewed_by") @db.Uuid
   reviewAction  ReportAction? @map("review_action")
-  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
 
   reporter   User        @relation(fields: [reporterId], references: [id], onDelete: Cascade)
   ride       Ride?       @relation(fields: [rideId], references: [id], onDelete: Cascade)
@@ -538,13 +558,13 @@ model UserReport {
 // ---------------------------------------------------------------------------
 
 model Chat {
-  id            String   @id @default(uuid()) @db.Uuid
-  postedRideId  String   @map("posted_ride_id") @db.Uuid
-  initiatorId   String   @map("initiator_id") @db.Uuid
-  posterId      String   @map("poster_id") @db.Uuid
-  isActive      Boolean  @default(true) @map("is_active") // false = read-only (ride expired/done)
+  id            String    @id @default(uuid()) @db.Uuid
+  postedRideId  String    @map("posted_ride_id") @db.Uuid
+  initiatorId   String    @map("initiator_id") @db.Uuid
+  posterId      String    @map("poster_id") @db.Uuid
+  isActive      Boolean   @default(true) @map("is_active") // false = read-only (ride expired/done)
   lastMessageAt DateTime? @map("last_message_at") @db.Timestamptz(6)
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   postedRide PostedRide    @relation(fields: [postedRideId], references: [id], onDelete: Cascade)
   initiator  User          @relation("ChatInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
@@ -565,8 +585,8 @@ model ChatMessage {
   chatId        String      @map("chat_id") @db.Uuid
   senderId      String      @map("sender_id") @db.Uuid
   messageType   MessageType @default(text) @map("message_type")
-  messageText   String?     @map("message_text")    // null if image
-  attachmentUrl String?     @map("attachment_url")  // null if text
+  messageText   String?     @map("message_text") // null if image
+  attachmentUrl String?     @map("attachment_url") // null if text
   readAt        DateTime?   @map("read_at") @db.Timestamptz(6)
   sentAt        DateTime    @default(now()) @map("sent_at") @db.Timestamptz(6)
 

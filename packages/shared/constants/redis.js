@@ -34,4 +34,14 @@ const RIDES_NEW_CHANNEL = redisKey('rides', 'new');
 // posted-ride analogue of RIDES_NEW_CHANNEL (which carries bot rides).
 const POSTED_RIDES_NEW_CHANNEL = redisKey('posted-rides', 'new');
 
-module.exports = { REDIS_PREFIX, redisKey, RIDES_NEW_CHANNEL, POSTED_RIDES_NEW_CHANNEL };
+// Pub/sub channel: the admin API publishes here after any bot_filter_entries
+// write (Phase 17.4); easecab-bot reloads its filter lists on each message.
+const BOT_FILTERS_CHANGED_CHANNEL = redisKey('bot', 'filters', 'changed');
+
+module.exports = {
+  REDIS_PREFIX,
+  redisKey,
+  RIDES_NEW_CHANNEL,
+  POSTED_RIDES_NEW_CHANNEL,
+  BOT_FILTERS_CHANGED_CHANNEL,
+};

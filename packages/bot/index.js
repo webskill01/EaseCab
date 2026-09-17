@@ -8,14 +8,14 @@ const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
 const { DisconnectReason } = require('@whiskeysockets/baileys');
-const { createCityResolver, createAlerter } = require('@easecab/shared');
+const { createCityResolver, createAlerter, BOT_FILTERS_CHANGED_CHANNEL } = require('@easecab/shared');
 const { createRideRepository } = require('./features/ingest/rideRepository');
 const { createProcessMessage } = require('./features/ingest/processMessage');
 const { createHeartbeat } = require('./features/health/recordHeartbeat');
 const { createConnection } = require('./features/whatsapp/connection');
 const { createSlotRegistry } = require('./features/whatsapp/slotRegistry');
 const { createNumberPool } = require('./features/whatsapp/numberPool');
-const { FILTERS } = require('./config/filters');
+const { createFilterStore } = require('./features/filters/filterStore');
 
 const CITY_REFRESH_MS = 5 * 60 * 1000; // re-pull the city vocab every 5 min
 
@@ -62,6 +62,15 @@ async function main() {
 
   // Hold the vocab in a stable array reference and mutate it in place on refresh,
   // so the processMessage closure always sees the latest cities without re-wiring.
+  // Filter lists live in bot_filter_entries (Phase 17.3). start() throws on a
+  // bad/empty table, which exits the process: never ingest unfiltered.
+  const filterStore = createFilterStore({ prisma, logger });
+  await filterStore.start();
+  // The admin API publishes on every filter write; reload immediately.
+  const subscriber = redis.duplicate();
+  subscriber.on('message', () => filterStore.reload());
+  await subscriber.subscribe(BOT_FILTERS_CHANGED_CHANNEL);
+
   const cityNames = await loadCityVocab(prisma);
   logger.info({ count: cityNames.length }, 'city vocab loaded');
   const refresh = setInterval(async () => {
@@ -72,6 +81,9 @@ async function main() {
     } catch (err) {
       logger.warn({ err: err.message }, 'city vocab refresh failed; keeping previous');
     }
+    // ponytail: backstop for a publish missed while Redis was down; worst case a
+    // filter change lands CITY_REFRESH_MS late.
+    await filterStore.reload();
   }, CITY_REFRESH_MS);
 
   const resolver = createCityResolver({ prisma, redis, logger });
@@ -81,7 +93,7 @@ async function main() {
     resolver,
     repository,
     cityNames,
-    filters: FILTERS,
+    filters: filterStore.filters,
     heartbeat,
     logger,
   });
@@ -92,7 +104,7 @@ async function main() {
   const registry = createSlotRegistry({ sessionPath: env.WA_SESSION_PATH, slots: env.WA_NUMBERS });
   const pool = createNumberPool({
     slots: env.WA_NUMBERS,
-    targetGroupJid: env.WA_TARGET_GROUP_JID,
+    targetGroupJids: env.WA_TARGET_GROUP_JID,
     onMessage: processMessage,
     logger,
     redis,
@@ -112,6 +124,7 @@ async function main() {
       // pool may already be stopped — nothing to do
     }
     await prisma.$disconnect().catch(() => {});
+    subscriber.disconnect();
     redis.disconnect();
     process.exit(0);
   };

@@ -15,7 +15,19 @@ test('parseEnv accepts a fully valid env and freezes the result', () => {
   const r = parseEnv(BASE);
   assert.strictEqual(r.success, true);
   assert.ok(Object.isFrozen(r.data));
-  assert.strictEqual(r.data.WA_TARGET_GROUP_JID, BASE.WA_TARGET_GROUP_JID);
+  assert.deepStrictEqual(r.data.WA_TARGET_GROUP_JID, [BASE.WA_TARGET_GROUP_JID]);
+});
+
+test('WA_TARGET_GROUP_JID splits a comma list, trims, and drops empties', () => {
+  const r = parseEnv({ ...BASE, WA_TARGET_GROUP_JID: '1@g.us, 2@g.us ,' });
+  assert.strictEqual(r.success, true);
+  assert.deepStrictEqual(r.data.WA_TARGET_GROUP_JID, ['1@g.us', '2@g.us']);
+});
+
+test('WA_TARGET_GROUP_JID rejects an all-empty list and names it', () => {
+  const r = parseEnv({ ...BASE, WA_TARGET_GROUP_JID: ' , ' });
+  assert.strictEqual(r.success, false);
+  assert.ok(r.errors.some((line) => /WA_TARGET_GROUP_JID/.test(line)));
 });
 
 test('parseEnv defaults WA_SESSION_PATH when omitted', () => {
