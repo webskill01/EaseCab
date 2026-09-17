@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useBotFilters } from '@/features/bot-filters/hooks/useBotFilters'
+import { SyncResult } from '@/features/bot-filters/components/SyncResult'
 
 // Mirrors shared BOT_FILTER_LIST (the admin app doesn't bundle @easecab/shared).
+// `fleet: true` = the list is shared with the fleet control panels (shared FLEET_FIELDS).
 const LISTS = [
-  { id: 'blocked_phone', label: 'Blocked numbers', hint: 'Numbers inside message text. Paste any format, one or many: +91 98765 43210, 098765-43210, 0091 9876543210, (+91) 98765.43210, Hindi/Punjabi digits; separate with commas, spaces, new lines, / or |. Also sent to the fleet panel.' },
-  { id: 'blocked_sender', label: 'Blocked senders', hint: 'WhatsApp sender numbers. Same formats as blocked numbers. Also sent to the fleet panel.' },
-  { id: 'ignore_keyword', label: 'Ignore words', hint: 'A message containing any of these is dropped. Also sent to the fleet panel.' },
+  { id: 'blocked_phone', fleet: true, label: 'Blocked numbers', hint: 'Numbers inside message text. Paste any format, one or many: +91 98765 43210, 098765-43210, 0091 9876543210, (+91) 98765.43210, Hindi/Punjabi digits; separate with commas, spaces, new lines, / or |. Also sent to the fleet panel.' },
+  { id: 'blocked_sender', fleet: true, label: 'Blocked senders', hint: 'WhatsApp sender numbers. Same formats as blocked numbers. Also sent to the fleet panel.' },
+  { id: 'ignore_keyword', fleet: true, label: 'Ignore words', hint: 'A message containing any of these is dropped. Also sent to the fleet panel.' },
   { id: 'ride_keyword', label: 'Ride words', hint: 'Words that mark a message as a ride.' },
   { id: 'branding', label: 'Stamps', hint: 'Exact trailing "Forwarded Duty" lines stripped before dedup. Keep in sync with the fleet.' },
 ]
@@ -41,7 +43,7 @@ export default function BotFiltersPage() {
           <button
             key={l.id}
             type="button"
-            onClick={() => { f.setList(l.id); f.add.reset() }}
+            onClick={() => { f.setList(l.id); f.add.reset(); f.remove.reset() }}
             className={`shrink-0 rounded-md border px-3 py-1.5 text-sm ${l.id === f.list ? 'bg-ec-ink text-white' : 'text-ec-ink'}`}
           >
             {l.label}
@@ -63,6 +65,8 @@ export default function BotFiltersPage() {
       </form>
       <p className="mt-1 text-xs text-ec-ink60">{current.hint}</p>
       {f.add.data && <AddResult result={f.add.data} />}
+      {current.fleet && f.add.data && <SyncResult peers={f.add.data.peers} />}
+      {current.fleet && f.remove.data && <SyncResult peers={f.remove.data.peers} />}
       {f.add.isError && <p className="mt-1 text-xs text-red-600">{f.add.error.message}</p>}
       {f.remove.isError && <p className="mt-1 text-xs text-red-600">{f.remove.error.message}</p>}
 

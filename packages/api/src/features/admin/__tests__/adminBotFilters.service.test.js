@@ -77,6 +77,19 @@ test('admin adds to fleet-shared lists are replayed to the panels in their proto
   assert.deepStrictEqual(r.peers, OK_PEERS);
 });
 
+test('a panel that rejects the change is logged and reported, not thrown', async () => {
+  const warned = [];
+  const svc = createAdminBotFiltersService({
+    repo: { async createMany() { return 1; }, async findByValue() { return null; } },
+    redis: { async publish() {} },
+    logger: { warn: (obj) => warned.push(obj) },
+    fleet: { async post() { return [{ peer: 'fleet', ok: false, error: 'HTTP 403' }]; } },
+  });
+  const r = await svc.add({ list: 'blocked_phone', value: '9876543210' });
+  assert.deepStrictEqual(r.peers, [{ peer: 'fleet', ok: false, error: 'HTTP 403' }]);
+  assert.strictEqual(warned[0].peer, 'fleet');
+});
+
 test('writes arriving from a panel ({ mirror: false }) are not bounced back', async () => {
   const { service, mirrored, created } = setup({ withFleet: true });
   await service.add({ list: 'blocked_sender', value: '9876543210' }, { mirror: false });

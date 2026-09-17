@@ -50,8 +50,13 @@ function createAdminBotFiltersService({ repo, redis, logger, fleet }) {
   }
 
   /** Replay to the fleet panels when this list is fleet-shared and mirroring is on. */
-  function toFleet(list, mirror, path, body) {
-    return mirror && fleet && FLEET_BY_LIST[list] ? fleet.post(path, body) : Promise.resolve([]);
+  async function toFleet(list, mirror, path, body) {
+    if (!mirror || !fleet || !FLEET_BY_LIST[list]) return [];
+    const results = await fleet.post(path, body);
+    for (const r of results.filter((x) => !x.ok)) {
+      logger.warn({ peer: r.peer, path, err: r.error }, 'fleet panel did not accept bot filter change');
+    }
+    return results;
   }
 
   async function deleteRow(row, mirror) {

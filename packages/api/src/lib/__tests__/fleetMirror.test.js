@@ -25,7 +25,8 @@ test('post sends the fleet protocol to every peer and reports each result', asyn
   assert.strictEqual(calls[0].url, 'https://a.example/api/block/number');
   assert.strictEqual(calls[0].opts.method, 'POST');
   assert.strictEqual(calls[0].opts.headers['x-token'], 'ta');
-  assert.strictEqual(calls[0].opts.headers['x-mirror'], '1');
+  // No x-mirror: the panel must forward EaseCab's change to the rest of the fleet.
+  assert.strictEqual(calls[0].opts.headers['x-mirror'], undefined);
   assert.strictEqual(calls[0].opts.headers['CF-Access-Client-Id'], 'id');
   assert.strictEqual(calls[0].opts.body, '{"input":"9876543210"}');
 });

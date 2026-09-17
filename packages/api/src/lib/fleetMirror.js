@@ -3,9 +3,11 @@
 const PEER_TIMEOUT_MS = 8000;
 
 /**
- * Replays a bot-filter write to every fleet control panel (Phase 17.5), speaking
- * the panels' own protocol: POST with x-token, plus x-mirror so the receiving
- * panel does not replay it onward. Fire-and-report like the fleet: never throws,
+ * Sends an EaseCab-originated bot-filter write to every fleet control panel
+ * (Phase 17.5) in the panels' own protocol (POST + x-token). Deliberately WITHOUT
+ * x-mirror: EaseCab peers with one panel only, so that panel must replay the write
+ * to the rest of the fleet (e.g. MultiBot). Its echo back to EaseCab is a no-op
+ * (duplicate add / missing remove). Fire-and-report like the fleet: never throws,
  * returns one result per peer so the admin sees which panel missed the change.
  * ponytail: no retry queue — a peer that was down is caught up by scripts/fleet-sync.js.
  *
@@ -31,7 +33,7 @@ function createFleetMirror({ peers, fetchImpl = fetch }) {
     try {
       const res = await fetchImpl(`${base(peer)}${path}`, {
         method: 'POST',
-        headers: headers(peer, { 'Content-Type': 'application/json', 'x-mirror': '1' }),
+        headers: headers(peer, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(PEER_TIMEOUT_MS),
       });
