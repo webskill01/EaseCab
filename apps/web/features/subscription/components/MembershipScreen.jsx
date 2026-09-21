@@ -66,7 +66,7 @@ function PlanCard({ t }) {
   )
 }
 
-/** Membership hub (SCREENS §6/§8) — status card + ₹149 plan + Razorpay upgrade/renew + history. */
+/** Membership hub (SCREENS §6/§8) — status card + ₹149 plan + Cashfree upgrade/renew + history. */
 export function MembershipScreen() {
   const t = useTranslations('membership')
   const { data: sub, isLoading, isError } = useMembership()
@@ -101,6 +101,7 @@ export function MembershipScreen() {
           <PlanCard t={t} />
 
           {checkout.errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t('error.checkout')}</p>}
+          {checkout.pending && <p className="text-[13px] font-semibold text-ec-ink60">{t('notice.pending')}</p>}
 
           <div>
             <button

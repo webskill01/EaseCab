@@ -15,7 +15,7 @@ const CONFIG = {
   cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
   adminJwt: { accessSecret: 'c'.repeat(32), refreshSecret: 'd'.repeat(32), accessTtl: '15m', refreshTtl: '8h' },
-  razorpay: { keyId: 'rzp_test_x', keySecret: 'x'.repeat(16), webhookSecret: 'w'.repeat(16) },
+  cashfree: { secretKey: 'x'.repeat(16) },
 };
 
 function fakeRedis() {
@@ -56,7 +56,7 @@ function app() {
   return buildApp({
     prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { verifyOtpToken: async () => ({ phone: '+910000000000' }), mintCustomToken: async () => 'ct' },
-    subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'o' }; } }, surepass,
+    subscriber: inertSubscriber, cashfree: { async createOrder() { return { id: 'o' }; } }, surepass,
   });
 }
 

@@ -81,18 +81,19 @@ const serverEnvSchema = envSchema.extend({
   FIREBASE_PROJECT_ID: z.string().min(1),
   FIREBASE_CLIENT_EMAIL: z.string().email(),
   FIREBASE_PRIVATE_KEY: z.string().min(1),
-  // Razorpay (Step 11). Backend only — KEY_SECRET + WEBHOOK_SECRET never reach the
-  // frontend bundle (§11). KEY_ID is the public checkout key. Secrets floored at 16.
-  RAZORPAY_KEY_ID: z.string().min(1),
-  RAZORPAY_KEY_SECRET: z.string().min(16),
-  RAZORPAY_WEBHOOK_SECRET: z.string().min(16),
-  // STUB until Razorpay activation: RAZORPAY_STUB=true injects the deterministic
-  // client (server.js) AND skips client/webhook signature verification, so the full
-  // upgrade→credit flow runs without a gateway (demo). FATAL in production (server.js
-  // refuses to boot) so payments can never be silently bypassed live. Swap to real
-  // keys at go-live with zero code change. The KEY/SECRET above still need dummy
-  // values (≥16 chars) to satisfy this schema even when stubbed.
-  RAZORPAY_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+  // Cashfree PG (Phase 16.1, replaced Razorpay). Backend only — neither value reaches
+  // the frontend bundle (§11); the browser only ever gets a payment_session_id. The
+  // SECRET_KEY also signs webhooks (Cashfree has no separate webhook secret).
+  CASHFREE_APP_ID: z.string().min(1),
+  CASHFREE_SECRET_KEY: z.string().min(16),
+  // sandbox → sandbox.cashfree.com, production → api.cashfree.com. Keys are per-env.
+  CASHFREE_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
+  // Where Cashfree sends the browser after redirect-style methods (net-banking, some UPI).
+  CASHFREE_RETURN_URL: z.string().url().default('https://easecab.com/membership'),
+  // STUB until activation: CASHFREE_STUB=true injects the deterministic client (every
+  // order instantly paid) AND skips webhook signature verification — demo only. FATAL
+  // in production (server.js). The APP_ID/SECRET above still need dummy values.
+  CASHFREE_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   // Surepass KYC (Step 12). Backend only (§11) — token never reaches the frontend.
   // STUB until incorporation: set SUREPASS_STUB=true to inject the deterministic
   // client (server.js); swap to a real token at go-live with zero code change.
@@ -171,7 +172,14 @@ function parseServerEnv(raw) {
   if (!result.success) {
     return { success: false, errors: formatIssues(result.error) };
   }
-  return { success: true, data: Object.freeze(result.data) };
+  // Key/environment pairing (security-review L1): Cashfree sandbox App IDs start with
+  // TEST, production ones never do. A mismatch fails every payment, or worse, charges
+  // real money from a box that thinks it is testing — refuse to boot instead.
+  const d = result.data;
+  if (!d.CASHFREE_STUB && d.CASHFREE_APP_ID.startsWith('TEST') !== (d.CASHFREE_ENV === 'sandbox')) {
+    return { success: false, errors: ['CASHFREE_APP_ID: does not match CASHFREE_ENV (sandbox App IDs start with TEST)'] };
+  }
+  return { success: true, data: Object.freeze(d) };
 }
 
 module.exports = { envSchema, serverEnvSchema, parseEnv, parseServerEnv };

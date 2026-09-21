@@ -17,15 +17,15 @@ const { sendSuccess } = require('../../http/respond');
 function createSubscriptionRouter({ service, requireAuth }) {
   const router = express.Router();
 
-  // Create / reuse the ₹149 order for the Razorpay checkout popup.
+  // Create / reuse the ₹149 Cashfree order; returns the payment_session_id for checkout.
   router.post('/checkout', requireAuth, async (req, res) => {
     const data = await service.createCheckout(req.user.id);
     sendSuccess(res, { data });
   });
 
-  // Client callback after the popup succeeds — instant credit.
+  // Client callback after checkout closes — server re-fetches the order, instant credit.
   router.post('/verify', requireAuth, validate(verifyPaymentSchema), async (req, res) => {
-    const data = await service.verifyPayment(req.valid.body);
+    const data = await service.verifyPayment({ userId: req.user.id, orderId: req.valid.body.orderId });
     sendSuccess(res, { data });
   });
 
@@ -46,8 +46,8 @@ function createSubscriptionRouter({ service, requireAuth }) {
 
 /**
  * The webhook handler — mounted in app.js with express.raw() BEFORE the global JSON
- * parser, because HMAC verification needs the exact bytes Razorpay signed. Always
- * answers 2xx on a verified event (incl. ignored/duplicate) so Razorpay stops
+ * parser, because HMAC verification needs the exact bytes Cashfree signed. Always
+ * answers 2xx on a verified event (incl. ignored/duplicate) so Cashfree stops
  * retrying; a bad signature throws → 422 via the global error handler.
  *
  * @param {object} deps
@@ -56,8 +56,12 @@ function createSubscriptionRouter({ service, requireAuth }) {
  */
 function createWebhookHandler({ service }) {
   return async function webhookHandler(req, res) {
-    const signature = req.headers['x-razorpay-signature'];
-    const data = await service.handleWebhook({ rawBody: req.body, signature });
+    const data = await service.handleWebhook({
+      ip: req.ip,
+      rawBody: req.body,
+      timestamp: req.headers['x-webhook-timestamp'],
+      signature: req.headers['x-webhook-signature'],
+    });
     sendSuccess(res, { data });
   };
 }

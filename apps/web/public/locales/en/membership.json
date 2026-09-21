@@ -33,7 +33,10 @@
     "checkout": "Payment couldn't be completed. Please try again.",
     "load": "Couldn't load your membership."
   },
-  "securedBy": "Secured by Razorpay · UPI · Cards",
+  "notice": {
+    "pending": "Payment is processing. Your membership will activate automatically in a few minutes."
+  },
+  "securedBy": "Secured by Cashfree · UPI · Cards",
   "plan": {
     "title": "Monthly Plan",
     "popular": "Popular",

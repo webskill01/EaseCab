@@ -10,7 +10,7 @@ const CONFIG = {
   corsOrigins: ['http://localhost:3000'],
   cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
-  razorpay: { keyId: 'rzp_test_x', keySecret: 'x'.repeat(16), webhookSecret: 'w'.repeat(16) },
+  cashfree: { secretKey: 'x'.repeat(16) },
 };
 
 // Minimal in-memory fakes so the test exercises route→service→repo wiring + cookies.
@@ -56,7 +56,7 @@ function fakePrisma() {
 const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
 
 function appWith(identity) {
-  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'order_test' }; } }, surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } } });
+  return buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity, subscriber: inertSubscriber, cashfree: { async createOrder() { return { id: 'order_test' }; } }, surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } } });
 }
 
 const okIdentity = { verifyOtpToken: async () => ({ phone: '+919876543210' }), mintCustomToken: async (uid) => `ct:${uid}` };

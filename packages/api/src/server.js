@@ -6,11 +6,12 @@ const { serverEnv } = require('../config/serverEnv');
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
+const { PAYMENT_RECONCILE } = require('@easecab/shared');
 const { buildApp } = require('./app');
 const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
 const { createChatStore } = require('./lib/firestoreChat');
 const { createPushSender } = require('./lib/fcm');
-const { createRazorpayClient, createStubRazorpayClient } = require('./lib/razorpay');
+const { createCashfreeClient, createStubCashfreeClient } = require('./lib/cashfree');
 const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
 const { createR2Client, createStubR2Client } = require('./lib/r2.js');
 
@@ -59,12 +60,12 @@ async function main() {
       accessTtl: serverEnv.ADMIN_JWT_ACCESS_TTL,
       refreshTtl: serverEnv.ADMIN_JWT_REFRESH_TTL,
     },
-    razorpay: {
-      keyId: serverEnv.RAZORPAY_KEY_ID,
-      keySecret: serverEnv.RAZORPAY_KEY_SECRET,
-      webhookSecret: serverEnv.RAZORPAY_WEBHOOK_SECRET,
-      // stub demo mode → the service skips signature verification (see subscription.service).
-      stub: serverEnv.RAZORPAY_STUB,
+    cashfree: {
+      secretKey: serverEnv.CASHFREE_SECRET_KEY,
+      // Sent to the browser with each checkout so the web SDK mode always matches the API keys.
+      env: serverEnv.CASHFREE_ENV,
+      // stub demo mode → the service skips webhook signature verification (see subscription.service).
+      stub: serverEnv.CASHFREE_STUB,
     },
     // Fleet control-panel peer sync (Phase 17.5).
     fleet: { syncToken: serverEnv.FLEET_SYNC_TOKEN, peers: serverEnv.FLEET_PEERS },
@@ -90,18 +91,20 @@ async function main() {
     privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
   });
 
-  // Razorpay: deterministic stub until activation (RAZORPAY_STUB=true), real client at
-  // go-live — swapping is an env change, zero code change (Phase 9a). FATAL in prod so
+  // Cashfree: deterministic stub until activation (CASHFREE_STUB=true), real client at
+  // go-live — swapping is an env change, zero code change (Phase 16.1). FATAL in prod so
   // payments can never be silently bypassed live (mirrors the SUREPASS_STUB/R2_STUB guards).
-  if (serverEnv.RAZORPAY_STUB && serverEnv.NODE_ENV === 'production') {
-    logger.error('FATAL: RAZORPAY_STUB=true in production — refusing to start (payments would be bypassed)');
+  if (serverEnv.CASHFREE_STUB && serverEnv.NODE_ENV === 'production') {
+    logger.error('FATAL: CASHFREE_STUB=true in production — refusing to start (payments would be bypassed)');
     process.exit(1);
   }
-  const razorpay = serverEnv.RAZORPAY_STUB
-    ? createStubRazorpayClient()
-    : createRazorpayClient({
-        keyId: serverEnv.RAZORPAY_KEY_ID,
-        keySecret: serverEnv.RAZORPAY_KEY_SECRET,
+  const cashfree = serverEnv.CASHFREE_STUB
+    ? createStubCashfreeClient()
+    : createCashfreeClient({
+        appId: serverEnv.CASHFREE_APP_ID,
+        secretKey: serverEnv.CASHFREE_SECRET_KEY,
+        env: serverEnv.CASHFREE_ENV,
+        returnUrl: serverEnv.CASHFREE_RETURN_URL,
       });
 
   // Surepass: deterministic stub until incorporation (SUREPASS_STUB=true), real
@@ -126,13 +129,26 @@ async function main() {
         publicBaseUrl: serverEnv.R2_PUBLIC_BASE_URL,
       });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber, uploads });
+  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });
 
+  // Payment reconciliation (Phase 16.1): credit paid-but-unconfirmed orders if a webhook
+  // was lost. Off in stub mode — the stub reports every order paid.
+  async function reconcilePayments() {
+    try {
+      const credited = await app.locals.subscriptionService.reconcileOpenOrders();
+      if (credited > 0) logger.warn({ credited }, 'payment reconcile credited orders the webhook missed');
+    } catch (err) {
+      logger.error({ err }, 'payment reconcile failed');
+    }
+  }
+  const reconcileTimer = serverEnv.CASHFREE_STUB ? null : setInterval(reconcilePayments, PAYMENT_RECONCILE.INTERVAL_MS);
+
   const shutdown = (signal) => {
     logger.info({ signal }, 'shutting down api server');
+    if (reconcileTimer) clearInterval(reconcileTimer);
     server.close(async () => {
       await app.locals.rideFeed?.close().catch(() => {});
       await app.locals.pushDispatcher?.close().catch(() => {});

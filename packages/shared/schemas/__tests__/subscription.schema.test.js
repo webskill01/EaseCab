@@ -5,13 +5,14 @@ const assert = require('node:assert');
 const { verifyPaymentSchema, paymentsListQuerySchema } = require('../subscription.schema');
 
 test('accepts a well-formed verify body', () => {
-  const r = verifyPaymentSchema.safeParse({ orderId: 'order_x', paymentId: 'pay_x', signature: 'abc' });
+  const r = verifyPaymentSchema.safeParse({ orderId: 'sub_0123456789abcdef' });
   assert.ok(r.success);
 });
 
-test('rejects a missing field', () => {
-  const r = verifyPaymentSchema.safeParse({ orderId: 'order_x', paymentId: 'pay_x' });
-  assert.strictEqual(r.success, false);
+test('rejects a missing or malformed order id (path chars, over 45)', () => {
+  assert.strictEqual(verifyPaymentSchema.safeParse({}).success, false);
+  assert.strictEqual(verifyPaymentSchema.safeParse({ orderId: '../x' }).success, false);
+  assert.strictEqual(verifyPaymentSchema.safeParse({ orderId: 'a'.repeat(46) }).success, false);
 });
 
 test('paymentsListQuerySchema defaults limit and accepts a cursor', () => {

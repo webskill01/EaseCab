@@ -13,7 +13,7 @@ const CONFIG = {
   corsOrigins: ['http://localhost:3000'],
   cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
-  razorpay: { keyId: 'rzp_test_x', keySecret: 'x'.repeat(16), webhookSecret: 'w'.repeat(16) },
+  cashfree: { secretKey: 'x'.repeat(16) },
 };
 const jwt = createJwt(CONFIG.jwt);
 const cookieFor = (id) => `${AUTH_COOKIES.ACCESS_TOKEN}=${jwt.signAccess({ sub: id, role: 'user' })}`;
@@ -78,7 +78,7 @@ function makeApp(seed) {
     prisma: fakePrisma(seed), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { async verifyOtpToken() { return { phone: '+910000000000' }; } },
     subscriber: sseSub(),
-    razorpay: { async createOrder() { return { id: 'order_x' }; } },
+    cashfree: { async createOrder() { return { id: 'order_x' }; } },
     surepass: {},
     pushSender, pushSubscriber,
   });

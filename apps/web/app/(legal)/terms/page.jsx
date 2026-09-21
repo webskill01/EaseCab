@@ -104,7 +104,7 @@ export default function TermsAndConditions() {
 
       <h3>5.4 Billing</h3>
       <p>
-        Payments are processed by Razorpay. By subscribing, you authorise Razorpay to charge your
+        Payments are processed by Cashfree Payments. By subscribing, you authorise Cashfree to charge your
         chosen payment method on your behalf. You are responsible for ensuring your payment method
         remains valid.
       </p>

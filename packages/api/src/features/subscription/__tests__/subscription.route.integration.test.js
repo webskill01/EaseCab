@@ -13,11 +13,17 @@ const CONFIG = {
   corsOrigins: ['http://localhost:3000'],
   cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
-  razorpay: { keyId: 'rzp_test_x', keySecret: 's'.repeat(16), webhookSecret: 'w'.repeat(16) },
+  cashfree: { secretKey: 's'.repeat(16), env: 'sandbox' },
 };
 const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
 const jwt = createJwt(CONFIG.jwt);
 const authCookie = `${AUTH_COOKIES.ACCESS_TOKEN}=${jwt.signAccess({ sub: 'u1', role: 'user' })}`;
+
+const successEvent = (orderId, cfPaymentId) => ({
+  type: 'PAYMENT_SUCCESS_WEBHOOK',
+  data: { order: { order_id: orderId }, payment: { cf_payment_id: cfPaymentId, payment_status: 'SUCCESS' } },
+});
+const sign = (ts, raw) => crypto.createHmac('sha256', CONFIG.cashfree.secretKey).update(ts + raw).digest('base64');
 
 function fakeRedis() {
   const store = new Map();
@@ -36,6 +42,7 @@ function fakePrisma() {
   const sub = { userId: 'u1', status: 'trial', trialExpiresAt: new Date(Date.now() + 2 * 86_400_000), expiresAt: null, paidStartedAt: null };
   return {
     _sub: sub,
+    user: { async findUnique() { return { phone: '+919876543210' }; } },
     payment: {
       async findFirst({ where, orderBy }) {
         let rows = payments.filter((p) => (where.userId ? p.userId === where.userId : true) && (where.status ? p.status === where.status : true) && (where.razorpayOrderId ? p.razorpayOrderId === where.razorpayOrderId : true));
@@ -72,7 +79,11 @@ function appWith(prisma) {
     prisma, redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { verifyOtpToken: async () => ({ phone: '+919876543210' }) },
     subscriber: inertSubscriber,
-    razorpay: { async createOrder() { return { id: 'order_new' }; } },
+    cashfree: {
+      async createOrder() { return { id: 'order_new', paymentSessionId: 'sess_1' }; },
+      async getActiveSession() { return 'sess_1'; },
+      async getPaymentState() { return { state: 'paid', paymentId: '555', amountRupees: 149 }; },
+    },
     surepass: { async generateAadhaarOtp() { return { clientId: 'c' }; }, async submitAadhaarOtp() { return { success: true, name: 'T' }; }, async verifyDl() { return { success: true, name: 'T', ref: 'r' }; }, async verifyRc() { return { success: true, name: 'T', ref: 'r' }; } },
   });
 }
@@ -95,10 +106,20 @@ test('webhook with a valid signature credits + flips sub to active', async () =>
   const prisma = fakePrisma();
   const app = appWith(prisma);
   await request(app).post('/api/v1/subscriptions/checkout').set('Cookie', authCookie);
-  const body = { event: 'payment.captured', payload: { payment: { entity: { id: 'pay_1', order_id: 'order_new', amount: 14900 } } } };
-  const raw = JSON.stringify(body);
-  const sig = crypto.createHmac('sha256', CONFIG.razorpay.webhookSecret).update(raw).digest('hex');
-  const res = await request(app).post('/api/v1/subscriptions/webhook').set('X-Razorpay-Signature', sig).set('Content-Type', 'application/json').send(raw);
+  const raw = JSON.stringify(successEvent('order_new', 555));
+  const ts = '1726900000';
+  const sig = sign(ts, raw);
+  const res = await request(app).post('/api/v1/subscriptions/webhook').set('x-webhook-timestamp', ts).set('x-webhook-signature', sig).set('Content-Type', 'application/json').send(raw);
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.data.credited, true);
+  assert.strictEqual(prisma._sub.status, 'active');
+});
+
+test('POST /verify credits once Cashfree reports the order paid', async () => {
+  const prisma = fakePrisma();
+  const app = appWith(prisma);
+  await request(app).post('/api/v1/subscriptions/checkout').set('Cookie', authCookie);
+  const res = await request(app).post('/api/v1/subscriptions/verify').set('Cookie', authCookie).send({ orderId: 'order_new' });
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.body.data.credited, true);
   assert.strictEqual(prisma._sub.status, 'active');
@@ -107,8 +128,8 @@ test('webhook with a valid signature credits + flips sub to active', async () =>
 test('webhook with a forged signature → 422, no credit', async () => {
   const prisma = fakePrisma();
   const app = appWith(prisma);
-  const raw = JSON.stringify({ event: 'payment.captured' });
-  const res = await request(app).post('/api/v1/subscriptions/webhook').set('X-Razorpay-Signature', 'deadbeef').set('Content-Type', 'application/json').send(raw);
+  const raw = JSON.stringify(successEvent('order_new', 555));
+  const res = await request(app).post('/api/v1/subscriptions/webhook').set('x-webhook-timestamp', '1').set('x-webhook-signature', 'ZGVhZGJlZWY=').set('Content-Type', 'application/json').send(raw);
   assert.strictEqual(res.status, 422);
   assert.strictEqual(prisma._sub.status, 'trial');
 });
@@ -128,10 +149,10 @@ test('GET /payments returns the captured-payment history after a webhook credit'
   const prisma = fakePrisma();
   const app = appWith(prisma);
   await request(app).post('/api/v1/subscriptions/checkout').set('Cookie', authCookie);
-  const body = { event: 'payment.captured', payload: { payment: { entity: { id: 'pay_1', order_id: 'order_new', amount: 14900 } } } };
-  const raw = JSON.stringify(body);
-  const sig = crypto.createHmac('sha256', CONFIG.razorpay.webhookSecret).update(raw).digest('hex');
-  await request(app).post('/api/v1/subscriptions/webhook').set('X-Razorpay-Signature', sig).set('Content-Type', 'application/json').send(raw);
+  const raw = JSON.stringify(successEvent('order_new', 555));
+  const ts = '1726900000';
+  const sig = sign(ts, raw);
+  await request(app).post('/api/v1/subscriptions/webhook').set('x-webhook-timestamp', ts).set('x-webhook-signature', sig).set('Content-Type', 'application/json').send(raw);
 
   const res = await request(app).get('/api/v1/subscriptions/payments').set('Cookie', authCookie);
   assert.strictEqual(res.status, 200);

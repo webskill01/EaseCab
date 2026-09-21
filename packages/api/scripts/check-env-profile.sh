@@ -18,7 +18,7 @@ done
 
 echo
 echo "--- stub flags (true = FAKE, not talking to the vendor) ---"
-for v in RAZORPAY_STUB SUREPASS_STUB R2_STUB; do
+for v in CASHFREE_STUB SUREPASS_STUB R2_STUB; do
   val=$(get "$v")
   [ -z "$val" ] && val='(unset -> false)'
   printf '%-18s %s\n' "$v" "$val"
@@ -26,7 +26,7 @@ done
 
 echo
 echo "--- credentials present? (value never printed) ---"
-for v in RAZORPAY_KEY_ID RAZORPAY_KEY_SECRET RAZORPAY_WEBHOOK_SECRET \
+for v in CASHFREE_ENV CASHFREE_APP_ID CASHFREE_SECRET_KEY \
          SUREPASS_TOKEN R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY \
          FIREBASE_PROJECT_ID FIREBASE_CLIENT_EMAIL FIREBASE_PRIVATE_KEY; do
   val=$(get "$v")

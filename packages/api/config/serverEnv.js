@@ -34,8 +34,8 @@ if (!result.success) {
  *   ADMIN_JWT_ACCESS_SECRET: string, ADMIN_JWT_REFRESH_SECRET: string,
  *   ADMIN_JWT_ACCESS_TTL: string, ADMIN_JWT_REFRESH_TTL: string,
  *   CORS_ORIGINS: string[],
- *   RAZORPAY_KEY_ID: string, RAZORPAY_KEY_SECRET: string,
- *   RAZORPAY_WEBHOOK_SECRET: string,
+ *   CASHFREE_APP_ID: string, CASHFREE_SECRET_KEY: string, CASHFREE_ENV: string,
+ *   CASHFREE_RETURN_URL: string, CASHFREE_STUB: boolean,
  *   SUREPASS_TOKEN: string, SUREPASS_BASE_URL: string, SUREPASS_STUB: boolean,
  *   R2_ACCOUNT_ID: string, R2_ACCESS_KEY_ID: string, R2_SECRET_ACCESS_KEY: string,
  *   R2_BUCKET: string, R2_PUBLIC_BASE_URL: string, R2_STUB: boolean

@@ -63,9 +63,10 @@ export default function PrivacyPolicy() {
 
       <h3>2.5 Payment Information</h3>
       <p>
-        Subscription payments are processed by Razorpay. We do not receive, store, or have access
+        Subscription payments are processed by Cashfree Payments. We share your registered phone
+        number with Cashfree to create the payment order. We do not receive, store, or have access
         to your card number, bank account details, or UPI credentials. We store only subscription
-        status, plan period, and anonymised Razorpay transaction identifiers.
+        status, plan period, and Cashfree order and payment identifiers.
       </p>
 
       <h3>2.6 Usage Data</h3>
@@ -98,8 +99,8 @@ export default function PrivacyPolicy() {
           (FCM). Google&apos;s Privacy Policy applies to data processed by Firebase.
         </li>
         <li>
-          <strong>Razorpay</strong> — Subscription payment processing. Razorpay&apos;s Privacy
-          Policy applies to all payment data.
+          <strong>Cashfree Payments</strong> — Subscription payment processing. Cashfree&apos;s
+          Privacy Policy applies to all payment data.
         </li>
         <li>
           <strong>Surepass</strong> — KYC verification (Aadhaar, Driving Licence, RC). Surepass

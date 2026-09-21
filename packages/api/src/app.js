@@ -109,9 +109,9 @@ const { createPasswordHasher } = require('./lib/passwordHasher');
  * @param {import('ioredis').Redis} deps.subscriber - dedicated redis subscriber
  *   (a `redis.duplicate()`) backing the rides SSE fan-out; a subscriber-mode
  *   connection can't run normal commands, so it must be separate from `redis`.
- * @param {{ createOrder(args): Promise<{ id: string }> }} deps.razorpay - injected
- *   Razorpay vendor boundary (Step 11); the subscription service depends only on
- *   this interface, never on the SDK.
+ * @param {{ createOrder, getActiveSession, getPaymentState }} deps.cashfree - injected
+ *   Cashfree PG vendor boundary (Phase 16.1); the subscription service depends only on
+ *   this interface, never on HTTP details.
  * @param {{ generateAadhaarOtp, submitAadhaarOtp, verifyDl, verifyRc }} deps.surepass
  *   - injected Surepass KYC vendor boundary (Step 12); stub until incorporation.
  * @param {{ createChatDoc, appendMessage }} [deps.chatStore] - injected Firestore
@@ -127,7 +127,7 @@ const { createPasswordHasher } = require('./lib/passwordHasher');
  *   uploads routes touch it, so harnesses that don't exercise uploads may omit it.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpay, surepass, chatStore, pushSender, pushSubscriber, uploads }) {
+function buildApp({ prisma, redis, logger, config, identity, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -172,7 +172,8 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, razorpa
   // Subscription service (Step 11). The webhook must read the RAW body for HMAC, so
   // it is mounted with express.raw() BEFORE the global express.json() below.
   const subscriptionRepo = createSubscriptionRepository({ prisma, redis });
-  const subscriptionService = createSubscriptionService({ repo: subscriptionRepo, razorpay, config });
+  const subscriptionService = createSubscriptionService({ repo: subscriptionRepo, cashfree, config });
+  app.locals.subscriptionService = subscriptionService; // server.js runs the reconcile sweep on it
   app.use(
     '/api/v1/subscriptions/webhook',
     express.raw({ type: '*/*', limit: '100kb' }),

@@ -16,8 +16,8 @@ export async function getMembership() {
 }
 
 /**
- * Create (or reuse) the ₹149 Razorpay order for the checkout popup.
- * @returns {Promise<{ orderId: string, amount: number, currency: string, keyId: string }>}
+ * Create (or reuse) the ₹149 Cashfree order for the checkout modal.
+ * @returns {Promise<{ orderId: string, paymentSessionId: string, amount: number, mode: string } | { alreadyPaid: true }>}
  */
 export async function createCheckout() {
   const { data } = await apiFetch('/subscriptions/checkout', { method: 'POST' })
@@ -25,8 +25,8 @@ export async function createCheckout() {
 }
 
 /**
- * Client callback after the Razorpay popup succeeds — HMAC-verified server-side, instant credit.
- * @param {{ orderId: string, paymentId: string, signature: string }} body
+ * After the modal closes — the API re-fetches the order from Cashfree and credits if paid.
+ * @param {{ orderId: string }} body
  * @returns {Promise<{ credited: boolean, reason?: string }>}
  */
 export async function verifyPayment(body) {

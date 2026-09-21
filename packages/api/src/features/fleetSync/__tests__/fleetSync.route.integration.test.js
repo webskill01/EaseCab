@@ -14,7 +14,7 @@ const CONFIG = {
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
   adminJwt: { accessSecret: 'c'.repeat(32), refreshSecret: 'd'.repeat(32), accessTtl: '15m', refreshTtl: '8h' },
   fleet: { syncToken: TOKEN, peers: [] },
-  razorpay: { keyId: 'rzp_test_x', keySecret: 'x'.repeat(16), webhookSecret: 'w'.repeat(16) },
+  cashfree: { secretKey: 'x'.repeat(16) },
 };
 
 const published = [];
@@ -61,7 +61,7 @@ function app(config = CONFIG) {
   return buildApp({
     prisma, redis: fakeRedis(), logger: pino({ level: 'silent' }), config,
     identity: { verifyOtpToken: async () => ({ phone: '+910000000000' }), mintCustomToken: async () => 'ct' },
-    subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'o' }; } }, surepass,
+    subscriber: inertSubscriber, cashfree: { async createOrder() { return { id: 'o' }; } }, surepass,
   });
 }
 const call = (method, path) => request(app())[method](`/api/v1/fleet${path}`).set('x-token', TOKEN);
@@ -77,7 +77,7 @@ test('an IP over the failed-token limit gets 429 even with the right token', asy
   const res = await request(buildApp({
     prisma, redis: blocked, logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { verifyOtpToken: async () => ({}), mintCustomToken: async () => 'ct' },
-    subscriber: inertSubscriber, razorpay: { async createOrder() { return { id: 'o' }; } }, surepass,
+    subscriber: inertSubscriber, cashfree: { async createOrder() { return { id: 'o' }; } }, surepass,
   })).get('/api/v1/fleet/api/bots').set('x-token', TOKEN);
   assert.strictEqual(res.status, 429);
 });

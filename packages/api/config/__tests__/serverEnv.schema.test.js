@@ -23,9 +23,8 @@ const BASE = Object.freeze({
   FIREBASE_PROJECT_ID: 'easecab-test',
   FIREBASE_CLIENT_EMAIL: 'svc@easecab-test.iam.gserviceaccount.com',
   FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n',
-  RAZORPAY_KEY_ID: 'rzp_test_abc123',
-  RAZORPAY_KEY_SECRET: 'x'.repeat(16),
-  RAZORPAY_WEBHOOK_SECRET: 'w'.repeat(16),
+  CASHFREE_APP_ID: 'TEST_abc123',
+  CASHFREE_SECRET_KEY: 'x'.repeat(16),
   SUREPASS_TOKEN: 't'.repeat(16),
   R2_ACCOUNT_ID: 'acc_test',
   R2_ACCESS_KEY_ID: 'akid_test',
@@ -122,9 +121,8 @@ test('serverEnvSchema requires the FIREBASE_* credentials', () => {
     FIREBASE_PROJECT_ID: 'easecab',
     FIREBASE_CLIENT_EMAIL: 'svc@easecab.iam.gserviceaccount.com',
     FIREBASE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n',
-    RAZORPAY_KEY_ID: BASE.RAZORPAY_KEY_ID,
-    RAZORPAY_KEY_SECRET: BASE.RAZORPAY_KEY_SECRET,
-    RAZORPAY_WEBHOOK_SECRET: BASE.RAZORPAY_WEBHOOK_SECRET,
+    CASHFREE_APP_ID: BASE.CASHFREE_APP_ID,
+    CASHFREE_SECRET_KEY: BASE.CASHFREE_SECRET_KEY,
     SUREPASS_TOKEN: BASE.SUREPASS_TOKEN,
     R2_ACCOUNT_ID: BASE.R2_ACCOUNT_ID,
     R2_ACCESS_KEY_ID: BASE.R2_ACCESS_KEY_ID,
@@ -176,4 +174,11 @@ test('FLEET_PEERS rejects bad JSON or a bad peer, naming the var only', () => {
 test('FLEET_SYNC_TOKEN is optional but floored at 32 chars', () => {
   assert.equal(parseServerEnv(BASE).data.FLEET_SYNC_TOKEN, undefined);
   assert.equal(parseServerEnv({ ...BASE, FLEET_SYNC_TOKEN: 'short' }).success, false);
+});
+
+test('Cashfree App ID must match CASHFREE_ENV unless stubbed (security-review L1)', () => {
+  assert.equal(parseServerEnv({ ...BASE, CASHFREE_ENV: 'production' }).success, false); // TEST id in prod
+  assert.equal(parseServerEnv({ ...BASE, CASHFREE_APP_ID: '12345abc', CASHFREE_ENV: 'sandbox' }).success, false);
+  assert.equal(parseServerEnv({ ...BASE, CASHFREE_APP_ID: '12345abc', CASHFREE_ENV: 'production' }).success, true);
+  assert.equal(parseServerEnv({ ...BASE, CASHFREE_ENV: 'production', CASHFREE_STUB: 'true' }).success, true);
 });

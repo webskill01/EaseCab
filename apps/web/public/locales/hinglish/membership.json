@@ -33,7 +33,10 @@
     "checkout": "Payment complete nahi ho saka. Phir try karo.",
     "load": "Aapki membership load nahi ho saki."
   },
-  "securedBy": "Razorpay se secure · UPI · Cards",
+  "notice": {
+    "pending": "Payment process ho raha hai. Aapki membership kuch minute mein apne aap active ho jayegi."
+  },
+  "securedBy": "Cashfree se secure · UPI · Cards",
   "plan": {
     "title": "Monthly Plan",
     "popular": "Popular",

@@ -26,9 +26,9 @@ describe('createCheckout', () => {
 })
 
 describe('verifyPayment', () => {
-  it('POSTs /subscriptions/verify with the razorpay callback body', async () => {
+  it('POSTs /subscriptions/verify with the order id', async () => {
     apiFetch.mockResolvedValue({ data: { credited: true } })
-    const body = { orderId: 'order_1', paymentId: 'pay_1', signature: 'sig' }
+    const body = { orderId: 'sub_1' }
     const out = await verifyPayment(body)
     expect(apiFetch).toHaveBeenCalledWith('/subscriptions/verify', { method: 'POST', body: JSON.stringify(body) })
     expect(out.credited).toBe(true)

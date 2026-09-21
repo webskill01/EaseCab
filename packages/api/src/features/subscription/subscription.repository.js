@@ -1,6 +1,6 @@
 'use strict';
 
-const { redisKey, RAZORPAY, PAYMENT_STATUS, SUBSCRIPTION_STATUS } = require('@easecab/shared');
+const { redisKey, CASHFREE, PAYMENT_STATUS, SUBSCRIPTION_STATUS } = require('@easecab/shared');
 
 /** Columns that render a payment-history row (never the order/internal ids beyond payment id). */
 const PAYMENT_HISTORY_SELECT = Object.freeze({
@@ -23,19 +23,39 @@ function createSubscriptionRepository({ prisma, redis }) {
   return {
     /**
      * Best-effort per-payment dedupe lock (fast path). SET NX with a TTL that
-     * outlives Razorpay's retry window. Returns true if WE acquired it (caller may
+     * outlives Cashfree's webhook retry window. Returns true if WE acquired it (caller may
      * proceed), false if it already existed (treat as a duplicate). The DB UNIQUE on
      * razorpay_payment_id is the hard guarantee behind this.
      * @returns {Promise<boolean>}
      */
     async acquirePaymentLock(paymentId) {
-      const res = await redis.set(lockKey(paymentId), '1', 'EX', RAZORPAY.PAYMENT_LOCK_TTL_SEC, 'NX');
+      const res = await redis.set(lockKey(paymentId), '1', 'EX', CASHFREE.PAYMENT_LOCK_TTL_SEC, 'NX');
       return res === 'OK';
     },
 
     /** Atomic fixed-window /checkout counter for a user; returns the new count (H2). */
     async incrCheckoutAttempts(userId, windowSec) {
       return fixedWindowIncr(redis, redisKey('checkout', userId), windowSec);
+    },
+
+    /** Atomic fixed-window /verify counter for a user (each call hits Cashfree). */
+    async incrVerifyAttempts(userId, windowSec) {
+      return fixedWindowIncr(redis, redisKey('verify', userId), windowSec);
+    },
+
+    /** Atomic fixed-window webhook counter per source IP (M1). */
+    async incrWebhookAttempts(ip, windowSec) {
+      return fixedWindowIncr(redis, redisKey('webhook', ip), windowSec);
+    },
+
+    /** Still-`created` orders since `since`, oldest first — the reconcile sweep's input. */
+    async listRecentOpenOrders(since, limit) {
+      return prisma.payment.findMany({
+        where: { status: PAYMENT_STATUS.CREATED, createdAt: { gte: since } },
+        orderBy: { createdAt: 'asc' },
+        take: limit,
+        select: { userId: true, razorpayOrderId: true, amount: true },
+      });
     },
 
     /** Newest unpaid (`created`) order for a user, or null — the reusable open order. */
@@ -47,7 +67,7 @@ function createSubscriptionRepository({ prisma, redis }) {
       });
     },
 
-    /** Persist a freshly-created Razorpay order as a `created` payment row. */
+    /** Persist a freshly-created Cashfree order as a `created` payment row. */
     async createOrderRecord({ userId, razorpayOrderId, amount }) {
       return prisma.payment.create({
         data: { userId, razorpayOrderId, amount, status: PAYMENT_STATUS.CREATED },
@@ -61,6 +81,12 @@ function createSubscriptionRepository({ prisma, redis }) {
         where: { razorpayOrderId },
         select: { userId: true, amount: true },
       });
+    },
+
+    /** The user's phone for Cashfree's required customer_phone (never logged — §10). */
+    async findUserPhone(userId) {
+      const u = await prisma.user.findUnique({ where: { id: userId }, select: { phone: true } });
+      return u.phone;
     },
 
     /** Uncached subscription read for the credit path (needs paidStartedAt; must be fresh). */

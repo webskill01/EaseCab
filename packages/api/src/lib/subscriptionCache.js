@@ -1,6 +1,6 @@
 'use strict';
 
-const { redisKey, RAZORPAY } = require('@easecab/shared');
+const { redisKey, CASHFREE } = require('@easecab/shared');
 
 const key = (userId) => redisKey('sub', userId);
 
@@ -31,7 +31,7 @@ async function getCachedSub(redis, userId) {
 /** Cache a subscription snapshot with the §15 TTL. No-op if `snap` is falsy. */
 async function setCachedSub(redis, userId, snap) {
   if (!snap) return;
-  await redis.set(key(userId), JSON.stringify(snap), 'EX', RAZORPAY.SUB_CACHE_TTL_SEC);
+  await redis.set(key(userId), JSON.stringify(snap), 'EX', CASHFREE.SUB_CACHE_TTL_SEC);
 }
 
 /** Invalidate on write (every credit). */

@@ -4,12 +4,16 @@ const {
   AppError,
   ERROR_CODES,
   SUBSCRIPTION_PLAN,
-  RAZORPAY,
+  CASHFREE,
   CHECKOUT_RATE_LIMIT,
+  VERIFY_RATE_LIMIT,
+  WEBHOOK_RATE_LIMIT,
+  PAYMENT_RECONCILE,
   isSubscriptionActive,
   computeRenewal,
 } = require('@easecab/shared');
-const { verifyPaymentSignature, verifyWebhookSignature } = require('../../lib/razorpaySignature');
+const crypto = require('node:crypto');
+const { verifyWebhookSignature } = require('../../lib/cashfreeSignature');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
 /** Client-safe payment-history row. `paidAt` = capture time (updatedAt). */
@@ -18,25 +22,25 @@ function toPublicPayment(p) {
 }
 
 /**
- * Subscription business logic (CLAUDE.md §4). Razorpay is injected (vendor boundary);
- * HMAC checks use our pure lib. /verify and /webhook both funnel into creditPayment,
- * which is idempotent (Redis lock fast-path + the repo's UNIQUE-guarded credit tx).
+ * Subscription business logic (CLAUDE.md §4). Cashfree is injected (vendor boundary,
+ * Phase 16.1). /verify and /webhook both funnel into creditPayment, which is idempotent
+ * (Redis lock fast-path + the repo's UNIQUE-guarded credit tx).
+ *
+ * ponytail: Cashfree ids are stored in the legacy razorpay_order_id / razorpay_payment_id
+ * columns — no rename migration yet; rename when a schema change touches payments anyway.
  *
  * @param {object} deps
  * @param {ReturnType<import('./subscription.repository').createSubscriptionRepository>} deps.repo
- * @param {{ createOrder(args): Promise<{ id: string }> }} deps.razorpay
- * @param {{ razorpay: { keyId: string, keySecret: string, webhookSecret: string } }} deps.config
+ * @param {ReturnType<import('../../lib/cashfree').createCashfreeClient>} deps.cashfree
+ * @param {{ cashfree: { secretKey: string, env: 'sandbox'|'production', stub?: boolean } }} deps.config
  */
-function createSubscriptionService({ repo, razorpay, config }) {
-  const { keyId, keySecret, webhookSecret, stub } = config.razorpay;
+function createSubscriptionService({ repo, cashfree, config }) {
+  const { secretKey, stub, env } = config.cashfree;
 
-  /** Shared idempotent credit path. Resolves the user from the stored order record. */
-  async function creditPayment({ orderId, paymentId }) {
+  /** Shared idempotent credit path for an already-verified payment on a known order. */
+  async function creditPayment({ order, orderId, paymentId }) {
     const acquired = await repo.acquirePaymentLock(paymentId);
     if (!acquired) return { credited: false, reason: 'duplicate' };
-
-    const order = await repo.findOrderRecord(orderId);
-    if (!order) return { credited: false, reason: 'unknown_order' };
 
     const sub = await repo.findSubscriptionForCredit(order.userId);
     const { newExpiresAt, paidStartedAt } = computeRenewal(sub);
@@ -54,40 +58,78 @@ function createSubscriptionService({ repo, razorpay, config }) {
     return { credited: true };
   }
 
+  /**
+   * THE only way money becomes membership: ask Cashfree (never the browser, never the
+   * webhook body) whether the order is paid, check the amount matches what we charged,
+   * then credit idempotently. /verify, the webhook, checkout self-heal and the
+   * reconcile sweep all funnel through here.
+   */
+  async function settleFromGateway(orderId, order) {
+    const found = order || (await repo.findOrderRecord(orderId));
+    if (!found) return { credited: false, reason: 'unknown_order' };
+    const state = await cashfree.getPaymentState(orderId);
+    if (state.state === 'pending') return { credited: false, reason: 'pending' };
+    if (state.state !== 'paid') return { credited: false, reason: 'not_paid' };
+    if (Math.round(state.amountRupees * 100) !== found.amount) {
+      // Impossible for orders we create server-side. If it ever happens, refuse and surface
+      // it: 500 is logged by the global handler, and Cashfree retries the webhook.
+      throw new AppError(ERROR_CODES.INTERNAL_ERROR, `payment amount mismatch on ${orderId}`, 500);
+    }
+    return creditPayment({ order: found, orderId, paymentId: state.paymentId });
+  }
+
   return {
-    /** Idempotent checkout — reuse the user's open order, else create one (anti double-charge). */
+    /** Idempotent checkout — reuse the user's still-payable order, else create one (anti double-charge). */
     async createCheckout(userId) {
       const attempts = await repo.incrCheckoutAttempts(userId, CHECKOUT_RATE_LIMIT.WINDOW_SEC);
       if (attempts > CHECKOUT_RATE_LIMIT.MAX_PER_WINDOW) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
+      const amount = SUBSCRIPTION_PLAN.PRICE_PAISE;
       const open = await repo.findOpenOrder(userId);
       if (open) {
-        return { orderId: open.razorpayOrderId, amount: open.amount, currency: SUBSCRIPTION_PLAN.CURRENCY, keyId };
+        const session = await cashfree.getActiveSession(open.razorpayOrderId);
+        if (session) return { orderId: open.razorpayOrderId, paymentSessionId: session, amount: open.amount, mode: env };
+        // Paid but not yet credited (user refreshed mid-checkout, webhook still in flight):
+        // credit it now instead of opening a second order the user could pay twice.
+        const settled = await settleFromGateway(open.razorpayOrderId, { userId, amount: open.amount });
+        if (settled.credited || settled.reason === 'duplicate') return { alreadyPaid: true };
+        // Expired unpaid — leave the row `created`; the new order becomes the open one.
       }
-      const order = await razorpay.createOrder({
-        amount: SUBSCRIPTION_PLAN.PRICE_PAISE,
-        currency: SUBSCRIPTION_PLAN.CURRENCY,
-        receipt: `sub_${userId}_${Date.now()}`,
+      const phone = await repo.findUserPhone(userId);
+      // Cashfree order_id: [A-Za-z0-9_-], max 45 chars → "sub_" + 32 hex.
+      const order = await cashfree.createOrder({
+        orderId: `sub_${crypto.randomUUID().replace(/-/g, '')}`,
+        amountRupees: amount / 100,
+        customerId: userId,
+        customerPhone: phone.slice(-10),
       });
-      await repo.createOrderRecord({ userId, razorpayOrderId: order.id, amount: SUBSCRIPTION_PLAN.PRICE_PAISE });
-      return { orderId: order.id, amount: SUBSCRIPTION_PLAN.PRICE_PAISE, currency: SUBSCRIPTION_PLAN.CURRENCY, keyId };
+      await repo.createOrderRecord({ userId, razorpayOrderId: order.id, amount });
+      return { orderId: order.id, paymentSessionId: order.paymentSessionId, amount, mode: env };
     },
 
-    /** Client callback (instant UX). HMAC-verify then credit. */
-    async verifyPayment({ orderId, paymentId, signature }) {
-      // stub demo mode (RAZORPAY_STUB=true, never production — server.js FATALs):
-      // the stub gateway emits no real HMAC, so skip verification and credit directly.
-      if (!stub && !verifyPaymentSignature({ orderId, paymentId, signature, keySecret })) {
-        throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
-      }
-      return creditPayment({ orderId, paymentId });
+    /**
+     * Post-checkout callback (instant UX). Owner-scoped so one user can't probe another
+     * user's order, and rate-limited because each call is a Cashfree round-trip.
+     */
+    async verifyPayment({ userId, orderId }) {
+      const attempts = await repo.incrVerifyAttempts(userId, VERIFY_RATE_LIMIT.WINDOW_SEC);
+      if (attempts > VERIFY_RATE_LIMIT.MAX_PER_WINDOW) throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      const order = await repo.findOrderRecord(orderId);
+      if (!order || order.userId !== userId) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      return settleFromGateway(orderId, order);
     },
 
-    /** Razorpay webhook (durable backstop). Verify raw-body HMAC, then credit on capture. */
-    async handleWebhook({ rawBody, signature }) {
-      // stub demo mode: skip the raw-body HMAC check (no real webhook secret in play).
-      if (!stub && !verifyWebhookSignature({ rawBody, signature, webhookSecret })) {
+    /**
+     * Cashfree webhook (durable backstop). The HMAC proves Cashfree sent it; the body is
+     * then used ONLY for the order id — the payment itself is re-fetched (Cashfree's own
+     * guidance: re-verify before fulfilling; also covers a leaked secret).
+     */
+    async handleWebhook({ ip, rawBody, timestamp, signature }) {
+      const attempts = await repo.incrWebhookAttempts(ip, WEBHOOK_RATE_LIMIT.WINDOW_SEC);
+      if (attempts > WEBHOOK_RATE_LIMIT.MAX_PER_WINDOW) throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+      // stub demo mode: skip the HMAC check (no real secret in play). Never production.
+      if (!stub && !verifyWebhookSignature({ rawBody, timestamp, signature, secretKey })) {
         throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       }
       let body;
@@ -96,14 +138,30 @@ function createSubscriptionService({ repo, razorpay, config }) {
       } catch {
         throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
       }
-      if (body.event !== RAZORPAY.EVENT_PAYMENT_CAPTURED) {
+      if (body.type !== CASHFREE.EVENT_PAYMENT_SUCCESS) {
         return { credited: false, reason: 'ignored_event' };
       }
-      const entity = body.payload && body.payload.payment && body.payload.payment.entity;
-      if (!entity || !entity.id || !entity.order_id) {
-        return { credited: false, reason: 'malformed' };
+      const orderId = body.data && body.data.order && body.data.order.order_id;
+      if (typeof orderId !== 'string' || !orderId) return { credited: false, reason: 'malformed' };
+      return settleFromGateway(orderId);
+    },
+
+    /**
+     * Reconciliation sweep: credit recent orders that were paid but never confirmed
+     * (webhook lost AND the user never came back).
+     * ponytail: re-polls every abandoned order in the window each pass (at most BATCH
+     * calls); add a last-checked-at column if checkout volume makes that noisy.
+     * @returns {Promise<number>} how many were credited this pass
+     */
+    async reconcileOpenOrders() {
+      const since = new Date(Date.now() - PAYMENT_RECONCILE.LOOKBACK_HOURS * 3_600_000);
+      const orders = await repo.listRecentOpenOrders(since, PAYMENT_RECONCILE.BATCH);
+      let credited = 0;
+      for (const o of orders) {
+        const res = await settleFromGateway(o.razorpayOrderId, o);
+        if (res.credited) credited += 1;
       }
-      return creditPayment({ orderId: entity.order_id, paymentId: entity.id });
+      return credited;
     },
 
     /** Cached subscription snapshot + computed isActive for the membership UI. */

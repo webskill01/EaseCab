@@ -11,7 +11,7 @@ const { createJwt } = require('../../../lib/jwt');
 const CONFIG = {
   corsOrigins: ['http://localhost:3000'], cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
-  razorpay: { keyId: 'rzp_test_x', keySecret: 's'.repeat(16), webhookSecret: 'w'.repeat(16) },
+  cashfree: { secretKey: 's'.repeat(16) },
 };
 const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
 const jwt = createJwt(CONFIG.jwt);
@@ -28,7 +28,7 @@ function appWith() {
     prisma: {}, redis: { async eval() { return 1; } }, logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { verifyOtpToken: async () => ({ phone: '+919876543210' }) },
     subscriber: inertSubscriber,
-    razorpay: { async createOrder() { return { id: 'order_new' }; } },
+    cashfree: { async createOrder() { return { id: 'order_new' }; } },
     surepass: {},
     uploads: fakeR2,
   });
