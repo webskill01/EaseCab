@@ -22,7 +22,8 @@
     "minAgo": "{count} मिनट पहले",
     "hourAgo": "{count} घंटे पहले",
     "today": "आज",
-    "tomorrow": "कल"
+    "tomorrow": "कल",
+    "liveAgo": "{time} पहले"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -39,8 +40,7 @@
     "quickPick": "शहर चुनें",
     "myLocation": "मेरी लोकेशन",
     "citiesSelected": "{count} शहर",
-    "clear": "फ़िल्टर हटाएं",
-    "showingOnly": "सिर्फ़ ये दिख रहे हैं: {cities}"
+    "clear": "फ़िल्टर हटाएं"
   },
   "banner": {
     "freeTrial": "फ्री ट्रायल",

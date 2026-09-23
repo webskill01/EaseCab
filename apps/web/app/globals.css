@@ -56,6 +56,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* No browser pull-to-refresh / overscroll bounce — the feed is live (SSE), and a
+     stray pull reloaded the whole app in the TWA. */
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
 
   /* Locale-aware fonts (variables injected on <html> in layout.jsx). */
   html {

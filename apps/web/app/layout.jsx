@@ -15,8 +15,13 @@ export const metadata = {
   appleWebApp,
 }
 
+// App-like feel in the TWA: no pinch/double-tap zoom (layout is already mobile-sized).
 export const viewport = {
   themeColor: THEME_COLOR,
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default async function RootLayout({ children }) {

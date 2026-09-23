@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { Check, Trash, Swap } from '@/components/ui/icons'
 import { RouteRow } from './RideCard'
-import { historyStamp, rideDateParts } from '../lib/rideView'
+import { historyStamp, rideSlot } from '../lib/rideView'
 import { repostDraftFromPost } from '../lib/postForm'
 import { saveRepostDraft } from '../lib/repostDraft'
 
@@ -34,9 +34,8 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
   const locale = useLocale()
   // Exact posted date + time (IST), same as the Contacted tab — not a relative "ago".
   const stamp = historyStamp(post.createdAt, locale)
-  // Travel date: the API sends an ISO datetime — format it (Today / Tomorrow / 18 Sept).
-  const tr = useTranslations('rides')
-  const dateParts = rideDateParts(post.date, locale)
+  // Exact travel date + time the poster picked ("18 Sept 2026, 2:30 pm").
+  const slot = rideSlot(post.date, post.time, locale)
   const onRepost = () => {
     // sourceId rides along so the Post screen can delete this stale original once the
     // repost is published — keeps the verified feed to one fresh listing, not a dupe.
@@ -74,7 +73,7 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
         <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-ec-line pt-2.5 text-[13px] font-semibold text-ec-ink60">
           <span className="min-w-0">{t('posted.vehicle')} : <span className="font-extrabold text-ec-ink">{post.vehicleType || t('posted.any')}</span></span>
           {post.fare ? <span className="shrink-0 rounded-full bg-ec-sky px-2 py-0.5 text-[12.5px] font-extrabold text-ec-blueInk">₹{post.fare}</span> : null}
-          {dateParts ? <span className="shrink-0 text-[12.5px]">{dateParts.text ?? tr(`time.${dateParts.key}`)}</span> : null}
+          {slot ? <span className="shrink-0 text-[12.5px]">{slot}</span> : null}
         </div>
       </div>
 

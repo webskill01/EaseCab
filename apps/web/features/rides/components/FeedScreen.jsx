@@ -13,7 +13,7 @@ import { membershipView } from '@/features/subscription/lib/membership'
 import { SubTabs } from './SubTabs'
 import { CityFilter } from './CityFilter'
 import { FeedBanner } from './FeedBanner'
-import { FeedStatus } from './FeedStatus'
+import { LiveNote } from './LiveNote'
 import { RideCard } from './RideCard'
 import { RideCardSkeleton, CatchingUp, EmptyFeed } from './FeedStates'
 import { NewRidesPill } from './NewRidesPill'
@@ -91,7 +91,6 @@ export function FeedScreen() {
         </div>
       </div>
       <SubTabs sub={sub} onChange={setSub} />
-      <FeedStatus selected={selectedCities} live={sub === FEED_SUB.RIDES} onClear={clearCities} />
       <FeedBanner membership={membership} onUpgrade={goMembership} />
 
       <div
@@ -101,6 +100,7 @@ export function FeedScreen() {
       >
         <NewRidesPill count={feed.atTop ? 0 : feed.pendingCount} onClick={feed.flushPending} />
         <div className="h-1.5 shrink-0" />
+        {sub === FEED_SUB.RIDES && <LiveNote />}
 
         {showPrePrompt && (
           <NotificationPrePrompt onEnable={enableAlerts} onDismiss={dismissPre} enabling={alerts.isEnabling} />

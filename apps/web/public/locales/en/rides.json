@@ -22,7 +22,8 @@
     "minAgo": "{count} min ago",
     "hourAgo": "{count} h ago",
     "today": "Today",
-    "tomorrow": "Tomorrow"
+    "tomorrow": "Tomorrow",
+    "liveAgo": "{time} ago"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -39,8 +40,7 @@
     "quickPick": "Filter by city",
     "myLocation": "My location",
     "citiesSelected": "{count} cities",
-    "clear": "Clear filter",
-    "showingOnly": "Showing only: {cities}"
+    "clear": "Clear filter"
   },
   "banner": {
     "freeTrial": "Free trial",

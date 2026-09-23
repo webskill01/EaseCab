@@ -32,16 +32,16 @@ export function ageMinFrom(receivedAt, now = Date.now()) {
 }
 
 /**
- * Live-window countdown as "m:ss" (0:00 once the ride has aged out). Same boundary
- * as statusOf, so the badge flips to booked exactly when this reaches zero.
+ * Time since arrival as a live "m:ss" clock (counts UP from 0:00) — shown in the
+ * card's "posted" slot while the ride is fresh, so drivers see its exact age.
  * @param {Date|string|number} receivedAt
  * @param {number} [now] - epoch ms
  * @returns {string}
  */
-export function freshLeft(receivedAt, now = Date.now()) {
+export function ageClock(receivedAt, now = Date.now()) {
   const t = new Date(receivedAt).getTime()
-  const left = Number.isNaN(t) ? 0 : Math.max(0, Math.ceil((t + FRESH_WINDOW_MIN * 60000 - now) / 1000))
-  return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`
+  const sec = Number.isNaN(t) ? 0 : Math.max(0, Math.floor((now - t) / 1000))
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 }
 
 /**
@@ -72,29 +72,26 @@ export function relParts(ageMin) {
 // next-intl locale → Intl BCP-47 tag for date formatting (all India locales).
 const DATE_LOCALE = Object.freeze({ en: 'en-IN', hinglish: 'en-IN', hi: 'hi-IN', pa: 'pa-IN' })
 
-function dayStart(ms) {
-  const d = new Date(ms)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
-}
-
 /**
- * Format a verified ride's travel date for the card. Today/Tomorrow as i18n
- * tokens (component localizes via `t('rides.time.<key>')`); any other date as a
- * locale-aware "DD Mon" string. Pure — caller passes `useLocale()`.
- * @param {?(Date|string|number)} date - ISO datetime (UTC midnight from the API)
+ * A posted ride's exact travel slot — "18 Sept 2026, 2:30 pm" (date only when no time).
+ * rideDate is a UTC-midnight date and rideTime a 1970-epoch UTC time (@db.Time), both
+ * wall-clock values the poster typed — so read their UTC parts and format in UTC.
+ * @param {?(string|Date)} date - rideDate
+ * @param {?(string|Date)} time - rideTime
  * @param {string} [locale]
- * @param {number} [now] - epoch ms (injectable for tests)
- * @returns {{key: 'today'|'tomorrow'}|{text: string}|null}
+ * @returns {?string}
  */
-export function rideDateParts(date, locale = 'en', now = Date.now()) {
+export function rideSlot(date, time, locale = 'en') {
   if (!date) return null
-  const t = date instanceof Date ? date.getTime() : new Date(date).getTime()
-  if (Number.isNaN(t)) return null
-  const days = Math.round((dayStart(t) - dayStart(now)) / 86400000)
-  if (days === 0) return { key: 'today' }
-  if (days === 1) return { key: 'tomorrow' }
-  return { text: new Intl.DateTimeFormat(DATE_LOCALE[locale] || 'en-IN', { day: '2-digit', month: 'short' }).format(t) }
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return null
+  const tm = time ? new Date(time) : null
+  const hasTime = Boolean(tm) && !Number.isNaN(tm.getTime())
+  const at = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), hasTime ? tm.getUTCHours() : 0, hasTime ? tm.getUTCMinutes() : 0)
+  return new Intl.DateTimeFormat(DATE_LOCALE[locale] || 'en-IN', {
+    timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric',
+    ...(hasTime ? { hour: 'numeric', minute: '2-digit', hour12: true } : {}),
+  }).format(at)
 }
 
 /**

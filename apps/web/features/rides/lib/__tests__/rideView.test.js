@@ -1,21 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import {
-  ageMinFrom, freshLeft, statusOf, relParts, historyStamp, vehIconKey, cityLabel, stripUrls, pickCityName,
-  rideDateParts, RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
+  ageMinFrom, ageClock, statusOf, relParts, historyStamp, vehIconKey, cityLabel, stripUrls, pickCityName,
+  rideSlot, RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
 } from '../rideView'
 
-describe('rideDateParts', () => {
-  const now = new Date('2026-06-27T10:00:00.000Z').getTime()
-  it('returns today/tomorrow tokens for same/next day', () => {
-    expect(rideDateParts('2026-06-27T00:00:00.000Z', 'en', now)).toEqual({ key: 'today' })
-    expect(rideDateParts('2026-06-28T00:00:00.000Z', 'en', now)).toEqual({ key: 'tomorrow' })
+describe('rideSlot', () => {
+  it('formats the exact travel date + time from the UTC wall-clock parts', () => {
+    expect(rideSlot('2026-09-18T00:00:00.000Z', '1970-01-01T14:30:00.000Z', 'en')).toMatch(/18 Sept? 2026, 2:30 pm/i)
   })
-  it('formats other dates as DD Mon', () => {
-    expect(rideDateParts('2026-07-05T00:00:00.000Z', 'en', now)).toEqual({ text: '05 Jul' })
-  })
-  it('returns null for missing/invalid input', () => {
-    expect(rideDateParts(null, 'en', now)).toBeNull()
-    expect(rideDateParts('not-a-date', 'en', now)).toBeNull()
+  it('falls back to the date alone, and null for missing/invalid input', () => {
+    expect(rideSlot('2026-07-05T00:00:00.000Z', null, 'en')).toMatch(/05 Jul 2026/)
+    expect(rideSlot(null, null)).toBeNull()
+    expect(rideSlot('not-a-date', null)).toBeNull()
   })
 })
 
@@ -129,12 +125,12 @@ describe('cityLabel', () => {
   })
 })
 
-describe('freshLeft', () => {
-  it('counts down the live window as m:ss and floors at 0:00', () => {
+describe('ageClock', () => {
+  it('counts up from arrival as m:ss and never goes negative', () => {
     const now = Date.parse('2026-06-06T10:00:00.000Z')
-    expect(freshLeft('2026-06-06T10:00:00.000Z', now)).toBe('5:00')
-    expect(freshLeft('2026-06-06T09:57:28.000Z', now)).toBe('2:28')
-    expect(freshLeft('2026-06-06T09:50:00.000Z', now)).toBe('0:00')
-    expect(freshLeft('bad', now)).toBe('0:00')
+    expect(ageClock('2026-06-06T10:00:00.000Z', now)).toBe('0:00')
+    expect(ageClock('2026-06-06T09:57:28.000Z', now)).toBe('2:32')
+    expect(ageClock('2026-06-06T10:00:05.000Z', now)).toBe('0:00')
+    expect(ageClock('bad', now)).toBe('0:00')
   })
 })

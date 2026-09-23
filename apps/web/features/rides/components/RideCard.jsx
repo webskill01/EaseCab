@@ -3,10 +3,10 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Swap, User, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
-import { statusOf, freshLeft, relParts, ageMinFrom, vehIconKey, pickCityName, rideDateParts, RIDE_DISPLAY_STATUS } from '../lib/rideView'
+import { statusOf, ageClock, relParts, ageMinFrom, vehIconKey, pickCityName, rideSlot, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
-/** Status pill — Fresh (pulsing green dot + live m:ss countdown) / Likely-booked (blue dot) / Verified (shield). */
-export function StatusBadge({ status, left }) {
+/** Status pill — Fresh (green dot) / Likely-booked (blue dot) / Verified (shield). */
+export function StatusBadge({ status }) {
   const t = useTranslations('rides')
   if (status === RIDE_DISPLAY_STATUS.VERIFIED) {
     return (
@@ -23,9 +23,8 @@ export function StatusBadge({ status, left }) {
         booked ? 'bg-ec-bookedBg text-ec-bookedTx' : 'bg-ec-successBg text-ec-successTx'
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${booked ? 'bg-ec-bookedTx' : 'animate-pulse bg-ec-success motion-reduce:animate-none'}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${booked ? 'bg-ec-bookedTx' : 'bg-ec-success'}`} />
       {booked ? t('status.booked') : t('status.fresh')}
-      {!booked && left ? <span className="tabular-nums">· {left}</span> : null}
     </span>
   )
 }
@@ -140,7 +139,8 @@ export function RideCard({ ride, now, onContact, onReport }) {
   const rel = relParts(ageMin)
   const from = pickCityName(ride.from, ride.fromLocalized, locale)
   const to = pickCityName(ride.to, ride.toLocalized, locale)
-  const dateParts = verified ? rideDateParts(ride.date, locale, now) : null
+  const slot = verified ? rideSlot(ride.date, ride.time, locale) : null
+  const fresh = display === RIDE_DISPLAY_STATUS.FRESH
 
   return (
     <article
@@ -153,9 +153,11 @@ export function RideCard({ ride, now, onContact, onReport }) {
 
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[12px] font-semibold text-ec-ink60">
-          {t('card.postedAt')} · <b className="font-bold text-ec-ink">{t(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
+          {t('card.postedAt')} · <b className="font-bold text-ec-ink">{fresh
+            ? <span className="tabular-nums text-ec-successTx">{t('time.liveAgo', { time: ageClock(ride.receivedAt, now) })}</span>
+            : t(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
         </span>
-        <StatusBadge status={display} left={display === RIDE_DISPLAY_STATUS.FRESH ? freshLeft(ride.receivedAt, now) : null} />
+        <StatusBadge status={display} />
       </div>
 
       <RouteRow from={from} to={to} />
@@ -171,9 +173,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
           {verified && ride.fare ? (
             <span className="inline-flex shrink-0 items-center rounded-full bg-ec-sky px-2 py-0.5 text-[12.5px] font-extrabold text-ec-blueInk">₹{ride.fare}</span>
           ) : null}
-          {dateParts ? (
-            <span className="shrink-0 text-[12.5px] font-semibold text-ec-ink60">{dateParts.text ?? t(`time.${dateParts.key}`)}</span>
-          ) : null}
+          {slot ? <span className="shrink-0 text-[12.5px] font-semibold text-ec-ink60">{slot}</span> : null}
         </div>
         {ride.message ? (
           <p className="mt-1.5 whitespace-pre-line break-words text-[12.5px] font-medium leading-snug text-ec-ink60">{ride.message}</p>

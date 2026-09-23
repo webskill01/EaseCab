@@ -22,7 +22,8 @@
     "minAgo": "{count} ਮਿੰਟ ਪਹਿਲਾਂ",
     "hourAgo": "{count} ਘੰਟੇ ਪਹਿਲਾਂ",
     "today": "ਅੱਜ",
-    "tomorrow": "ਕੱਲ੍ਹ"
+    "tomorrow": "ਕੱਲ੍ਹ",
+    "liveAgo": "{time} ਪਹਿਲਾਂ"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -39,8 +40,7 @@
     "quickPick": "ਸ਼ਹਿਰ ਚੁਣੋ",
     "myLocation": "ਮੇਰੀ ਲੋਕੇਸ਼ਨ",
     "citiesSelected": "{count} ਸ਼ਹਿਰ",
-    "clear": "ਫਿਲਟਰ ਹਟਾਓ",
-    "showingOnly": "ਸਿਰਫ਼ ਇਹ ਦਿਖ ਰਹੇ ਹਨ: {cities}"
+    "clear": "ਫਿਲਟਰ ਹਟਾਓ"
   },
   "banner": {
     "freeTrial": "ਫ੍ਰੀ ਟ੍ਰਾਇਲ",

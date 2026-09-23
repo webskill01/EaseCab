@@ -22,7 +22,8 @@
     "minAgo": "{count} min pehle",
     "hourAgo": "{count} ghante pehle",
     "today": "Aaj",
-    "tomorrow": "Kal"
+    "tomorrow": "Kal",
+    "liveAgo": "{time} pehle"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -39,8 +40,7 @@
     "quickPick": "Shehar chuno",
     "myLocation": "Meri location",
     "citiesSelected": "{count} shehar",
-    "clear": "Filter hatao",
-    "showingOnly": "Sirf ye dikh rahe hain: {cities}"
+    "clear": "Filter hatao"
   },
   "banner": {
     "freeTrial": "Free trial",

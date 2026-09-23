@@ -32,13 +32,19 @@ export function CityFilter({ selected, onToggle, onClear }) {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold ${
+        className={`relative flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold ${
           filtered ? 'bg-ec-blue text-white shadow-ec-blue' : 'border-[1.5px] border-ec-line bg-white text-ec-blueInk shadow-ec-card'
         }`}
       >
         <span className={`inline-flex ${filtered ? 'text-white' : 'text-ec-blue'}`}><Pin size={17} /></span>
         <span className="min-w-0 truncate text-center">{label}</span>
         <span className={`inline-flex ${filtered ? 'text-white' : 'text-ec-ink40'}`}><ChevR size={15} /></span>
+        {/* Notification-style count badge: the one signal that a city filter is on. */}
+        {filtered && (
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ec-danger px-1 text-[11px] font-extrabold leading-none text-white ring-2 ring-ec-bg">
+            {count}
+          </span>
+        )}
       </button>
 
       {open && (

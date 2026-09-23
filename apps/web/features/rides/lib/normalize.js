@@ -47,6 +47,7 @@ export function toMyPostVM(p) {
     vehicleType: p.vehicleType ?? null,
     fare: p.fare ?? null,
     date: p.rideDate ?? null,
+    time: p.rideTime ?? null,
     status: p.status, // 'active' | 'done'
     isClosed: p.isClosed,
     createdAt: p.createdAt,
