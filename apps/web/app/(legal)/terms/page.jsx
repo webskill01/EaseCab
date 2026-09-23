@@ -9,7 +9,7 @@ export default function TermsAndConditions() {
     <article className="prose prose-gray max-w-none">
       <h1>Terms &amp; Conditions</h1>
       <p className="text-sm text-gray-500">
-        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: May 30, 2026
+        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: September 23, 2026
       </p>
 
       <h2>1. Acceptance of Terms</h2>
@@ -62,32 +62,30 @@ export default function TermsAndConditions() {
         </li>
       </ul>
 
-      <h2>4. KYC Verification</h2>
+      <h2>4. Profile Requirement</h2>
       <p>
-        To post your own ride leads, you must complete identity verification (KYC) by submitting at
-        least one of the following. Identity verification is <strong>not</strong> required to view
-        contact details on ride leads — viewing contacts requires only an active paid membership.
-      </p>
-      <ul>
-        <li>Aadhaar OTP verification</li>
-        <li>Driving Licence number verification</li>
-        <li>Vehicle Registration Certificate (RC) verification</li>
-      </ul>
-      <p>
-        A &quot;verified&quot; trust badge is granted only after our team approves your submitted
-        documents.
+        To post your own ride leads, you must first complete your EaseCab profile — a profile photo,
+        your name, a short description, your base city, your vehicle type, and the languages you
+        speak. A complete profile is <strong>not</strong> required to view contact details on ride
+        leads — viewing contacts requires only an active paid membership.
       </p>
       <p>
-        By submitting KYC information, you confirm that all details are accurate and genuine. Submitting
-        false or fraudulent documents will result in immediate account suspension and may be reported
-        to relevant authorities.
+        <strong>EaseCab does not verify the identity of any driver or vendor.</strong> We do not
+        check government documents, we do not operate a trust or verification badge, and a complete
+        profile is not a statement that we have vetted that person. Every user is responsible for
+        satisfying themselves about whoever they deal with.
+      </p>
+      <p>
+        You confirm that the details in your profile are accurate and genuine and describe you.
+        False or impersonating profiles will result in immediate account suspension and may be
+        reported to relevant authorities.
       </p>
 
       <h2>5. Subscription and Pricing</h2>
       <h3>5.1 Free Access</h3>
       <p>
         Viewing the ride leads feed and posting your own ride leads are <strong>free</strong> and
-        require no payment. Posting requires identity verification (see section 4).
+        require no payment. Posting requires a complete profile (see section 4).
       </p>
 
       <h3>5.2 Paid Membership</h3>
@@ -128,8 +126,7 @@ export default function TermsAndConditions() {
         <li>A real-time feed of taxi ride leads sourced from WhatsApp groups</li>
         <li>Automated deduplication to reduce repeated leads</li>
         <li>City-based filtering and targeted push notifications for new leads</li>
-        <li>In-app contact (phone number reveal) for subscribed and verified users</li>
-        <li>KYC-backed trust badges for identity-verified members</li>
+        <li>In-app contact (phone number reveal) for subscribed members</li>
         <li>Ability to post your own rides (24-hour visibility)</li>
       </ul>
 
@@ -156,7 +153,7 @@ export default function TermsAndConditions() {
 
       <h2>8. Soft Gate Policy</h2>
       <p>
-        Users who have not subscribed or completed KYC may view the ride feed at all times. Access
+        Users who have not subscribed or completed their profile may view the ride feed at all times. Access
         restrictions apply only at specific action points:
       </p>
       <ul>
@@ -164,8 +161,7 @@ export default function TermsAndConditions() {
           <strong>Viewing a contact number:</strong> requires an active paid membership
         </li>
         <li>
-          <strong>Posting a ride:</strong> requires identity verification (at least one KYC document
-          submitted)
+          <strong>Posting a ride:</strong> requires a complete profile
         </li>
       </ul>
       <p>
@@ -183,7 +179,7 @@ export default function TermsAndConditions() {
           Use automated scripts, bots, or crawlers to access or scrape the platform or its data
         </li>
         <li>Attempt to reverse engineer, decompile, or circumvent any platform security measure</li>
-        <li>Submit false or fraudulent KYC documents</li>
+        <li>Submit false, impersonating or fraudulent profile details</li>
         <li>Harass, threaten, or abuse other users</li>
         <li>Use the platform for any purpose that violates Indian law</li>
         <li>Resell, redistribute, or commercially exploit ride lead data</li>
@@ -207,7 +203,7 @@ export default function TermsAndConditions() {
       <p>EaseCab may suspend or permanently terminate your account without prior notice if you:</p>
       <ul>
         <li>Violate any provision of these Terms</li>
-        <li>Submit false or fraudulent KYC information</li>
+        <li>Submit false, impersonating or fraudulent profile details</li>
         <li>Engage in abusive, fraudulent, or spammy behaviour</li>
         <li>Attempt to manipulate or game the ride lead feed</li>
         <li>Use the platform in a manner harmful to other users or the platform&apos;s integrity</li>
@@ -250,7 +246,7 @@ export default function TermsAndConditions() {
       <ul>
         <li>Your violation of these Terms</li>
         <li>Your misuse of the platform</li>
-        <li>False or fraudulent KYC submissions</li>
+        <li>False, impersonating or fraudulent profile details</li>
         <li>Disputes between you and other users or third parties</li>
         <li>Any content you post on the platform</li>
       </ul>

@@ -8,7 +8,7 @@ export default function DeleteAccount() {
   return (
     <article className="prose prose-gray max-w-none">
       <h1>Delete Your EaseCab Account</h1>
-      <p className="text-sm text-gray-500">Last Updated: July 24, 2026</p>
+      <p className="text-sm text-gray-500">Last Updated: September 23, 2026</p>
 
       <p>
         EaseCab accounts belong to taxi drivers and travel vendors. You can delete your account and
@@ -33,7 +33,7 @@ export default function DeleteAccount() {
       <ul>
         <li>Your mobile number, name, profile picture, and bio</li>
         <li>Your vehicle details, base city, working city, and language preferences</li>
-        <li>Your KYC verification records and any uploaded documents or vehicle photos</li>
+        <li>Your chat messages and any images you sent or uploaded</li>
         <li>Your posted ride leads and your contacted-rides history</li>
         <li>Your notification cities and all push-notification device tokens</li>
       </ul>
@@ -47,7 +47,7 @@ export default function DeleteAccount() {
         </li>
         <li>
           <strong>Server logs</strong> — automatically deleted after 30 days. Logs never contain
-          phone numbers, OTPs, Aadhaar details, or payment credentials.
+          phone numbers, OTPs, or payment credentials.
         </li>
       </ul>
 

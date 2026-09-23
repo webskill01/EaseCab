@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
     <article className="prose prose-gray max-w-none">
       <h1>Privacy Policy</h1>
       <p className="text-sm text-gray-500">
-        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: May 30, 2026
+        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: September 23, 2026
       </p>
 
       <h2>1. Introduction</h2>
@@ -46,22 +46,7 @@ export default function PrivacyPolicy() {
         the ride feed.
       </p>
 
-      <h3>2.4 KYC Documents</h3>
-      <p>
-        To post your own ride leads and earn a verified trust badge, we collect and verify your
-        identity through our KYC partner Surepass:
-      </p>
-      <ul>
-        <li>Aadhaar number and OTP (Aadhaar-linked mobile for verification)</li>
-        <li>Driving Licence number</li>
-        <li>Vehicle Registration Certificate (RC) number</li>
-      </ul>
-      <p>
-        KYC documents are processed by Surepass and are not stored on EaseCab servers beyond what
-        is required for verification status.
-      </p>
-
-      <h3>2.5 Payment Information</h3>
+      <h3>2.4 Payment Information</h3>
       <p>
         Subscription payments are processed by Cashfree Payments. We share your registered phone
         number with Cashfree to create the payment order. We do not receive, store, or have access
@@ -69,19 +54,18 @@ export default function PrivacyPolicy() {
         status, plan period, and Cashfree order and payment identifiers.
       </p>
 
-      <h3>2.6 Usage Data</h3>
+      <h3>2.5 Usage Data</h3>
       <p>
         We collect standard server logs including IP address, device type, operating system,
         browser/app version, pages visited, ride cards viewed, and actions taken. Logs are used
         for security, debugging, and aggregated analytics. Logs never contain phone numbers, OTPs,
-        Aadhaar details, JWT tokens, or payment credentials.
+        JWT tokens, or payment credentials.
       </p>
 
       <h2>3. How We Use Your Information</h2>
       <ul>
         <li>Authenticate you via phone OTP and maintain your session</li>
         <li>Deliver and personalise the real-time ride leads feed</li>
-        <li>Verify your identity through KYC to enable ride posting and the verified trust badge</li>
         <li>Process your subscription payment and manage access</li>
         <li>Send city-targeted push notifications for new ride leads (with your permission)</li>
         <li>Detect and prevent fraud, abuse, spam, and duplicate ride leads</li>
@@ -103,13 +87,9 @@ export default function PrivacyPolicy() {
           Privacy Policy applies to all payment data.
         </li>
         <li>
-          <strong>Surepass</strong> — KYC verification (Aadhaar, Driving Licence, RC). Surepass
-          processes identity documents under its own data handling policy.
-        </li>
-        <li>
-          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures and
-          KYC-related uploads. Files are served via time-limited presigned URLs only
-          — the storage bucket is never publicly accessible.
+          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures and chat
+          images. Uploads are made through time-limited presigned URLs only — the storage bucket
+          is never publicly accessible.
         </li>
       </ul>
 
@@ -118,10 +98,6 @@ export default function PrivacyPolicy() {
         <li>
           <strong>Account data:</strong> retained while your account is active, and for 30 days
           following an account deletion request, after which it is permanently deleted.
-        </li>
-        <li>
-          <strong>KYC document data:</strong> retained for 90 days after verification is confirmed,
-          then permanently deleted.
         </li>
         <li>
           <strong>Ride lead data:</strong> ride leads are automatically hard-deleted 12 hours after
@@ -143,7 +119,7 @@ export default function PrivacyPolicy() {
         <li>All data transmitted over HTTPS (TLS)</li>
         <li>Uploaded files accessible only via time-limited presigned URLs</li>
         <li>Role-based access control separating user and admin systems</li>
-        <li>No PII (phone numbers, OTPs, Aadhaar, payment credentials) recorded in server logs</li>
+        <li>No PII (phone numbers, OTPs, payment credentials) recorded in server logs</li>
         <li>Rate limiting on OTP requests to prevent abuse</li>
       </ul>
       <p>

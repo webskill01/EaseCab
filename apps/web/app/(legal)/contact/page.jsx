@@ -56,8 +56,9 @@ export default function Contact() {
           <a href="/delete-account">account deletion page</a>.
         </li>
         <li>
-          <strong>Verification problems</strong> &mdash; include the mobile number your account is
-          registered with. Never send us your full Aadhaar number by email.
+          <strong>Login or account problems</strong> &mdash; include the mobile number your account
+          is registered with. We never ask for your Aadhaar, bank or card details &mdash; never send
+          them to us or to anyone claiming to be from EaseCab.
         </li>
         <li>
           <strong>Reporting a user or a fraudulent ride</strong> &mdash; include the ride details and
