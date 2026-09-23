@@ -4,8 +4,8 @@
  * One-off 2Factor check (Phase 16.5) — proves the API key + DLT template mapping
  * deliver a real SMS, BEFORE flipping OTP_PROVIDER on the app.
  *
- *   node --env-file=.env scripts/test-2factor.js +919876543210          # send
- *   node --env-file=.env scripts/test-2factor.js +919876543210 123456   # verify
+ *   node --env-file=.env scripts/check-2factor.js +919876543210          # send
+ *   node --env-file=.env scripts/check-2factor.js +919876543210 123456   # verify
  *
  * Reads TWOFACTOR_API_KEY + TWOFACTOR_TEMPLATE from the env. Prints the session id
  * (not the key, not the OTP).
@@ -24,7 +24,7 @@ async function main() {
   if (!otp) {
     const sessionId = await client.sendOtp(phone);
     console.log(`sent via template "${template}" — session ${sessionId}`);
-    console.log(`now run: node --env-file=.env scripts/test-2factor.js ${phone} <code from SMS>`);
+    console.log(`now run: node --env-file=.env scripts/check-2factor.js ${phone} <code from SMS>`);
     return;
   }
   // Verify by phone so the session id doesn't have to be pasted back in.
