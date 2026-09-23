@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Swap, Shield } from '@/components/ui/icons'
+import { Swap } from '@/components/ui/icons'
 import { CityPicker } from './CityPicker'
 import { VehicleChips } from './VehicleChips'
 import { isPostable, isFutureDateTime, todayStr } from '../lib/postForm'
@@ -102,10 +102,6 @@ export function PostForm({ form, onChange, onSubmit, submitting, gated = false }
         />
       </section>
 
-      {/* Soft-gate note */}
-      <p className="flex items-center justify-center gap-1.5 text-[12.5px] font-semibold text-ec-wa">
-        <Shield size={14} />{t('post.verifiedNote')}
-      </p>
       </div>
 
       {/* Pinned action bar — a shrink-0 flex-child footer OUTSIDE the scroll body

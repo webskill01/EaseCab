@@ -1,7 +1,7 @@
 {
   "tabs": {
     "rides": "लाइव राइड्स",
-    "verified": "वेरिफाइड राइड्स"
+    "verified": "ड्राइवर ड्यूटी"
   },
   "card": {
     "pickup": "पिकअप",
@@ -9,15 +9,13 @@
     "vehicle": "गाड़ी",
     "postedAt": "पोस्ट",
     "viewProfile": "प्रोफ़ाइल",
-    "verifiedDriver": "वेरिफाइड ड्राइवर",
     "unknownCity": "—",
-    "yearsExp": "{count} साल अनुभव",
-    "aadhaarVerified": "आधार सत्यापित"
+    "yearsExp": "{count} साल अनुभव"
   },
   "status": {
     "fresh": "नई",
     "booked": "शायद बुक",
-    "verified": "वेरिफाइड"
+    "driverPost": "ड्राइवर पोस्ट"
   },
   "time": {
     "justNow": "अभी",
@@ -74,9 +72,9 @@
     "notNow": "अभी नहीं",
     "perMonth": "/माह",
     "planNote": "हर फ़ीचर तक पूरी पहुँच।",
-    "verifyTitle": "संपर्क के लिए वेरिफ़ाई करें",
-    "verifyBody": "वेरिफ़ाइड ड्राइवरों से संपर्क करने के लिए आधार वेरिफ़िकेशन पूरा करें।",
-    "verifyCta": "अभी वेरिफ़ाई करें"
+    "verifyTitle": "संपर्क के लिए प्रोफ़ाइल पूरी करें",
+    "verifyBody": "ड्राइवरों से संपर्क करने के लिए फ़ोटो, नाम, बेस शहर, गाड़ी और भाषा जोड़ें।",
+    "verifyCta": "प्रोफ़ाइल पूरी करें"
   },
   "reveal": {
     "title": "ड्राइवर से संपर्क",
@@ -88,10 +86,11 @@
     "errorGone": "यह राइड अब उपलब्ध नहीं है।",
     "errorNetwork": "कोई कनेक्शन नहीं। अपना इंटरनेट जांचें और फिर कोशिश करें।",
     "retry": "फिर कोशिश करें",
-    "advanceWarning": "किसी भी एजेंट या ड्राइवर को एडवांस कमीशन न दें। EaseCab सिर्फ़ लीड देता है और किसी भी धोखाधड़ी के लिए ज़िम्मेदार नहीं है।",
     "fareNote": "ड्यूटी पूरी होने पर किराया ग्राहक से सीधे कैश या UPI में लें।",
     "warningTitle": "सावधान: कोई एडवांस पेमेंट नहीं",
-    "numberLabel": "संपर्क नंबर"
+    "numberLabel": "संपर्क नंबर",
+    "advanceWarningEn": "Never pay advance to anyone. EaseCab only shares leads and is not responsible for any fraud.",
+    "advanceWarningHi": "किसी को भी एडवांस पैसे न दें। EaseCab सिर्फ़ लीड देता है और किसी भी धोखाधड़ी के लिए ज़िम्मेदार नहीं है।"
   },
   "report": {
     "title": "राइड रिपोर्ट करें",

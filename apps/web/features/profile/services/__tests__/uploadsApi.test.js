@@ -36,3 +36,18 @@ describe('uploadsApi', () => {
     expect(dpPrecheck({ size: 10, type: 'image/png' })).toBeNull()
   })
 })
+
+describe('uploadToR2 cache header', () => {
+  it('sends the exact Cache-Control the API signs into the PUT', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal('fetch', fetchMock)
+    const file = new Blob(['x'], { type: 'image/jpeg' })
+    await uploadToR2({ url: 'https://r2.example/put', file })
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({
+      'Content-Type': 'image/jpeg',
+      // must match packages/shared/constants/uploads.js UPLOAD.CACHE_CONTROL
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    })
+    vi.unstubAllGlobals()
+  })
+})

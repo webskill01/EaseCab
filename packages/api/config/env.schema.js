@@ -81,6 +81,10 @@ const serverEnvSchema = envSchema.extend({
   FIREBASE_PROJECT_ID: z.string().min(1),
   FIREBASE_CLIENT_EMAIL: z.string().email(),
   FIREBASE_PRIVATE_KEY: z.string().min(1),
+  // Driver KYC (Phase 19). v1 ships with verification OFF: no Surepass/Cashfree checks,
+  // /verification is not mounted, and posting is gated by profile completeness alone.
+  // The code stays in the tree — flip this to true when escrow/trusted-vendors lands.
+  VERIFICATION_ENABLED: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   // Login OTP provider (Phase 16.5). firebase = legacy client-side phone auth;
   // twofactor = API sends/verifies via 2factor.in (needs the DLT-approved template).
   // Flip back to firebase to roll back — no deploy needed.

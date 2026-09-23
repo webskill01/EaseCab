@@ -1,7 +1,7 @@
 {
   "tabs": {
     "rides": "Live Rides",
-    "verified": "Verified Rides"
+    "verified": "Driver Duties"
   },
   "card": {
     "pickup": "Pickup",
@@ -9,15 +9,13 @@
     "vehicle": "Gaadi",
     "postedAt": "Posted",
     "viewProfile": "Profile dekho",
-    "verifiedDriver": "Verified driver",
     "unknownCity": "—",
-    "yearsExp": "{count} saal exp",
-    "aadhaarVerified": "Aadhaar verified"
+    "yearsExp": "{count} saal exp"
   },
   "status": {
     "fresh": "Fresh",
     "booked": "Shayad book",
-    "verified": "Verified"
+    "driverPost": "Driver post"
   },
   "time": {
     "justNow": "abhi",
@@ -74,9 +72,9 @@
     "notNow": "Abhi nahi",
     "perMonth": "/month",
     "planNote": "Har feature tak puri access.",
-    "verifyTitle": "Contact karne ke liye verify karein",
-    "verifyBody": "Verified drivers se contact karne ke liye Aadhaar verification poora karein.",
-    "verifyCta": "Abhi verify karein"
+    "verifyTitle": "Contact ke liye profile poori karein",
+    "verifyBody": "Drivers se contact karne ke liye photo, naam, base city, gaadi aur bhasha add karein.",
+    "verifyCta": "Profile poori karein"
   },
   "reveal": {
     "title": "Driver se contact",
@@ -88,10 +86,11 @@
     "errorGone": "Ye ride ab available nahi hai.",
     "errorNetwork": "Connection nahi hai. Internet check karke dobara try karein.",
     "retry": "Dobara try karein",
-    "advanceWarning": "Kisi bhi agent ya driver ko advance commission na dein. EaseCab sirf leads deta hai aur kisi bhi fraud ke liye zimmedaar nahi hai.",
     "fareNote": "Duty poori hone par kiraya customer se seedha cash ya UPI mein lein.",
-    "warningTitle": "Saavdhan: koi advance payment nahi",
-    "numberLabel": "Contact number"
+    "warningTitle": "Savdhan: koi advance payment nahi",
+    "numberLabel": "Contact number",
+    "advanceWarningEn": "Never pay advance to anyone. EaseCab only shares leads and is not responsible for any fraud.",
+    "advanceWarningHi": "किसी को भी एडवांस पैसे न दें। EaseCab सिर्फ़ लीड देता है और किसी भी धोखाधड़ी के लिए ज़िम्मेदार नहीं है।"
   },
   "report": {
     "title": "Ride report karein",

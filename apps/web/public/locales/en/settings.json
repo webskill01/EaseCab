@@ -5,7 +5,7 @@
     "botRides": "Live rides",
     "botRidesHint": "Fresh duties as they come in",
     "postedRides": "Verified rides",
-    "postedRidesHint": "Duties posted by verified drivers",
+    "postedRidesHint": "Duties posted by drivers in the app",
     "cities": {
       "title": "Alert cities",
       "add": "Add a city",
@@ -14,8 +14,13 @@
       "remove": "Remove {city}"
     }
   },
-  "language": { "title": "Language" },
-  "support": { "title": "Support", "cta": "Get help" },
+  "language": {
+    "title": "Language"
+  },
+  "support": {
+    "title": "Support",
+    "cta": "Get help"
+  },
   "logout": "Log out",
   "error": {
     "load": "Couldn't load your settings.",

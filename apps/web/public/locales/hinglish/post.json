@@ -33,18 +33,18 @@
   },
   "gate": {
     "title": "Post karne ke liye profile poori karein",
-    "body": "Sirf verified members hi duties post kar sakte hain. Pehle ye 2 steps poore karein:",
-    "stepAadhaar": "Aadhaar verification",
-    "stepAadhaarSub": "Aadhaar-linked mobile par chhota sa OTP check",
+    "body": "Duty post karne ke liye apni profile poori karein:",
     "stepProfile": "Profile poori karein",
     "stepProfileSub": "Photo, naam, apne baare mein, base city, gaadi aur bhasha",
     "done": "Ho gaya",
     "pending": "Baaki hai",
-    "ctaAadhaar": "Aadhaar verify karein",
     "ctaProfile": "Profile poori karein",
     "notNow": "Abhi nahi",
-    "banner": "Duties post karne ke liye Aadhaar verify karein aur profile poori karein.",
-    "bannerCta": "Steps dekhein"
+    "banner": "Duties post karne ke liye profile poori karein.",
+    "bannerCta": "Steps dekhein",
+    "stepAadhaar": "Aadhaar verification",
+    "stepAadhaarSub": "Aadhaar-linked mobile par chhota sa OTP check",
+    "ctaAadhaar": "Aadhaar verify karein"
   },
   "success": {
     "title": "Duty post ho gayi",

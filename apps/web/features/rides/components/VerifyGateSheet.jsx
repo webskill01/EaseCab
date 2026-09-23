@@ -4,17 +4,20 @@ import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Button } from '@/components/ui/button'
 import { Shield, User, Check } from '@/components/ui/icons'
+import { env } from '@/config/env'
 
 /**
- * Posting eligibility for a /me profile — mirrors the server L1 gate
- * (@easecab/shared hasSubmittedKyc: Aadhaar verified AND profile complete).
+ * Posting eligibility for a /me profile — mirrors the server gate. Phase 19: with KYC
+ * off (the v1 default) a complete profile is the whole gate; with it on this is the
+ * original L1 rule (@easecab/shared hasSubmittedKyc: Aadhaar AND profile).
  * @param {?object} profile
  * @returns {{ aadhaar: boolean, profile: boolean, eligible: boolean }}
  */
 export function postEligibility(profile) {
   const aadhaar = Boolean(profile?.verification?.aadhaarVerified)
   const complete = Boolean(profile?.profileComplete)
-  return { aadhaar, profile: complete, eligible: aadhaar && complete }
+  const kycOn = env.NEXT_PUBLIC_VERIFICATION_ENABLED
+  return { aadhaar, profile: complete, eligible: complete && (!kycOn || aadhaar) }
 }
 
 function Step({ icon, title, sub, done, t }) {
@@ -51,12 +54,14 @@ export function VerifyGateSheet({ profile, onClose, onGo }) {
       <h2 className="mt-3 pr-9 text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{t('gate.title')}</h2>
       <p className="mt-1 text-[13px] font-medium leading-snug text-ec-ink60">{t('gate.body')}</p>
       <ol className="mt-3.5 flex flex-col gap-2">
-        <Step icon={<Shield size={18} />} title={t('gate.stepAadhaar')} sub={t('gate.stepAadhaarSub')} done={e.aadhaar} t={t} />
+        {env.NEXT_PUBLIC_VERIFICATION_ENABLED
+          ? <Step icon={<Shield size={18} />} title={t('gate.stepAadhaar')} sub={t('gate.stepAadhaarSub')} done={e.aadhaar} t={t} />
+          : null}
         <Step icon={<User size={18} />} title={t('gate.stepProfile')} sub={t('gate.stepProfileSub')} done={e.profile} t={t} />
       </ol>
       <div className="mt-4 flex flex-col gap-2">
-        <Button type="button" size="lg" className="w-full" onClick={() => onGo(e.aadhaar ? '/profile/edit' : '/verify?intent=l1')}>
-          {e.aadhaar ? t('gate.ctaProfile') : t('gate.ctaAadhaar')}
+        <Button type="button" size="lg" className="w-full" onClick={() => onGo(!env.NEXT_PUBLIC_VERIFICATION_ENABLED || e.aadhaar ? '/profile/edit' : '/verify?intent=l1')}>
+          {!env.NEXT_PUBLIC_VERIFICATION_ENABLED || e.aadhaar ? t('gate.ctaProfile') : t('gate.ctaAadhaar')}
         </Button>
         <Button type="button" variant="ghost" onClick={onClose} className="w-full bg-ec-bg font-bold text-ec-ink60">
           {t('gate.notNow')}

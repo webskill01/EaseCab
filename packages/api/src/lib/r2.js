@@ -38,7 +38,7 @@ function createR2Client({ accountId, accessKeyId, secretAccessKey, bucket, publi
     async presignPut({ key, contentType }) {
       const url = await getSignedUrl(
         client,
-        new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType }),
+        new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType, CacheControl: UPLOAD.CACHE_CONTROL }),
         { expiresIn: UPLOAD.PRESIGN_EXPIRY_SEC },
       );
       return { url };

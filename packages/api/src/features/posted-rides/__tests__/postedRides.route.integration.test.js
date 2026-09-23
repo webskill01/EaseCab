@@ -83,9 +83,10 @@ function fakeRedis() {
   };
 }
 
-function makeApp(seed) {
+function makeApp(seed, { requireKyc = false } = {}) {
   return buildApp({
-    prisma: fakePrisma(seed), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG,
+    prisma: fakePrisma(seed), redis: fakeRedis(), logger: pino({ level: 'silent' }),
+    config: { ...CONFIG, verificationEnabled: requireKyc },
     identity: { async verifyOtpToken() { return { phone: '+910000000000' }; } },
     subscriber: { on() {}, subscribe: async () => {}, duplicate() { return this; }, disconnect() {} },
     cashfree: { async createOrder() { return { id: 'order_x' }; } },
@@ -100,8 +101,8 @@ const VERIFIED = {
 const UNVERIFIED = { ...VERIFIED, aadhaarVerified: false };
 const ACTIVE_SUB = { status: 'active', expiresAt: FUTURE, trialExpiresAt: null };
 
-test('POST /posted-rides → 403 VERIFICATION_REQUIRED when no KYC doc', async () => {
-  const app = makeApp({ users: { u1: UNVERIFIED } });
+test('POST /posted-rides → 403 VERIFICATION_REQUIRED when no KYC doc (VERIFICATION_ENABLED)', async () => {
+  const app = makeApp({ users: { u1: UNVERIFIED } }, { requireKyc: true });
   const res = await request(app).post('/api/v1/posted-rides').set('Cookie', cookieFor('u1')).send({ fromCityRaw: 'a', toCityRaw: 'b', phone: '+919876543210' });
   assert.equal(res.status, 403);
   assert.equal(res.body.error.code, 'VERIFICATION_REQUIRED');
@@ -131,12 +132,19 @@ test('POST /:id/contact → 200 reveals phone for a subscribed contacter', async
   assert.equal(res.body.data.phoneNumber, '+919876500000');
 });
 
-test('POST /:id/contact → 403 VERIFICATION_REQUIRED without L1 KYC', async () => {
-  const app = makeApp({ users: { u1: UNVERIFIED }, posts: [{ id: UUID(2), postedBy: 'u9', status: 'active', expiresAt: FUTURE, createdAt: new Date(), phone: '+919876500000' }], subs: { u1: ACTIVE_SUB } });
+test('POST /:id/contact → 403 VERIFICATION_REQUIRED without L1 KYC (VERIFICATION_ENABLED)', async () => {
+  const app = makeApp({ users: { u1: UNVERIFIED }, posts: [{ id: UUID(2), postedBy: 'u9', status: 'active', expiresAt: FUTURE, createdAt: new Date(), phone: '+919876500000' }], subs: { u1: ACTIVE_SUB } }, { requireKyc: true });
   const res = await request(app).post(`/api/v1/posted-rides/${UUID(2)}/contact`).set('Cookie', cookieFor('u1'));
   assert.equal(res.status, 403);
   assert.equal(res.body.error.code, 'VERIFICATION_REQUIRED');
 });
+
+test('POST /posted-rides → 201 for an unverified user when verification is off (v1 default)', async () => {
+  const app = makeApp({ users: { u1: UNVERIFIED } });
+  const res = await request(app).post('/api/v1/posted-rides').set('Cookie', cookieFor('u1')).send({ fromCityRaw: 'a', toCityRaw: 'b', phone: '+919876543210' });
+  assert.equal(res.status, 201);
+});
+
 
 test('POST /:id/contact/log → 200 records the contact on the Call/WhatsApp tap', async () => {
   const app = makeApp({ posts: [{ id: UUID(2), postedBy: 'u9', status: 'active', expiresAt: FUTURE, createdAt: new Date(), phone: '+919876500000' }], subs: { u1: ACTIVE_SUB } });

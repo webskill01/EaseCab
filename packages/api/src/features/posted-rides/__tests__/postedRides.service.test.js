@@ -35,8 +35,8 @@ function baseRepo(over = {}) {
   };
 }
 
-test('createPost: throws VERIFICATION_REQUIRED when aadhaar is not verified', async () => {
-  const svc = createPostedRidesService({ repo: baseRepo({ flags: { ...L1_OK, aadhaarVerified: false } }) });
+test('createPost (requireKyc): throws VERIFICATION_REQUIRED when aadhaar is not verified', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ flags: { ...L1_OK, aadhaarVerified: false } }), requireKyc: true });
   await assert.rejects(() => svc.createPost('u1', { fromCityRaw: 'a', toCityRaw: 'b', phone: '+919876543210' }), code('VERIFICATION_REQUIRED'));
 });
 
@@ -122,9 +122,21 @@ test('contactPost: own post returns phone without gate/record', async () => {
   assert.equal(out.phoneNumber, '+919876543210');
 });
 
-test('contactPost: VERIFICATION_REQUIRED when picker is not L1-verified (same gate as posting)', async () => {
-  const svc = createPostedRidesService({ repo: baseRepo({ target: { id: 'p1', phone: '+91x', postedBy: 'u9' }, flags: { ...L1_OK, aadhaarVerified: false } }) });
+test('contactPost (requireKyc): VERIFICATION_REQUIRED when picker is not L1-verified (same gate as posting)', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ target: { id: 'p1', phone: '+91x', postedBy: 'u9' }, flags: { ...L1_OK, aadhaarVerified: false } }), requireKyc: true });
   await assert.rejects(() => svc.contactPost({ userId: 'u1', postedRideId: 'p1' }), code('VERIFICATION_REQUIRED'));
+});
+
+// --- Phase 19: v1 default (requireKyc omitted) — profile completeness is the whole gate
+test('createPost (v1 default): a complete profile posts without any KYC', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ flags: { ...L1_OK, aadhaarVerified: false } }) });
+  const row = await svc.createPost('u1', { fromCityRaw: 'a', toCityRaw: 'b', phone: '+919876543210' });
+  assert.ok(row);
+});
+
+test('createPost (v1 default): an incomplete profile is still blocked', async () => {
+  const svc = createPostedRidesService({ repo: baseRepo({ flags: { ...L1_OK, aadhaarVerified: false, profilePicUrl: null } }) });
+  await assert.rejects(() => svc.createPost('u1', { fromCityRaw: 'a', toCityRaw: 'b', phone: '+919876543210' }), code('VERIFICATION_REQUIRED'));
 });
 
 test('contactPost: own post is exempt from the verification gate', async () => {

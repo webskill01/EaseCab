@@ -2,7 +2,7 @@
 
 const {
   AppError, ERROR_CODES, POSTED_RIDES, POSTED_RIDE_STATUS, CONTACT_RATE_LIMIT,
-  hasSubmittedKyc, isSubscriptionActive, CONTACT_SOURCE,
+  hasSubmittedKyc, isProfileComplete, isSubscriptionActive, CONTACT_SOURCE,
 } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
@@ -49,8 +49,9 @@ function toPublicPostedRide(p) {
 }
 
 /**
- * Posted-rides business logic (CLAUDE.md §4). Create is verification-gated (≥1 KYC
- * doc); contact is subscription-gated (mirrors bot-rides reveal). The opaque cursor
+ * Posted-rides business logic (CLAUDE.md §4). Create is gated on posting eligibility
+ * (Phase 19: profile completeness alone, or + Aadhaar when `requireKyc`); contact is
+ * subscription-gated (mirrors bot-rides reveal). The opaque cursor
  * codec is shared with bot rides — its `receivedAt` field carries our createdAt key.
  *
  * @param {object} deps
@@ -58,13 +59,18 @@ function toPublicPostedRide(p) {
  * @param {import('pino').Logger} [deps.logger] - used only to log a best-effort
  *   push-publish failure on create; test harnesses may omit it.
  * @param {{ verifyUpload: Function }} [deps.uploads] - R2 verify gate (report screenshots)
+ * @param {boolean} [deps.requireKyc=false] - VERIFICATION_ENABLED. false (v1 default) →
+ *   the gate is profile completeness only; true → the original L1 Aadhaar + profile gate.
  */
-function createPostedRidesService({ repo, logger, uploads }) {
+function createPostedRidesService({ repo, logger, uploads, requireKyc = false }) {
+  // Phase 19: one gate, both call sites. KYC off → a complete profile is all it takes.
+  const canPost = (flags) => (requireKyc ? hasSubmittedKyc(flags) : isProfileComplete(flags));
+
   return {
-    /** Create a 24h post behind the KYC soft gate, validating any picked cityIds. */
+    /** Create a 24h post behind the posting soft gate, validating any picked cityIds. */
     async createPost(userId, input) {
       const flags = await repo.getUserKycFlags(userId);
-      if (!hasSubmittedKyc(flags)) {
+      if (!canPost(flags)) {
         throw AppError.fromCode(ERROR_CODES.VERIFICATION_REQUIRED);
       }
       const ids = [input.fromCityId, input.toCityId].filter(Boolean);
@@ -120,10 +126,9 @@ function createPostedRidesService({ repo, logger, uploads }) {
       if (post.postedBy === userId) {
         return { phoneNumber: post.phone };
       }
-      // Picking a verified ride requires the same L1 KYC (Aadhaar + complete profile)
-      // as posting one — verified drivers only contact verified drivers.
+      // Contacting a driver-posted duty needs the same eligibility as posting one.
       const flags = await repo.getUserKycFlags(userId);
-      if (!hasSubmittedKyc(flags)) {
+      if (!canPost(flags)) {
         throw AppError.fromCode(ERROR_CODES.VERIFICATION_REQUIRED);
       }
       const sub = await repo.findSubscriptionByUserId(userId);

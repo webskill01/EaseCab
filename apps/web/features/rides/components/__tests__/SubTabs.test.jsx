@@ -10,7 +10,7 @@ describe('SubTabs', () => {
     const user = userEvent.setup()
     renderWithIntl(<SubTabs sub="rides" onChange={onChange} />)
     expect(screen.getByRole('tab', { name: 'Live Rides' })).toHaveAttribute('aria-selected', 'true')
-    await user.click(screen.getByRole('tab', { name: /verified rides/i }))
+    await user.click(screen.getByRole('tab', { name: /driver duties/i }))
     expect(onChange).toHaveBeenCalledWith('verified')
   })
 })

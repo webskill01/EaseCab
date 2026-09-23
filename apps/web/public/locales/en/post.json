@@ -33,18 +33,18 @@
   },
   "gate": {
     "title": "Complete your profile to post",
-    "body": "Only verified members can post duties. Finish these 2 steps first:",
-    "stepAadhaar": "Aadhaar verification",
-    "stepAadhaarSub": "Quick OTP check on your Aadhaar-linked mobile",
+    "body": "Complete your profile to post a duty:",
     "stepProfile": "Complete profile",
     "stepProfileSub": "Photo, name, about you, base city, vehicle and language",
     "done": "Done",
     "pending": "Pending",
-    "ctaAadhaar": "Verify Aadhaar",
     "ctaProfile": "Complete profile",
     "notNow": "Not now",
-    "banner": "Verify Aadhaar and complete your profile to post duties.",
-    "bannerCta": "See steps"
+    "banner": "Complete your profile to post duties.",
+    "bannerCta": "See steps",
+    "stepAadhaar": "Aadhaar verification",
+    "stepAadhaarSub": "Quick OTP check on your Aadhaar-linked mobile",
+    "ctaAadhaar": "Verify Aadhaar"
   },
   "success": {
     "title": "Duty posted",

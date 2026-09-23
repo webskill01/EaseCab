@@ -11,6 +11,8 @@ const CONFIG = {
   corsOrigins: ['http://localhost:3000'], cookie: { secure: false },
   jwt: { accessSecret: 'a'.repeat(32), refreshSecret: 'b'.repeat(32), accessTtl: '15m', refreshTtl: '30d' },
   cashfree: { secretKey: 's'.repeat(16) },
+  // Phase 19: /verification is mounted only when this is on (v1 ships with it off).
+  verificationEnabled: true,
 };
 const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, async unsubscribe() {} };
 const jwt = createJwt(CONFIG.jwt);

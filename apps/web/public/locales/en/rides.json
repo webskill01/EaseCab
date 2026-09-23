@@ -1,7 +1,7 @@
 {
   "tabs": {
     "rides": "Live Rides",
-    "verified": "Verified Rides"
+    "verified": "Driver Duties"
   },
   "card": {
     "pickup": "Pickup",
@@ -9,15 +9,13 @@
     "vehicle": "Vehicle",
     "postedAt": "Posted",
     "viewProfile": "View Profile",
-    "verifiedDriver": "Verified Driver",
     "unknownCity": "—",
-    "yearsExp": "{count} yrs exp",
-    "aadhaarVerified": "Aadhaar verified"
+    "yearsExp": "{count} yrs exp"
   },
   "status": {
     "fresh": "Fresh",
     "booked": "Likely booked",
-    "verified": "Verified"
+    "driverPost": "Driver post"
   },
   "time": {
     "justNow": "just now",
@@ -74,9 +72,9 @@
     "notNow": "Not now",
     "perMonth": "/month",
     "planNote": "Full access to every feature.",
-    "verifyTitle": "Get verified to contact",
-    "verifyBody": "Complete Aadhaar verification to contact verified drivers.",
-    "verifyCta": "Verify now"
+    "verifyTitle": "Complete your profile to contact",
+    "verifyBody": "Add your photo, name, base city, vehicle and language to contact drivers.",
+    "verifyCta": "Complete profile"
   },
   "reveal": {
     "title": "Contact driver",
@@ -88,10 +86,11 @@
     "errorGone": "This ride is no longer available.",
     "errorNetwork": "No connection. Check your internet and try again.",
     "retry": "Try again",
-    "advanceWarning": "Never pay advance commission to any agent or driver. EaseCab only shares leads and is not responsible for any fraud.",
     "fareNote": "After the duty, collect your fare directly from the customer in cash or UPI.",
     "warningTitle": "Stay alert: no advance payments",
-    "numberLabel": "Contact number"
+    "numberLabel": "Contact number",
+    "advanceWarningEn": "Never pay advance to anyone. EaseCab only shares leads and is not responsible for any fraud.",
+    "advanceWarningHi": "किसी को भी एडवांस पैसे न दें। EaseCab सिर्फ़ लीड देता है और किसी भी धोखाधड़ी के लिए ज़िम्मेदार नहीं है।"
   },
   "report": {
     "title": "Report ride",

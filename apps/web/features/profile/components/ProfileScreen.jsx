@@ -123,7 +123,7 @@ export function ProfileScreen() {
       </button>
 
       {/* ② Complete-profile banner */}
-      {!profile.profileComplete && <CompletenessBanner onAction={() => (v.aadhaarVerified ? goEdit() : router.push('/verify?intent=l1'))} />}
+      {!profile.profileComplete && <CompletenessBanner onAction={() => (!env.NEXT_PUBLIC_VERIFICATION_ENABLED || v.aadhaarVerified ? goEdit() : router.push('/verify?intent=l1'))} />}
 
       {/* ③ Stats grid — tap to edit */}
       <div>
@@ -156,11 +156,12 @@ export function ProfileScreen() {
 
       {/* ⑤ Settings group A */}
       <nav className="overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
-        <NavRow icon={<Shield size={18} />} tone="success" label={t('nav.verification')}
+        {/* Phase 19: verification rows only exist when KYC is switched back on. */}
+        {env.NEXT_PUBLIC_VERIFICATION_ENABLED ? <NavRow icon={<Shield size={18} />} tone="success" label={t('nav.verification')}
           value={profile.profileComplete ? t('status.verified') : t('status.pending')}
           valueTint={profile.profileComplete ? 'text-ec-successTx' : 'text-ec-warning'}
-          onClick={() => router.push('/verify?intent=driver')} />
-        <NavRow icon={<Pencil size={16} />} tone="blue" label={t('nav.editReverify')} value={t('edit')} onClick={() => router.push('/verify?intent=center')} />
+          onClick={() => router.push('/verify?intent=driver')} /> : null}
+        {env.NEXT_PUBLIC_VERIFICATION_ENABLED ? <NavRow icon={<Pencil size={16} />} tone="blue" label={t('nav.editReverify')} value={t('edit')} onClick={() => router.push('/verify?intent=center')} /> : null}
         <NavRow icon={<Crown size={16} />} tone={memTone || 'warning'} label={t('nav.membership')} value={memValue} valueTint={memTint} onClick={() => router.push('/membership')} />
         <NavRow icon={<BellEdit size={18} />} tone="blue" label={t('nav.notifications')} value={alertCityCount > 0 ? t('nav.notificationsCount', { count: alertCityCount }) : undefined} onClick={() => router.push('/notifications')} />
         <NavRow icon={<Globe size={18} />} tone="blue" label={t('nav.language')} value={LOCALE_NAMES[locale] ?? locale} onClick={() => router.push('/profile/language')} last />

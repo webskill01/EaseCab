@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevronLeft, Shield, Pin, Steer, VehicleIcon, Globe, List, User, Flag } from '@/components/ui/icons'
+import { env } from '@/config/env'
 import { vehIconKeyOf } from '../lib/profileForm'
 import { usePosterProfile } from '../hooks/usePosterProfile'
 import { useProfile } from '../hooks/useProfile'
@@ -74,7 +75,7 @@ export function PosterProfileScreen({ userId }) {
         {p.baseCity && (
           <div className="mt-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-ec-sky"><Pin size={14} />{p.baseCity}</div>
         )}
-        {p.verifiedDriver && (
+        {env.NEXT_PUBLIC_VERIFICATION_ENABLED && p.verifiedDriver && (
           <span className="mt-2.5 inline-flex h-[26px] items-center gap-1.5 rounded-full bg-white px-3 text-[11.5px] font-extrabold uppercase tracking-wide text-ec-successTx">
             <Shield size={14} className="text-ec-success" />{t('poster.verifiedDriver')}
           </span>
@@ -87,9 +88,12 @@ export function PosterProfileScreen({ userId }) {
           <Stat i={0} icon={<Steer size={16} />} label={t('stats.experience')} value={p.experience != null ? `${p.experience} ${t('stats.years')}` : '—'} />
           <Stat i={1} icon={<Pin size={15} />} label={t('poster.stats.baseCity')} value={p.baseCity || '—'} />
           <Stat i={2} icon={<VehicleIcon vehicleKey={vehIconKeyOf(p.vehicleType)} size={16} />} label={t('stats.vehicle')} value={p.vehicleType || '—'} />
-          <Stat i={3} icon={<Shield size={15} />} label={t('poster.stats.aadhaar')} value={statusLabel(v.aadhaarVerified)} />
-          <Stat i={4} icon={<List size={15} />} label={t('poster.stats.license')} value={statusLabel(v.dlSubmitted)} />
-          <Stat i={5} icon={<Globe size={15} />} label={t('poster.stats.languages')} value={String(p.languagesSpoken.length)} />
+          {/* Phase 19: KYC stats (and the languages count that padded the row) only exist
+              when verification is switched back on — otherwise they'd read "Pending"
+              forever and imply a check we no longer run. */}
+          {env.NEXT_PUBLIC_VERIFICATION_ENABLED ? <Stat i={3} icon={<Shield size={15} />} label={t('poster.stats.aadhaar')} value={statusLabel(v.aadhaarVerified)} /> : null}
+          {env.NEXT_PUBLIC_VERIFICATION_ENABLED ? <Stat i={4} icon={<List size={15} />} label={t('poster.stats.license')} value={statusLabel(v.dlSubmitted)} /> : null}
+          {env.NEXT_PUBLIC_VERIFICATION_ENABLED ? <Stat i={5} icon={<Globe size={15} />} label={t('poster.stats.languages')} value={String(p.languagesSpoken.length)} /> : null}
         </div>
 
         {/* About */}

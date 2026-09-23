@@ -5,7 +5,7 @@
     "botRides": "Live rides",
     "botRidesHint": "Aate hi fresh duties",
     "postedRides": "Verified rides",
-    "postedRidesHint": "Verified drivers ki posted duties",
+    "postedRidesHint": "App mein drivers dwara post ki gayi duties",
     "cities": {
       "title": "Alert cities",
       "add": "City add karo",
@@ -14,8 +14,13 @@
       "remove": "{city} hatao"
     }
   },
-  "language": { "title": "Language" },
-  "support": { "title": "Support", "cta": "Help lo" },
+  "language": {
+    "title": "Language"
+  },
+  "support": {
+    "title": "Support",
+    "cta": "Help lo"
+  },
   "logout": "Log out",
   "error": {
     "load": "Aapki settings load nahi ho saki.",

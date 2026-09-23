@@ -68,6 +68,8 @@ async function main() {
       // stub demo mode → the service skips webhook signature verification (see subscription.service).
       stub: serverEnv.CASHFREE_STUB,
     },
+    // Phase 19: KYC off in v1 (routes unmounted, posting gated on profile only).
+    verificationEnabled: serverEnv.VERIFICATION_ENABLED,
     // Fleet control-panel peer sync (Phase 17.5).
     fleet: { syncToken: serverEnv.FLEET_SYNC_TOKEN, peers: serverEnv.FLEET_PEERS },
   };

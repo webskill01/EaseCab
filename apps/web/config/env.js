@@ -18,6 +18,10 @@ const schema = z.object({
   // digits only incl. country code. Defaults to the company support line (COMPANY.phone).
   NEXT_PUBLIC_SUPPORT_WHATSAPP: z.string().regex(/^\d{10,15}$/).default('916284992669'),
   NEXT_PUBLIC_SUPPORT_EMAIL: z.string().email().default('support@easecab.com'),
+  // Phase 19: v1 ships with driver KYC off — verify screens and entry points are hidden
+  // and posting is gated on profile completeness alone. Must match the API's
+  // VERIFICATION_ENABLED; flip both when escrow/trusted-vendors lands.
+  NEXT_PUBLIC_VERIFICATION_ENABLED: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
 })
 
 const parsed = schema.safeParse({
@@ -30,6 +34,7 @@ const parsed = schema.safeParse({
   NEXT_PUBLIC_FIREBASE_VAPID_KEY: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
   NEXT_PUBLIC_SUPPORT_WHATSAPP: process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP,
   NEXT_PUBLIC_SUPPORT_EMAIL: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
+  NEXT_PUBLIC_VERIFICATION_ENABLED: process.env.NEXT_PUBLIC_VERIFICATION_ENABLED,
 })
 
 if (!parsed.success) {

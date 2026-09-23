@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
+import { env } from '@/config/env'
 import { BellEdit } from '@/components/ui/icons'
 import { useRidesFeed, FEED_SUB } from '../hooks/useRidesFeed'
 import { readCityLock, writeCityLock } from '../lib/cityLock'
@@ -132,7 +133,7 @@ export function FeedScreen() {
           membershipState={membership.state}
           onClose={() => setContactRideVM(null)}
           onUpgrade={() => { setContactRideVM(null); goMembership() }}
-          onVerify={() => { setContactRideVM(null); router.push('/verify?intent=l1') }}
+          onVerify={() => { setContactRideVM(null); router.push(env.NEXT_PUBLIC_VERIFICATION_ENABLED ? '/verify?intent=l1' : '/profile/edit') }}
         />
       )}
 

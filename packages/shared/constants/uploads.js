@@ -41,6 +41,11 @@ const UPLOAD_PURPOSES = Object.freeze(Object.keys(UPLOAD_PURPOSE));
 const UPLOAD = Object.freeze({
   PRESIGN_EXPIRY_SEC: 300, // presigned POST validity
   GET_EXPIRY_SEC: 300, // private-tier presigned GET validity
+  // Stored on every uploaded object and echoed by the client PUT (the signature covers
+  // the header, so both sides must match byte-for-byte). Keys carry a per-upload UUID,
+  // so an object is never overwritten — immutable + 1y is safe, and it is what stops
+  // the browser/Cloudflare re-fetching a profile photo on every page load.
+  CACHE_CONTROL: 'public, max-age=31536000, immutable',
 });
 
 module.exports = { UPLOAD_TIER, UPLOAD_MIME_EXT, UPLOAD_PURPOSE, UPLOAD_PURPOSES, UPLOAD };

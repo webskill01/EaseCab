@@ -1,7 +1,7 @@
 {
   "tabs": {
     "rides": "ਲਾਈਵ ਰਾਈਡਾਂ",
-    "verified": "ਵੈਰੀਫਾਈਡ ਰਾਈਡਾਂ"
+    "verified": "ਡਰਾਈਵਰ ਡਿਊਟੀਆਂ"
   },
   "card": {
     "pickup": "ਪਿਕਅਪ",
@@ -9,15 +9,13 @@
     "vehicle": "ਗੱਡੀ",
     "postedAt": "ਪੋਸਟ",
     "viewProfile": "ਪ੍ਰੋਫਾਈਲ",
-    "verifiedDriver": "ਵੈਰੀਫਾਈਡ ਡਰਾਈਵਰ",
     "unknownCity": "—",
-    "yearsExp": "{count} ਸਾਲ ਤਜਰਬਾ",
-    "aadhaarVerified": "ਆਧਾਰ ਪ੍ਰਮਾਣਿਤ"
+    "yearsExp": "{count} ਸਾਲ ਤਜਰਬਾ"
   },
   "status": {
     "fresh": "ਨਵੀਂ",
     "booked": "ਸ਼ਾਇਦ ਬੁੱਕ",
-    "verified": "ਵੈਰੀਫਾਈਡ"
+    "driverPost": "ਡਰਾਈਵਰ ਪੋਸਟ"
   },
   "time": {
     "justNow": "ਹੁਣੇ",
@@ -74,9 +72,9 @@
     "notNow": "ਹੁਣੇ ਨਹੀਂ",
     "perMonth": "/ਮਹੀਨਾ",
     "planNote": "ਹਰ ਫੀਚਰ ਤੱਕ ਪੂਰੀ ਪਹੁੰਚ।",
-    "verifyTitle": "ਸੰਪਰਕ ਲਈ ਵੈਰੀਫਾਈ ਕਰੋ",
-    "verifyBody": "ਵੈਰੀਫਾਈਡ ਡਰਾਈਵਰਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰਨ ਲਈ ਆਧਾਰ ਵੈਰੀਫਿਕੇਸ਼ਨ ਪੂਰੀ ਕਰੋ।",
-    "verifyCta": "ਹੁਣੇ ਵੈਰੀਫਾਈ ਕਰੋ"
+    "verifyTitle": "ਸੰਪਰਕ ਲਈ ਪ੍ਰੋਫਾਈਲ ਪੂਰੀ ਕਰੋ",
+    "verifyBody": "ਡਰਾਈਵਰਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰਨ ਲਈ ਫ਼ੋਟੋ, ਨਾਮ, ਬੇਸ ਸ਼ਹਿਰ, ਗੱਡੀ ਅਤੇ ਭਾਸ਼ਾ ਜੋੜੋ।",
+    "verifyCta": "ਪ੍ਰੋਫਾਈਲ ਪੂਰੀ ਕਰੋ"
   },
   "reveal": {
     "title": "ਡਰਾਈਵਰ ਨਾਲ ਸੰਪਰਕ",
@@ -88,10 +86,11 @@
     "errorGone": "ਇਹ ਰਾਈਡ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।",
     "errorNetwork": "ਕੋਈ ਕਨੈਕਸ਼ਨ ਨਹੀਂ। ਆਪਣਾ ਇੰਟਰਨੈੱਟ ਜਾਂਚੋ ਅਤੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
     "retry": "ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
-    "advanceWarning": "ਕਿਸੇ ਵੀ ਏਜੰਟ ਜਾਂ ਡਰਾਈਵਰ ਨੂੰ ਐਡਵਾਂਸ ਕਮਿਸ਼ਨ ਨਾ ਦਿਓ। EaseCab ਸਿਰਫ਼ ਲੀਡ ਦਿੰਦਾ ਹੈ ਅਤੇ ਕਿਸੇ ਵੀ ਧੋਖਾਧੜੀ ਲਈ ਜ਼ਿੰਮੇਵਾਰ ਨਹੀਂ ਹੈ।",
     "fareNote": "ਡਿਊਟੀ ਪੂਰੀ ਹੋਣ 'ਤੇ ਕਿਰਾਇਆ ਗਾਹਕ ਤੋਂ ਸਿੱਧਾ ਕੈਸ਼ ਜਾਂ UPI ਵਿੱਚ ਲਓ।",
     "warningTitle": "ਸਾਵਧਾਨ: ਕੋਈ ਐਡਵਾਂਸ ਪੇਮੈਂਟ ਨਹੀਂ",
-    "numberLabel": "ਸੰਪਰਕ ਨੰਬਰ"
+    "numberLabel": "ਸੰਪਰਕ ਨੰਬਰ",
+    "advanceWarningEn": "Never pay advance to anyone. EaseCab only shares leads and is not responsible for any fraud.",
+    "advanceWarningHi": "किसी को भी एडवांस पैसे न दें। EaseCab सिर्फ़ लीड देता है और किसी भी धोखाधड़ी के लिए ज़िम्मेदार नहीं है।"
   },
   "report": {
     "title": "ਰਾਈਡ ਦੀ ਰਿਪੋਰਟ ਕਰੋ",

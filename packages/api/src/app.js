@@ -295,9 +295,13 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
   v1.use('/subscriptions', createSubscriptionRouter({ service: subscriptionService, requireAuth }));
 
   // Verification (Step 12) — authed Surepass KYC flows (aadhaar otp/verify, dl, rc, me).
-  const verificationRepo = createVerificationRepository({ prisma, redis });
-  const verificationService = createVerificationService({ repo: verificationRepo, surepass });
-  v1.use('/verification', createVerificationRouter({ service: verificationService, requireAuth }));
+  // Phase 19: mounted only when VERIFICATION_ENABLED — v1 does no KYC at all, so the
+  // Surepass-backed routes stay unreachable rather than deleted.
+  if (config.verificationEnabled) {
+    const verificationRepo = createVerificationRepository({ prisma, redis });
+    const verificationService = createVerificationService({ repo: verificationRepo, surepass });
+    v1.use('/verification', createVerificationRouter({ service: verificationService, requireAuth }));
+  }
 
   // Cities (Step 13) — mount the authed typeahead (citiesService built above).
   v1.use('/cities', createCitiesRouter({ service: citiesService, requireAuth }));
@@ -306,7 +310,7 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
   // subscription-gated contact. The free-text parser (Step 20) reuses the shared
   // CityResolver + extractors to turn a pasted message into a draft preview.
   const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
-  const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger, uploads: uploadsService });
+  const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger, uploads: uploadsService, requireKyc: config.verificationEnabled });
   const postParser = createPostParser({
     repo: postedRidesRepo,
     resolver: createCityResolver({ prisma, redis, logger }),

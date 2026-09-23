@@ -36,19 +36,20 @@ describe('RideCard', () => {
     expect(screen.getByText('—')).toBeInTheDocument()
   })
 
-  it('verified ride shows the Verified badge', () => {
+  it('driver-posted ride shows the Driver post badge (no verification claim)', () => {
     renderWithIntl(<RideCard ride={botRide({ kind: 'verified', status: 'verified', fare: 4200 })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
-    expect(screen.getByText('Verified')).toBeInTheDocument()
+    expect(screen.getByText('Driver post')).toBeInTheDocument()
     expect(screen.getByText(/₹4200/)).toBeInTheDocument()
   })
 
-  it('verified ride with a poster shows the poster block and links to their profile', async () => {
+  it('driver-posted ride with a poster shows the poster block and links to their profile', async () => {
     const user = userEvent.setup()
     const ride = botRide({ kind: 'verified', status: 'verified', posterId: 'u9', posterName: 'Gurpreet', posterBaseCity: 'Patiala', verifiedDriver: true, posterPhotoUrl: 'https://cdn/dp.jpg', posterExperience: 6, posterAadhaarVerified: true })
     renderWithIntl(<RideCard ride={ride} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
     expect(screen.getByText('Gurpreet')).toBeInTheDocument()
     expect(document.querySelector('img[src="https://cdn/dp.jpg"]')).not.toBeNull()
-    expect(screen.getByText('Aadhaar verified')).toBeInTheDocument()
+    // Phase 19: no 'Aadhaar verified' / 'Verified Driver' claims on the card any more.
+    expect(screen.queryByText('Aadhaar verified')).not.toBeInTheDocument()
     expect(screen.getByText('Patiala · 6 yrs exp')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /view profile/i }))
     expect(push).toHaveBeenCalledWith('/u/u9')

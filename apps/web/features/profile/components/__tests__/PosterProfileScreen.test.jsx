@@ -17,11 +17,11 @@ const POSTER = {
 beforeEach(() => vi.clearAllMocks())
 
 describe('PosterProfileScreen', () => {
-  it('renders name, verified-driver badge, bio and language chips', () => {
+  it('renders name, bio and language chips (no verified badge while KYC is off)', () => {
     usePosterProfile.mockReturnValue({ data: POSTER, isLoading: false, isError: false })
     renderWithIntl(<PosterProfileScreen userId="u1" />)
     expect(screen.getByText('Gurpreet Singh')).toBeInTheDocument()
-    expect(screen.getByText('Verified driver')).toBeInTheDocument()
+    expect(screen.queryByText('Verified driver')).not.toBeInTheDocument()
     expect(screen.getByText('Punjab driver of 3 years.')).toBeInTheDocument()
     expect(screen.getByText('About Gurpreet')).toBeInTheDocument()
   })

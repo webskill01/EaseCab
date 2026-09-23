@@ -7,6 +7,9 @@ export const DP_MIMES = Object.freeze(['image/jpeg', 'image/png', 'image/webp'])
 // KYC docs (DL/RC images) — mirrors shared UPLOAD_PURPOSE.{rc_image,licence_image} (10MB, +PDF).
 export const KYC_MAX_BYTES = 10 * 1024 * 1024
 export const KYC_MIMES = Object.freeze(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+// Mirrors shared UPLOAD.CACHE_CONTROL — the API signs the PUT with this exact header,
+// so it must be sent back verbatim or R2 rejects the signature.
+export const UPLOAD_CACHE_CONTROL = 'public, max-age=31536000, immutable'
 
 /**
  * Client-side precheck for a chosen DP file (server re-checks via verifyUpload).
@@ -51,6 +54,12 @@ export async function presignUpload({ purpose, contentType }) {
  */
 export async function uploadToR2({ url, file, stub = false }) {
   if (stub) return
-  const res = await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } })
+  const res = await fetch(url, {
+    method: 'PUT',
+    body: file,
+    // Cache-Control is part of the signed PUT (see UPLOAD_CACHE_CONTROL) — it must be
+    // sent verbatim or R2 rejects the signature.
+    headers: { 'Content-Type': file.type, 'Cache-Control': UPLOAD_CACHE_CONTROL },
+  })
   if (!res.ok) throw new Error(`R2 upload failed (${res.status})`)
 }

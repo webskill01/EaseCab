@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { Swap, Shield, Check, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
+import { Swap, User, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
 import { statusOf, relParts, ageMinFrom, vehIconKey, pickCityName, rideDateParts, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
 /** Status pill — Fresh (green dot) / Likely-booked (blue dot) / Verified (shield). */
@@ -10,9 +10,9 @@ export function StatusBadge({ status }) {
   const t = useTranslations('rides')
   if (status === RIDE_DISPLAY_STATUS.VERIFIED) {
     return (
-      <span className="inline-flex h-[23px] items-center gap-1.5 rounded-ec-chip bg-ec-successBg px-2.5 text-[11.5px] font-extrabold text-ec-successTx">
-        <span className="inline-flex text-ec-success"><Shield size={12} /></span>
-        {t('status.verified')}
+      <span className="inline-flex h-[23px] items-center gap-1.5 rounded-ec-chip bg-ec-sky px-2.5 text-[11.5px] font-extrabold text-ec-blueInk">
+        <span className="inline-flex text-ec-blue"><User size={12} /></span>
+        {t('status.driverPost')}
       </span>
     )
   }
@@ -104,13 +104,7 @@ function PosterRow({ ride }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-[14px] font-extrabold text-ec-ink">{ride.posterName || '—'}</span>
-          {ride.verifiedDriver && <span className="inline-flex shrink-0 text-ec-success" title={t('card.verifiedDriver')}><Shield size={14} /></span>}
         </div>
-        {ride.posterAadhaarVerified && (
-          <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-ec-successBg px-1.5 py-px text-[10.5px] font-extrabold text-ec-successTx">
-            <Check size={11} />{t('card.aadhaarVerified')}
-          </span>
-        )}
         {meta && <div className="mt-0.5 truncate text-[11.5px] font-medium text-ec-ink60">{meta}</div>}
       </div>
       <button

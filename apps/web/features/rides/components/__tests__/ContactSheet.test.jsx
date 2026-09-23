@@ -43,13 +43,13 @@ describe('ContactSheet', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/advance/i)
   })
 
-  it('verified ride: an unverified picker sees the verify gate (VERIFICATION_REQUIRED)', async () => {
+  it('driver-posted ride: an ineligible picker sees the profile gate (VERIFICATION_REQUIRED)', async () => {
     contactVerifiedRide.mockRejectedValue({ code: 'VERIFICATION_REQUIRED' })
     const onVerify = vi.fn()
     const user = userEvent.setup()
     renderSheet(<ContactSheet ride={{ id: 'v1', kind: 'verified' }} membershipState={MEMBERSHIP_STATE.TRIAL} onClose={vi.fn()} onUpgrade={vi.fn()} onVerify={onVerify} />)
-    await waitFor(() => expect(screen.getByText(/verified to contact/i)).toBeInTheDocument())
-    await user.click(screen.getByRole('button', { name: /verify now/i }))
+    await waitFor(() => expect(screen.getByText(/complete your profile to contact/i)).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: /^complete profile$/i }))
     expect(onVerify).toHaveBeenCalled()
   })
 
