@@ -24,9 +24,21 @@ function createCashfreeClient({ appId, secretKey, env, returnUrl }) {
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
       // Cashfree's error body carries code/message only — no PII, safe to surface to logs.
-      throw new Error(`CASHFREE_${res.status}: ${body.code || ''} ${body.message || ''}`.trim());
+      throw Object.assign(new Error(`CASHFREE_${res.status}: ${body.code || ''} ${body.message || ''}`.trim()), { status: res.status });
     }
     return body;
+  }
+
+  // An order Cashfree has never seen (a Razorpay-era or stub `created` row left in our DB)
+  // 404s. Treat it as not payable + not paid so checkout opens a fresh order instead of
+  // 500-ing on every attempt. Any other failure still throws.
+  async function callOrNull(path) {
+    try {
+      return await call(path);
+    } catch (err) {
+      if (err.status === 404) return null;
+      throw err;
+    }
   }
 
   return {
@@ -53,8 +65,8 @@ function createCashfreeClient({ appId, secretKey, env, returnUrl }) {
      * @returns {Promise<?string>}
      */
     async getActiveSession(orderId) {
-      const o = await call(`/orders/${encodeURIComponent(orderId)}`);
-      return o.order_status === CASHFREE.ORDER_ACTIVE ? o.payment_session_id : null;
+      const o = await callOrNull(`/orders/${encodeURIComponent(orderId)}`);
+      return o && o.order_status === CASHFREE.ORDER_ACTIVE ? o.payment_session_id : null;
     },
 
     /**
@@ -63,7 +75,7 @@ function createCashfreeClient({ appId, secretKey, env, returnUrl }) {
      * @returns {Promise<{ state: 'paid', paymentId: string, amountRupees: number } | { state: 'pending'|'unpaid' }>}
      */
     async getPaymentState(orderId) {
-      const list = await call(`/orders/${encodeURIComponent(orderId)}/payments`);
+      const list = await callOrNull(`/orders/${encodeURIComponent(orderId)}/payments`);
       const payments = Array.isArray(list) ? list : [];
       const ok = payments.find((p) => p.payment_status === CASHFREE.PAYMENT_SUCCESS);
       if (ok) return { state: 'paid', paymentId: String(ok.cf_payment_id), amountRupees: Number(ok.payment_amount) };

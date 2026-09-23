@@ -154,7 +154,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[12px] font-semibold text-ec-ink60">
           {t('card.postedAt')} · <b className="font-bold text-ec-ink">{fresh
-            ? <span className="tabular-nums text-ec-successTx">{t('time.liveAgo', { time: ageClock(ride.receivedAt, now) })}</span>
+            ? <span className="tabular-nums">{t('time.liveAgo', { time: ageClock(ride.receivedAt, now) })}</span>
             : t(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
         </span>
         <StatusBadge status={display} />

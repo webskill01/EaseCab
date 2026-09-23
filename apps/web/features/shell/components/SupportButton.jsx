@@ -26,10 +26,10 @@ export function SupportButton() {
       href={supportHref()}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={t('shell.support')}
-      className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] text-ec-blueInk"
+      className="flex h-9 shrink-0 flex-col items-center justify-center gap-0.5 rounded-[10px] px-1 text-ec-blueInk"
     >
       <Headset size={18} />
+      <span className="text-[10px] font-bold leading-none">{t('shell.support')}</span>
     </a>
   )
 }
