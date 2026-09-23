@@ -81,6 +81,16 @@ const serverEnvSchema = envSchema.extend({
   FIREBASE_PROJECT_ID: z.string().min(1),
   FIREBASE_CLIENT_EMAIL: z.string().email(),
   FIREBASE_PRIVATE_KEY: z.string().min(1),
+  // Login OTP provider (Phase 16.5). firebase = legacy client-side phone auth;
+  // twofactor = API sends/verifies via 2factor.in (needs the DLT-approved template).
+  // Flip back to firebase to roll back — no deploy needed.
+  OTP_PROVIDER: z.enum(['firebase', 'twofactor']).default('firebase'),
+  TWOFACTOR_API_KEY: z.string().min(16).optional(),
+  TWOFACTOR_TEMPLATE: z.string().min(1).default('easecab_login_otp_txn'),
+  // Play-reviewer login for twofactor mode (replaces the Firebase console test number):
+  // this phone gets no SMS and accepts OTP_TEST_CODE. Set both or neither.
+  OTP_TEST_PHONE: z.string().regex(/^\+91[6-9]\d{9}$/).optional(),
+  OTP_TEST_CODE: z.string().regex(/^\d{6}$/).optional(),
   // Cashfree PG (Phase 16.1, replaced Razorpay). Backend only — neither value reaches
   // the frontend bundle (§11); the browser only ever gets a payment_session_id. The
   // SECRET_KEY also signs webhooks (Cashfree has no separate webhook secret).
@@ -178,6 +188,12 @@ function parseServerEnv(raw) {
   const d = result.data;
   if (!d.CASHFREE_STUB && d.CASHFREE_APP_ID.startsWith('TEST') !== (d.CASHFREE_ENV === 'sandbox')) {
     return { success: false, errors: ['CASHFREE_APP_ID: does not match CASHFREE_ENV (sandbox App IDs start with TEST)'] };
+  }
+  if (d.OTP_PROVIDER === 'twofactor' && !d.TWOFACTOR_API_KEY) {
+    return { success: false, errors: ['TWOFACTOR_API_KEY: required when OTP_PROVIDER=twofactor'] };
+  }
+  if (Boolean(d.OTP_TEST_PHONE) !== Boolean(d.OTP_TEST_CODE)) {
+    return { success: false, errors: ['OTP_TEST_PHONE/OTP_TEST_CODE: set both or neither'] };
   }
   return { success: true, data: Object.freeze(d) };
 }

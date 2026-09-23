@@ -182,3 +182,17 @@ test('Cashfree App ID must match CASHFREE_ENV unless stubbed (security-review L1
   assert.equal(parseServerEnv({ ...BASE, CASHFREE_APP_ID: '12345abc', CASHFREE_ENV: 'production' }).success, true);
   assert.equal(parseServerEnv({ ...BASE, CASHFREE_ENV: 'production', CASHFREE_STUB: 'true' }).success, true);
 });
+
+test('OTP_PROVIDER defaults to firebase; twofactor requires TWOFACTOR_API_KEY', () => {
+  assert.equal(parseServerEnv({ ...BASE }).data.OTP_PROVIDER, 'firebase');
+  const missing = parseServerEnv({ ...BASE, OTP_PROVIDER: 'twofactor' });
+  assert.equal(missing.success, false);
+  assert.match(missing.errors.join(), /TWOFACTOR_API_KEY/);
+  assert.equal(parseServerEnv({ ...BASE, OTP_PROVIDER: 'twofactor', TWOFACTOR_API_KEY: 'k'.repeat(36) }).success, true);
+});
+
+test('OTP_TEST_PHONE and OTP_TEST_CODE must be set together', () => {
+  const half = parseServerEnv({ ...BASE, OTP_TEST_PHONE: '+919876543210' });
+  assert.equal(half.success, false);
+  assert.equal(parseServerEnv({ ...BASE, OTP_TEST_PHONE: '+919876543210', OTP_TEST_CODE: '424242' }).success, true);
+});

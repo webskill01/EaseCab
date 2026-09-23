@@ -12,6 +12,7 @@ const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
 const { createChatStore } = require('./lib/firestoreChat');
 const { createPushSender } = require('./lib/fcm');
 const { createCashfreeClient, createStubCashfreeClient } = require('./lib/cashfree');
+const { createTwoFactorClient } = require('./lib/twoFactor');
 const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
 const { createR2Client, createStubR2Client } = require('./lib/r2.js');
 
@@ -77,6 +78,15 @@ async function main() {
     privateKey: serverEnv.FIREBASE_PRIVATE_KEY,
   });
 
+  // 2Factor SMS OTP (Phase 16.5) — only when OTP_PROVIDER=twofactor; null keeps the
+  // legacy Firebase client-side flow. The reviewer test login only applies in that mode.
+  const smsOtp = serverEnv.OTP_PROVIDER === 'twofactor'
+    ? createTwoFactorClient({ apiKey: serverEnv.TWOFACTOR_API_KEY, template: serverEnv.TWOFACTOR_TEMPLATE })
+    : null;
+  const testLogin = serverEnv.OTP_TEST_PHONE
+    ? { phone: serverEnv.OTP_TEST_PHONE, code: serverEnv.OTP_TEST_CODE }
+    : null;
+
   // Firestore chat boundary (Step 14) — same Firebase project, separate named app.
   const chatStore = createChatStore({
     projectId: serverEnv.FIREBASE_PROJECT_ID,
@@ -129,7 +139,7 @@ async function main() {
         publicBaseUrl: serverEnv.R2_PUBLIC_BASE_URL,
       });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads });
+  const app = buildApp({ prisma, redis, logger, config, identity, smsOtp, testLogin, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });

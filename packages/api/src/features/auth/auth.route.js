@@ -28,15 +28,15 @@ function createAuthRouter({ service, config, requireAuth }) {
     refreshTtl: config.jwt.refreshTtl,
   };
 
-  // OUR rate-limit gate only; the client triggers the Firebase send after a 200.
+  // Rate-limit gate; in 2Factor mode it also sends the SMS. channel tells the client which flow to run.
   router.post('/send-otp', validate(sendOtpSchema), async (req, res) => {
     const data = await service.requestOtp(req.valid.body.phone);
     sendSuccess(res, { data });
   });
 
-  // Verify Firebase ID token → upsert user (trial if new) → set cookies.
+  // Verify (Firebase ID token | phone+code) → upsert user (trial if new) → set cookies.
   router.post('/verify-otp', validate(verifyOtpSchema), async (req, res) => {
-    const { user, isNewUser, accessToken, refreshToken } = await service.verifyOtp(req.valid.body.idToken);
+    const { user, isNewUser, accessToken, refreshToken } = await service.verifyOtp(req.valid.body);
     setAuthCookies(res, { accessToken, refreshToken }, cookieCfg);
     sendSuccess(res, {
       data: { user: toPublicUser(user) },

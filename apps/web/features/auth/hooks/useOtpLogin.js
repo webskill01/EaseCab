@@ -9,7 +9,9 @@ import { errorKey } from '../lib/errorKey'
 /**
  * Login state machine: 'phone' → 'otp' → ('perms' → 'done' for new users | redirect
  * to /feed for returning users). Holds the phone (E.164), an i18n error sub-key, a
- * loading flag, and the Firebase confirmationResult (ref — survives renders).
+ * loading flag, and the Firebase confirmationResult (ref — survives renders). When the
+ * API sends the SMS itself (2Factor, channel 'server') there is no Firebase step: the
+ * code goes straight to /verify-otp with the phone.
  * Never logs phone or token (§10).
  */
 export function useOtpLogin() {
@@ -19,14 +21,16 @@ export function useOtpLogin() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const confirmationRef = useRef(null)
+  const serverOtpRef = useRef(false)
 
   const submitPhone = useCallback(async (digits) => {
     const e164 = `+91${digits}`
     setLoading(true)
     setError(null)
     try {
-      await requestOtp(e164)
-      confirmationRef.current = await sendOtp(e164)
+      const { channel } = await requestOtp(e164)
+      serverOtpRef.current = channel === 'server'
+      if (!serverOtpRef.current) confirmationRef.current = await sendOtp(e164)
       setPhone(e164)
       setPhase('otp')
     } catch (err) {
@@ -40,8 +44,10 @@ export function useOtpLogin() {
     setLoading(true)
     setError(null)
     try {
-      const idToken = await confirm(confirmationRef.current, code)
-      const { isNewUser } = await verifyOtp(idToken)
+      const proof = serverOtpRef.current
+        ? { phone, otp: code }
+        : { idToken: await confirm(confirmationRef.current, code) }
+      const { isNewUser } = await verifyOtp(proof)
       if (isNewUser) setPhase('perms')
       else router.replace('/feed')
     } catch (err) {
@@ -49,7 +55,7 @@ export function useOtpLogin() {
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [router, phone])
 
   const changeNumber = useCallback(() => {
     confirmationRef.current = null

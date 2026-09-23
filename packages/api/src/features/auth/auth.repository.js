@@ -15,6 +15,8 @@ const { fixedWindowIncr } = require('../../lib/rateLimit');
 function createAuthRepository({ prisma, redis }) {
   const cooldownKey = (phone) => redisKey('otp', 'cooldown', phone);
   const countKey = (phone) => redisKey('otp', 'count', phone);
+  const sessionKey = (phone) => redisKey('otp', 'session', phone);
+  const verifyKey = (phone) => redisKey('otp', 'verify', phone);
 
   return {
     /** @returns {Promise<number>} TTL secs of the resend-cooldown key (-2 if none). */
@@ -36,6 +38,26 @@ function createAuthRepository({ prisma, redis }) {
     /** Arm the resend cooldown for this phone. */
     async setResendCooldown(phone, cooldownSec) {
       await redis.set(cooldownKey(phone), '1', 'EX', cooldownSec);
+    },
+
+    /** Bind a 2Factor session id to the phone it was sent to (Phase 16.5). */
+    async saveOtpSession(phone, sessionId, ttlSec) {
+      await redis.set(sessionKey(phone), sessionId, 'EX', ttlSec);
+    },
+
+    /** @returns {Promise<?string>} the live session id for this phone, or null. */
+    async getOtpSession(phone) {
+      return redis.get(sessionKey(phone));
+    },
+
+    /** Burn the session after a successful verify so the code can't be replayed. */
+    async deleteOtpSession(phone) {
+      await redis.del(sessionKey(phone));
+    },
+
+    /** Fixed-window count of verify attempts for this phone. */
+    async incrementVerifyAttempts(phone, windowSec) {
+      return fixedWindowIncr(redis, verifyKey(phone), windowSec);
     },
 
     /** Look up by phone WITHOUT an isDeleted filter (phone is @unique; a soft-deleted

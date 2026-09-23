@@ -18,7 +18,7 @@ describe('authApi', () => {
 
   it('verifyOtp returns isNewUser=true on a 201', async () => {
     apiFetch.mockResolvedValue({ data: { user: { id: 'u1' } }, status: 201 })
-    const out = await verifyOtp('id-token-xyz')
+    const out = await verifyOtp({ idToken: 'id-token-xyz' })
     expect(apiFetch).toHaveBeenCalledWith('/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ idToken: 'id-token-xyz' }),
@@ -28,7 +28,7 @@ describe('authApi', () => {
 
   it('verifyOtp returns isNewUser=false on a 200', async () => {
     apiFetch.mockResolvedValue({ data: { user: { id: 'u1' } }, status: 200 })
-    const out = await verifyOtp('id-token-xyz')
+    const out = await verifyOtp({ phone: '+919876543210', otp: '123456' })
     expect(out.isNewUser).toBe(false)
   })
 

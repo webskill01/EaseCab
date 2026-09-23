@@ -1,6 +1,7 @@
 'use strict';
 
-const { AppError, ERROR_CODES, OTP_RATE_LIMIT, TRIAL_DAYS, USER_ROLE } = require('@easecab/shared');
+const crypto = require('node:crypto');
+const { AppError, ERROR_CODES, OTP_RATE_LIMIT, OTP_CHANNEL, OTP_SESSION, TRIAL_DAYS, USER_ROLE } = require('@easecab/shared');
 
 const DAY_MS = 86_400_000;
 
@@ -26,24 +27,79 @@ function toPublicUser(user) {
   };
 }
 
+/** Constant-time compare for the reviewer test code (never a plain ===). */
+function codesMatch(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+
 /**
- * Auth business logic (CLAUDE.md §4 service layer). Provider-agnostic except that
- * it calls the injected `identity.verifyOtpToken` — the single Firebase touchpoint
- * (migration boundary). Never logs phone or token (§10).
+ * Auth business logic (CLAUDE.md §4 service layer). Two OTP paths (Phase 16.5):
+ * `identity.verifyOtpToken` (Firebase, legacy) and `smsOtp` (2Factor, server-side,
+ * present only when OTP_PROVIDER=twofactor). Never logs phone, code or token (§10).
  *
  * @param {object} deps
  * @param {ReturnType<import('./auth.repository').createAuthRepository>} deps.repo
  * @param {{ signAccess, signRefresh, verifyRefresh }} deps.jwt - from lib/jwt
  * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }>, mintCustomToken(uid: string): Promise<string> }} deps.identity
+ * @param {?ReturnType<import('../../lib/twoFactor').createTwoFactorClient>} [deps.smsOtp]
+ * @param {?{ phone: string, code: string }} [deps.testLogin] - Play-reviewer number that
+ *   skips the SMS and accepts a fixed code (replaces the Firebase console test number).
  */
-function createAuthService({ repo, jwt, identity }) {
+function createAuthService({ repo, jwt, identity, smsOtp = null, testLogin = null }) {
+  const isTestPhone = (phone) => Boolean(testLogin) && phone === testLogin.phone;
+
   function issueTokens(user) {
     const payload = { sub: user.id, role: USER_ROLE };
     return { accessToken: jwt.signAccess(payload), refreshToken: jwt.signRefresh(payload) };
   }
 
+  /** Upsert the user for a proven phone (trial if new, restore if soft-deleted). */
+  async function signIn(phone) {
+    let user = await repo.findUserByPhone(phone);
+    let isNewUser = false;
+    if (!user) {
+      const trialExpiresAt = new Date(Date.now() + TRIAL_DAYS * DAY_MS);
+      user = await repo.createUserWithTrial(phone, trialExpiresAt);
+      isNewUser = true;
+    } else if (user.isDeleted) {
+      user = await repo.restoreUser(user.id);
+    }
+    return { user, isNewUser, ...issueTokens(user) };
+  }
+
+  async function phoneFromFirebase(idToken) {
+    try {
+      return (await identity.verifyOtpToken(idToken)).phone;
+    } catch {
+      // Any verification failure collapses to one generic 401 (no detail leak, §9).
+      throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
+    }
+  }
+
+  /** Check phone+code against the bound 2Factor session (or the reviewer code). */
+  async function checkSmsCode(phone, otp) {
+    if (!smsOtp) throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
+    const attempts = await repo.incrementVerifyAttempts(phone, OTP_SESSION.VERIFY_WINDOW_SEC);
+    if (attempts > OTP_SESSION.MAX_VERIFY_ATTEMPTS) throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+    if (isTestPhone(phone)) {
+      if (!codesMatch(otp, testLogin.code)) throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
+      return;
+    }
+    const sessionId = await repo.getOtpSession(phone);
+    if (!sessionId || !(await smsOtp.verifyOtp(sessionId, otp))) {
+      throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
+    }
+    await repo.deleteOtpSession(phone);
+  }
+
   return {
-    /** OUR rate-limit gate (Firebase does the actual send on the client). */
+    /**
+     * OUR rate-limit gate, then (2Factor mode) the send itself.
+     * @returns {Promise<{ sent: true, channel: string }>} channel tells the client
+     *   whether to run Firebase itself or just collect the code.
+     */
     async requestOtp(phone) {
       const cooldown = await repo.getResendCooldownTtl(phone);
       if (cooldown > 0) {
@@ -57,30 +113,22 @@ function createAuthService({ repo, jwt, identity }) {
       if (count > OTP_RATE_LIMIT.MAX_PER_HOUR) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
-      return { sent: true };
+      if (!smsOtp) return { sent: true, channel: OTP_CHANNEL.FIREBASE };
+      if (!isTestPhone(phone)) {
+        const sessionId = await smsOtp.sendOtp(phone);
+        await repo.saveOtpSession(phone, sessionId, OTP_SESSION.SESSION_TTL_SEC);
+      }
+      return { sent: true, channel: OTP_CHANNEL.SERVER };
     },
 
-    /** Verify the Firebase ID token, upsert the user, issue our cookies' tokens. */
-    async verifyOtp(idToken) {
-      let phone;
-      try {
-        ({ phone } = await identity.verifyOtpToken(idToken));
-      } catch {
-        // Any verification failure collapses to one generic 401 (no detail leak, §9).
-        throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
-      }
-
-      let user = await repo.findUserByPhone(phone);
-      let isNewUser = false;
-      if (!user) {
-        const trialExpiresAt = new Date(Date.now() + TRIAL_DAYS * DAY_MS);
-        user = await repo.createUserWithTrial(phone, trialExpiresAt);
-        isNewUser = true;
-      } else if (user.isDeleted) {
-        user = await repo.restoreUser(user.id);
-      }
-
-      return { user, isNewUser, ...issueTokens(user) };
+    /**
+     * Prove the phone (Firebase ID token OR phone+code), upsert the user, issue tokens.
+     * @param {{ idToken: string } | { phone: string, otp: string }} body
+     */
+    async verifyOtp(body) {
+      if (body.idToken) return signIn(await phoneFromFirebase(body.idToken));
+      await checkSmsCode(body.phone, body.otp);
+      return signIn(body.phone);
     },
 
     /** Rotate tokens from a valid refresh cookie; any problem → AUTH_REQUIRED. */

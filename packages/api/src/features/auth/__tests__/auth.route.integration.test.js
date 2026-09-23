@@ -64,7 +64,7 @@ const okIdentity = { verifyOtpToken: async () => ({ phone: '+919876543210' }), m
 test('POST /api/v1/auth/send-otp returns the success envelope', async () => {
   const res = await request(appWith(okIdentity)).post('/api/v1/auth/send-otp').send({ phone: '+919876543210' });
   assert.strictEqual(res.status, 200);
-  assert.deepStrictEqual(res.body, { success: true, data: { sent: true } });
+  assert.deepStrictEqual(res.body, { success: true, data: { sent: true, channel: 'firebase' } });
 });
 
 test('send-otp rejects a bad phone with 422 VALIDATION_ERROR', async () => {
@@ -132,4 +132,16 @@ test('full round-trip: verify-otp → reuse refresh cookie → refresh issues ne
   assert.strictEqual(refreshed.status, 200);
   assert.deepStrictEqual(refreshed.body, { success: true, data: { refreshed: true } });
   assert.match(refreshed.headers['set-cookie'].join(';'), /ec_at=.*HttpOnly/i);
+});
+
+test('twofactor: send-otp → verify-otp with phone+code sets cookies (201 new user)', async () => {
+  const smsOtp = { sendOtp: async () => 'sess-9', verifyOtp: async (id, otp) => id === 'sess-9' && otp === '654321' };
+  const app = buildApp({ prisma: fakePrisma(), redis: fakeRedis(), logger: pino({ level: 'silent' }), config: CONFIG, identity: okIdentity, smsOtp, subscriber: inertSubscriber, cashfree: {}, surepass: {} });
+  const sent = await request(app).post('/api/v1/auth/send-otp').send({ phone: '+919812345678' });
+  assert.deepStrictEqual(sent.body.data, { sent: true, channel: 'server' });
+  const bad = await request(app).post('/api/v1/auth/verify-otp').send({ phone: '+919812345678', otp: '12' });
+  assert.strictEqual(bad.status, 422);
+  const ok = await request(app).post('/api/v1/auth/verify-otp').send({ phone: '+919812345678', otp: '654321' });
+  assert.strictEqual(ok.status, 201);
+  assert.ok(ok.headers['set-cookie'].some((c) => c.startsWith('ec_at=')));
 });

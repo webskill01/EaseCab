@@ -62,6 +62,34 @@ const OTP_RATE_LIMIT = Object.freeze({
   RESEND_COOLDOWN_SEC: 30,
 });
 
+/**
+ * Who sends + checks the login OTP (Phase 16.5). FIREBASE = client-side Firebase phone
+ * auth (legacy); TWOFACTOR = the API sends/verifies via 2factor.in. Picked by the
+ * OTP_PROVIDER env var so the cut-over (and a rollback) is an env flip, no deploy.
+ */
+const OTP_PROVIDER = Object.freeze({ FIREBASE: 'firebase', TWOFACTOR: 'twofactor' });
+
+/** Returned by /send-otp so the client knows whether to run Firebase or just ask for the code. */
+const OTP_CHANNEL = Object.freeze({ FIREBASE: 'firebase', SERVER: 'server' });
+
+/**
+ * Server-side OTP session (2Factor path). SESSION_TTL_SEC matches the 5-minute validity
+ * in the DLT template (CLAUDE.md §6). Verify attempts are capped per phone per window so
+ * a 6-digit code can't be brute-forced inside its lifetime.
+ */
+const OTP_SESSION = Object.freeze({
+  SESSION_TTL_SEC: 300,
+  MAX_VERIFY_ATTEMPTS: 5,
+  VERIFY_WINDOW_SEC: 300,
+});
+
+/** 2factor.in REST boundary (lib/twoFactor.js). */
+const TWO_FACTOR = Object.freeze({
+  BASE_URL: 'https://2factor.in/API/V1',
+  HTTP_TIMEOUT_MS: 10_000,
+  STATUS_SUCCESS: 'Success',
+});
+
 /** Full-access trial length granted on first sign-in (CLAUDE.md §1). */
 const TRIAL_DAYS = 7;
 
@@ -71,6 +99,10 @@ const USER_ROLE = 'user';
 module.exports = {
   AUTH_COOKIES,
   OTP_RATE_LIMIT,
+  OTP_PROVIDER,
+  OTP_CHANNEL,
+  OTP_SESSION,
+  TWO_FACTOR,
   TRIAL_DAYS,
   USER_ROLE,
   ADMIN_AUTH_COOKIES,

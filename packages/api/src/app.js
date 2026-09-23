@@ -106,6 +106,8 @@ const { createPasswordHasher } = require('./lib/passwordHasher');
  * @param {{ accessSecret, refreshSecret, accessTtl, refreshTtl }} deps.config.adminJwt
  *   - SEPARATE admin JWT secrets/TTLs (Step 24a, §6); a second createJwt instance.
  * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }} deps.identity
+ * @param {?object} [deps.smsOtp] - 2Factor client (OTP_PROVIDER=twofactor) or null
+ * @param {?{ phone: string, code: string }} [deps.testLogin] - Play-reviewer login
  * @param {import('ioredis').Redis} deps.subscriber - dedicated redis subscriber
  *   (a `redis.duplicate()`) backing the rides SSE fan-out; a subscriber-mode
  *   connection can't run normal commands, so it must be separate from `redis`.
@@ -127,7 +129,7 @@ const { createPasswordHasher } = require('./lib/passwordHasher');
  *   uploads routes touch it, so harnesses that don't exercise uploads may omit it.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads }) {
+function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, testLogin = null, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -194,7 +196,7 @@ function buildApp({ prisma, redis, logger, config, identity, subscriber, cashfre
 
   // Auth (Step 9) — public.
   const authRepo = createAuthRepository({ prisma, redis });
-  const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, config });
+  const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, smsOtp, testLogin });
   v1.use('/auth', createAuthRouter({ service: authService, config, requireAuth }));
 
   // Cities (Step 13) — authed typeahead for the post form + Step-18 filter bar.

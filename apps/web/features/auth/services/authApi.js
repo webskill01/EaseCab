@@ -6,7 +6,10 @@ import { apiFetch } from '@/lib/api/client'
  * credentials). Never logs phone or token (§10).
  */
 
-/** Our rate-limit gate. The client triggers the Firebase send only after this 200. */
+/**
+ * Our rate-limit gate. Returns `{ channel }`: 'server' = the API already sent the SMS
+ * (2Factor); anything else = the client runs the Firebase send itself.
+ */
 export async function requestOtp(phoneE164) {
   const { data } = await apiFetch('/auth/send-otp', {
     method: 'POST',
@@ -15,11 +18,14 @@ export async function requestOtp(phoneE164) {
   return data
 }
 
-/** Verify the Firebase ID token → cookies. 201 ⇒ new user (show the trial screen). */
-export async function verifyOtp(idToken) {
+/**
+ * Verify → cookies. 201 ⇒ new user (show the trial screen).
+ * @param {{ idToken: string } | { phone: string, otp: string }} proof
+ */
+export async function verifyOtp(proof) {
   const { data, status } = await apiFetch('/auth/verify-otp', {
     method: 'POST',
-    body: JSON.stringify({ idToken }),
+    body: JSON.stringify(proof),
   })
   return { user: data.user, isNewUser: status === 201 }
 }
