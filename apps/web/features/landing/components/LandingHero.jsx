@@ -15,8 +15,7 @@ export async function LandingHeader() {
     <header className="sticky top-0 z-40 border-b border-ec-line bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <div className="flex items-center gap-2.5">
-          {/* ponytail: current app icon as logo — swap file when the final logo lands */}
-          <Image src="/icons/icon-96.png" alt="EaseCab logo" width={36} height={36} className="rounded-[10px]" />
+          <Image src="/icons/icon-96.png" unoptimized alt="EaseCab logo" width={36} height={36} className="rounded-[10px]" />
           <span className="leading-tight">
             <span className="block text-[19px] font-extrabold tracking-tight text-ec-ink">{COMPANY.brand}</span>
             <span className="block text-[10px] font-semibold uppercase tracking-wide text-ec-ink40">

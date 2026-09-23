@@ -3,10 +3,10 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Swap, User, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
-import { statusOf, relParts, ageMinFrom, vehIconKey, pickCityName, rideDateParts, RIDE_DISPLAY_STATUS } from '../lib/rideView'
+import { statusOf, freshLeft, relParts, ageMinFrom, vehIconKey, pickCityName, rideDateParts, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
-/** Status pill — Fresh (green dot) / Likely-booked (blue dot) / Verified (shield). */
-export function StatusBadge({ status }) {
+/** Status pill — Fresh (pulsing green dot + live m:ss countdown) / Likely-booked (blue dot) / Verified (shield). */
+export function StatusBadge({ status, left }) {
   const t = useTranslations('rides')
   if (status === RIDE_DISPLAY_STATUS.VERIFIED) {
     return (
@@ -23,8 +23,9 @@ export function StatusBadge({ status }) {
         booked ? 'bg-ec-bookedBg text-ec-bookedTx' : 'bg-ec-successBg text-ec-successTx'
       }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${booked ? 'bg-ec-bookedTx' : 'bg-ec-success'}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${booked ? 'bg-ec-bookedTx' : 'animate-pulse bg-ec-success motion-reduce:animate-none'}`} />
       {booked ? t('status.booked') : t('status.fresh')}
+      {!booked && left ? <span className="tabular-nums">· {left}</span> : null}
     </span>
   )
 }
@@ -154,7 +155,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
         <span className="text-[12px] font-semibold text-ec-ink60">
           {t('card.postedAt')} · <b className="font-bold text-ec-ink">{t(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
         </span>
-        <StatusBadge status={display} />
+        <StatusBadge status={display} left={display === RIDE_DISPLAY_STATUS.FRESH ? freshLeft(ride.receivedAt, now) : null} />
       </div>
 
       <RouteRow from={from} to={to} />

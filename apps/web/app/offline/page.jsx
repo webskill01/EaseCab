@@ -8,7 +8,7 @@ export const metadata = { title: 'Offline — EaseCab' }
 export default function OfflinePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white px-6 text-center">
-      <Image src="/icons/icon-192.png" alt="EaseCab" width={64} height={64} className="rounded-2xl" />
+      <Image src="/icons/icon-192.png" unoptimized alt="EaseCab" width={64} height={64} className="rounded-2xl" />
       <h1 className="text-xl font-extrabold text-ec-ink">You&rsquo;re offline</h1>
       <p className="max-w-xs text-sm font-medium text-ec-ink40">
         EaseCab can&rsquo;t reach the network right now. Check your connection &mdash; your ride

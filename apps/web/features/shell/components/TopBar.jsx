@@ -13,7 +13,7 @@ export function TopBar({ locale }) {
   const t = useTranslations('common')
   return (
     <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-ec-line bg-white px-3.5 py-2.5">
-      <Image src="/icons/icon-96.png" alt="" width={34} height={34} priority className="shrink-0 rounded-[9px]" />
+      <Image src="/icons/icon-96.png" unoptimized alt="" width={34} height={34} priority className="shrink-0 rounded-[9px]" />
       <div className="min-w-0 flex-1 leading-none">
         <p className="text-[18px] font-extrabold tracking-tight text-ec-ink">{t('appName')}</p>
         <p className="mt-0.5 text-[10.5px] font-semibold text-ec-ink40">{t('tagline')}</p>

@@ -3,7 +3,7 @@
 // FCM worker (firebase-messaging-sw.js) is registered at a narrower scope
 // (/firebase-cloud-messaging-push-scope) so the two coexist without clashing.
 // v2: purges RSC payloads the v1 catch-all cached (stale language after a switch).
-const CACHE = 'easecab-shell-v2'
+const CACHE = 'easecab-shell-v3' // v3: purge cached pre-rebrand icons
 const OFFLINE_URL = '/offline'
 // Only precache URLs guaranteed to exist (icons cache lazily at runtime so a
 // not-yet-generated icon can never fail install via addAll).

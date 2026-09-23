@@ -39,7 +39,8 @@
     "quickPick": "Shehar chuno",
     "myLocation": "Meri location",
     "citiesSelected": "{count} shehar",
-    "clear": "Filter hatao"
+    "clear": "Filter hatao",
+    "showingOnly": "Sirf ye dikh rahe hain: {cities}"
   },
   "banner": {
     "freeTrial": "Free trial",
@@ -114,5 +115,8 @@
     "attaching": "Upload ho raha…",
     "attached": "Screenshot add ho gaya",
     "attachError": "Add nahi hua. Choti image try karein."
+  },
+  "feed": {
+    "liveNote": "Live · nayi rides apne aap aati hain — refresh karne ki zaroorat nahi"
   }
 }

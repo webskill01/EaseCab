@@ -46,7 +46,7 @@ export function OtpForm({ phone, onSubmit, onChangeNumber, loading, error }) {
 
       {/* compact brandmark */}
       <div className="mt-2 flex items-center gap-[11px]">
-        <Image src="/icons/icon-192.png" alt="EaseCab" width={46} height={46} priority className="shrink-0 rounded-[13px] shadow-ec-blue" />
+        <Image src="/icons/icon-192.png" unoptimized alt="EaseCab" width={46} height={46} priority className="shrink-0 rounded-[13px] shadow-ec-blue" />
         <div>
           <p className="text-[18px] font-extrabold leading-none tracking-tight text-ec-ink">{t('brand.name')}</p>
           <p className="mt-[3px] text-[11.5px] font-semibold text-ec-ink40">{t('brand.tagline')}</p>

@@ -8,6 +8,7 @@ import { useProfile } from '../hooks/useProfile'
 import { useUpdateProfile } from '../hooks/useUpdateProfile'
 import { profileToForm } from '../lib/profileForm'
 import { ProfileForm } from './ProfileForm'
+import { env } from '@/config/env'
 
 /** Edit-profile page (#20) — its own route, not inline. Saves then returns to /profile. */
 export function EditProfileScreen() {
@@ -32,7 +33,7 @@ export function EditProfileScreen() {
         <div className="flex-1 text-[18px] font-extrabold tracking-tight text-ec-ink">{t('edit')}</div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col">
-        <ProfileForm initial={profileToForm(profile)} phone={profile.phone} lockBaseCity={Boolean(profile.baseCity)} pinnedFooter onSubmit={(body) => update.save(body)} submitting={update.saving} errorKey={update.errorKey} />
+        <ProfileForm initial={profileToForm(profile)} phone={profile.phone} lockBaseCity={env.NEXT_PUBLIC_VERIFICATION_ENABLED && Boolean(profile.baseCity)} pinnedFooter onSubmit={(body) => update.save(body)} submitting={update.saving} errorKey={update.errorKey} />
       </div>
     </div>
   )

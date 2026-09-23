@@ -39,7 +39,8 @@
     "quickPick": "Filter by city",
     "myLocation": "My location",
     "citiesSelected": "{count} cities",
-    "clear": "Clear filter"
+    "clear": "Clear filter",
+    "showingOnly": "Showing only: {cities}"
   },
   "banner": {
     "freeTrial": "Free trial",
@@ -114,5 +115,8 @@
     "attaching": "Uploading…",
     "attached": "Screenshot added",
     "attachError": "Couldn't attach. Try a smaller image."
+  },
+  "feed": {
+    "liveNote": "Live · new rides appear automatically — no need to refresh"
   }
 }

@@ -34,7 +34,7 @@ export function PhoneForm({ onSubmit, loading, error }) {
         <Image src="/images/login-hero.svg" alt="" fill priority unoptimized className="object-cover" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/70" />
         <div className="pointer-events-none absolute inset-x-[22px] bottom-[30px] flex items-center gap-3">
-          <Image src="/icons/icon-192.png" alt="EaseCab" width={52} height={52} priority className="shrink-0 rounded-[15px] shadow-ec-float" />
+          <Image src="/icons/icon-192.png" unoptimized alt="EaseCab" width={52} height={52} priority className="shrink-0 rounded-[15px] shadow-ec-float" />
           <div>
             <p className="text-[26px] font-extrabold leading-none tracking-tight text-white">{t('brand.name')}</p>
             <p className="mt-1 text-[13px] font-medium text-white/90">{t('brand.tagline')}</p>

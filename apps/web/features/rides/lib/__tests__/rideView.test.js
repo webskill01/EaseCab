@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  ageMinFrom, statusOf, relParts, historyStamp, vehIconKey, cityLabel, stripUrls, pickCityName,
+  ageMinFrom, freshLeft, statusOf, relParts, historyStamp, vehIconKey, cityLabel, stripUrls, pickCityName,
   rideDateParts, RIDE_KIND, RIDE_DISPLAY_STATUS, FRESH_WINDOW_MIN,
 } from '../rideView'
 
@@ -71,8 +71,8 @@ describe('statusOf', () => {
     expect(statusOf({ kind: RIDE_KIND.VERIFIED, status: 'booked', ageMin: 999 })).toBe(RIDE_DISPLAY_STATUS.VERIFIED)
   })
   it('bot ride is fresh only while status=fresh AND within the fresh window', () => {
-    expect(statusOf({ kind: RIDE_KIND.BOT, status: 'fresh', ageMin: FRESH_WINDOW_MIN })).toBe(RIDE_DISPLAY_STATUS.FRESH)
-    expect(statusOf({ kind: RIDE_KIND.BOT, status: 'fresh', ageMin: FRESH_WINDOW_MIN + 1 })).toBe(RIDE_DISPLAY_STATUS.BOOKED)
+    expect(statusOf({ kind: RIDE_KIND.BOT, status: 'fresh', ageMin: FRESH_WINDOW_MIN - 1 })).toBe(RIDE_DISPLAY_STATUS.FRESH)
+    expect(statusOf({ kind: RIDE_KIND.BOT, status: 'fresh', ageMin: FRESH_WINDOW_MIN })).toBe(RIDE_DISPLAY_STATUS.BOOKED)
     // server already aged it → booked regardless of client clock
     expect(statusOf({ kind: RIDE_KIND.BOT, status: 'booked', ageMin: 0 })).toBe(RIDE_DISPLAY_STATUS.BOOKED)
   })
@@ -126,5 +126,15 @@ describe('cityLabel', () => {
   it('returns null when neither is present (caller renders the — dash)', () => {
     expect(cityLabel(null, null)).toBeNull()
     expect(cityLabel(null, '   ')).toBeNull()
+  })
+})
+
+describe('freshLeft', () => {
+  it('counts down the live window as m:ss and floors at 0:00', () => {
+    const now = Date.parse('2026-06-06T10:00:00.000Z')
+    expect(freshLeft('2026-06-06T10:00:00.000Z', now)).toBe('5:00')
+    expect(freshLeft('2026-06-06T09:57:28.000Z', now)).toBe('2:28')
+    expect(freshLeft('2026-06-06T09:50:00.000Z', now)).toBe('0:00')
+    expect(freshLeft('bad', now)).toBe('0:00')
   })
 })

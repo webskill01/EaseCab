@@ -32,6 +32,19 @@ export function ageMinFrom(receivedAt, now = Date.now()) {
 }
 
 /**
+ * Live-window countdown as "m:ss" (0:00 once the ride has aged out). Same boundary
+ * as statusOf, so the badge flips to booked exactly when this reaches zero.
+ * @param {Date|string|number} receivedAt
+ * @param {number} [now] - epoch ms
+ * @returns {string}
+ */
+export function freshLeft(receivedAt, now = Date.now()) {
+  const t = new Date(receivedAt).getTime()
+  const left = Number.isNaN(t) ? 0 : Math.max(0, Math.ceil((t + FRESH_WINDOW_MIN * 60000 - now) / 1000))
+  return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`
+}
+
+/**
  * Derive the display status. Verified posts are always "verified". A bot ride is
  * "fresh" only while the server still has it `fresh` AND it's within the window —
  * so it ages to "booked" client-side without waiting for an SSE/cron push.
@@ -40,7 +53,7 @@ export function ageMinFrom(receivedAt, now = Date.now()) {
  */
 export function statusOf({ kind, status, ageMin }) {
   if (kind === RIDE_KIND.VERIFIED) return RIDE_DISPLAY_STATUS.VERIFIED
-  if (status === 'fresh' && ageMin <= FRESH_WINDOW_MIN) return RIDE_DISPLAY_STATUS.FRESH
+  if (status === 'fresh' && ageMin < FRESH_WINDOW_MIN) return RIDE_DISPLAY_STATUS.FRESH
   return RIDE_DISPLAY_STATUS.BOOKED
 }
 

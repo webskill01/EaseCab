@@ -13,6 +13,7 @@ import { membershipView } from '@/features/subscription/lib/membership'
 import { SubTabs } from './SubTabs'
 import { CityFilter } from './CityFilter'
 import { FeedBanner } from './FeedBanner'
+import { FeedStatus } from './FeedStatus'
 import { RideCard } from './RideCard'
 import { RideCardSkeleton, CatchingUp, EmptyFeed } from './FeedStates'
 import { NewRidesPill } from './NewRidesPill'
@@ -90,6 +91,7 @@ export function FeedScreen() {
         </div>
       </div>
       <SubTabs sub={sub} onChange={setSub} />
+      <FeedStatus selected={selectedCities} live={sub === FEED_SUB.RIDES} onClear={clearCities} />
       <FeedBanner membership={membership} onUpgrade={goMembership} />
 
       <div
@@ -131,6 +133,7 @@ export function FeedScreen() {
         <ContactSheet
           ride={contactRideVM}
           membershipState={membership.state}
+          membershipLoading={membershipQuery.isPending}
           onClose={() => setContactRideVM(null)}
           onUpgrade={() => { setContactRideVM(null); goMembership() }}
           onVerify={() => { setContactRideVM(null); router.push(env.NEXT_PUBLIC_VERIFICATION_ENABLED ? '/verify?intent=l1' : '/profile/edit') }}

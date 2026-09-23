@@ -30,11 +30,17 @@ export function PostScreen() {
   const [form, setForm] = useState(emptyForm())
   const [repostSourceId, setRepostSourceId] = useState(null)
   const post = usePostRide()
-  const { data: profile } = useProfile()
+  const { data: profile, isPending: profileLoading } = useProfile()
   const [gateOpen, setGateOpen] = useState(false)
   // Unknown until the profile loads — don't flash the gate; the server 403 still backs it.
   const gated = Boolean(profile) && !postEligibility(profile).eligible
-  const submit = () => (gated ? setGateOpen(true) : post.submit(form))
+  // Profile still loading → hold the tap (button shows busy) rather than let the
+  // server 403 open the gate a round-trip late. A failed load falls through to the server gate.
+  const submit = () => {
+    if (profileLoading) return
+    if (gated) setGateOpen(true)
+    else post.submit(form)
+  }
 
   // Repost hand-off: a draft stashed by My Rides' Repost chip prefills from/to/
   // vehicle/fare once on mount (then it's consumed). Runs before the phone effect
@@ -133,7 +139,7 @@ export function PostScreen() {
             form={form}
             onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
             onSubmit={submit}
-            submitting={post.submitting}
+            submitting={post.submitting || profileLoading}
             gated={gated}
           />
         ) : (

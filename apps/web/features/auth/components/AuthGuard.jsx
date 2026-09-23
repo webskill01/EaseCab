@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { useQueryClient } from '@tanstack/react-query'
 import { setOnSessionExpired } from '@/lib/api/client'
 import { refreshSession } from '../services/authApi'
+import { getProfile } from '@/features/profile/services/profileApi'
+import { getMembership } from '@/features/subscription/services/subscriptionApi'
 
 /**
  * How often to proactively rotate the session while the app stays open. Must be
@@ -27,19 +30,27 @@ export const SESSION_REFRESH_INTERVAL_MS = 12 * 60 * 1000
 export function AuthGuard({ children }) {
   const router = useRouter()
   const t = useTranslations('auth')
+  const qc = useQueryClient()
   const [status, setStatus] = useState('checking')
 
   useEffect(() => {
     let active = true
     refreshSession()
-      .then(() => { if (active) setStatus('authed') })
+      .then(() => {
+        if (!active) return
+        // Warm the two queries every soft gate reads (post: profile, contact: membership)
+        // so a gate opens on the first tap instead of popping in after a fetch.
+        qc.prefetchQuery({ queryKey: ['profile'], queryFn: getProfile, staleTime: 300000 })
+        qc.prefetchQuery({ queryKey: ['membership'], queryFn: getMembership, staleTime: 300000 })
+        setStatus('authed')
+      })
       .catch(() => {
         if (!active) return
         setStatus('redirecting')
         router.replace('/login')
       })
     return () => { active = false }
-  }, [router])
+  }, [router, qc])
 
   // Once authed: keep the session warm + wire the hard-failure redirect.
   useEffect(() => {

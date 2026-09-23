@@ -54,11 +54,12 @@ function RouteLine({ ride }) {
  * @param {object} props
  * @param {{ id: string, kind: string, from?: string, to?: string, vehicleType?: string }} props.ride
  * @param {string} props.membershipState - MEMBERSHIP_STATE value
+ * @param {boolean} [props.membershipLoading] - membership query still in flight → hold the sheet
  * @param {() => void} props.onClose
  * @param {() => void} props.onUpgrade
  * @param {() => void} props.onVerify - route to L1 verification (verified-ride pick gate)
  */
-export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVerify }) {
+export function ContactSheet({ ride, membershipState, membershipLoading = false, onClose, onUpgrade, onVerify }) {
   const t = useTranslations('rides')
   const tc = useTranslations('common')
   const qc = useQueryClient()
@@ -86,9 +87,14 @@ export function ContactSheet({ ride, membershipState, onClose, onUpgrade, onVeri
   // Reveal the number immediately on open — no second "reveal" tap. The server is the
   // real gate, so expired members short-circuit to the subscribe sheet instead of calling.
   const fire = reveal.mutate
+  // While membership is still loading, wait: firing then would open the reveal sheet and
+  // flip it to the gate a round-trip later — the "lag" users saw. A failed membership
+  // query doesn't block: the server stays the real gate.
   useEffect(() => {
-    if (membershipState !== MEMBERSHIP_STATE.EXPIRED) fire()
-  }, [fire, membershipState])
+    if (!membershipLoading && membershipState !== MEMBERSHIP_STATE.EXPIRED) fire()
+  }, [fire, membershipLoading, membershipState])
+
+  if (membershipLoading) return null
 
   if (gatedOut) {
     return (

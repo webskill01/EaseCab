@@ -9,7 +9,7 @@ export const FEED_SUB = Object.freeze({ RIDES: 'rides', VERIFIED: 'verified' })
 
 const LIVE_CAP = 14 // max live-prepended rides held at the top
 const PENDING_CAP = 20 // max queued rides while the user is scrolled down
-const AGE_TICK_MS = 20000 // re-render cadence so cards cross the fresh→booked line live
+const AGE_TICK_MS = 1000 // 1s: drives the live m:ss countdown on fresh cards (and the fresh→booked flip)
 const AT_TOP_PX = 24
 
 /** Merge live + base rides, newest-first, de-duplicated by id (live wins). */
