@@ -41,7 +41,7 @@ jobs:
       - name: Setup Node 20
         uses: actions/setup-node@v5
         with:
-          node-version: '20' # matches engines.node and the VPS runtime (not the dev machine's 24)
+          node-version: '22' # matches the VPS runtime (Node 22 since 2026-09-24; not the dev machine's 24)
           cache: npm
 
       - name: Install (clean, lockfile-pinned)
