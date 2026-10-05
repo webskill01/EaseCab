@@ -15,6 +15,7 @@ import { vehIconKeyOf } from '../lib/profileForm'
 import { CompletenessBanner } from './CompletenessBanner'
 import { AppPermsSheet } from './AppPermsSheet'
 import { AccountActionsCard } from './AccountActionsCard'
+import { useLocalCityName } from '@/features/rides/hooks/useLocalNames'
 
 /** Support deep-link — WhatsApp when configured, else email (mirrors shell SupportButton). */
 function supportHref() {
@@ -57,6 +58,7 @@ export function ProfileScreen() {
   const t = useTranslations('profile')
   const locale = useLocale()
   const router = useRouter()
+  const city = useLocalCityName()
   const [permsOpen, setPermsOpen] = useState(false)
   const { data: profile, isLoading, isError } = useProfile()
   const { data: sub } = useMembership()
@@ -116,7 +118,7 @@ export function ProfileScreen() {
               </span>
             )}
           </span>
-          <span className="mt-0.5 block text-[13px] font-semibold text-ec-ink60">{[profile.baseCity, t('header.driver')].filter(Boolean).join(' · ')}</span>
+          <span className="mt-0.5 block text-[13px] font-semibold text-ec-ink60">{[city(profile.baseCity), t('header.driver')].filter(Boolean).join(' · ')}</span>
           <span className="block text-[12.5px] font-semibold text-ec-ink40">{phone}</span>
         </span>
         <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-ec-bg text-ec-ink60"><Pencil size={17} /></span>
@@ -129,7 +131,7 @@ export function ProfileScreen() {
       <div>
         <div className="grid grid-cols-3 divide-x divide-ec-line overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
           <Stat icon={<Bolt size={16} />} label={t('stats.experience')} value={profile.experience != null ? `${profile.experience} ${t('stats.years')}` : '—'} onEdit={goEdit} />
-          <Stat icon={<Pin size={15} />} label={t('stats.workingCity')} value={profile.workingCity || profile.baseCity || '—'} onEdit={goEdit} />
+          <Stat icon={<Pin size={15} />} label={t('stats.workingCity')} value={city(profile.workingCity || profile.baseCity) || '—'} onEdit={goEdit} />
           <Stat icon={<VehicleIcon vehicleKey={vehIconKeyOf(profile.vehicleType)} size={16} />} label={t('stats.vehicle')} value={profile.vehicleType || '—'} onEdit={goEdit} />
         </div>
         <p className="mt-1.5 text-center text-[11px] font-semibold text-ec-ink40">{t('stats.tapHint')}</p>
@@ -174,8 +176,8 @@ export function ProfileScreen() {
         {/* Legal pages live in the public (legal) layout outside AuthGuard; navigating
             there in-app and back bounces through the root → /login redirect. Open them
             in a new tab so the authed session is never left. */}
-        <NavRow icon={<Info size={16} />} tone="ink" label={t('nav.privacy')} onClick={() => window.open('/privacy-policy', '_blank', 'noopener')} />
-        <NavRow icon={<List size={18} />} tone="ink" label={t('nav.terms')} onClick={() => window.open('/terms', '_blank', 'noopener')} last />
+        <NavRow icon={<Info size={16} />} tone="ink" label={t('nav.privacy')} onClick={() => router.push('/privacy-policy')} />
+        <NavRow icon={<List size={18} />} tone="ink" label={t('nav.terms')} onClick={() => router.push('/terms')} last />
       </nav>
 
       {/* ⑦ Support */}

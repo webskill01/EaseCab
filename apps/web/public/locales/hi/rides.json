@@ -10,7 +10,8 @@
     "postedAt": "पोस्ट",
     "viewProfile": "प्रोफ़ाइल",
     "unknownCity": "—",
-    "yearsExp": "{count} साल अनुभव"
+    "yearsExp": "{count} साल अनुभव",
+    "rideAt": "राइड"
   },
   "status": {
     "fresh": "नई",
@@ -23,7 +24,7 @@
     "hourAgo": "{count} घंटे पहले",
     "today": "आज",
     "tomorrow": "कल",
-    "liveAgo": "{time} पहले"
+    "liveAgo": "{time} मिनट पहले"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -116,7 +117,15 @@
     "attached": "स्क्रीनशॉट जोड़ा गया",
     "attachError": "जोड़ा नहीं जा सका। छोटी इमेज आज़माएँ।"
   },
-  "feed": {
-    "liveNote": "लाइव · नई राइड अपने-आप आती हैं — रिफ़्रेश करने की ज़रूरत नहीं"
+  "feed": {},
+  "vehicles": {
+    "Sedan": "सेडान",
+    "Innova": "इनोवा",
+    "SUV": "एसयूवी",
+    "Urbania": "अर्बेनिया",
+    "TempoTraveller": "टेम्पो ट्रैवलर",
+    "Bolero": "बोलेरो",
+    "Bus": "बस",
+    "Auto": "ऑटो"
   }
 }

@@ -2,6 +2,7 @@
 
 import { VehicleIcon } from '@/components/ui/icons'
 import { POST_VEHICLES } from '../lib/postForm'
+import { useVehicleLabel } from '../hooks/useLocalNames'
 import { vehIconKey } from '../lib/rideView'
 
 /**
@@ -10,6 +11,7 @@ import { vehIconKey } from '../lib/rideView'
  * @param {{ value: string, onChange: (v: string) => void }} props
  */
 export function VehicleChips({ value, onChange }) {
+  const veh = useVehicleLabel()
   return (
     <div role="radiogroup" className="flex flex-wrap gap-2">
       {POST_VEHICLES.map((v) => {
@@ -26,7 +28,7 @@ export function VehicleChips({ value, onChange }) {
             }`}
           >
             <VehicleIcon vehicleKey={vehIconKey(v)} size={16} />
-            {v}
+            {veh(v)}
           </button>
         )
       })}

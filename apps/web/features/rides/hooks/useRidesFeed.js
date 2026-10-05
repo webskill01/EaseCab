@@ -12,8 +12,16 @@ const PENDING_CAP = 20 // max queued rides while the user is scrolled down
 const AGE_TICK_MS = 1000 // 1s: drives the live m:ss countdown on fresh cards (and the fresh→booked flip)
 const AT_TOP_PX = 24
 
-/** Merge live + base rides, newest-first, de-duplicated by id (live wins). */
-function mergeDedup(extra, base) {
+/**
+ * Merge live + base rides, de-duplicated by id (live wins), sorted newest-first by
+ * receivedAt. Sorting matters: a refetch (app refocus / SSE reconnect) brings newer
+ * rides into `base` while older live-prepended rides still sit in `extra` — without it
+ * a 10-min-old ride stayed pinned above the fresh ones. Stable sort keeps ties in order.
+ * @param {object[]} extra - live-prepended ride VMs
+ * @param {object[]} base - query ride VMs
+ * @returns {object[]}
+ */
+export function mergeNewestFirst(extra, base) {
   const seen = new Set()
   const out = []
   for (const r of [...extra, ...base]) {
@@ -21,7 +29,9 @@ function mergeDedup(extra, base) {
     seen.add(r.id)
     out.push(r)
   }
-  return out
+  if (!extra.length) return out // server order already newest-first; verified tab never has extra
+  const at = (r) => new Date(r.receivedAt).getTime() || 0
+  return out.sort((a, b) => at(b) - at(a))
 }
 
 /**
@@ -113,7 +123,7 @@ export function useRidesFeed({ sub, cityIds }) {
     })
   }, [])
 
-  const rides = useMemo(() => mergeDedup(extra, base), [extra, base])
+  const rides = useMemo(() => mergeNewestFirst(extra, base), [extra, base])
 
   return {
     rides,

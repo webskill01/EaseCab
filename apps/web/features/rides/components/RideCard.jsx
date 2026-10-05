@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { Swap, User, Whatsapp, Phone, Flag, VehicleIcon } from '@/components/ui/icons'
+import { useVehicleLabel } from '../hooks/useLocalNames'
 import { statusOf, ageClock, relParts, ageMinFrom, vehIconKey, pickCityName, rideSlot, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
 /** Status pill — Fresh (green dot) / Likely-booked (blue dot) / Verified (shield). */
@@ -36,12 +37,12 @@ export function RouteRow({ from, to }) {
     <div className="flex items-end gap-2">
       <div className="min-w-0 flex-1">
         <div className="mb-px text-[11.5px] font-bold text-ec-ink60">{t('card.pickup')}</div>
-        <div className="truncate text-[16px] font-extrabold leading-tight tracking-tight text-ec-ink">{from || t('card.unknownCity')}</div>
+        <div className="truncate text-[15px] font-extrabold leading-[1.45] tracking-tight text-ec-ink">{from || t('card.unknownCity')}</div>
       </div>
       <div className="shrink-0 pb-px text-ec-blue"><Swap size={17} /></div>
       <div className="min-w-0 flex-1 text-right">
         <div className="mb-px text-[11.5px] font-bold text-ec-ink60">{t('card.drop')}</div>
-        <div className={`truncate text-[16px] font-extrabold leading-tight tracking-tight ${to ? 'text-ec-ink' : 'text-ec-ink40'}`}>{to || t('card.unknownCity')}</div>
+        <div className={`truncate text-[15px] font-extrabold leading-[1.45] tracking-tight ${to ? 'text-ec-ink' : 'text-ec-ink40'}`}>{to || t('card.unknownCity')}</div>
       </div>
     </div>
   )
@@ -141,6 +142,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
   const to = pickCityName(ride.to, ride.toLocalized, locale)
   const slot = verified ? rideSlot(ride.date, ride.time, locale) : null
   const fresh = display === RIDE_DISPLAY_STATUS.FRESH
+  const veh = useVehicleLabel()
 
   return (
     <article
@@ -153,7 +155,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
 
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[12px] font-semibold text-ec-ink60">
-          {t('card.postedAt')} · <b className="font-bold text-ec-ink">{fresh
+          {t('card.postedAt')} · <b className="font-bold text-ec-ink">{fresh && ageMin < 1
             ? <span className="tabular-nums">{t('time.liveAgo', { time: ageClock(ride.receivedAt, now) })}</span>
             : t(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
         </span>
@@ -168,12 +170,12 @@ export function RideCard({ ride, now, onContact, onReport }) {
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] font-semibold text-ec-ink60">
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <span className="inline-flex shrink-0 text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
-            <span className="truncate font-extrabold text-ec-ink">{ride.vehicleType || t('card.unknownCity')}</span>
+            <span className="truncate font-extrabold text-ec-ink">{veh(ride.vehicleType) || t('card.unknownCity')}</span>
           </span>
           {verified && ride.fare ? (
             <span className="inline-flex shrink-0 items-center rounded-full bg-ec-sky px-2 py-0.5 text-[12.5px] font-extrabold text-ec-blueInk">₹{ride.fare}</span>
           ) : null}
-          {slot ? <span className="shrink-0 text-[12.5px] font-semibold text-ec-ink60">{slot}</span> : null}
+          {slot ? <span className="shrink-0 text-[12.5px] font-semibold text-ec-ink60">{t('card.rideAt')} : <b className="font-extrabold text-ec-ink">{slot}</b></span> : null}
         </div>
         {ride.message ? (
           <p className="mt-1.5 whitespace-pre-line break-words text-[12.5px] font-medium leading-snug text-ec-ink60">{ride.message}</p>

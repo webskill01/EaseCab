@@ -43,17 +43,23 @@ function createCashfreeClient({ appId, secretKey, env, returnUrl }) {
 
   return {
     /**
-     * @param {{ orderId: string, amountRupees: number, customerId: string, customerPhone: string }} args
+     * @param {{ orderId: string, amountRupees: number, customerId: string, customerPhone: string, customerName?: ?string }} args
      * @returns {Promise<{ id: string, paymentSessionId: string }>}
      */
-    async createOrder({ orderId, amountRupees, customerId, customerPhone }) {
+    async createOrder({ orderId, amountRupees, customerId, customerPhone, customerName }) {
+      const name = customerName?.trim();
       const o = await call('/orders', {
         method: 'POST',
         body: JSON.stringify({
           order_id: orderId,
           order_amount: amountRupees,
           order_currency: 'INR',
-          customer_details: { customer_id: customerId, customer_phone: customerPhone },
+          customer_details: {
+            customer_id: customerId,
+            customer_phone: customerPhone,
+            // Optional; Cashfree requires 3+ chars when present, so skip short/blank names.
+            ...(name && name.length >= 3 ? { customer_name: name.slice(0, 100) } : {}),
+          },
           order_meta: { return_url: returnUrl },
         }),
       });

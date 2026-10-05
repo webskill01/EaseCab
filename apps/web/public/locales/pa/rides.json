@@ -10,7 +10,8 @@
     "postedAt": "ਪੋਸਟ",
     "viewProfile": "ਪ੍ਰੋਫਾਈਲ",
     "unknownCity": "—",
-    "yearsExp": "{count} ਸਾਲ ਤਜਰਬਾ"
+    "yearsExp": "{count} ਸਾਲ ਤਜਰਬਾ",
+    "rideAt": "ਰਾਈਡ"
   },
   "status": {
     "fresh": "ਨਵੀਂ",
@@ -23,7 +24,7 @@
     "hourAgo": "{count} ਘੰਟੇ ਪਹਿਲਾਂ",
     "today": "ਅੱਜ",
     "tomorrow": "ਕੱਲ੍ਹ",
-    "liveAgo": "{time} ਪਹਿਲਾਂ"
+    "liveAgo": "{time} ਮਿੰਟ ਪਹਿਲਾਂ"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -91,7 +92,7 @@
     "warningTitle": "ਸਾਵਧਾਨ: ਕੋਈ ਐਡਵਾਂਸ ਪੇਮੈਂਟ ਨਹੀਂ",
     "numberLabel": "ਸੰਪਰਕ ਨੰਬਰ",
     "advanceWarningEn": "Never pay advance to anyone. EaseCab only shares leads and is not responsible for any fraud.",
-    "advanceWarningHi": "किसी को भी एडवांस पैसे न दें। EaseCab सिर्फ़ लीड देता है और किसी भी धोखाधड़ी के लिए ज़िम्मेदार नहीं है।"
+    "advanceWarningHi": "ਕਿਸੇ ਨੂੰ ਵੀ ਐਡਵਾਂਸ ਪੈਸੇ ਨਾ ਦਿਓ। EaseCab ਸਿਰਫ਼ ਲੀਡ ਦਿੰਦਾ ਹੈ ਅਤੇ ਕਿਸੇ ਵੀ ਧੋਖਾਧੜੀ ਲਈ ਜ਼ਿੰਮੇਵਾਰ ਨਹੀਂ ਹੈ।"
   },
   "report": {
     "title": "ਰਾਈਡ ਦੀ ਰਿਪੋਰਟ ਕਰੋ",
@@ -116,7 +117,15 @@
     "attached": "ਸਕ੍ਰੀਨਸ਼ਾਟ ਜੋੜਿਆ",
     "attachError": "ਜੋੜਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਛੋਟੀ ਤਸਵੀਰ ਵਰਤੋ।"
   },
-  "feed": {
-    "liveNote": "ਲਾਈਵ · ਨਵੀਆਂ ਰਾਈਡਾਂ ਆਪਣੇ-ਆਪ ਆਉਂਦੀਆਂ ਹਨ — ਰਿਫ੍ਰੈਸ਼ ਕਰਨ ਦੀ ਲੋੜ ਨਹੀਂ"
+  "feed": {},
+  "vehicles": {
+    "Sedan": "ਸੇਡਾਨ",
+    "Innova": "ਇਨੋਵਾ",
+    "SUV": "ਐਸਯੂਵੀ",
+    "Urbania": "ਅਰਬੇਨੀਆ",
+    "TempoTraveller": "ਟੈਂਪੋ ਟਰੈਵਲਰ",
+    "Bolero": "ਬੋਲੈਰੋ",
+    "Bus": "ਬੱਸ",
+    "Auto": "ਆਟੋ"
   }
 }

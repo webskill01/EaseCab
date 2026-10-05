@@ -6,6 +6,7 @@ import { Whatsapp, Phone, ChevR } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { RouteRow, StatusBadge } from './RideCard'
 import { historyStamp } from '../lib/rideView'
+import { useLocalCityName, useVehicleLabel } from '../hooks/useLocalNames'
 
 /** wa.me wants digits only. */
 function waLink(phone) { return `https://wa.me/${String(phone).replace(/[^\d]/g, '')}` }
@@ -19,6 +20,8 @@ export function ContactedCard({ contact }) {
   const t = useTranslations('mine')
   const tr = useTranslations('rides')
   const locale = useLocale()
+  const city = useLocalCityName()
+  const veh = useVehicleLabel()
   const router = useRouter()
   const verified = contact.kind === 'verified'
   const stamp = historyStamp(contact.contactedAt, locale)
@@ -33,7 +36,7 @@ export function ContactedCard({ contact }) {
           ? <StatusBadge status="verified" />
           : <span className="text-[11px] font-extrabold uppercase tracking-wide text-ec-ink40">{t('contacted.ridesLabel')}</span>}
       </div>
-      <RouteRow from={contact.from} to={contact.to} />
+      <RouteRow from={city(contact.from)} to={city(contact.to)} />
       {verified && contact.posterId && (
         <button
           type="button"
@@ -49,7 +52,7 @@ export function ContactedCard({ contact }) {
         </button>
       )}
       <div className="mt-2.5 border-t border-ec-line pt-2.5 text-[13px] font-semibold text-ec-ink60">
-        {t('contacted.vehicle')} : <span className="font-extrabold text-ec-ink">{contact.vehicleType || t('contacted.any')}</span>
+        {t('contacted.vehicle')} : <span className="font-extrabold text-ec-ink">{veh(contact.vehicleType) || t('contacted.any')}</span>
       </div>
       <div className="mt-2.5 flex gap-1.5">
         <Button asChild variant="wa" className="h-[42px] flex-1 gap-1.5 rounded-[11px] px-2 text-[13.5px] font-bold">

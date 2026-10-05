@@ -10,7 +10,8 @@
     "postedAt": "Posted",
     "viewProfile": "View Profile",
     "unknownCity": "—",
-    "yearsExp": "{count} yrs exp"
+    "yearsExp": "{count} yrs exp",
+    "rideAt": "Ride"
   },
   "status": {
     "fresh": "Fresh",
@@ -23,7 +24,7 @@
     "hourAgo": "{count} h ago",
     "today": "Today",
     "tomorrow": "Tomorrow",
-    "liveAgo": "{time} ago"
+    "liveAgo": "{time} min ago"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -116,7 +117,15 @@
     "attached": "Screenshot added",
     "attachError": "Couldn't attach. Try a smaller image."
   },
-  "feed": {
-    "liveNote": "Live · new rides appear automatically — no need to refresh"
+  "feed": {},
+  "vehicles": {
+    "Sedan": "Sedan",
+    "Innova": "Innova",
+    "SUV": "SUV",
+    "Urbania": "Urbania",
+    "TempoTraveller": "Tempo Traveller",
+    "Bolero": "Bolero",
+    "Bus": "Bus",
+    "Auto": "Auto"
   }
 }

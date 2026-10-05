@@ -15,7 +15,7 @@ vi.mock('../useRideStream', () => ({
 }))
 
 import { listRides, listVerifiedRides } from '../../services/ridesApi'
-import { useRidesFeed, FEED_SUB } from '../useRidesFeed'
+import { useRidesFeed, FEED_SUB, mergeNewestFirst } from '../useRidesFeed'
 
 const botRow = (id, over = {}) => ({
   id, displayText: `msg ${id}`, status: 'fresh', pickupCityId: 'c1', dropCityId: 'c2',
@@ -70,5 +70,18 @@ describe('useRidesFeed', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(result.current.rides[0]).toMatchObject({ kind: 'verified', id: 'p1', from: 'Patiala' })
     expect(captured.enabled).toBe(false)
+  })
+})
+
+describe('mergeNewestFirst', () => {
+  const r = (id, min) => ({ id, receivedAt: new Date(Date.UTC(2026, 9, 5, 10, min)).toISOString() })
+  it('an old live ride never stays above newer refetched rides', () => {
+    const extra = [r('old', 0)] // pinned live 10 min ago
+    const base = [r('new2', 10), r('new1', 9), r('old', 0)] // refetch after refocus
+    expect(mergeNewestFirst(extra, base).map((x) => x.id)).toEqual(['new2', 'new1', 'old'])
+  })
+  it('keeps server order untouched when nothing is live', () => {
+    const base = [r('a', 1), r('b', 5)]
+    expect(mergeNewestFirst([], base).map((x) => x.id)).toEqual(['a', 'b'])
   })
 })

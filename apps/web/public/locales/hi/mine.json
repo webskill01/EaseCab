@@ -11,7 +11,8 @@
     "markDone": "पूरा करें",
     "delete": "हटाएं",
     "repost": "फिर पोस्ट करें",
-    "postedAt": "पोस्ट"
+    "postedAt": "पोस्ट",
+    "rideAt": "राइड"
   },
   "contacted": {
     "label": "संपर्क किया",

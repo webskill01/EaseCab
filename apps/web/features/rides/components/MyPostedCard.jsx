@@ -7,6 +7,7 @@ import { RouteRow } from './RideCard'
 import { historyStamp, rideSlot } from '../lib/rideView'
 import { repostDraftFromPost } from '../lib/postForm'
 import { saveRepostDraft } from '../lib/repostDraft'
+import { useLocalCityName, useVehicleLabel } from '../hooks/useLocalNames'
 
 /** Active (green dot) / Completed (grey dot) status pill — myrides.jsx StatusPill. */
 function StatusPill({ active, label }) {
@@ -32,6 +33,8 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
   const router = useRouter()
   const active = post.status === 'active'
   const locale = useLocale()
+  const city = useLocalCityName()
+  const veh = useVehicleLabel()
   // Exact posted date + time (IST), same as the Contacted tab — not a relative "ago".
   const stamp = historyStamp(post.createdAt, locale)
   // Exact travel date + time the poster picked ("18 Sept 2026, 2:30 pm").
@@ -69,11 +72,11 @@ export function MyPostedCard({ post, onMarkDone, onDelete }) {
       </div>
 
       <div className={active ? '' : 'opacity-[0.62]'}>
-        <RouteRow from={post.from} to={post.to} />
+        <RouteRow from={city(post.from)} to={city(post.to)} />
         <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-ec-line pt-2.5 text-[13px] font-semibold text-ec-ink60">
-          <span className="min-w-0">{t('posted.vehicle')} : <span className="font-extrabold text-ec-ink">{post.vehicleType || t('posted.any')}</span></span>
+          <span className="min-w-0">{t('posted.vehicle')} : <span className="font-extrabold text-ec-ink">{veh(post.vehicleType) || t('posted.any')}</span></span>
           {post.fare ? <span className="shrink-0 rounded-full bg-ec-sky px-2 py-0.5 text-[12.5px] font-extrabold text-ec-blueInk">₹{post.fare}</span> : null}
-          {slot ? <span className="shrink-0 text-[12.5px]">{slot}</span> : null}
+          {slot ? <span className="shrink-0 text-[12.5px]">{t('posted.rideAt')} : <b className="font-extrabold text-ec-ink">{slot}</b></span> : null}
         </div>
       </div>
 

@@ -168,7 +168,8 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
         </div>
 
         {/* Fraud warning — red, shown every time before Call/WhatsApp are usable, and
-            ALWAYS in English + Hindi together whatever the app locale (Phase 19): the
+            ALWAYS English + Hindi together (Punjabi locale: English + Punjabi — the pa
+            file carries Punjabi under advanceWarningHi, user request 2026-10-05): the
             people most at risk read one or the other, and we no longer vet anyone. */}
         <div role="alert" className="rounded-ec-card border border-ec-danger/40 bg-ec-dangerBg px-3.5 py-3">
           <div className="flex items-start gap-2.5">

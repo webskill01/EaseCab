@@ -33,3 +33,26 @@ export function writeCityLock(cities) {
   const value = encodeURIComponent(JSON.stringify(cities.map((c) => ({ id: c.id, name: c.name }))))
   document.cookie = `${COOKIE}=${value}; path=/; max-age=${MAX_AGE}; SameSite=Lax`
 }
+
+const RECENT_KEY = 'ec_recent_cities'
+export const RECENT_MAX = 5
+
+/** City ids the user picked in the filter, most recent first (device-local convenience). @returns {string[]} */
+export function readRecentCities() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]')
+    return Array.isArray(arr) ? arr.filter((id) => typeof id === 'string').slice(0, RECENT_MAX) : []
+  } catch {
+    return [] // private mode / blocked storage — quick picks fall back to the hubs
+  }
+}
+
+/** Move `id` to the front of the recent list. @param {string} id */
+export function pushRecentCity(id) {
+  try {
+    const next = [id, ...readRecentCities().filter((x) => x !== id)].slice(0, RECENT_MAX)
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next))
+  } catch {
+    // storage unavailable — recents are a nicety, never block the filter
+  }
+}

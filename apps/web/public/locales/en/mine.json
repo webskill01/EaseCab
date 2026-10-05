@@ -12,7 +12,8 @@
     "postedAt": "Posted",
     "markDone": "Mark done",
     "delete": "Delete",
-    "repost": "Repost"
+    "repost": "Repost",
+    "rideAt": "Ride"
   },
   "contacted": {
     "label": "Contacted",

@@ -1,22 +1,21 @@
 import Link from 'next/link'
 import { COMPANY } from '@/config/company'
+import { BackLink } from './BackLink'
 
 export default function LegalLayout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen overflow-x-hidden bg-gray-50">
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-3xl px-6 py-4 flex items-center justify-between">
           <Link href="/" className="text-lg font-bold text-gray-900">
             EaseCab
           </Link>
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-            &larr; Back
-          </Link>
+          <BackLink />
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-6 py-10">{children}</main>
+      <main className="mx-auto max-w-3xl break-words px-6 py-10">{children}</main>
       <footer className="border-t border-gray-200 bg-white mt-10">
-        <div className="mx-auto max-w-3xl px-6 py-6 flex gap-6 text-sm text-gray-400">
+        <div className="mx-auto max-w-3xl px-6 py-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-400">
           <Link href="/privacy-policy" className="hover:text-gray-600">
             Privacy Policy
           </Link>

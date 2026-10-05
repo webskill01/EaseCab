@@ -9,6 +9,7 @@ import { vehIconKeyOf } from '../lib/profileForm'
 import { usePosterProfile } from '../hooks/usePosterProfile'
 import { useProfile } from '../hooks/useProfile'
 import { ReportUserSheet } from './ReportUserSheet'
+import { useLocalCityName } from '@/features/rides/hooks/useLocalNames'
 
 // `i` drives per-cell borders (right except last column, top from the 2nd row) — a 2-row
 // grid can't use Tailwind `divide-*` cleanly (its sibling selectors break across rows).
@@ -29,6 +30,7 @@ function Stat({ icon, label, value, i }) {
  */
 export function PosterProfileScreen({ userId }) {
   const t = useTranslations('profile')
+  const city = useLocalCityName()
   const router = useRouter()
   const [reportOpen, setReportOpen] = useState(false)
   const { data: p, isLoading, isError } = usePosterProfile(userId)
@@ -73,7 +75,7 @@ export function PosterProfileScreen({ userId }) {
         )}
         <div className="mt-3 text-[20px] font-extrabold text-white">{p.name || '—'}</div>
         {p.baseCity && (
-          <div className="mt-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-ec-sky"><Pin size={14} />{p.baseCity}</div>
+          <div className="mt-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold text-ec-sky"><Pin size={14} />{city(p.baseCity)}</div>
         )}
         {env.NEXT_PUBLIC_VERIFICATION_ENABLED && p.verifiedDriver && (
           <span className="mt-2.5 inline-flex h-[26px] items-center gap-1.5 rounded-full bg-white px-3 text-[11.5px] font-extrabold uppercase tracking-wide text-ec-successTx">
@@ -86,7 +88,7 @@ export function PosterProfileScreen({ userId }) {
         {/* Stats */}
         <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
           <Stat i={0} icon={<Steer size={16} />} label={t('stats.experience')} value={p.experience != null ? `${p.experience} ${t('stats.years')}` : '—'} />
-          <Stat i={1} icon={<Pin size={15} />} label={t('poster.stats.baseCity')} value={p.baseCity || '—'} />
+          <Stat i={1} icon={<Pin size={15} />} label={t('poster.stats.baseCity')} value={city(p.baseCity) || '—'} />
           <Stat i={2} icon={<VehicleIcon vehicleKey={vehIconKeyOf(p.vehicleType)} size={16} />} label={t('stats.vehicle')} value={p.vehicleType || '—'} />
           {/* Phase 19: KYC stats (and the languages count that padded the row) only exist
               when verification is switched back on — otherwise they'd read "Pending"

@@ -10,7 +10,8 @@
     "postedAt": "Posted",
     "viewProfile": "Profile dekho",
     "unknownCity": "—",
-    "yearsExp": "{count} saal exp"
+    "yearsExp": "{count} saal exp",
+    "rideAt": "Ride"
   },
   "status": {
     "fresh": "Fresh",
@@ -23,7 +24,7 @@
     "hourAgo": "{count} ghante pehle",
     "today": "Aaj",
     "tomorrow": "Kal",
-    "liveAgo": "{time} pehle"
+    "liveAgo": "{time} min pehle"
   },
   "actions": {
     "whatsapp": "WhatsApp",
@@ -116,7 +117,15 @@
     "attached": "Screenshot add ho gaya",
     "attachError": "Add nahi hua. Choti image try karein."
   },
-  "feed": {
-    "liveNote": "Live · nayi rides apne aap aati hain — refresh karne ki zaroorat nahi"
+  "feed": {},
+  "vehicles": {
+    "Sedan": "Sedan",
+    "Innova": "Innova",
+    "SUV": "SUV",
+    "Urbania": "Urbania",
+    "TempoTraveller": "Tempo Traveller",
+    "Bolero": "Bolero",
+    "Bus": "Bus",
+    "Auto": "Auto"
   }
 }

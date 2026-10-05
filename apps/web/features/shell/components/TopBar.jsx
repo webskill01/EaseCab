@@ -13,11 +13,12 @@ export function TopBar({ locale }) {
   const t = useTranslations('common')
   return (
     <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-ec-line bg-white px-3.5 py-2.5">
-      {/* Logo and the two-line wordmark share one 36px box: 20px name + 5px gap + 11px tagline. */}
+      {/* Logo + two-line wordmark (~36px). No leading-none here: with truncate's overflow-hidden it
+          clips the Hindi/Punjabi vowel signs that sit above the line. */}
       <Image src="/icons/icon-96.png" unoptimized alt="" width={36} height={36} priority className="h-9 w-9 shrink-0 rounded-[9px]" />
-      <div className="flex h-9 min-w-0 flex-1 flex-col justify-center gap-[5px]">
-        <p className="truncate text-[20px] font-extrabold leading-none tracking-tight text-ec-ink">{t('appName')}</p>
-        <p className="truncate text-[11px] font-semibold leading-none text-ec-ink40">{t('tagline')}</p>
+      <div className="flex min-h-9 min-w-0 flex-1 flex-col justify-center">
+        <p className="truncate text-[18px] font-extrabold leading-[1.3] tracking-tight text-ec-ink">{t('appName')}</p>
+        <p className="truncate text-[11px] font-semibold leading-[1.4] text-ec-ink40">{t('tagline')}</p>
       </div>
       <LanguageMenu current={locale} />
       <SupportButton />

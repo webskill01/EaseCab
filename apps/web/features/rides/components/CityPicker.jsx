@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Pin, Search, Check, ChevR } from '@/components/ui/icons'
 import { searchCities } from '../services/citiesApi'
+import { useLocalCityName } from '../hooks/useLocalNames'
 
 const DEBOUNCE_MS = 250
 
@@ -23,6 +24,7 @@ export function CityPicker({ label, value, onPick }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [results, setResults] = useState([])
+  const show = useLocalCityName()
 
   // Debounced typeahead with abort-on-keystroke (≥2 chars; backend floors the rest).
   useEffect(() => {
@@ -52,7 +54,7 @@ export function CityPicker({ label, value, onPick }) {
       >
         <span className="inline-flex text-ec-blue"><Pin size={17} /></span>
         <span className={`min-w-0 flex-1 truncate text-left ${value ? 'text-ec-blueInk' : 'text-ec-ink40'}`}>
-          {value ? value.name : label}
+          {value ? show(value.name) : label}
         </span>
         <span className={`inline-flex text-ec-ink40 transition-transform ${open ? 'rotate-180' : ''}`}><ChevR size={15} /></span>
       </button>
@@ -78,7 +80,7 @@ export function CityPicker({ label, value, onPick }) {
               return (
                 <button key={c.id} type="button" onClick={() => choose({ id: c.id, name: c.canonicalName })} className={ddItem(on)}>
                   <span className={`inline-flex ${on ? 'text-ec-blue' : 'text-ec-ink40'}`}><Pin size={15} /></span>
-                  <span className="flex-1 text-left">{c.canonicalName}</span>
+                  <span className="flex-1 text-left">{show(c.canonicalName)}</span>
                   {on && <span className="inline-flex text-ec-blue"><Check size={15} /></span>}
                 </button>
               )

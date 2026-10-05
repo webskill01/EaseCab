@@ -25,6 +25,15 @@ describe('RideCard', () => {
     expect(screen.getByRole('button', { name: /call/i })).toBeEnabled()
   })
 
+  it('arrival clock shows seconds only in the first minute, then whole minutes', () => {
+    const sec = (s) => new Date(NOW - s * 1000).toISOString()
+    const { unmount } = renderWithIntl(<RideCard ride={botRide({ receivedAt: sec(50) })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    expect(screen.getByText('0:50 min ago')).toBeInTheDocument()
+    unmount()
+    renderWithIntl(<RideCard ride={botRide({ receivedAt: sec(150) })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    expect(screen.getByText('2 min ago')).toBeInTheDocument()
+  })
+
   it('a bot ride past the fresh window reads "Likely booked" and disables contact', () => {
     renderWithIntl(<RideCard ride={botRide({ receivedAt: ago(10) })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
     expect(screen.getByText('Likely booked')).toBeInTheDocument()

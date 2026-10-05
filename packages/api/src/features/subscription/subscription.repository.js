@@ -83,10 +83,9 @@ function createSubscriptionRepository({ prisma, redis }) {
       });
     },
 
-    /** The user's phone for Cashfree's required customer_phone (never logged — §10). */
-    async findUserPhone(userId) {
-      const u = await prisma.user.findUnique({ where: { id: userId }, select: { phone: true } });
-      return u.phone;
+    /** Payer phone (required) + profile name for Cashfree customer_details (never logged — §10). */
+    async findPayer(userId) {
+      return prisma.user.findUnique({ where: { id: userId }, select: { phone: true, name: true } });
     },
 
     /** Uncached subscription read for the credit path (needs paidStartedAt; must be fresh). */

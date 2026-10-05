@@ -9,7 +9,8 @@ import { allCities } from '../services/citiesApi'
 import { useNearestCity } from '@/features/notifications/hooks/useNearestCity'
 import { geoDenied } from '@/features/notifications/services/geoClient'
 import { PermBlockedSheet, BLOCKED_PERM } from '@/features/notifications/components/PermBlockedSheet'
-import { LOCATION_CHIPS, cityToView, filterCities, groupCitiesByLetter } from '../lib/allLocations'
+import { LOCATION_CHIPS, cityToView, filterCities, groupCitiesByLetter, quickPickCities } from '../lib/allLocations'
+import { readRecentCities, pushRecentCity } from '../lib/cityLock'
 
 /**
  * "All Locations" overlay (design-spec §7.4): search field, pastel quick-pick chip
@@ -34,17 +35,15 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
 
   const { data: cities = [], isLoading } = useQuery({ queryKey: ['allCities'], queryFn: allCities, staleTime: 300000 })
 
-  const byName = useMemo(() => {
-    const m = new Map()
-    for (const c of cities) m.set(c.canonicalName.toLowerCase(), c)
-    return m
-  }, [cities])
-
   const groups = useMemo(() => groupCitiesByLetter(filterCities(cities, q, locale), locale), [cities, q, locale])
   const searching = q.trim().length > 0
   const none = selected.length === 0
   const isOn = (id) => selected.some((c) => c.id === id)
-  const toggle = (city) => onToggle(city) // stays open for multi-select
+  // Stays open for multi-select. Turning a city ON records it as a recent quick pick.
+  const toggle = (city) => { if (!isOn(city.id)) pushRecentCity(city.id); onToggle(city) }
+  const [recentIds] = useState(readRecentCities) // read once per open, so chips don't jump while tapping
+  const quickPicks = useMemo(() => quickPickCities(recentIds, cities), [recentIds, cities])
+  const geoChip = LOCATION_CHIPS.find((ch) => ch.geo)
 
   const useMyLocation = async () => {
     const city = await nearest.locate()
@@ -103,31 +102,27 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
           <>
             <p className="mb-2.5 mt-4 text-[12.5px] font-bold text-ec-ink60">{t('filter.quickPick')}</p>
             <div className="grid grid-cols-2 gap-2.5">
-              {LOCATION_CHIPS.map((ch) => {
-                if (ch.geo) {
-                  return (
-                    <button
-                      key={ch.key}
-                      type="button"
-                      onClick={useMyLocation}
-                      disabled={nearest.isLocating}
-                      style={{ background: ch.bg, color: ch.fg }}
-                      className="flex h-[46px] items-center justify-center rounded-xl text-[13.5px] font-extrabold uppercase tracking-wide disabled:opacity-60"
-                    >
-                      {t('filter.myLocation')}
-                    </button>
-                  )
-                }
-                const city = byName.get(ch.key.toLowerCase())
-                if (!city) return null
+              {geoChip && (
+                <button
+                  key="my"
+                  type="button"
+                  onClick={useMyLocation}
+                  disabled={nearest.isLocating}
+                  style={{ background: geoChip.bg, color: geoChip.fg }}
+                  className="flex h-[46px] items-center justify-center rounded-xl text-[13.5px] font-extrabold uppercase tracking-wide disabled:opacity-60"
+                >
+                  {t('filter.myLocation')}
+                </button>
+              )}
+              {quickPicks.map(({ city, bg, fg }) => {
                 const view = cityToView(city, locale)
                 const on = isOn(view.id)
                 return (
                   <button
-                    key={ch.key}
+                    key={view.id}
                     type="button"
                     onClick={() => toggle(view)}
-                    style={{ background: ch.bg, color: ch.fg }}
+                    style={{ background: bg, color: fg }}
                     className={`flex h-[46px] items-center justify-center gap-1.5 rounded-xl text-[13.5px] font-extrabold uppercase tracking-wide ${on ? 'ring-2 ring-ec-blue ring-offset-1' : ''}`}
                   >
                     {on && <span className="inline-flex"><Check size={14} /></span>}

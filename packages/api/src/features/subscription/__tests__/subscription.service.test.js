@@ -15,7 +15,7 @@ function baseRepo(over = {}) {
     async incrWebhookAttempts() { return over.webhookCount ?? 1; },
     async listRecentOpenOrders() { return []; },
     async findOpenOrder() { return null; },
-    async findUserPhone() { return '+919876543210'; },
+    async findPayer() { return { phone: '+919876543210', name: 'Ravi Kumar' }; },
     async createOrderRecord() {},
     async findOrderRecord() { return { userId: 'u1', amount: 14900 }; },
     async findSubscriptionForCredit() { return { status: 'expired', expiresAt: null, trialExpiresAt: null, paidStartedAt: null }; },
@@ -88,6 +88,7 @@ test('checkout sends rupees, a 10-digit phone and a Cashfree-legal order id', as
   const out = await svc.createCheckout('u1');
   assert.strictEqual(sent.amountRupees, 149);
   assert.strictEqual(sent.customerPhone, '9876543210');
+  assert.strictEqual(sent.customerName, 'Ravi Kumar');
   assert.strictEqual(sent.customerId, 'u1');
   assert.match(sent.orderId, /^[A-Za-z0-9_-]{1,45}$/);
   assert.strictEqual(out.amount, 14900);

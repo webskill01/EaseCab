@@ -96,13 +96,14 @@ function createSubscriptionService({ repo, cashfree, config }) {
         if (settled.credited || settled.reason === 'duplicate') return { alreadyPaid: true };
         // Expired unpaid — leave the row `created`; the new order becomes the open one.
       }
-      const phone = await repo.findUserPhone(userId);
+      const payer = await repo.findPayer(userId);
       // Cashfree order_id: [A-Za-z0-9_-], max 45 chars → "sub_" + 32 hex.
       const order = await cashfree.createOrder({
         orderId: `sub_${crypto.randomUUID().replace(/-/g, '')}`,
         amountRupees: amount / 100,
         customerId: userId,
-        customerPhone: phone.slice(-10),
+        customerPhone: payer.phone.slice(-10),
+        customerName: payer.name, // shows the payer in the Cashfree dashboard, not just a number
       });
       await repo.createOrderRecord({ userId, razorpayOrderId: order.id, amount });
       return { orderId: order.id, paymentSessionId: order.paymentSessionId, amount, mode: env };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { LOCATION_CHIPS, cityToView, filterCities, groupCitiesByLetter } from '../allLocations'
+import { LOCATION_CHIPS, cityToView, filterCities, groupCitiesByLetter, quickPickCities } from '../allLocations'
 
 const ROWS = [
   { id: 'a1', canonicalName: 'Ambala', namePa: 'ਅੰਬਾਲਾ', nameHi: 'अंबाला' },
@@ -35,5 +35,11 @@ describe('allLocations', () => {
   it('LOCATION_CHIPS leads with the geo "my location" chip', () => {
     expect(LOCATION_CHIPS[0].geo).toBe(true)
     expect(LOCATION_CHIPS.some((c) => c.key === 'Chandigarh')).toBe(true)
+  })
+
+  it('quickPickCities puts recent cities first, fills with hubs, skips unknown ids + dupes', () => {
+    const picks = quickPickCities(['a2', 'gone', 'c1'], ROWS, 3).map((p) => p.city.id)
+    expect(picks).toEqual(['a2', 'c1', 'l1']) // Chandigarh hub not repeated; Ludhiana hub fills slot 3
+    expect(quickPickCities([], ROWS).map((p) => p.city.id)).toEqual(['l1', 'c1']) // new user = hubs present in the list
   })
 })
