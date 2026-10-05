@@ -75,6 +75,16 @@ test('saves a valid ride with resolved pickup + masked display text', async () =
   assert.ok(!r.ride.displayText.includes('9876543210'));
 });
 
+test('route matched but no city known: saved with raw text, null city ids', async () => {
+  const pm = createProcessMessage(baseDeps());
+  const r = await pm(msg({ text: 'need sedan hardiwar to ajitwal 9876543210' }));
+  assert.strictEqual(r.reason, 'saved');
+  assert.strictEqual(r.ride.pickupRaw, 'hardiwar');
+  assert.strictEqual(r.ride.dropRaw, 'ajitwal');
+  assert.strictEqual(r.ride.pickupCityId, null);
+  assert.strictEqual(r.ride.dropCityId, null);
+});
+
 test('skips when no pickup and no drop found', async () => {
   const pm = createProcessMessage(baseDeps());
   const r = await pm(msg({ text: 'need a ride somewhere to anywhere 9876543210' }));

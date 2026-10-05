@@ -86,6 +86,15 @@ test('dispatchForRide: no city ids → no send', async () => {
   assert.equal(sender.calls.length, 0);
 });
 
+test('dispatchForRide: unresolved pickup never alerts the drop city', async () => {
+  const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 0, staleTokens: [] }; } };
+  const repo = fakeRepo({ tokens: ['t1'] });
+  const out = await createPushService({ repo, pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [null, CITY] });
+  assert.deepEqual(out, { targeted: 0, successCount: 0, pruned: 0 });
+  assert.equal(repo.calls.find.length, 0);
+  assert.equal(sender.calls.length, 0);
+});
+
 test('dispatchForRide: no matching tokens → no send', async () => {
   const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 0, staleTokens: [] }; } };
   const out = await createPushService({ repo: fakeRepo({ tokens: [] }), pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [CITY] });

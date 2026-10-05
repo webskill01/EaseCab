@@ -1,5 +1,7 @@
 'use strict';
 
+const { rawPlace, rawRoute } = require('./rawPlace');
+
 /**
  * Directional city extractor — ported verbatim from the legacy multibot
  * `core/filter.js` (extractCities + scanCitiesWithContext + normalizeText),
@@ -117,8 +119,8 @@ function extractCities(text, cities) {
 
     if (pickupCities.length > 0 || dropCities.length > 0) {
       return {
-        pickup: pickupCities[0] || null,
-        drop: dropCities[0] || null,
+        pickup: pickupCities[0] || rawPlace(sourceWords),
+        drop: dropCities[0] || rawPlace(destWords),
         allCities: [...pickupCities, ...dropCities.filter((c) => !pickupCities.includes(c))],
       };
     }
@@ -183,8 +185,8 @@ function extractCities(text, cities) {
 
     if (pickupCities.length > 0 || dropCities.length > 0) {
       return {
-        pickup: pickupCities[0] || null,
-        drop: dropCities[0] || null,
+        pickup: pickupCities[0] || rawPlace(sourceWords),
+        drop: dropCities[0] || rawPlace(destWords),
         allCities: [...pickupCities, ...dropCities.filter((c) => !pickupCities.includes(c))],
       };
     }
@@ -208,8 +210,8 @@ function extractCities(text, cities) {
 
     if (pickupCities.length > 0 || dropCities.length > 0) {
       return {
-        pickup: pickupCities[0] || null,
-        drop: dropCities[0] || null,
+        pickup: pickupCities[0] || rawPlace(pickupWords),
+        drop: dropCities[0] || rawPlace(dropWords),
         allCities: [...pickupCities, ...dropCities.filter((c) => !pickupCities.includes(c))],
       };
     }
@@ -247,6 +249,19 @@ function extractCities(text, cities) {
       allCities: citiesInContext,
     };
   }
+
+  // No vocabulary city anywhere: keep the first directional match's raw place text
+  // (same priority order) so the ride is saved and the city backfill can map it.
+  const raw = rawRoute(normalized, [
+    { re: fromToPattern, pickup: 1, drop: 2 },
+    { re: dropCurrentPattern, pickup: 2, drop: 1, both: true },
+    { re: dropPattern, pickup: 2, drop: 1, both: true },
+    { re: toPattern, pickup: 1, drop: 2 },
+    { re: pickupPattern, pickup: 1 },
+    { re: dropExplicitPattern, drop: 1 },
+    { re: currentPattern, pickup: 1 },
+  ]);
+  if (raw) return { pickup: raw.pickup, drop: raw.drop, allCities: [] };
 
   return { pickup: null, drop: null, allCities: [] };
 }

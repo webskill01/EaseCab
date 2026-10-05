@@ -69,7 +69,9 @@ function createPushService({ repo, pushSender }) {
       const empty = { targeted: 0, successCount: 0, pruned: 0 };
       // Targeting is PICKUP-only (cityIds[0]) to mirror the feed filter — a driver's
       // opted-in city must match the ride's PICKUP; the drop city never triggers an alert.
-      const pickupId = all[0];
+      // Read the slot, not the first non-null id: an unresolved pickup ([null, drop])
+      // must send nothing, not alert the drop city.
+      const pickupId = (cityIds || [])[0];
       if (!pickupId) return empty;
       const tokens = await repo.findTargetTokens({ cityIds: [pickupId], source });
       if (tokens.length === 0) return empty;
