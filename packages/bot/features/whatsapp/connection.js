@@ -5,6 +5,7 @@ const {
   useMultiFileAuthState,
   Browsers,
   fetchLatestBaileysVersion,
+  NO_MESSAGE_FOUND_ERROR_TEXT,
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const { toGroupRecord } = require('../groups/groupStore');
@@ -22,6 +23,38 @@ function extractText(message) {
     (message.extendedTextMessage && message.extendedTextMessage.text) ||
     ''
   );
+}
+
+/**
+ * Baileys `shouldIgnoreJid`: drop everything except group chats. This bot shares its
+ * number with a phone used for 1:1 chats, and WhatsApp copies those to every linked
+ * device. We can't decrypt them (Bad MAC), they went un-acked, and WA killed the
+ * stream ("Stream Errored (ack)"). Ignored nodes are acked without decrypting, and
+ * Baileys always exempts '@s.whatsapp.net' (prekeys, server notifications).
+ * Trade-off: a group message Baileys asks the phone to resend is lost (the reply
+ * comes from our own jid) — counted by `isLostGroupMessage`.
+ * @param {string} [jid]
+ * @returns {boolean}
+ */
+const isIgnoredJid = (jid) => !!jid && !jid.endsWith('@g.us');
+
+/**
+ * A group message whose body never arrived ("unavailable" placeholder). Diagnostic
+ * for the trade-off above.
+ * @param {object} m - a messages.upsert entry
+ * @returns {boolean}
+ */
+function isLostGroupMessage(m) {
+  const jid = m && m.key && m.key.remoteJid;
+  return Boolean(jid && jid.endsWith('@g.us') && !m.message
+    && m.messageStubParameters && m.messageStubParameters[0] === NO_MESSAGE_FOUND_ERROR_TEXT);
+}
+
+let lostGroupMessages = 0; // process lifetime, across reconnects
+
+/** @returns {number} group messages lost since the process started */
+function getLostGroupMessageCount() {
+  return lostGroupMessages;
 }
 
 /**
@@ -63,6 +96,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
     browser: Browsers.macOS('Chrome'),
     logger: pino({ level: 'silent' }), // silence Baileys internals; we log our own
     markOnlineOnConnect: false, // stay invisible — read-only listener
+    shouldIgnoreJid: isIgnoredJid, // group-only: phone's own 1:1 chats broke the stream (see above)
   });
 
   sock.ev.on('creds.update', saveCreds);
@@ -112,6 +146,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
   });
 
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    for (const m of messages) if (isLostGroupMessage(m)) lostGroupMessages += 1;
     if (type !== 'notify') return; // ignore history/append syncs
     for (const m of messages) {
       const jid = m.key && m.key.remoteJid;
@@ -132,4 +167,4 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
   return sock;
 }
 
-module.exports = { createConnection, extractText };
+module.exports = { createConnection, extractText, isIgnoredJid, isLostGroupMessage, getLostGroupMessageCount };

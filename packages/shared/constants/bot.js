@@ -50,6 +50,7 @@ const BOT_HEALTH = Object.freeze({
   // open. A forced reconnect during a genuinely quiet stretch is harmless (read-only).
   STALL_WATCHDOG_MS: 12 * 60 * 1000,
   WATCHDOG_CHECK_MS: 60 * 1000, // how often the watchdog evaluates inbound silence
+  LOST_MSG_LOG_MS: 10 * 60 * 1000, // how often the lost-group-message diagnostic is logged + stored
 });
 
 /** Reconnect backoff for transient (non-logout) disconnects on one slot. */
@@ -63,6 +64,7 @@ const BACKOFF = Object.freeze({
 const BOT_NUMBERS_KEY = redisKey('bot', 'numbers'); // hash: slot -> {state,lastCode,since}
 const BOT_LAST_INGEST_KEY = redisKey('bot', 'last_ingest_at'); // epoch ms of the last ride write
 const BOT_ALERTS_KEY = redisKey('bot', 'alerts'); // hash: event -> {sev,since,detail?}
+const BOT_LOST_MSGS_KEY = redisKey('bot', 'lost_group_msgs'); // group messages lost since bot start
 
 module.exports = {
   SLOT_STATE,
@@ -73,4 +75,5 @@ module.exports = {
   BOT_NUMBERS_KEY,
   BOT_LAST_INGEST_KEY,
   BOT_ALERTS_KEY,
+  BOT_LOST_MSGS_KEY,
 };

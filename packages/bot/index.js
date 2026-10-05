@@ -10,11 +10,12 @@ const pino = require('pino');
 const { DisconnectReason } = require('@whiskeysockets/baileys');
 const {
   createCityResolver, createAlerter, BOT_FILTERS_CHANGED_CHANNEL, BOT_GROUPS_CHANGED_CHANNEL,
+  BOT_HEALTH, BOT_LOST_MSGS_KEY,
 } = require('@easecab/shared');
 const { createRideRepository } = require('./features/ingest/rideRepository');
 const { createProcessMessage } = require('./features/ingest/processMessage');
 const { createHeartbeat } = require('./features/health/recordHeartbeat');
-const { createConnection } = require('./features/whatsapp/connection');
+const { createConnection, getLostGroupMessageCount } = require('./features/whatsapp/connection');
 const { createSlotRegistry } = require('./features/whatsapp/slotRegistry');
 const { createNumberPool } = require('./features/whatsapp/numberPool');
 const { createFilterStore } = require('./features/filters/filterStore');
@@ -124,9 +125,19 @@ async function main() {
   });
   pool.start();
 
+  // Diagnostic for the group-only shouldIgnoreJid trade-off (connection.js): how many
+  // group messages arrived as "unavailable" placeholders and were never recovered.
+  const lostLog = setInterval(() => {
+    const lostGroupMessages = getLostGroupMessageCount();
+    logger.info({ lostGroupMessages }, 'lost group messages (since start)');
+    redis.set(BOT_LOST_MSGS_KEY, String(lostGroupMessages))
+      .catch((err) => logger.warn({ err: err.message }, 'could not store lost-message count'));
+  }, BOT_HEALTH.LOST_MSG_LOG_MS);
+
   const shutdown = async (signal) => {
     logger.info({ signal }, 'shutting down');
     clearInterval(refresh);
+    clearInterval(lostLog);
     try {
       pool.stop();
     } catch {
