@@ -64,3 +64,10 @@ test('vehicle/time-only text yields no raw city', () => {
   assert.equal(r2.pickup, null);
   assert.equal(r2.drop, null);
 });
+
+test('misspelled vehicles and state codes are noise in raw text', () => {
+  assert.equal(extractCities('sadan kasol to delhi', RAW_VOCAB).pickup, 'kasol');
+  assert.equal(extractCities('dizer zirkhpur to delhi', RAW_VOCAB).pickup, 'zirkhpur');
+  assert.equal(extractCities('jibhi hp to delhi', RAW_VOCAB).pickup, 'jibhi');
+  assert.equal(extractCities('wc kasol to delhi', RAW_VOCAB).pickup, 'kasol');
+});

@@ -22,6 +22,7 @@ const NOISE = Object.freeze(new Set([
   'traveller', 'urbania', 'bolero', 'bus', 'auto', 'ac', 'non', 'nonac', 'seater', 'pax',
   'passenger', 'passengers', 'person', 'persons', 'duty', 'ride', 'trip', 'booking', 'book',
   'available', 'oneway', 'one', 'way', 'round', 'return', 'local', 'outstation', 'fare', 'rs', 'km',
+  'sadan', 'sedaan', 'dizer', 'dizire', 'inova', 'ertica', 'wc', 'hp', // seen in the live queue
   // time / date
   'am', 'pm', 'time', 'date', 'today', 'tomorrow', 'tonight', 'kal', 'aaj', 'parso', 'subah',
   'sham', 'raat', 'morning', 'evening', 'night', 'noon', 'afternoon', 'now', 'hrs', 'hr', 'min',
