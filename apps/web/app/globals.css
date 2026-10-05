@@ -73,6 +73,14 @@
   html[lang='hi'] {
     font-family: var(--font-devanagari), var(--font-sans), sans-serif;
   }
+  /* Devanagari/Gurmukhi vowel signs rise above the line box (measured: 17px ink vs
+     16.2px room on the 18px header). `truncate`'s overflow:hidden cut them off, so in
+     these scripts clip sideways only — the ellipsis still works, the tops don't. */
+  html[lang='hi'] .truncate,
+  html[lang='pa'] .truncate {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
 
   /* Subtle, app-wide interaction feedback: smooth state transitions on every
      interactive element + a gentle press on tap. Honours reduced-motion. */
