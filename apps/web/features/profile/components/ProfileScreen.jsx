@@ -91,12 +91,10 @@ export function ProfileScreen() {
   // Membership row value + tint (handoff §3⑤) — only once the status loads, so we
   // never flash a misleading "Expired" while the query is in flight.
   const mv = sub ? membershipView(sub) : null
-  const memValue = mv && (mv.state === MEMBERSHIP_STATE.TRIAL
-    ? t('nav.membershipValue.trial', { days: mv.daysLeft ?? 0 })
-    : t(`nav.membershipValue.${mv.state}`))
+  const memValue = mv && t(`nav.membershipValue.${mv.state}`)
   const memTone = mv && (mv.state === MEMBERSHIP_STATE.EXPIRED ? 'danger'
-    : mv.state === MEMBERSHIP_STATE.ACTIVE ? 'success' : 'warning')
-  const memTint = memTone && (memTone === 'danger' ? 'text-ec-danger' : memTone === 'success' ? 'text-ec-successTx' : 'text-ec-warning')
+    : mv.state === MEMBERSHIP_STATE.ACTIVE ? 'success' : 'ink')
+  const memTint = memTone && (memTone === 'danger' ? 'text-ec-danger' : memTone === 'success' ? 'text-ec-successTx' : 'text-ec-ink60')
 
   return (
     <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-ec-bg p-4">

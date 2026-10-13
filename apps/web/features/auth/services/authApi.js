@@ -19,7 +19,7 @@ export async function requestOtp(phoneE164) {
 }
 
 /**
- * Verify → cookies. 201 ⇒ new user (show the trial screen).
+ * Verify → cookies. 201 ⇒ new user (show the welcome screen).
  * @param {{ idToken: string } | { phone: string, otp: string }} proof
  */
 export async function verifyOtp(proof) {

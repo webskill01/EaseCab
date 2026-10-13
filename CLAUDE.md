@@ -15,7 +15,7 @@ EaseCab is a production-grade PWA for taxi ride leads in India (Punjab/Haryana/D
 **Infra:** Contabo VPS (Ubuntu, 8GB RAM) — Nginx + Let's Encrypt + PM2. CI/CD via GitHub Actions.
 
 **Key facts:**
-- 7-day full-access trial → ₹149/month (30-day rolling, stacks on renewal)
+- No trial — browse + post free; contact needs ₹149/month (30-day rolling, stacks on renewal)
 - Soft gate philosophy: users see everything; gates fire only at the action point
 - `oracle-v2` (production WA bot on VPS) — **NEVER TOUCH. EVER.**
 

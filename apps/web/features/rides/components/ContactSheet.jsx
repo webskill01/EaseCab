@@ -47,7 +47,7 @@ function RouteLine({ ride }) {
 }
 
 /**
- * Contact soft-gate sheet (SCREENS §11). Expired members see the subscribe gate;
+ * Contact soft-gate sheet (SCREENS §11). Expired / never-subscribed users see the subscribe gate;
  * otherwise the reveal runs the server-gated contact call and shows Call/WhatsApp
  * deep links (the server is the real gate — an expired error falls back to the gate).
  *
@@ -80,19 +80,18 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
       .catch(() => {})
   }
 
-  const gatedOut =
-    membershipState === MEMBERSHIP_STATE.EXPIRED ||
-    reveal.error?.code === 'SUBSCRIPTION_EXPIRED'
+  const noMembership = membershipState === MEMBERSHIP_STATE.EXPIRED || membershipState === MEMBERSHIP_STATE.NONE
+  const gatedOut = noMembership || reveal.error?.code === 'SUBSCRIPTION_EXPIRED'
 
   // Reveal the number immediately on open — no second "reveal" tap. The server is the
-  // real gate, so expired members short-circuit to the subscribe sheet instead of calling.
+  // real gate, so members without a membership short-circuit to the subscribe sheet instead of calling.
   const fire = reveal.mutate
   // While membership is still loading, wait: firing then would open the reveal sheet and
   // flip it to the gate a round-trip later — the "lag" users saw. A failed membership
   // query doesn't block: the server stays the real gate.
   useEffect(() => {
-    if (!membershipLoading && membershipState !== MEMBERSHIP_STATE.EXPIRED) fire()
-  }, [fire, membershipLoading, membershipState])
+    if (!membershipLoading && !noMembership) fire()
+  }, [fire, membershipLoading, noMembership])
 
   if (membershipLoading) return null
 

@@ -31,7 +31,7 @@ const USER_ROW = {
   id: USER_ID, name: 'Gurpreet', phone: '+919876543210', aadhaarVerified: true,
   verificationStatus: 'approved', baseCity: 'Amritsar', vehicleType: 'sedan',
   createdAt: new Date(), isDeleted: false, deletedAt: null,
-  subscription: { status: 'trial', expiresAt: null, trialExpiresAt: new Date('2026-07-01') },
+  subscription: { status: 'active', expiresAt: new Date('2026-07-01') },
 };
 
 function fakePrisma() {
@@ -81,7 +81,7 @@ test('GET /admin/users returns the directory envelope + meta with masked phone',
   const u = res.body.data.users[0];
   assert.strictEqual(u.phoneMasked, '••••3210');
   assert.strictEqual(u.phone, undefined);
-  assert.strictEqual(u.subscription.status, 'trial');
+  assert.strictEqual(u.subscription.status, 'active');
 });
 
 test('GET /admin/users with a bad status → 422', async () => {

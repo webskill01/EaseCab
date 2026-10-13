@@ -48,7 +48,6 @@ const VERIFICATION_STATUS = Object.freeze({
 
 /** @see schema.prisma enum SubscriptionStatus */
 const SUBSCRIPTION_STATUS = Object.freeze({
-  TRIAL: 'trial',
   ACTIVE: 'active',
   EXPIRED: 'expired',
   HALTED: 'halted',

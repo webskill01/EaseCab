@@ -32,9 +32,16 @@ describe('ContactSheet', () => {
     expect(contactRide).not.toHaveBeenCalled()
   })
 
+  it('never-subscribed user sees the subscribe gate (no reveal call)', () => {
+    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.NONE} onClose={vi.fn()} onUpgrade={vi.fn()} />)
+    expect(screen.getByText(/subscribe to contact/i)).toBeInTheDocument()
+    expect(screen.queryByText(/trial/i)).not.toBeInTheDocument()
+    expect(contactRide).not.toHaveBeenCalled()
+  })
+
   it('active member auto-reveals the phone with Call + WhatsApp deep links (no second tap)', async () => {
     contactRide.mockResolvedValue({ phoneNumber: '+919876543210' })
-    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.TRIAL} onClose={vi.fn()} onUpgrade={vi.fn()} />)
+    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.ACTIVE} onClose={vi.fn()} onUpgrade={vi.fn()} />)
     await waitFor(() => expect(screen.getByText('+919876543210')).toBeInTheDocument())
     expect(contactRide).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('link', { name: /call/i })).toHaveAttribute('href', 'tel:+919876543210')
@@ -47,7 +54,7 @@ describe('ContactSheet', () => {
     contactVerifiedRide.mockRejectedValue({ code: 'VERIFICATION_REQUIRED' })
     const onVerify = vi.fn()
     const user = userEvent.setup()
-    renderSheet(<ContactSheet ride={{ id: 'v1', kind: 'verified' }} membershipState={MEMBERSHIP_STATE.TRIAL} onClose={vi.fn()} onUpgrade={vi.fn()} onVerify={onVerify} />)
+    renderSheet(<ContactSheet ride={{ id: 'v1', kind: 'verified' }} membershipState={MEMBERSHIP_STATE.ACTIVE} onClose={vi.fn()} onUpgrade={vi.fn()} onVerify={onVerify} />)
     await waitFor(() => expect(screen.getByText(/complete your profile to contact/i)).toBeInTheDocument())
     await user.click(screen.getByRole('button', { name: /^complete profile$/i }))
     expect(onVerify).toHaveBeenCalled()
@@ -57,7 +64,7 @@ describe('ContactSheet', () => {
     contactRide.mockResolvedValue({ phoneNumber: '+919876543210' })
     logContactRide.mockResolvedValue({ contactedAt: 't' })
     const user = userEvent.setup()
-    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.TRIAL} onClose={vi.fn()} onUpgrade={vi.fn()} />)
+    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.ACTIVE} onClose={vi.fn()} onUpgrade={vi.fn()} />)
     await waitFor(() => expect(screen.getByText('+919876543210')).toBeInTheDocument())
     expect(logContactRide).not.toHaveBeenCalled() // peek alone logs nothing
     await user.click(screen.getByRole('link', { name: /whatsapp/i }))
@@ -66,14 +73,14 @@ describe('ContactSheet', () => {
 
   it('falls back to the gate when the server rejects with SUBSCRIPTION_EXPIRED', async () => {
     contactRide.mockRejectedValue({ code: 'SUBSCRIPTION_EXPIRED' })
-    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.TRIAL} onClose={vi.fn()} onUpgrade={vi.fn()} />)
+    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.ACTIVE} onClose={vi.fn()} onUpgrade={vi.fn()} />)
     await waitFor(() => expect(screen.getByText(/subscribe to contact/i)).toBeInTheDocument())
   })
 
   it('shows a friendly error + retry on a non-subscription failure (rate limit)', async () => {
     contactRide.mockRejectedValue({ code: 'RATE_LIMITED' })
     const user = userEvent.setup()
-    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.TRIAL} onClose={vi.fn()} onUpgrade={vi.fn()} />)
+    renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.ACTIVE} onClose={vi.fn()} onUpgrade={vi.fn()} />)
     await waitFor(() => expect(screen.getByText(/contacted too many drivers/i)).toBeInTheDocument())
     contactRide.mockResolvedValue({ phoneNumber: '+919876543210', contactedAt: 't' })
     await user.click(screen.getByRole('button', { name: /try again/i }))

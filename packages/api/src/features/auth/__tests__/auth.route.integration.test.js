@@ -42,7 +42,7 @@ function fakePrisma() {
       },
       async create({ data }) {
         const u = { id: `u${++seq}`, phone: data.phone, name: null, verificationStatus: 'none', isDeleted: false,
-          subscription: { status: 'trial', trialExpiresAt: data.subscription.create.trialExpiresAt, expiresAt: null } };
+          subscription: { status: 'expired', expiresAt: null, ...data.subscription.create } }; // DB defaults
         byPhone.set(u.phone, u); return u;
       },
       async update({ where, data }) {
@@ -81,11 +81,11 @@ test('send-otp enforces the 30s resend cooldown with 429', async () => {
   assert.strictEqual(res.body.error.code, 'RATE_LIMITED');
 });
 
-test('verify-otp creates a trial user, returns 201 + sets both httpOnly cookies', async () => {
+test('verify-otp creates a user with no membership, returns 201 + sets both httpOnly cookies', async () => {
   const res = await request(appWith(okIdentity)).post('/api/v1/auth/verify-otp').send({ idToken: 'x'.repeat(20) });
   assert.strictEqual(res.status, 201);
   assert.strictEqual(res.body.data.user.phone, '+919876543210');
-  assert.strictEqual(res.body.data.user.subscription.status, 'trial');
+  assert.deepStrictEqual(res.body.data.user.subscription, { status: 'expired', expiresAt: null });
   const cookies = res.headers['set-cookie'].join(';');
   assert.match(cookies, /ec_at=.*HttpOnly/i);
   assert.match(cookies, /ec_rt=.*HttpOnly/i);

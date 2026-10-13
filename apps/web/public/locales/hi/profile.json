@@ -86,7 +86,7 @@
     "editReverify": "एडिट व पुनः सत्यापन",
     "membership": "मेंबरशिप",
     "membershipValue": {
-      "trial": "ट्रायल · {days} दिन बाकी",
+      "none": "सदस्यता नहीं",
       "active": "चालू",
       "expired": "समाप्त"
     },

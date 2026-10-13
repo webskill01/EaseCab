@@ -170,7 +170,6 @@ function createSubscriptionService({ repo, cashfree, config }) {
       const sub = await repo.getSubscriptionCached(userId);
       return {
         status: sub ? sub.status : null,
-        trialExpiresAt: sub ? sub.trialExpiresAt : null,
         expiresAt: sub ? sub.expiresAt : null,
         isActive: isSubscriptionActive(sub),
       };

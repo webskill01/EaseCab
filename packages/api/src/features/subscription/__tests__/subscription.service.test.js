@@ -18,11 +18,11 @@ function baseRepo(over = {}) {
     async findPayer() { return { phone: '+919876543210', name: 'Ravi Kumar' }; },
     async createOrderRecord() {},
     async findOrderRecord() { return { userId: 'u1', amount: 14900 }; },
-    async findSubscriptionForCredit() { return { status: 'expired', expiresAt: null, trialExpiresAt: null, paidStartedAt: null }; },
+    async findSubscriptionForCredit() { return { status: 'expired', expiresAt: null, paidStartedAt: null }; },
     async acquirePaymentLock() { return true; },
     async recordCaptureAndExtend() { return { duplicate: false }; },
     async invalidateSubCache() {},
-    async getSubscriptionCached() { return { status: 'active', trialExpiresAt: null, expiresAt: new Date(Date.now() + DAY) }; },
+    async getSubscriptionCached() { return { status: 'active', expiresAt: new Date(Date.now() + DAY) }; },
     ...over,
   };
 }
@@ -249,6 +249,7 @@ test('credit is a no-op when the redis lock is already held (duplicate)', async 
 test('getStatus returns the snapshot with isActive', async () => {
   const svc = createSubscriptionService({ repo: baseRepo(), cashfree: {}, config: CONFIG });
   const out = await svc.getStatus('u1');
+  assert.deepStrictEqual(Object.keys(out).sort(), ['expiresAt', 'isActive', 'status']);
   assert.strictEqual(out.status, 'active');
   assert.strictEqual(out.isActive, true);
 });

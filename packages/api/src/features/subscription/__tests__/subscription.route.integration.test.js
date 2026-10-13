@@ -39,7 +39,7 @@ function fakeRedis() {
 function fakePrisma() {
   const payments = [];
   let seq = 0;
-  const sub = { userId: 'u1', status: 'trial', trialExpiresAt: new Date(Date.now() + 2 * 86_400_000), expiresAt: null, paidStartedAt: null };
+  const sub = { userId: 'u1', status: 'expired', expiresAt: null, paidStartedAt: null }; // never-paid user
   return {
     _sub: sub,
     user: { async findUnique() { return { phone: '+919876543210' }; } },
@@ -67,7 +67,7 @@ function fakePrisma() {
       },
     },
     subscription: {
-      async findUnique() { return { status: sub.status, trialExpiresAt: sub.trialExpiresAt, expiresAt: sub.expiresAt, paidStartedAt: sub.paidStartedAt }; },
+      async findUnique() { return { status: sub.status, expiresAt: sub.expiresAt, paidStartedAt: sub.paidStartedAt }; },
       async update({ data }) { Object.assign(sub, data); return sub; },
     },
     async $transaction(fn) { return fn(this); },
@@ -131,13 +131,13 @@ test('webhook with a forged signature → 422, no credit', async () => {
   const raw = JSON.stringify(successEvent('order_new', 555));
   const res = await request(app).post('/api/v1/subscriptions/webhook').set('x-webhook-timestamp', '1').set('x-webhook-signature', 'ZGVhZGJlZWY=').set('Content-Type', 'application/json').send(raw);
   assert.strictEqual(res.status, 422);
-  assert.strictEqual(prisma._sub.status, 'trial');
+  assert.strictEqual(prisma._sub.status, 'expired');
 });
 
 test('GET /me returns the cached snapshot with isActive', async () => {
   const res = await request(appWith(fakePrisma())).get('/api/v1/subscriptions/me').set('Cookie', authCookie);
   assert.strictEqual(res.status, 200);
-  assert.strictEqual(res.body.data.isActive, true); // trial still in-window
+  assert.deepStrictEqual(res.body.data, { status: 'expired', expiresAt: null, isActive: false }); // never paid
 });
 
 test('GET /payments requires auth', async () => {

@@ -110,7 +110,7 @@ function createRidesRepository({ prisma, redis }) {
       if (cached) return cached;
       const sub = await prisma.subscription.findUnique({
         where: { userId },
-        select: { status: true, trialExpiresAt: true, expiresAt: true },
+        select: { status: true, expiresAt: true },
       });
       await setCachedSub(redis, userId, sub);
       return sub;

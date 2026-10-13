@@ -72,10 +72,10 @@ function createAuthRepository({ prisma, redis }) {
       return prisma.user.findFirst({ where: { id, isDeleted: false }, include: { subscription: true } });
     },
 
-    /** Create a user with a nested 7-day trial subscription, atomically. */
-    async createUserWithTrial(phone, trialExpiresAt) {
+    /** Create a user with an empty membership row (status defaults to expired — no trial since 2026-10-13). */
+    async createUser(phone) {
       return prisma.user.create({
-        data: { phone, subscription: { create: { trialExpiresAt } } },
+        data: { phone, subscription: { create: {} } },
         include: { subscription: true },
       });
     },

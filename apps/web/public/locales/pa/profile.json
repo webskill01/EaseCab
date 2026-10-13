@@ -86,7 +86,7 @@
     "editReverify": "ਸੋਧੋ ਤੇ ਮੁੜ-ਤਸਦੀਕ",
     "membership": "ਮੈਂਬਰਸ਼ਿਪ",
     "membershipValue": {
-      "trial": "ਟ੍ਰਾਇਲ · {days} ਦਿਨ ਬਾਕੀ",
+      "none": "ਮੈਂਬਰਸ਼ਿਪ ਨਹੀਂ",
       "active": "ਚਾਲੂ",
       "expired": "ਮਿਆਦ ਮੁੱਕੀ"
     },

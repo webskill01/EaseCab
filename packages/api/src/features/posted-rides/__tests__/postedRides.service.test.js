@@ -9,7 +9,7 @@ const code = (expected) => (err) => {
   return true;
 };
 
-const ACTIVE_SUB = { status: 'active', expiresAt: new Date(Date.now() + 86_400_000), trialExpiresAt: null };
+const ACTIVE_SUB = { status: 'active', expiresAt: new Date(Date.now() + 86_400_000) };
 
 /** L1-complete posting profile (Step 21b): aadhaar verified + every profile field present. */
 const L1_OK = Object.freeze({

@@ -44,12 +44,7 @@
     "clear": "Filter hatao"
   },
   "banner": {
-    "freeTrial": "Free trial",
-    "daysLeft": "din baaki",
-    "trialEnding": "Trial jaldi khatam",
-    "trialSub": "Driver se contact jaari rakhne ke liye upgrade karein.",
-    "upgrade": "Upgrade",
-    "expiredTitle": "Trial khatam ho gaya",
+    "expiredTitle": "Membership khatam ho gayi",
     "expiredSub": "Driver se baat karne ke liye renew karein.",
     "renew": "Renew"
   },
@@ -68,7 +63,7 @@
   },
   "gate": {
     "contactTitle": "Contact ke liye subscribe karein",
-    "contactSub": "Trial ke baad ₹149/month mein unlimited contact.",
+    "contactSub": "₹149/month mein unlimited contact.",
     "subscribe": "Subscribe",
     "renew": "Abhi renew karein",
     "notNow": "Abhi nahi",

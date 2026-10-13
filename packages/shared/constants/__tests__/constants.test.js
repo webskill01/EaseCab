@@ -53,7 +53,7 @@ test('RIDE_STATUS mirrors the Prisma RideStatus enum exactly', () => {
 test('SUBSCRIPTION_STATUS mirrors the Prisma SubscriptionStatus enum exactly', () => {
   assert.deepEqual(
     Object.values(SUBSCRIPTION_STATUS).sort(),
-    ['active', 'cancelled', 'expired', 'halted', 'trial'],
+    ['active', 'cancelled', 'expired', 'halted'],
   );
 });
 

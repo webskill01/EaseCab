@@ -4,11 +4,10 @@ const { redisKey, CASHFREE } = require('@easecab/shared');
 
 const key = (userId) => redisKey('sub', userId);
 
-/** Revive the two timestamptz fields from JSON strings back to Date (or null). */
+/** Revive the timestamptz field from a JSON string back to Date (or null). */
 function revive(snap) {
   return {
     status: snap.status,
-    trialExpiresAt: snap.trialExpiresAt ? new Date(snap.trialExpiresAt) : null,
     expiresAt: snap.expiresAt ? new Date(snap.expiresAt) : null,
   };
 }
@@ -16,7 +15,7 @@ function revive(snap) {
 /**
  * @param {import('ioredis').Redis} redis
  * @param {string} userId
- * @returns {Promise<{status:string,trialExpiresAt:?Date,expiresAt:?Date}|null>} null on miss
+ * @returns {Promise<{status:string,expiresAt:?Date}|null>} null on miss
  */
 async function getCachedSub(redis, userId) {
   const raw = await redis.get(key(userId));

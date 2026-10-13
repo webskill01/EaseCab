@@ -34,7 +34,7 @@ function createAuthRouter({ service, config, requireAuth }) {
     sendSuccess(res, { data });
   });
 
-  // Verify (Firebase ID token | phone+code) → upsert user (trial if new) → set cookies.
+  // Verify (Firebase ID token | phone+code) → upsert user (new → no membership) → set cookies.
   router.post('/verify-otp', validate(verifyOtpSchema), async (req, res) => {
     const { user, isNewUser, accessToken, refreshToken } = await service.verifyOtp(req.valid.body);
     setAuthCookies(res, { accessToken, refreshToken }, cookieCfg);

@@ -6,7 +6,6 @@ const assert = require('node:assert');
 const {
   AUTH_COOKIES,
   OTP_RATE_LIMIT,
-  TRIAL_DAYS,
   USER_ROLE,
   ADMIN_AUTH_COOKIES,
   ADMIN_ROLE,
@@ -25,8 +24,7 @@ test('OTP_RATE_LIMIT matches CLAUDE.md §6', () => {
   assert.strictEqual(OTP_RATE_LIMIT.RESEND_COOLDOWN_SEC, 30);
 });
 
-test('trial + role constants', () => {
-  assert.strictEqual(TRIAL_DAYS, 7);
+test('role constants', () => {
   assert.strictEqual(USER_ROLE, 'user');
 });
 

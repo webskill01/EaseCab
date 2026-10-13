@@ -1,10 +1,9 @@
 {
   "title": "Membership",
   "price": "₹149 / month",
-  "trial": {
-    "badge": "Free trial",
-    "daysLeft": "{days, plural, one {# din baaki} other {# din baaki}}",
-    "note": "{date} tak puri access"
+  "none": {
+    "badge": "Subscribed nahi",
+    "note": "Driver se contact ke liye subscribe karo."
   },
   "active": {
     "badge": "Active",
@@ -12,10 +11,9 @@
   },
   "expired": {
     "badge": "Expired",
-    "note": "Drivers se contact karne aur duties post karne ke liye subscribe karo."
+    "note": "Aapki membership khatam ho gayi. Drivers se dobara contact ke liye renew karo."
   },
   "cta": {
-    "upgrade": "EaseCab Plus lo",
     "renew": "Membership renew karo",
     "subscribe": "Abhi subscribe karo",
     "processing": "Checkout khul raha hai…"

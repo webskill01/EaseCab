@@ -16,18 +16,17 @@ describe('FeedBanner', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('trial banner shows days left + Upgrade', async () => {
-    const onUpgrade = vi.fn()
-    const user = userEvent.setup()
-    renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.TRIAL, daysLeft: 5 }} onUpgrade={onUpgrade} />)
-    expect(screen.getByText(/5 days left/i)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /upgrade/i }))
-    expect(onUpgrade).toHaveBeenCalled()
+  it('renders nothing for a never-subscribed user (gate fires only at contact)', () => {
+    const { container } = renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.NONE }} onUpgrade={vi.fn()} />)
+    expect(container).toBeEmptyDOMElement()
   })
 
-  it('expired banner shows Renew', () => {
-    renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.EXPIRED }} onUpgrade={vi.fn()} />)
-    expect(screen.getByText(/trial ended/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /renew/i })).toBeInTheDocument()
+  it('expired banner shows Renew', async () => {
+    const onUpgrade = vi.fn()
+    const user = userEvent.setup()
+    renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.EXPIRED }} onUpgrade={onUpgrade} />)
+    expect(screen.getByText('Membership ended')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /renew/i }))
+    expect(onUpgrade).toHaveBeenCalled()
   })
 })

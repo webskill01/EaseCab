@@ -6,8 +6,8 @@ import { SuccessBadge } from '@/components/ui/SuccessBadge'
 import { ChevR } from '@/components/ui/icons'
 
 /**
- * Onboarding final step — done / trial started (docs/design/SCREENS.md §1, prototype
- * login.jsx DoneStep). No backend call — the trial was created server-side at verify-otp.
+ * Onboarding final step — welcome (docs/design/SCREENS.md §1, prototype login.jsx
+ * DoneStep). No backend call; new users start without a membership (no trial since 2026-10-13).
  * "Enter EaseCab" routes to the feed; identity/profile is completed later at verification.
  * Badge pops + ring ripples + tick draws, then the copy and CTA rise in a stagger.
  * @param {{ onEnter: () => void }} props
@@ -23,7 +23,7 @@ export function DoneScreen({ onEnter }) {
         {t('done.title')}
       </h1>
       <p className="mt-2 max-w-[290px] animate-ec-rise text-[14.5px] leading-relaxed text-ec-ink60 motion-reduce:animate-none" style={{ animationDelay: '0.35s' }}>
-        {t('done.trial')}
+        {t('done.welcome')}
       </p>
       <div className="w-full animate-ec-rise motion-reduce:animate-none" style={{ animationDelay: '0.45s' }}>
         <Button type="button" size="lg" onClick={onEnter} className="mt-7 w-full">

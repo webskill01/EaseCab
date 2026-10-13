@@ -1,10 +1,9 @@
 {
   "title": "Membership",
   "price": "₹149 / month",
-  "trial": {
-    "badge": "Free trial",
-    "daysLeft": "{days, plural, one {# day left} other {# days left}}",
-    "note": "Full access until {date}"
+  "none": {
+    "badge": "Not subscribed",
+    "note": "Subscribe to contact drivers."
   },
   "active": {
     "badge": "Active",
@@ -12,10 +11,9 @@
   },
   "expired": {
     "badge": "Expired",
-    "note": "Subscribe to contact drivers and post duties."
+    "note": "Your membership ended. Renew to contact drivers again."
   },
   "cta": {
-    "upgrade": "Upgrade to EaseCab Plus",
     "renew": "Renew membership",
     "subscribe": "Subscribe now",
     "processing": "Opening checkout…"

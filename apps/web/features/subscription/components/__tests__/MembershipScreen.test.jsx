@@ -15,28 +15,28 @@ const checkoutStub = (over = {}) => ({ start: vi.fn(), checkingOut: false, error
 beforeEach(() => vi.clearAllMocks())
 
 describe('MembershipScreen', () => {
-  it('renders a trial state with days left + Upgrade CTA', () => {
-    useMembership.mockReturnValue({ data: { status: 'trial', isActive: true, trialExpiresAt: new Date(Date.now() + 5 * 86400000).toISOString() }, isLoading: false, isError: false })
-    useCheckout.mockReturnValue(checkoutStub())
-    renderWithIntl(<MembershipScreen />)
-    expect(screen.getByText(/Free trial/)).toBeInTheDocument()
-    expect(screen.getByText(/day(s)? left/)).toBeInTheDocument()
-    expect(screen.getByText('Upgrade to EaseCab Plus')).toBeInTheDocument()
-    expect(screen.getByText('Monthly Plan')).toBeInTheDocument()
-  })
-
-  it('renders an expired state with the Subscribe CTA and fires checkout', () => {
-    useMembership.mockReturnValue({ data: { status: 'expired', isActive: false }, isLoading: false, isError: false })
+  it('never-subscribed user sees Not subscribed + Subscribe now and fires checkout', () => {
+    useMembership.mockReturnValue({ data: { status: 'expired', isActive: false, expiresAt: null }, isLoading: false, isError: false })
     const start = vi.fn()
     useCheckout.mockReturnValue(checkoutStub({ start }))
     renderWithIntl(<MembershipScreen />)
+    expect(screen.getByText('EaseCab · Not subscribed')).toBeInTheDocument()
+    expect(screen.getByText('Monthly Plan')).toBeInTheDocument()
     const cta = screen.getByText('Subscribe now')
     fireEvent.click(cta)
     expect(start).toHaveBeenCalled()
   })
 
+  it('lapsed member sees Membership ended + Renew', () => {
+    useMembership.mockReturnValue({ data: { status: 'active', isActive: false, expiresAt: '2026-09-01T00:00:00Z' }, isLoading: false, isError: false })
+    useCheckout.mockReturnValue(checkoutStub())
+    renderWithIntl(<MembershipScreen />)
+    expect(screen.getByText('Your membership ended. Renew to contact drivers again.')).toBeInTheDocument()
+    expect(screen.queryByText(/trial/i)).not.toBeInTheDocument()
+  })
+
   it('shows the success panel after a credited checkout', () => {
-    useMembership.mockReturnValue({ data: { status: 'trial', isActive: true, trialExpiresAt: new Date().toISOString() }, isLoading: false, isError: false })
+    useMembership.mockReturnValue({ data: { status: 'active', isActive: true, expiresAt: new Date().toISOString() }, isLoading: false, isError: false })
     useCheckout.mockReturnValue(checkoutStub({ succeeded: true }))
     renderWithIntl(<MembershipScreen />)
     expect(screen.getByText("You're all set!")).toBeInTheDocument()

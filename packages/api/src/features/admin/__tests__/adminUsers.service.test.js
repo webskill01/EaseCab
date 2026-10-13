@@ -9,7 +9,7 @@ const ROW = {
   id: USER_ID, name: 'Gurpreet', phone: '+919876543210', aadhaarVerified: true,
   verificationStatus: 'approved', baseCity: 'Amritsar', vehicleType: 'sedan',
   createdAt: new Date(), isDeleted: false, deletedAt: null,
-  subscription: { status: 'trial', expiresAt: null, trialExpiresAt: new Date('2026-07-01') },
+  subscription: { status: 'active', expiresAt: new Date('2026-07-01') },
 };
 
 function fakeRepo(overrides = {}) {
@@ -31,7 +31,7 @@ test('list masks the phone and flattens subscription validUntil', async () => {
   const u = out.items[0];
   assert.strictEqual(u.phoneMasked, '••••3210');
   assert.strictEqual(u.phone, undefined);
-  assert.strictEqual(u.subscription.status, 'trial');
+  assert.strictEqual(u.subscription.status, 'active');
   assert.deepStrictEqual(u.subscription.validUntil, new Date('2026-07-01'));
 });
 

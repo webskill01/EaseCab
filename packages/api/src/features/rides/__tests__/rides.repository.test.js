@@ -111,7 +111,7 @@ test('findSubscriptionByUserId selects the gate fields by userId', async () => {
   await repo.findSubscriptionByUserId('u1');
   assert.deepStrictEqual(prisma.calls.subFindUnique, {
     where: { userId: 'u1' },
-    select: { status: true, trialExpiresAt: true, expiresAt: true },
+    select: { status: true, expiresAt: true },
   });
 });
 

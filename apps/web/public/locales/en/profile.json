@@ -86,7 +86,7 @@
     "editReverify": "Edit & re-verify",
     "membership": "Membership",
     "membershipValue": {
-      "trial": "Trial · {days} days left",
+      "none": "Not subscribed",
       "active": "Active",
       "expired": "Expired"
     },

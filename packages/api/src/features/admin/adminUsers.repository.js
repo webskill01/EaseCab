@@ -4,7 +4,7 @@
 const USER_SELECT = Object.freeze({
   id: true, name: true, phone: true, aadhaarVerified: true, verificationStatus: true,
   baseCity: true, vehicleType: true, createdAt: true, isDeleted: true, deletedAt: true,
-  subscription: { select: { status: true, expiresAt: true, trialExpiresAt: true } },
+  subscription: { select: { status: true, expiresAt: true } },
 });
 
 /** Map the status filter to a `where.isDeleted` fragment (`all` → no filter). */

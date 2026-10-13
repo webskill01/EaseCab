@@ -51,7 +51,7 @@ test('incrementOtpCount uses a FIXED window (TTL set once, self-heals a lost TTL
   assert.strictEqual(redis._store.get(key).ttl, 3600); // re-applied
 });
 
-test('createUserWithTrial nests a trial subscription; findUserByPhone has no isDeleted filter', async () => {
+test('createUser nests an empty membership row; findUserByPhone has no isDeleted filter', async () => {
   const created = [];
   const prisma = {
     user: {
@@ -66,11 +66,8 @@ test('createUserWithTrial nests a trial subscription; findUserByPhone has no isD
   assert.deepStrictEqual(await repo.findUserByPhone('+91hit'), { id: 'u1', phone: '+91hit', isDeleted: false });
   assert.strictEqual(await repo.findUserByPhone('+91miss'), null);
 
-  const trialEnds = new Date('2026-06-08T00:00:00Z');
-  await repo.createUserWithTrial('+91new', trialEnds);
-  assert.strictEqual(created[0].data.phone, '+91new');
-  assert.strictEqual(created[0].data.subscription.create.trialExpiresAt, trialEnds);
-  assert.deepStrictEqual(created[0].include, { subscription: true });
+  await repo.createUser('+91new');
+  assert.deepStrictEqual(created[0], { data: { phone: '+91new', subscription: { create: {} } }, include: { subscription: true } });
 
   assert.deepStrictEqual(await repo.findActiveUserById('u1'), { id: 'u1' });
 });

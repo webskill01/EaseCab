@@ -8,11 +8,11 @@ beforeEach(() => vi.clearAllMocks())
 
 describe('getMembership', () => {
   it('GETs /subscriptions/me and returns the status payload', async () => {
-    apiFetch.mockResolvedValue({ data: { status: 'trial', isActive: true, trialExpiresAt: 't', expiresAt: null } })
+    apiFetch.mockResolvedValue({ data: { status: 'expired', isActive: false, expiresAt: null } })
     const out = await getMembership()
     expect(apiFetch).toHaveBeenCalledWith('/subscriptions/me')
-    expect(out.status).toBe('trial')
-    expect(out.isActive).toBe(true)
+    expect(out.status).toBe('expired')
+    expect(out.isActive).toBe(false)
   })
 })
 

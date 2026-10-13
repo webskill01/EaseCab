@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  * our own /api/v1/auth endpoints. The 201 on verify-otp drives the new-user "Done"
  * screen; refresh 401 drives the AuthGuard redirect.
  */
-test('phone → OTP → trial screen → feed (new user)', async ({ page }) => {
+test('phone → OTP → welcome screen → feed (new user)', async ({ page }) => {
   await page.route('**/api/v1/auth/send-otp', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, data: { sent: true } }) }),
   )
@@ -27,6 +27,7 @@ test('phone → OTP → trial screen → feed (new user)', async ({ page }) => {
   await page.getByRole('button', { name: /not now/i }).click()
 
   await expect(page.getByText(/you're all set/i)).toBeVisible()
+  await expect(page.getByText(/Browse live duties free/)).toBeVisible()
   await page.getByRole('button', { name: /enter easecab/i }).click()
   await expect(page).toHaveURL(/\/feed$/)
   // the feed surface renders (sub-tabs are chrome, independent of the data fetch)

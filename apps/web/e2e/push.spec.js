@@ -28,7 +28,7 @@ async function installSeams(page) {
 async function mockFeed(page) {
   await page.route('**/api/v1/auth/refresh', (r) => r.fulfill(ok({ refreshed: true })))
   await page.route('**/api/v1/subscriptions/me', (r) =>
-    r.fulfill(ok({ status: 'trial', isActive: true, trialExpiresAt: new Date(Date.now() + 5 * 86400000).toISOString(), expiresAt: null })),
+    r.fulfill(ok({ status: 'active', isActive: true, expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() })),
   )
   await page.route('**/api/v1/posted-rides**', (r) => r.fulfill(ok({ posts: [] }, { nextCursor: null })))
   await page.route('**/api/v1/rides**', (r) =>

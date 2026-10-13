@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api/client'
 
 /**
  * Membership status for the feed banner + Membership screen.
- * @returns {Promise<{ status: ?string, trialExpiresAt: ?string, expiresAt: ?string, isActive: boolean }>}
+ * @returns {Promise<{ status: ?string, expiresAt: ?string, isActive: boolean }>}
  */
 export async function getMembership() {
   const { data } = await apiFetch('/subscriptions/me')

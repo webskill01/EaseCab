@@ -44,12 +44,7 @@
     "clear": "Clear filter"
   },
   "banner": {
-    "freeTrial": "Free trial",
-    "daysLeft": "days left",
-    "trialEnding": "Trial ending soon",
-    "trialSub": "Upgrade to keep contacting drivers.",
-    "upgrade": "Upgrade",
-    "expiredTitle": "Trial ended",
+    "expiredTitle": "Membership ended",
     "expiredSub": "Renew to contact drivers again.",
     "renew": "Renew"
   },
@@ -68,7 +63,7 @@
   },
   "gate": {
     "contactTitle": "Subscribe to contact",
-    "contactSub": "Unlock unlimited contact for ₹149/month after your trial.",
+    "contactSub": "Unlock unlimited contact for ₹149/month.",
     "subscribe": "Subscribe",
     "renew": "Renew now",
     "notNow": "Not now",

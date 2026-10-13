@@ -99,7 +99,7 @@ const VERIFIED = {
   vehicleType: 'Innova', profilePicUrl: 'https://r2/dp.jpg', languagesSpoken: ['pa'],
 };
 const UNVERIFIED = { ...VERIFIED, aadhaarVerified: false };
-const ACTIVE_SUB = { status: 'active', expiresAt: FUTURE, trialExpiresAt: null };
+const ACTIVE_SUB = { status: 'active', expiresAt: FUTURE };
 
 test('POST /posted-rides → 403 VERIFICATION_REQUIRED when no KYC doc (VERIFICATION_ENABLED)', async () => {
   const app = makeApp({ users: { u1: UNVERIFIED } }, { requireKyc: true });

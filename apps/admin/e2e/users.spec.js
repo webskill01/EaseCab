@@ -6,7 +6,7 @@ const USER = {
   id: USER_ID, name: 'Gurpreet', phoneMasked: '••••3210', aadhaarVerified: true,
   verificationStatus: 'approved', baseCity: 'Amritsar', vehicleType: 'sedan',
   createdAt: new Date().toISOString(), isDeleted: false, deletedAt: null,
-  subscription: { status: 'trial', validUntil: new Date('2026-07-01').toISOString() },
+  subscription: { status: 'active', validUntil: new Date('2026-07-01').toISOString() },
 }
 
 test('users directory lists a user and soft-deletes them', async ({ page }) => {

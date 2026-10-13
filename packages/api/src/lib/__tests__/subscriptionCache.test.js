@@ -18,17 +18,17 @@ test('miss returns null; set then get round-trips and revives Date fields', asyn
   const redis = fakeRedis();
   assert.strictEqual(await getCachedSub(redis, 'u1'), null);
   const exp = new Date('2026-07-01T00:00:00Z');
-  await setCachedSub(redis, 'u1', { status: 'active', trialExpiresAt: null, expiresAt: exp });
+  await setCachedSub(redis, 'u1', { status: 'active', expiresAt: exp });
   const hit = await getCachedSub(redis, 'u1');
   assert.strictEqual(hit.status, 'active');
   assert.ok(hit.expiresAt instanceof Date);
   assert.strictEqual(hit.expiresAt.getTime(), exp.getTime());
-  assert.strictEqual(hit.trialExpiresAt, null);
+  assert.deepStrictEqual(Object.keys(hit).sort(), ['expiresAt', 'status']);
 });
 
 test('del removes the key', async () => {
   const redis = fakeRedis();
-  await setCachedSub(redis, 'u1', { status: 'trial', trialExpiresAt: new Date(), expiresAt: null });
+  await setCachedSub(redis, 'u1', { status: 'expired', expiresAt: null });
   await delCachedSub(redis, 'u1');
   assert.strictEqual(await getCachedSub(redis, 'u1'), null);
 });

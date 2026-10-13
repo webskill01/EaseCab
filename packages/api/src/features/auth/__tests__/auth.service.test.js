@@ -18,7 +18,7 @@ function baseRepo(overrides = {}) {
     setResendCooldown: async () => {},
     findUserByPhone: async () => null,
     findActiveUserById: async () => ({ id: 'u1' }),
-    createUserWithTrial: async (phone) => ({ id: 'new', phone, isDeleted: false, subscription: { status: 'trial' } }),
+    createUser: async (phone) => ({ id: 'new', phone, isDeleted: false, subscription: { status: 'expired', expiresAt: null } }),
     restoreUser: async (id) => ({ id, isDeleted: false }),
     ...overrides,
   };
@@ -45,12 +45,14 @@ test('requestOtp throws RATE_LIMITED once over the hourly cap', async () => {
   await assert.rejects(svc.requestOtp('+919876543210'), (e) => e.code === ERROR_CODES.RATE_LIMITED);
 });
 
-test('verifyOtp on a new phone creates a trial user and signs tokens', async () => {
+test('verifyOtp on a new phone creates a user without a trial and signs tokens', async () => {
   const identity = { verifyOtpToken: async () => ({ phone: '+919876543210' }) };
-  const svc = make(baseRepo(), identity);
+  const createdWith = [];
+  const svc = make(baseRepo({ createUser: async (...args) => { createdWith.push(args); return { id: 'new', phone: args[0], isDeleted: false, subscription: { status: 'expired', expiresAt: null } }; } }), identity);
   const r = await svc.verifyOtp({ idToken: 'idtok' });
   assert.strictEqual(r.isNewUser, true);
   assert.strictEqual(r.user.phone, '+919876543210');
+  assert.deepStrictEqual(createdWith, [['+919876543210']]);
   assert.strictEqual(r.accessToken, 'acc:new:user');
   assert.strictEqual(r.refreshToken, 'ref:new');
 });
@@ -105,11 +107,11 @@ test('mintFirebaseToken returns a custom token for the user id', async () => {
 test('toPublicUser exposes only safe fields', () => {
   const pub = toPublicUser({
     id: 'u1', phone: '+91x', name: 'A', verificationStatus: 'none', isDeleted: false,
-    subscription: { status: 'trial', trialExpiresAt: 't', expiresAt: null, razorpaySubId: 'SECRET' },
+    subscription: { status: 'expired', expiresAt: null, razorpaySubId: 'SECRET' },
   });
   assert.deepStrictEqual(pub, {
     id: 'u1', phone: '+91x', name: 'A', verificationStatus: 'none',
-    subscription: { status: 'trial', trialExpiresAt: 't', expiresAt: null },
+    subscription: { status: 'expired', expiresAt: null },
   });
 });
 

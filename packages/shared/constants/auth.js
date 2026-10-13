@@ -90,9 +90,6 @@ const TWO_FACTOR = Object.freeze({
   STATUS_SUCCESS: 'Success',
 });
 
-/** Full-access trial length granted on first sign-in (CLAUDE.md §1). */
-const TRIAL_DAYS = 7;
-
 /** Role embedded in the user JWT payload (requireAuth → req.user.role). Admin is separate (§6). */
 const USER_ROLE = 'user';
 
@@ -103,7 +100,6 @@ module.exports = {
   OTP_CHANNEL,
   OTP_SESSION,
   TWO_FACTOR,
-  TRIAL_DAYS,
   USER_ROLE,
   ADMIN_AUTH_COOKIES,
   ADMIN_ROLE,

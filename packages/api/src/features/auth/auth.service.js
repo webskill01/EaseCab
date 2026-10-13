@@ -1,9 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const { AppError, ERROR_CODES, OTP_RATE_LIMIT, OTP_CHANNEL, OTP_SESSION, TRIAL_DAYS, USER_ROLE } = require('@easecab/shared');
-
-const DAY_MS = 86_400_000;
+const { AppError, ERROR_CODES, OTP_RATE_LIMIT, OTP_CHANNEL, OTP_SESSION, USER_ROLE } = require('@easecab/shared');
 
 /**
  * Reduce a Prisma user (+subscription) to the fields safe to return to the client
@@ -20,7 +18,6 @@ function toPublicUser(user) {
     subscription: user.subscription
       ? {
           status: user.subscription.status,
-          trialExpiresAt: user.subscription.trialExpiresAt,
           expiresAt: user.subscription.expiresAt ?? null,
         }
       : null,
@@ -55,13 +52,12 @@ function createAuthService({ repo, jwt, identity, smsOtp = null, testLogin = nul
     return { accessToken: jwt.signAccess(payload), refreshToken: jwt.signRefresh(payload) };
   }
 
-  /** Upsert the user for a proven phone (trial if new, restore if soft-deleted). */
+  /** Upsert the user for a proven phone (new → empty membership, restore if soft-deleted). */
   async function signIn(phone) {
     let user = await repo.findUserByPhone(phone);
     let isNewUser = false;
     if (!user) {
-      const trialExpiresAt = new Date(Date.now() + TRIAL_DAYS * DAY_MS);
-      user = await repo.createUserWithTrial(phone, trialExpiresAt);
+      user = await repo.createUser(phone);
       isNewUser = true;
     } else if (user.isDeleted) {
       user = await repo.restoreUser(user.id);

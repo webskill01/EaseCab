@@ -8,17 +8,17 @@ import { useMembership } from '../hooks/useMembership'
 import { useCheckout } from '../hooks/useCheckout'
 import { PaymentHistory } from './PaymentHistory'
 
-const CTA_KEY = Object.freeze({ trial: 'upgrade', active: 'renew', expired: 'subscribe' })
+const CTA_KEY = Object.freeze({ none: 'subscribe', active: 'renew', expired: 'renew' })
 
 // Status-card chrome per state (membership.jsx stateMeta).
 const STATUS_META = Object.freeze({
-  trial: { wrap: 'border-ec-warning/30 bg-ec-warnBg', tile: 'bg-ec-warning', Icon: Crown },
+  none: { wrap: 'border-ec-line bg-white', tile: 'bg-ec-blue', Icon: Crown },
   active: { wrap: 'border-ec-success/30 bg-ec-successBg', tile: 'bg-ec-success', Icon: Check },
   expired: { wrap: 'border-ec-danger/30 bg-ec-dangerBg', tile: 'bg-ec-danger', Icon: Info },
 })
 
-/** Status card — state-tinted tile + "EaseCab · <plan>" + note, with a trial progress bar. */
-function StatusCard({ state, note, daysLeft, t }) {
+/** Status card — state-tinted tile + "EaseCab · <plan>" + note. */
+function StatusCard({ state, note, t }) {
   const meta = STATUS_META[state]
   const Icon = meta.Icon
   return (
@@ -30,11 +30,6 @@ function StatusCard({ state, note, daysLeft, t }) {
           <p className="mt-0.5 text-[12.5px] font-semibold text-ec-ink60">{note}</p>
         </div>
       </div>
-      {state === MEMBERSHIP_STATE.TRIAL && (
-        <div className="mt-3.5 h-1.5 overflow-hidden rounded-[3px] bg-ec-warning/25">
-          <div className="h-full rounded-[3px] bg-ec-warning" style={{ width: `${Math.max(8, ((daysLeft ?? 0) / 7) * 100)}%` }} />
-        </div>
-      )}
     </section>
   )
 }
@@ -77,11 +72,9 @@ export function MembershipScreen() {
 
   const v = membershipView(sub)
   const note =
-    v.state === MEMBERSHIP_STATE.TRIAL
-      ? t('trial.daysLeft', { days: v.daysLeft })
-      : v.state === MEMBERSHIP_STATE.ACTIVE
-        ? t('active.note', { date: formatPaymentDate(sub?.expiresAt) })
-        : t('expired.note')
+    v.state === MEMBERSHIP_STATE.ACTIVE
+      ? t('active.note', { date: formatPaymentDate(sub?.expiresAt) })
+      : t(`${v.state}.note`)
 
   return (
     // Block + space-y, not flex-col: flex children with overflow-hidden (PlanCard) get
@@ -97,7 +90,7 @@ export function MembershipScreen() {
         </section>
       ) : (
         <>
-          <StatusCard state={v.state} note={note} daysLeft={v.daysLeft} t={t} />
+          <StatusCard state={v.state} note={note} t={t} />
           <PlanCard t={t} />
 
           {checkout.errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t('error.checkout')}</p>}

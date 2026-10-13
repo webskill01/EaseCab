@@ -5,12 +5,13 @@ import { renderWithIntl } from '@/test/intl'
 import { DoneScreen } from '../DoneScreen'
 
 describe('DoneScreen', () => {
-  it('shows the trial confirmation and enters the app', async () => {
+  it('shows the welcome (no trial) and enters the app', async () => {
     const onEnter = vi.fn()
     const user = userEvent.setup()
     renderWithIntl(<DoneScreen onEnter={onEnter} />)
     expect(screen.getByText(/you're all set/i)).toBeInTheDocument()
-    expect(screen.getByText(/7-day free trial/i)).toBeInTheDocument()
+    expect(screen.getByText(/Browse live duties free/)).toBeInTheDocument()
+    expect(screen.queryByText(/trial/i)).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /enter easecab/i }))
     expect(onEnter).toHaveBeenCalled()
   })

@@ -3,7 +3,7 @@
 /**
  * One-off CLI that gives the Play Store review account permanent full access.
  *
- * Google re-reviews on EVERY update. A trial expires, so a reviewer coming back
+ * Google re-reviews on EVERY update. There is no trial, so a reviewer coming back
  * months later would hit the paywall and reject the release. This pins the
  * account to status=active with a far-future expiry, which is what
  * isSubscriptionActive() checks (packages/shared/lib/subscriptionWindow.js).
@@ -48,8 +48,7 @@ async function main() {
 
     await prisma.subscription.upsert({
       where: { userId: user.id },
-      // ponytail: trialExpiresAt is required on create but irrelevant once status=active
-      create: { userId: user.id, status: 'active', trialExpiresAt: expiresAt, expiresAt },
+      create: { userId: user.id, status: 'active', expiresAt },
       update: { status: 'active', expiresAt },
     });
 

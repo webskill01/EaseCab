@@ -65,12 +65,11 @@ test('toPublicRide surfaces joined canonical city names, null when the relation 
 
 test('isSubscriptionActive — gate truth table', () => {
   assert.strictEqual(isSubscriptionActive(null), false);
-  assert.strictEqual(isSubscriptionActive({ status: 'trial', trialExpiresAt: FUTURE }), true);
-  assert.strictEqual(isSubscriptionActive({ status: 'trial', trialExpiresAt: PAST }), false);
+  assert.strictEqual(isSubscriptionActive({ status: 'trial', expiresAt: null }), false); // trial removed 2026-10-13
   assert.strictEqual(isSubscriptionActive({ status: 'active', expiresAt: FUTURE }), true);
   assert.strictEqual(isSubscriptionActive({ status: 'active', expiresAt: PAST }), false);
   assert.strictEqual(isSubscriptionActive({ status: 'active', expiresAt: null }), false);
-  assert.strictEqual(isSubscriptionActive({ status: 'expired', trialExpiresAt: FUTURE, expiresAt: FUTURE }), false);
+  assert.strictEqual(isSubscriptionActive({ status: 'expired', expiresAt: FUTURE }), false);
   assert.strictEqual(isSubscriptionActive({ status: 'cancelled', expiresAt: FUTURE }), false);
 });
 
@@ -124,7 +123,7 @@ test('contactRide reveals the phone without writing history (the tap logs it, no
   const calls = {};
   const repo = {
     findRideContactTarget: async (id) => { calls.target = id; return { id, phoneNumber: '+919876543210' }; },
-    findSubscriptionByUserId: async (uid) => { calls.sub = uid; return { status: 'trial', trialExpiresAt: FUTURE }; },
+    findSubscriptionByUserId: async (uid) => { calls.sub = uid; return { status: 'active', expiresAt: FUTURE }; },
     incrementContactCount: async () => 1,
     recordContact: async () => assert.fail('reveal must not record — only logContactRide writes history'),
   };

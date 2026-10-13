@@ -69,7 +69,7 @@ enum VerificationDocType {
 }
 
 enum SubscriptionStatus {
-  trial
+  trial // legacy, no longer written (trial removed 2026-10-13); drop in a later migration
   active
   expired
   halted
@@ -378,11 +378,11 @@ model User {
 model Subscription {
   id             String             @id @default(uuid()) @db.Uuid
   userId         String             @unique @map("user_id") @db.Uuid
-  status         SubscriptionStatus @default(trial)
-  trialStartedAt DateTime           @default(now()) @map("trial_started_at") @db.Timestamptz(6)
-  trialExpiresAt DateTime           @map("trial_expires_at") @db.Timestamptz(6) // +7d
+  status         SubscriptionStatus @default(expired)
+  trialStartedAt DateTime?          @map("trial_started_at") @db.Timestamptz(6) // legacy, unused since 2026-10-13
+  trialExpiresAt DateTime?          @map("trial_expires_at") @db.Timestamptz(6) // legacy, unused since 2026-10-13
   paidStartedAt  DateTime?          @map("paid_started_at") @db.Timestamptz(6)
-  expiresAt      DateTime?          @map("expires_at") @db.Timestamptz(6) // null in trial; stacks on renewal
+  expiresAt      DateTime?          @map("expires_at") @db.Timestamptz(6) // null = never had a membership; stacks on renewal
   razorpaySubId  String?            @map("razorpay_sub_id")
   razorpayPlanId String?            @map("razorpay_plan_id")
   createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)

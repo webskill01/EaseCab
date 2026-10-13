@@ -8,10 +8,10 @@ function maskPhone(phone) {
   return `••••${String(phone).slice(-4)}`;
 }
 
-/** Flatten the subscription to status + a single validUntil (paid expiry else trial). */
+/** Flatten the subscription to status + validUntil (paid expiry). */
 function toSubscription(sub) {
   if (!sub) return null;
-  return { status: sub.status, validUntil: sub.expiresAt ?? sub.trialExpiresAt ?? null };
+  return { status: sub.status, validUntil: sub.expiresAt ?? null };
 }
 
 /**

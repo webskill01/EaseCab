@@ -169,7 +169,7 @@ test('a tampered cursor → 422 VALIDATION_ERROR', async () => {
 // ---- contact (soft gate) --------------------------------------------------
 
 test('POST /:id/contact reveals the phone (no history); /contact/log records it (idempotent on re-tap)', async () => {
-  const seed = { rides: [makeRide(R0)], subs: { [USER_ID]: { status: 'trial', trialExpiresAt: FUTURE, expiresAt: null } } };
+  const seed = { rides: [makeRide(R0)], subs: { [USER_ID]: { status: 'active', expiresAt: FUTURE } } };
   const { app } = makeApp(seed);
   const res = await request(app).post(`/api/v1/rides/${R0}/contact`).set('Cookie', authCookie).send();
   assert.strictEqual(res.status, 200);
@@ -193,8 +193,16 @@ test('POST /:id/contact with an expired subscription → 403 SUBSCRIPTION_EXPIRE
   assert.strictEqual(res.body.error.code, 'SUBSCRIPTION_EXPIRED');
 });
 
+test('POST /:id/contact with a legacy trial row → 403 SUBSCRIPTION_EXPIRED (no trial since 2026-10-13)', async () => {
+  const seed = { rides: [makeRide(R0)], subs: { [USER_ID]: { status: 'trial', expiresAt: null } } };
+  const { app } = makeApp(seed);
+  const res = await request(app).post(`/api/v1/rides/${R0}/contact`).set('Cookie', authCookie).send();
+  assert.strictEqual(res.status, 403);
+  assert.strictEqual(res.body.error.code, 'SUBSCRIPTION_EXPIRED');
+});
+
 test('POST /:id/contact for an unknown ride → 404; a non-uuid id → 422', async () => {
-  const seed = { rides: [], subs: { [USER_ID]: { status: 'trial', trialExpiresAt: FUTURE } } };
+  const seed = { rides: [], subs: { [USER_ID]: { status: 'active', expiresAt: FUTURE } } };
   const { app } = makeApp(seed);
 
   const missing = await request(app)
@@ -210,7 +218,7 @@ test('POST /:id/contact for an unknown ride → 404; a non-uuid id → 422', asy
 
 test('contact reveals are rate-limited per user → 429 RATE_LIMITED past the cap', async () => {
   const { CONTACT_RATE_LIMIT } = require('@easecab/shared');
-  const seed = { rides: [makeRide(R0)], subs: { [USER_ID]: { status: 'trial', trialExpiresAt: FUTURE } } };
+  const seed = { rides: [makeRide(R0)], subs: { [USER_ID]: { status: 'active', expiresAt: FUTURE } } };
   const { app } = makeApp(seed);
   // Burn the budget (same ride re-tap counts — it's still a reveal).
   for (let i = 0; i < CONTACT_RATE_LIMIT.MAX_PER_WINDOW; i += 1) {

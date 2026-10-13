@@ -1,31 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import { membershipView, MEMBERSHIP_STATE } from '../membership'
 
-const NOW = Date.parse('2026-06-06T10:00:00.000Z')
-const inDays = (d) => new Date(NOW + d * 86400000).toISOString()
-
 describe('membershipView', () => {
-  it('active paid → active state, no banner', () => {
-    const v = membershipView({ status: 'active', isActive: true, expiresAt: inDays(20) }, NOW)
-    expect(v.state).toBe(MEMBERSHIP_STATE.ACTIVE)
+  it('active paid → ACTIVE', () => {
+    expect(membershipView({ status: 'active', isActive: true, expiresAt: '2036-01-01T00:00:00Z' })).toEqual({ state: MEMBERSHIP_STATE.ACTIVE })
   })
 
-  it('trial → trial state with whole days left (ceil)', () => {
-    const v = membershipView({ status: 'trial', isActive: true, trialExpiresAt: inDays(6.4) }, NOW)
-    expect(v.state).toBe(MEMBERSHIP_STATE.TRIAL)
-    expect(v.daysLeft).toBe(7)
+  it('never had a membership → NONE', () => {
+    expect(membershipView({ status: 'expired', isActive: false, expiresAt: null })).toEqual({ state: MEMBERSHIP_STATE.NONE })
   })
 
-  it('trial in its final hours → ending flag, daysLeft 1', () => {
-    const v = membershipView({ status: 'trial', isActive: true, trialExpiresAt: inDays(0.5) }, NOW)
-    expect(v.state).toBe(MEMBERSHIP_STATE.TRIAL)
-    expect(v.daysLeft).toBe(1)
-    expect(v.ending).toBe(true)
+  it('no subscription payload → NONE', () => {
+    expect(membershipView(null)).toEqual({ state: MEMBERSHIP_STATE.NONE })
   })
 
-  it('expired / inactive → expired state', () => {
-    expect(membershipView({ status: 'expired', isActive: false }, NOW).state).toBe(MEMBERSHIP_STATE.EXPIRED)
-    expect(membershipView({ status: 'trial', isActive: false, trialExpiresAt: inDays(-1) }, NOW).state).toBe(MEMBERSHIP_STATE.EXPIRED)
-    expect(membershipView(null, NOW).state).toBe(MEMBERSHIP_STATE.EXPIRED)
+  it('paid window lapsed → EXPIRED', () => {
+    expect(membershipView({ status: 'active', isActive: false, expiresAt: '2026-09-01T00:00:00Z' })).toEqual({ state: MEMBERSHIP_STATE.EXPIRED })
   })
 })
