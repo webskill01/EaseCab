@@ -25,13 +25,27 @@ export function Overlay({ onClose, label, children }) {
   // so without a history entry Back would pop the app's own history and EXIT (TWA).
   // Push one entry on open; Back fires popstate → close. If we instead close via the
   // chevron/Escape, consume the entry we added so Back stays consistent.
+  // The back() is deferred a tick: StrictMode (dev) runs cleanup → remount at once, and
+  // an immediate back() would popstate into the remounted listener and self-close.
+  const pendingBack = useRef(null)
+  const entryId = useRef(null)
   useEffect(() => {
-    window.history.pushState({ __ecOverlay: true }, '')
+    if (pendingBack.current) {
+      clearTimeout(pendingBack.current) // StrictMode remount: keep the entry we already pushed
+      pendingBack.current = null
+    } else {
+      entryId.current = Math.random().toString(36).slice(2)
+      window.history.pushState({ __ecOverlay: entryId.current }, '')
+    }
     const onPop = () => onCloseRef.current()
     window.addEventListener('popstate', onPop)
     return () => {
       window.removeEventListener('popstate', onPop)
-      if (window.history.state && window.history.state.__ecOverlay) window.history.back()
+      pendingBack.current = setTimeout(() => {
+        pendingBack.current = null
+        // Only pop our own entry: another overlay may have pushed on top in the meantime.
+        if (window.history.state && window.history.state.__ecOverlay === entryId.current) window.history.back()
+      }, 0)
     }
   }, [])
 

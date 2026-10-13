@@ -37,14 +37,14 @@ test('feed loads bot rides, switches to verified, and opens the contact sheet', 
   await expect(page.getByText('Amritsar')).toBeVisible()
   await expect(page.getByText('Delhi').first()).toBeVisible()
 
-  // contact soft-gate sheet opens at the action point
+  // contact sheet opens at the action point and auto-reveals the number (active member)
   await page.getByRole('button', { name: /whatsapp/i }).first().click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByRole('button', { name: /contact driver/i })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: /contact driver/i })).toBeVisible()
+  await expect(page.getByText('+919876543210')).toBeVisible()
   await page.keyboard.press('Escape')
 
-  // switch to the verified feed
-  await page.getByRole('tab', { name: /verified rides/i }).click()
+  // switch to the driver-posted (verified) feed
+  await page.getByRole('tab', { name: /driver duties/i }).click()
   await expect(page.getByText('Patiala')).toBeVisible()
 })
 
@@ -55,8 +55,11 @@ test('locking a city via the filter persists and refetches', async ({ page }) =>
 
   await page.getByRole('button', { name: /filter by city/i }).click()
   await page.getByLabel(/search cities/i).fill('moh')
-  await page.getByRole('button', { name: 'Mohali' }).click()
+  await page.getByRole('button', { name: 'Mohali', exact: true }).click()
+  // the overlay is multi-select and stays open — close it with Back
+  await page.getByRole('dialog', { name: /all locations/i }).getByRole('button', { name: /back/i }).click()
 
   // the lock button now shows the chosen city
+  await expect(page.getByRole('dialog', { name: /all locations/i })).toBeHidden()
   await expect(page.getByRole('button', { name: /mohali/i })).toBeVisible()
 })

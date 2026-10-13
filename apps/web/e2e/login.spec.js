@@ -31,7 +31,7 @@ test('phone → OTP → welcome screen → feed (new user)', async ({ page }) =>
   await page.getByRole('button', { name: /enter easecab/i }).click()
   await expect(page).toHaveURL(/\/feed$/)
   // the feed surface renders (sub-tabs are chrome, independent of the data fetch)
-  await expect(page.getByRole('tab', { name: 'Rides', exact: true })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Live Rides', exact: true })).toBeVisible()
 })
 
 test('unauthed visit to /feed redirects to /login', async ({ page }) => {
