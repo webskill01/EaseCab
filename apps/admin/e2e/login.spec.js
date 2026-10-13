@@ -25,7 +25,7 @@ test('login → dashboard, with the guarded route staying in', async ({ page }) 
   await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Verifications' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Verifications', exact: true })).toBeVisible() // nav link, not the dashboard card
 })
 
 test('unauthenticated visit to / redirects to /login', async ({ page }) => {
