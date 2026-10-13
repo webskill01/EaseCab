@@ -4,7 +4,7 @@
  * Single source of truth — never retype the address inline.
  */
 const ADDRESS = Object.freeze({
-  street: 'Balbir Colony, Near Balson Palace',
+  street: 'Unit-39, Ekta Nagar, DMW Road',
   city: 'Patiala',
   state: 'Punjab',
   postalCode: '147001',
@@ -29,9 +29,9 @@ export const COMPANY = Object.freeze({
     ADDRESS.street,
     `${ADDRESS.city}, ${ADDRESS.state} ${ADDRESS.postalCode}, ${ADDRESS.country}`,
   ]),
-  // ponytail: owner's exact pin for the click-through; goo.gl short links are being
-  // retired by Google — if it ever 404s, swap in a maps.app.goo.gl link.
-  mapsUrl: 'https://goo.gl/maps/yEucRMGKHW5rNkt99',
+  // ponytail: address search, not a pin; swap in a maps.app.goo.gl pin if the
+  // geocode lands on the wrong spot.
+  mapsUrl: `https://www.google.com/maps/search/?api=1&query=${ADDRESS_QUERY}`,
   /** Keyless embed — no Maps API key needed for the ?output=embed form. */
   mapsEmbedUrl: `https://www.google.com/maps?q=${ADDRESS_QUERY}&output=embed`,
 })
