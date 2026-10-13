@@ -14,6 +14,7 @@ const BASE_PROFILE = {
 
 async function mockBase(page) {
   await page.route('**/api/v1/auth/refresh', (r) => r.fulfill(ok({ refreshed: true })))
+  await page.route('**/api/v1/cities**', (r) => r.fulfill(ok({ cities: [{ id: 'c-ldh', canonicalName: 'Ludhiana' }] })))
 }
 
 test('L1: Aadhaar → OTP → complete profile → routed to /profile', async ({ page }) => {
@@ -37,9 +38,13 @@ test('L1: Aadhaar → OTP → complete profile → routed to /profile', async ({
   // complete the profile
   await page.setInputFiles('input[type="file"]', { name: 'dp.png', mimeType: 'image/png', buffer: Buffer.from('x') })
   await page.getByLabel('Full name').fill('Amrit Singh')
-  await page.getByLabel('Base city').fill('Ludhiana')
+  // Base city is a city picker (real city, not free text)
+  await page.getByRole('button', { name: 'Base city' }).click()
+  await page.getByLabel('Search city').fill('lud')
+  await page.getByRole('button', { name: 'Ludhiana' }).click()
   await page.getByLabel('About me').fill('Sedan driver')
   await page.getByRole('radio', { name: /sedan/i }).click()
+  await page.getByRole('button', { name: 'Add language' }).click()
   await page.getByRole('button', { name: 'Punjabi' }).click()
   await page.getByRole('button', { name: /save profile/i }).click()
   await expect(page).toHaveURL(/\/profile/)

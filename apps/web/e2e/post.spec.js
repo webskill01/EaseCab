@@ -20,6 +20,9 @@ const FUTURE_DATE = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
 
 async function mockBase(page) {
   await page.route('**/api/v1/auth/refresh', (r) => r.fulfill(ok({ refreshed: true })))
+  // Post is profile-gated client-side; unmocked, the profile query retries and holds the button on "…".
+  await page.route('**/api/v1/me/profile', (r) =>
+    r.fulfill(ok({ id: 'u1', phone: '+919876543210', name: 'Test', profileComplete: true, verification: { aadhaarVerified: false } })))
   await page.route('**/api/v1/cities**', (r) =>
     r.fulfill(ok({ cities: [{ id: 'c-moh', canonicalName: 'Mohali' }, { id: 'c-man', canonicalName: 'Manali' }] })))
 }
@@ -68,12 +71,12 @@ test('paste path: read message, preview, post', async ({ page }) => {
   await expect(page.getByText(/duty posted/i)).toBeVisible()
 })
 
-test('verification gate: 403 shows the verify sheet', async ({ page }) => {
+test('profile gate: a server 403 shows the complete-profile sheet', async ({ page }) => {
   await mockBase(page)
   await page.route('**/api/v1/posted-rides', (r) => r.fulfill(err('VERIFICATION_REQUIRED', 403)))
   await page.goto('/post')
   await fillStructured(page)
   await page.getByRole('button', { name: /post ride/i }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByText(/get verified to post/i)).toBeVisible()
+  await expect(page.getByText(/complete your profile to post/i).first()).toBeVisible()
 })

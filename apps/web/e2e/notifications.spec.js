@@ -24,8 +24,8 @@ test('toggles a ride-alert preference and adds an alert city', async ({ page }) 
 
   await page.goto('/notifications')
 
-  // Toggle "Verified ride alerts" on.
-  const postedToggle = page.getByRole('switch', { name: 'Verified ride alerts' })
+  // Toggle "Verified rides" alerts on.
+  const postedToggle = page.getByRole('switch', { name: /^verified rides/i })
   await expect(postedToggle).toHaveAttribute('aria-checked', 'false')
   await postedToggle.click()
   await expect(postedToggle).toHaveAttribute('aria-checked', 'true')
