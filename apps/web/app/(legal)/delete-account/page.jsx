@@ -33,7 +33,6 @@ export default function DeleteAccount() {
       <ul>
         <li>Your mobile number, name, profile picture, and bio</li>
         <li>Your vehicle details, base city, working city, and language preferences</li>
-        <li>Your chat messages and any images you sent or uploaded</li>
         <li>Your posted ride leads and your contacted-rides history</li>
         <li>Your notification cities and all push-notification device tokens</li>
       </ul>

@@ -87,8 +87,7 @@ export default function PrivacyPolicy() {
           Privacy Policy applies to all payment data.
         </li>
         <li>
-          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures and chat
-          images. Uploads are made through time-limited presigned URLs only — the storage bucket
+          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures. Uploads are made through time-limited presigned URLs only — the storage bucket
           is never publicly accessible.
         </li>
       </ul>
