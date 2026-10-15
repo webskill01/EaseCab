@@ -5,8 +5,8 @@ import { Bolt, Phone } from '@/components/ui/icons'
 import { LanguageMenu } from '@/features/shell/components/LanguageMenu'
 import { COMPANY } from '@/config/company'
 
-/** Play Store listing URL — fill in once the app is live (Step 27c), badge turns into a link. */
-export const PLAY_STORE_URL = null
+/** Play Store listing URL (live 2026-10-15) — the badge renders as a link. */
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.easecab.app'
 
 export async function LandingHeader() {
   const t = await getTranslations('landing')
