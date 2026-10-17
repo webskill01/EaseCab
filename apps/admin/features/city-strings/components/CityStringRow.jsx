@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Search, Check, X, MapPin, ArrowRight } from 'lucide-react'
+import { button, pill, card, input } from '@/lib/ui'
 import { searchAdminCities } from '../services/cityStringsApi'
 
 /**
@@ -25,46 +27,43 @@ export function CityStringRow({ row, onAction }) {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 break-words">
-          <span className="text-sm font-semibold text-ec-ink">{row.rawText}</span>
-          <span className="ml-2 rounded bg-muted px-2 py-0.5 text-xs text-ec-ink60">seen {row.occurrenceCount}×</span>
+    <div className={card}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="break-words font-mono text-sm font-semibold text-ec-ink">{row.rawText}</span>
+          <span className={pill({ tone: row.occurrenceCount >= 5 ? 'amber' : 'slate' })}>seen {row.occurrenceCount}×</span>
         </div>
         <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            disabled={!selected}
-            onClick={() => onAction(row.id, 'resolve', selected?.id)}
-            className="rounded-md bg-ec-blue px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40"
-          >
-            Resolve
+          <button type="button" disabled={!selected} onClick={() => onAction(row.id, 'resolve', selected?.id)} className={button({ variant: 'primary', size: 'sm' })}>
+            <Check size={14} /> Resolve
           </button>
-          <button type="button" onClick={() => onAction(row.id, 'dismiss', undefined)} className="rounded-md border px-3 py-1.5 text-sm font-medium text-ec-ink">
-            Dismiss
+          <button type="button" onClick={() => onAction(row.id, 'dismiss', undefined)} className={button({ size: 'sm' })}>
+            <X size={14} /> Dismiss
           </button>
         </div>
       </div>
 
-      <div className="mt-2 text-sm text-ec-ink60">
-        Maps to: <span className="text-ec-ink">{selected ? selected.canonicalName : '— pick a city —'}</span>
+      <div className="mt-3 flex items-center gap-2 text-sm text-ec-ink60">
+        <ArrowRight size={14} className="text-ec-ink40" /> Maps to:
+        <span className={selected ? pill({ tone: 'green' }) : 'italic text-ec-ink40'}>
+          {selected ? <><MapPin size={12} />{selected.canonicalName}</> : '— pick a city —'}
+        </span>
       </div>
 
-      <form onSubmit={search} className="mt-2 flex gap-2">
-        <input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder="Search city"
-          className="flex-1 rounded-md border px-3 py-1.5 text-sm text-ec-ink"
-        />
-        <button type="submit" className="rounded-md border px-3 py-1.5 text-sm font-medium text-ec-ink">Search</button>
+      <form onSubmit={search} className="mt-3 flex gap-2">
+        <div className="relative flex-1">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ec-ink40" />
+          <input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search city" className={`${input} pl-9`} />
+        </div>
+        <button type="submit" className={button()}>Search</button>
       </form>
 
       {results.length > 0 && (
-        <ul className="mt-2 flex flex-col gap-1">
+        <ul className="mt-2 overflow-hidden rounded-xl border border-ec-line">
           {results.map((c) => (
-            <li key={c.id}>
-              <button type="button" onClick={() => choose(c)} className="w-full rounded-md px-3 py-1.5 text-left text-sm text-ec-ink hover:bg-muted">
+            <li key={c.id} className="border-b border-ec-line last:border-0">
+              <button type="button" onClick={() => choose(c)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ec-ink transition hover:bg-ec-sky">
+                <MapPin size={14} className="text-ec-blue" />
                 {c.canonicalName}
               </button>
             </li>

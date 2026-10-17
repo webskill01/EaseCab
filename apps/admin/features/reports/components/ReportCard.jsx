@@ -1,48 +1,49 @@
 'use client'
 
-const REASON_LABEL = {
-  fake: 'Fake', spam: 'Spam', wrong_info: 'Wrong info', inappropriate: 'Inappropriate', other: 'Other',
-}
+import { ArrowRight, ImageIcon, X, Trash2 } from 'lucide-react'
+import { button, pill, card, REASONS } from '@/lib/ui'
 
 export function ReportCard({ item, onAction }) {
   const { reporter, target } = item
-  const route = target ? [target.fromCity, target.toCity].filter(Boolean).join(' → ') || '—' : 'target gone'
+  const reason = REASONS[item.reason] ?? { label: item.reason, tone: 'slate' }
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 break-words">
-          <span className="rounded bg-muted px-2 py-0.5 text-xs font-semibold uppercase text-ec-ink">
-            {REASON_LABEL[item.reason] ?? item.reason}
-          </span>
-          {target && (
-            <span className="ml-2 rounded bg-muted px-2 py-0.5 text-xs text-ec-ink60">{target.kind}</span>
-          )}
-          <span className="ml-2 text-sm text-ec-ink60">by {reporter.name ?? '—'}</span>
-          <span className="ml-1 text-sm text-ec-ink60">{reporter.phoneMasked}</span>
-        </div>
+    <div className={card}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={pill({ tone: reason.tone })}>{reason.label}</span>
+        {target && <span className={pill({ tone: target.kind === 'posted' ? 'blue' : 'violet' })}>{target.kind}</span>}
+        <span className="text-sm text-ec-ink60">by {reporter.name ?? '—'}</span>
+        <span className="font-mono text-sm text-ec-ink60">{reporter.phoneMasked}</span>
       </div>
 
-      <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 break-words text-sm text-ec-ink60 sm:grid-cols-2">
-        <div><dt className="inline">Route: </dt><dd className="inline text-ec-ink">{route}</dd></div>
-        <div><dt className="inline">Ride status: </dt><dd className="inline text-ec-ink">{target?.status ?? '—'}</dd></div>
-        {target?.displayText && <div className="col-span-2"><dt className="inline">Text: </dt><dd className="inline text-ec-ink">{target.displayText}</dd></div>}
-        {target?.posterName && <div><dt className="inline">Poster: </dt><dd className="inline text-ec-ink">{target.posterName}</dd></div>}
-        {item.remarks && <div className="col-span-2"><dt className="inline">Remarks: </dt><dd className="inline text-ec-ink">{item.remarks}</dd></div>}
-      </dl>
+      <div className="mt-3 rounded-xl bg-slate-50 p-3">
+        {target ? (
+          <div className="flex flex-wrap items-center gap-2 font-semibold text-ec-ink">
+            <span>{target.fromCity ?? '—'}</span>
+            <ArrowRight size={15} className="text-ec-blue" />
+            <span>{target.toCity ?? '—'}</span>
+            {target.status && <span className={`${pill({ tone: 'slate' })} ml-auto`}>{target.status}</span>}
+          </div>
+        ) : (
+          <p className="text-sm italic text-ec-ink60">target gone</p>
+        )}
+        {target?.displayText && <p className="mt-2 break-words text-sm text-ec-ink60">{target.displayText}</p>}
+        {target?.posterName && <p className="mt-1 text-xs text-ec-ink60">Poster: <span className="text-ec-ink">{target.posterName}</span></p>}
+      </div>
 
-      {item.screenshotUrl && (
-        <a href={item.screenshotUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-ec-blue underline">
-          Screenshot
-        </a>
-      )}
+      {item.remarks && <p className="mt-3 break-words border-l-2 border-amber-300 pl-3 text-sm text-ec-ink">{item.remarks}</p>}
 
-      <div className="mt-4 flex gap-2">
-        <button type="button" onClick={() => onAction(item.id, 'dismiss')} className="rounded-md border px-3 py-1.5 text-sm font-medium text-ec-ink">
-          Dismiss
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => onAction(item.id, 'dismiss')} className={button({ size: 'sm' })}>
+          <X size={14} /> Dismiss
         </button>
-        <button type="button" onClick={() => onAction(item.id, 'remove')} className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white">
-          Remove ride
+        <button type="button" onClick={() => onAction(item.id, 'remove')} className={button({ variant: 'danger', size: 'sm' })}>
+          <Trash2 size={14} /> Remove ride
         </button>
+        {item.screenshotUrl && (
+          <a href={item.screenshotUrl} target="_blank" rel="noreferrer" className="ml-auto flex items-center gap-1 text-xs font-medium text-ec-blue hover:underline">
+            <ImageIcon size={14} /> Screenshot
+          </a>
+        )}
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchWaGroups, setWaGroupEnabled, setAllWaGroupsEnabled } from '../services/waGroupsApi'
 
 /**
@@ -15,10 +15,10 @@ export function useWaGroups() {
   const [status, setStatusState] = useState('all')
   const [q, setQState] = useState('')
 
-  const query = useQuery({ queryKey: ['waGroups', page, status, q], queryFn: () => fetchWaGroups({ page, status, q }) })
+  const query = useQuery({ queryKey: ['waGroups', page, status, q], queryFn: () => fetchWaGroups({ page, status, q }), placeholderData: keepPreviousData })
   const invalidate = () => qc.invalidateQueries({ queryKey: ['waGroups'] })
 
-  const toggle = useMutation({ mutationFn: ({ id, enabled }) => setWaGroupEnabled(id, enabled), onSuccess: invalidate })
+  const toggle = useMutation({ mutationFn: ({ id, enabled }) => setWaGroupEnabled(id, enabled), onSuccess: invalidate, meta: { success: ({ enabled }) => (enabled ? 'Group switched on' : 'Group switched off') } })
   const bulk = useMutation({ mutationFn: (enabled) => setAllWaGroupsEnabled(enabled, q), onSuccess: invalidate })
 
   return {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 import { adminMe } from '../services/adminApi'
 
 /**
@@ -27,8 +28,8 @@ export function AdminGuard({ children }) {
 
   if (status === 'authed') return children
   return (
-    <div className="flex min-h-screen items-center justify-center text-ec-ink60">
-      Checking access…
+    <div className="flex min-h-screen items-center justify-center gap-2 bg-ec-bg text-ec-ink60">
+      <Loader2 size={18} className="animate-spin text-ec-blue" /> Checking access…
     </div>
   )
 }

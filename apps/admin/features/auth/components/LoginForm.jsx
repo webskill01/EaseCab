@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { Car, Mail, Lock, Loader2 } from 'lucide-react'
 import { useAdminLogin } from '../hooks/useAdminLogin'
+import { button, input } from '@/lib/ui'
 
 const MESSAGES = {
   AUTH_REQUIRED: 'Invalid email or password.',
@@ -16,41 +18,37 @@ export function LoginForm() {
   const [password, setPassword] = useState('')
 
   return (
-    <form
-      onSubmit={(e) => { e.preventDefault(); submit(email, password) }}
-      className="mx-auto mt-24 flex w-full max-w-sm flex-col gap-4 rounded-ec-card border bg-card p-6 shadow-ec-card"
-    >
-      <h1 className="text-lg font-semibold text-ec-ink">EaseCab Admin</h1>
-      <input
-        className="rounded-md border px-3 py-2"
-        type="email"
-        placeholder="Email"
-        autoComplete="username"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        className="rounded-md border px-3 py-2"
-        type="password"
-        placeholder="Password"
-        autoComplete="current-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      {errorKey && (
-        <p role="alert" className="text-sm text-ec-danger">
-          {MESSAGES[errorKey] ?? MESSAGES.INTERNAL_ERROR}
-        </p>
-      )}
-      <button
-        className="rounded-md bg-ec-blue px-3 py-2 font-medium text-white disabled:opacity-60"
-        type="submit"
-        disabled={pending}
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-ec-blueInk p-4">
+      <form
+        onSubmit={(e) => { e.preventDefault(); submit(email, password) }}
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
       >
-        {pending ? 'Signing in…' : 'Sign in'}
-      </button>
-    </form>
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-ec-blue to-ec-blueInk text-white shadow-lg shadow-ec-blue/40">
+          <Car size={26} />
+        </span>
+        <h1 className="mt-4 text-center text-xl font-bold text-ec-ink">EaseCab Admin</h1>
+        <p className="mt-1 text-center text-sm text-ec-ink60">Sign in to manage the platform</p>
+
+        <div className="mt-6 flex flex-col gap-3">
+          <div className="relative">
+            <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ec-ink40" />
+            <input className={`${input} h-11 pl-9`} type="email" placeholder="Email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="relative">
+            <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ec-ink40" />
+            <input className={`${input} h-11 pl-9`} type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          {errorKey && (
+            <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-ec-danger">
+              {MESSAGES[errorKey] ?? MESSAGES.INTERNAL_ERROR}
+            </p>
+          )}
+          <button className={`${button({ variant: 'primary' })} mt-1 h-11`} type="submit" disabled={pending}>
+            {pending && <Loader2 size={16} className="animate-spin" />}
+            {pending ? 'Signing in…' : 'Sign in'}
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }

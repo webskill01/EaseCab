@@ -29,6 +29,6 @@ test('users directory lists a user and soft-deletes them', async ({ page }) => {
   await page.goto('/users')
   await expect(page.getByText('••••3210')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Users/i })).toBeVisible()
-  await page.getByRole('button', { name: /delete/i }).click()
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await expect.poll(() => deleted).toBe(true)
 })

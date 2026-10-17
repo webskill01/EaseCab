@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchBotFilters, addBotFilter, removeBotFilter } from '../services/botFiltersApi'
 
 /**
@@ -14,11 +14,11 @@ export function useBotFilters(initialList) {
   const [page, setPage] = useState(1)
   const [q, setQState] = useState('')
 
-  const query = useQuery({ queryKey: ['botFilters', list, page, q], queryFn: () => fetchBotFilters(list, page, q) })
+  const query = useQuery({ queryKey: ['botFilters', list, page, q], queryFn: () => fetchBotFilters(list, page, q), placeholderData: keepPreviousData })
   const invalidate = () => qc.invalidateQueries({ queryKey: ['botFilters', list] })
 
   const add = useMutation({ mutationFn: (value) => addBotFilter(list, value), onSuccess: invalidate })
-  const remove = useMutation({ mutationFn: (id) => removeBotFilter(id), onSuccess: invalidate })
+  const remove = useMutation({ mutationFn: (id) => removeBotFilter(id), onSuccess: invalidate, meta: { success: 'Removed' } })
 
   return {
     list,

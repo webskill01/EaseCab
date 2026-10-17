@@ -1,4 +1,5 @@
-import { QueryClient, isServer } from '@tanstack/react-query'
+import { QueryClient, MutationCache, isServer } from '@tanstack/react-query'
+import { toast } from './toast'
 
 /**
  * Builds a QueryClient with admin defaults: 60s staleTime and no retries on 4xx
@@ -6,7 +7,16 @@ import { QueryClient, isServer } from '@tanstack/react-query'
  * @returns {QueryClient}
  */
 function makeQueryClient() {
-  return new QueryClient({
+  const client = new QueryClient({
+    // Every mutation reports its outcome as a toast (see lib/toast.js).
+    mutationCache: new MutationCache({
+      onSuccess: (_data, variables, _ctx, mutation) => {
+        const msg = mutation.meta?.success
+        if (msg) toast(typeof msg === 'function' ? msg(variables) : msg)
+        client.invalidateQueries({ queryKey: ['admin-stats'] }) // sidebar queue badges
+      },
+      onError: (error) => toast(error?.message || 'Something went wrong', 'error'),
+    }),
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000,
@@ -18,6 +28,7 @@ function makeQueryClient() {
       },
     },
   })
+  return client
 }
 
 let browserQueryClient

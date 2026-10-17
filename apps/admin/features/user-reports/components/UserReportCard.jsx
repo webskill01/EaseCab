@@ -1,8 +1,8 @@
 'use client'
 
-const REASON_LABEL = {
-  fake: 'Fake', spam: 'Spam', wrong_info: 'Wrong info', inappropriate: 'Inappropriate', other: 'Other',
-}
+import { ImageIcon, Eye, EyeOff } from 'lucide-react'
+import { Avatar } from '@/features/shell/components/Avatar'
+import { button, pill, card, REASONS } from '@/lib/ui'
 
 /**
  * One reported user + all their open reports. `reinstate` un-hides the driver (clears
@@ -11,35 +11,45 @@ const REASON_LABEL = {
 export function UserReportCard({ item, onAction }) {
   const { user, reportCount, reports } = item
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 break-words">
-          <span className="text-sm font-semibold text-ec-ink">{user.name ?? '—'}</span>
-          {user.flagged && <span className="ml-2 rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Hidden</span>}
-          <span className="ml-2 text-sm text-ec-ink60">{[user.baseCity, user.vehicleType].filter(Boolean).join(' · ') || '—'}</span>
+    <div className={card}>
+      <div className="flex items-start gap-3">
+        <Avatar name={user.name} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-ec-ink">{user.name ?? '—'}</span>
+            {user.flagged && <span className={pill({ tone: 'red' })}>Hidden</span>}
+          </div>
+          <p className="mt-0.5 text-sm text-ec-ink60">{[user.baseCity, user.vehicleType].filter(Boolean).join(' · ') || '—'}</p>
         </div>
-        <span className="shrink-0 text-xs text-ec-ink60">{reportCount} report{reportCount === 1 ? '' : 's'}</span>
+        <span className={pill({ tone: 'amber' })}>{`${reportCount} report${reportCount === 1 ? '' : 's'}`}</span>
       </div>
 
-      <ul className="mt-3 flex flex-col gap-2">
-        {reports.map((r) => (
-          <li key={r.id} className="rounded-md bg-muted px-3 py-2 text-sm">
-            <span className="rounded bg-card px-2 py-0.5 text-xs font-semibold uppercase text-ec-ink">{REASON_LABEL[r.reason] ?? r.reason}</span>
-            <span className="ml-2 text-ec-ink60">by {r.reporter.name ?? '—'} {r.reporter.phoneMasked}</span>
-            {r.remarks && <p className="mt-1 text-ec-ink">{r.remarks}</p>}
-            {r.screenshotUrl && (
-              <a href={r.screenshotUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-ec-blue underline">Screenshot</a>
-            )}
-          </li>
-        ))}
+      <ul className="mt-4 flex flex-col gap-2">
+        {reports.map((r) => {
+          const reason = REASONS[r.reason] ?? { label: r.reason, tone: 'slate' }
+          return (
+            <li key={r.id} className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={pill({ tone: reason.tone })}>{reason.label}</span>
+                <span className="text-ec-ink60">by {r.reporter.name ?? '—'} {r.reporter.phoneMasked}</span>
+                {r.screenshotUrl && (
+                  <a href={r.screenshotUrl} target="_blank" rel="noreferrer" className="ml-auto flex items-center gap-1 text-xs font-medium text-ec-blue hover:underline">
+                    <ImageIcon size={13} /> Screenshot
+                  </a>
+                )}
+              </div>
+              {r.remarks && <p className="mt-1.5 break-words text-ec-ink">{r.remarks}</p>}
+            </li>
+          )
+        })}
       </ul>
 
-      <div className="mt-4 flex gap-2">
-        <button type="button" onClick={() => onAction(user.id, 'reinstate')} className="rounded-md border px-3 py-1.5 text-sm font-medium text-ec-ink">
-          Reinstate
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" onClick={() => onAction(user.id, 'reinstate')} className={button({ variant: 'success', size: 'sm' })}>
+          <Eye size={14} /> Reinstate
         </button>
-        <button type="button" onClick={() => onAction(user.id, 'uphold')} className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white">
-          Keep hidden
+        <button type="button" onClick={() => onAction(user.id, 'uphold')} className={button({ variant: 'danger', size: 'sm' })}>
+          <EyeOff size={14} /> Keep hidden
         </button>
       </div>
     </div>

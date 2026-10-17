@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchUserReports, reviewUserReport } from '../services/userReportsApi'
 
 /**
@@ -12,15 +12,17 @@ export function useUserReports() {
   const qc = useQueryClient()
   const [page, setPage] = useState(1)
 
-  const query = useQuery({ queryKey: ['user-reports', page], queryFn: () => fetchUserReports(page) })
+  const query = useQuery({ queryKey: ['user-reports', page], queryFn: () => fetchUserReports(page), placeholderData: keepPreviousData })
   const review = useMutation({
     mutationFn: ({ userId, action }) => reviewUserReport(userId, action),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['user-reports'] }),
+    meta: { success: ({ action }) => (action === 'reinstate' ? 'Driver reinstated' : 'Kept hidden') },
   })
 
   return {
     items: query.data?.users ?? [],
     total: query.data?.meta?.total ?? 0,
+    limit: query.data?.meta?.limit ?? 20,
     page,
     setPage,
     isLoading: query.isLoading,

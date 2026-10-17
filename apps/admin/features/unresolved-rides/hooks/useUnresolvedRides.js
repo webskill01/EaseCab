@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchUnresolvedRides, actOnUnresolvedRide } from '../services/unresolvedRidesApi'
 
 /**
@@ -12,17 +12,19 @@ export function useUnresolvedRides() {
   const qc = useQueryClient()
   const [page, setPage] = useState(1)
 
-  const query = useQuery({ queryKey: ['unresolvedRides', page], queryFn: () => fetchUnresolvedRides(page) })
+  const query = useQuery({ queryKey: ['unresolvedRides', page], queryFn: () => fetchUnresolvedRides(page), placeholderData: keepPreviousData })
   const invalidate = () => qc.invalidateQueries({ queryKey: ['unresolvedRides'] })
 
   const action = useMutation({
     mutationFn: ({ id, action, side, cityId }) => actOnUnresolvedRide(id, action, { side, cityId }),
     onSuccess: invalidate,
+    meta: { success: ({ action }) => (action === 'hide' ? 'Ride hidden' : 'City set') },
   })
 
   return {
     items: query.data?.rides ?? [],
     total: query.data?.meta?.total ?? 0,
+    limit: query.data?.meta?.limit ?? 20,
     page, setPage,
     isLoading: query.isLoading,
     isError: query.isError,

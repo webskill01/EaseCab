@@ -1,5 +1,8 @@
 'use client'
 
+import { Check, X, ExternalLink, Car } from 'lucide-react'
+import { Avatar } from '@/features/shell/components/Avatar'
+import { button, pill, card } from '@/lib/ui'
 import { BadgeControl } from './BadgeControl'
 
 const IMG_LABELS = [
@@ -15,30 +18,36 @@ const IMG_LABELS = [
 function SubmissionBlock({ submission, onApprove, onReject }) {
   const { images } = submission
   return (
-    <div className="rounded-md border border-ec-line p-3">
-      <div className="flex items-start justify-between gap-2">
-        <span className="shrink-0 rounded bg-muted px-2 py-0.5 text-xs font-semibold uppercase text-ec-ink">{submission.docType}</span>
-        <span className="min-w-0 break-words text-right text-sm text-ec-ink60">Verified name: <span className="text-ec-ink">{submission.verifiedName ?? '—'}</span></span>
+    <div className="rounded-xl border border-ec-line bg-slate-50/70 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className={`${pill({ tone: submission.docType === 'dl' ? 'blue' : 'violet' })} uppercase`}>{submission.docType}</span>
+        <span className="min-w-0 break-words text-sm text-ec-ink60">Verified name: <span className="font-medium text-ec-ink">{submission.verifiedName ?? '—'}</span></span>
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         {IMG_LABELS.map(([key, label]) =>
           images[key] ? (
-            <a key={key} href={images[key]} target="_blank" rel="noreferrer" className="text-xs text-ec-blue underline">
-              {label}
+            <a
+              key={key}
+              href={images[key]}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 rounded-lg border border-ec-line bg-white px-2.5 py-1 text-xs font-medium text-ec-blue transition hover:border-ec-blue hover:bg-ec-sky"
+            >
+              {label} <ExternalLink size={12} />
             </a>
           ) : (
-            <span key={key} className="text-xs text-ec-ink40">{label}: none</span>
+            <span key={key} className="rounded-lg border border-dashed border-ec-line px-2.5 py-1 text-xs text-ec-ink40">{label}: none</span>
           ),
         )}
       </div>
 
       <div className="mt-3 flex gap-2">
-        <button type="button" onClick={() => onApprove(submission.id)} className="rounded-md bg-ec-blue px-3 py-1.5 text-sm font-medium text-white">
-          Approve
+        <button type="button" onClick={() => onApprove(submission.id)} className={button({ variant: 'success', size: 'sm' })}>
+          <Check size={14} /> Approve
         </button>
-        <button type="button" onClick={() => onReject(submission)} className="rounded-md border px-3 py-1.5 text-sm font-medium text-ec-ink">
-          Reject
+        <button type="button" onClick={() => onReject(submission)} className={button({ variant: 'dangerOutline', size: 'sm' })}>
+          <X size={14} /> Reject
         </button>
       </div>
     </div>
@@ -55,21 +64,25 @@ export function VerificationCard({ group, onApprove, onReject, onBadge }) {
   const { user, submissions } = group
   const car = [user.carMake, user.carModel, user.carRegNo].filter(Boolean).join(' ') || '—'
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 break-words">
-          <span className="text-sm font-medium text-ec-ink">{user.name ?? '—'}</span>
-          <span className="ml-2 text-sm text-ec-ink60">{user.phoneMasked}</span>
-          <span className="ml-2 text-xs text-ec-ink40">({submissions.length} doc{submissions.length === 1 ? '' : 's'})</span>
+    <div className={card}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <Avatar name={user.name} />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2">
+              <span className="font-semibold text-ec-ink">{user.name ?? '—'}</span>
+              <span className="font-mono text-sm text-ec-ink60">{user.phoneMasked}</span>
+            </div>
+            <p className="mt-0.5 flex items-center gap-1.5 text-sm text-ec-ink60">
+              <Car size={14} className="text-ec-ink40" /> <span className="text-ec-ink">{car}</span>
+              <span className="text-xs text-ec-ink40">· {submissions.length} doc{submissions.length === 1 ? '' : 's'}</span>
+            </p>
+          </div>
         </div>
-        <div className="shrink-0">
-          <BadgeControl status={user.verificationStatus} onChange={(status) => onBadge(user.id, status)} />
-        </div>
+        <BadgeControl status={user.verificationStatus} onChange={(status) => onBadge(user.id, status)} />
       </div>
 
-      <p className="mt-1 text-sm text-ec-ink60">Car: <span className="text-ec-ink">{car}</span></p>
-
-      <div className="mt-3 flex flex-col gap-3">
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
         {submissions.map((submission) => (
           <SubmissionBlock key={submission.id} submission={submission} onApprove={onApprove} onReject={onReject} />
         ))}
