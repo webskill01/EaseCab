@@ -18,4 +18,5 @@ module.exports = {
   ...require('./reports.schema'),
   ...require('./users.schema'),
   ...require('./blocks.schema'),
+  ...require('./memberSync.schema'),
 };

@@ -129,6 +129,10 @@ const serverEnvSchema = envSchema.extend({
   // mounted. FLEET_PEERS is a JSON array of panels we mirror admin blocks to:
   // [{"name":"fleet","url":"https://control.example.com","token":"<its admin token>"}].
   FLEET_SYNC_TOKEN: z.string().min(32).optional(),
+  // Read-only member sync for the WhatsApp manager bots (who paid on the app, until
+  // when). Unset → /member-sync is not mounted. Separate from FLEET_SYNC_TOKEN, which
+  // can write block lists.
+  MEMBER_SYNC_TOKEN: z.string().min(32).optional(),
   FLEET_PEERS: z
     .string()
     .default('[]')
