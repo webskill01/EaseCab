@@ -21,6 +21,11 @@ function createAdminStatsRouter({ service, requireAdmin }) {
     sendSuccess(res, { data: { stats } });
   });
 
+  router.get('/growth', async (_req, res) => {
+    const growth = await service.growth();
+    sendSuccess(res, { data: { growth } });
+  });
+
   return router;
 }
 

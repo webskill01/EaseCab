@@ -4,6 +4,7 @@ import { LogoutButton } from './LogoutButton'
 // The four feature sections (24b–24e). Their pages are stubs until each sub-step lands.
 const NAV = [
   { href: '/', label: 'Dashboard' },
+  { href: '/statistics', label: 'Statistics' },
   { href: '/verifications', label: 'Verifications' },
   { href: '/reports', label: 'Reports' },
   { href: '/user-reports', label: 'User Reports' },

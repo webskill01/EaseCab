@@ -59,7 +59,16 @@ const USER_REPORT_ACTION = Object.freeze({ REINSTATE: 'reinstate', UPHOLD: 'upho
 /** User-reports queue tuning. Offset pagination is acceptable for admin (§8). */
 const ADMIN_USER_REPORTS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 
+/** Statistics tab (growth since public launch). Days bucket in IST; the Play
+ * reviewer account is excluded so its pinned membership never counts as paid. */
+const ADMIN_STATISTICS = Object.freeze({
+  LAUNCH_DATE: '2026-10-16',
+  TIMEZONE: 'Asia/Kolkata',
+  EXCLUDED_PHONES: Object.freeze(['+919876543210']),
+});
+
 module.exports = {
+  ADMIN_STATISTICS,
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
