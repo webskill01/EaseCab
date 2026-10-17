@@ -71,6 +71,9 @@ const { createAdminBotFiltersRepository } = require('./features/admin/adminBotFi
 const { createAdminBotFiltersService } = require('./features/admin/adminBotFilters.service');
 const { createAdminBotFiltersRouter } = require('./features/admin/adminBotFilters.route');
 const { createFleetSyncRouter } = require('./features/fleetSync/fleetSync.route');
+const { createMemberSyncRepository } = require('./features/memberSync/memberSync.repository');
+const { createMemberSyncService } = require('./features/memberSync/memberSync.service');
+const { createMemberSyncRouter } = require('./features/memberSync/memberSync.route');
 const { createAdminWaGroupsRepository } = require('./features/admin/adminWaGroups.repository');
 const { createAdminWaGroupsService } = require('./features/admin/adminWaGroups.service');
 const { createAdminWaGroupsRouter } = require('./features/admin/adminWaGroups.route');
@@ -263,6 +266,14 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     if (config.fleet && config.fleet.syncToken) {
       v1.use('/fleet', createFleetSyncRouter({
         service: adminBotFiltersService, repo: adminBotFiltersRepo, token: config.fleet.syncToken, redis, logger,
+      }));
+    }
+
+    // Read-only member sync for the WhatsApp manager bots — mounted only when MEMBER_SYNC_TOKEN is set.
+    if (config.memberSync && config.memberSync.token) {
+      v1.use('/member-sync', createMemberSyncRouter({
+        service: createMemberSyncService({ repo: createMemberSyncRepository({ prisma }) }),
+        token: config.memberSync.token, redis, logger,
       }));
     }
 

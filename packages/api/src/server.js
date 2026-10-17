@@ -72,6 +72,8 @@ async function main() {
     verificationEnabled: serverEnv.VERIFICATION_ENABLED,
     // Fleet control-panel peer sync (Phase 17.5).
     fleet: { syncToken: serverEnv.FLEET_SYNC_TOKEN, peers: serverEnv.FLEET_PEERS },
+    // Read-only member sync for the manager bots.
+    memberSync: { token: serverEnv.MEMBER_SYNC_TOKEN },
   };
 
   const identity = createFirebaseIdentity({

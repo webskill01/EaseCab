@@ -24,4 +24,5 @@ module.exports = {
   ...require('./admin'),
   ...require('./reports'),
   ...require('./users'),
+  ...require('./memberSync'),
 };
