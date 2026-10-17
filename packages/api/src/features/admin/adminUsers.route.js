@@ -24,6 +24,12 @@ function createAdminUsersRouter({ service, requireAdmin }) {
     sendSuccess(res, { data: { users: items }, meta: { page, limit, total } });
   });
 
+  // Full profile for the user page (masked phone, presigned images, payments, counts).
+  router.get('/:userId', validate(adminUserIdParamSchema, 'params'), async (req, res) => {
+    const user = await service.detail(req.valid.params.userId);
+    sendSuccess(res, { data: { user } });
+  });
+
   // Soft-delete or restore (flag only).
   router.patch(
     '/:userId',

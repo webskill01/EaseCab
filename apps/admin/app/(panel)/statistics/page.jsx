@@ -19,7 +19,7 @@ const TOTALS = [
   { key: 'paidAccounts', label: 'Paid accounts', icon: Crown, tone: 'green' },
   { key: 'payments', label: 'Payments', icon: Receipt, tone: 'amber' },
   { key: 'revenue', label: 'Revenue', icon: IndianRupee, tone: 'violet', fmt: inr },
-  { key: 'activeMembers', label: 'Active members', icon: Users, tone: 'blue', hint: 'right now, any join date' },
+  { key: 'activeMembers', label: 'Active members', icon: Users, tone: 'blue', hint: 'right now, joined since launch' },
 ]
 
 const METRICS = [

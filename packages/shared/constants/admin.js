@@ -27,6 +27,10 @@ const USER_ACTION = Object.freeze({ DELETE: 'delete', RESTORE: 'restore' });
 /** User-directory queue tuning. Offset pagination is acceptable for admin (§8). */
 const ADMIN_USERS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 
+/** Users directory filters: membership state + join window (launch = ADMIN_STATISTICS.LAUNCH_DATE). */
+const USER_PLAN_FILTER = Object.freeze({ ALL: 'all', ACTIVE: 'active', EXPIRED: 'expired', NONE: 'none' });
+const USER_JOINED_FILTER = Object.freeze({ LAUNCH: 'launch', ALL: 'all' });
+
 /** City-string queue verbs (Step 24e). `resolve` writes a city_aliases row (feeds
  * CityResolverService exact match); `dismiss` marks the row reviewed without aliasing. */
 const CITY_STRING_ACTION = Object.freeze({ RESOLVE: 'resolve', DISMISS: 'dismiss' });
@@ -62,7 +66,7 @@ const ADMIN_USER_REPORTS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 /** Statistics tab (growth since public launch). Days bucket in IST; the Play
  * reviewer account is excluded so its pinned membership never counts as paid. */
 const ADMIN_STATISTICS = Object.freeze({
-  LAUNCH_DATE: '2026-10-16',
+  LAUNCH_DATE: '2026-10-15',
   TIMEZONE: 'Asia/Kolkata',
   EXCLUDED_PHONES: Object.freeze(['+919876543210']),
 });
@@ -70,7 +74,7 @@ const ADMIN_STATISTICS = Object.freeze({
 module.exports = {
   ADMIN_STATISTICS,
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
-  USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
+  USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
   USER_REPORT_ACTION, ADMIN_USER_REPORTS,
 };

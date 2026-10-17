@@ -234,7 +234,7 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
 
     // User management (Step 24d) — searchable directory + flag-only soft-delete/restore.
     const adminUsersRepo = createAdminUsersRepository({ prisma });
-    const adminUsersService = createAdminUsersService({ repo: adminUsersRepo });
+    const adminUsersService = createAdminUsersService({ repo: adminUsersRepo, r2: uploads });
     v1.use('/admin/users', createAdminUsersRouter({ service: adminUsersService, requireAdmin }));
 
     // City-string resolution (Step 24e) — admin clears unresolved_city_strings by

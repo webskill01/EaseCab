@@ -70,13 +70,16 @@ function createAdminStatsRepository({ prisma }) {
         ORDER BY g.day DESC`;
     },
 
-    /** Members with time left right now (any join date), excluding reviewer phones. */
+    /** Members with time left right now who joined since launch, excluding reviewer phones. */
     async activeMembers() {
       return prisma.subscription.count({
         where: {
           status: SUBSCRIPTION_STATUS.ACTIVE,
           expiresAt: { gt: new Date() },
-          user: { phone: { notIn: [...ADMIN_STATISTICS.EXCLUDED_PHONES] } },
+          user: {
+            phone: { notIn: [...ADMIN_STATISTICS.EXCLUDED_PHONES] },
+            createdAt: { gte: new Date(`${ADMIN_STATISTICS.LAUNCH_DATE}T00:00:00+05:30`) }, // pre-launch = test data
+          },
         },
       });
     },

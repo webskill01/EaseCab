@@ -22,7 +22,8 @@ function buildCsp() {
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    // Profile/KYC photos are presigned Cloudflare R2 GETs.
+    "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com",
     "font-src 'self'",
     `connect-src 'self' ${apiOrigin}`.trim(),
     "frame-ancestors 'none'",

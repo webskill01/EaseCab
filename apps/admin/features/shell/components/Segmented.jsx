@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils'
 
-/** Pill-style tab switcher. options: [{ id, label }]. Scrolls sideways on phones. */
+/** Pill-style tab switcher. options: [{ id, label }]. Wraps onto a second line on phones. */
 export function Segmented({ options, value, onChange }) {
   return (
     <div className="max-w-full overflow-x-auto">
-      <div className="inline-flex gap-1 rounded-xl bg-slate-200/70 p-1">
+      <div className="inline-flex flex-wrap gap-1 rounded-xl bg-slate-200/70 p-1">
         {options.map((o) => (
           <button
             key={o.id}

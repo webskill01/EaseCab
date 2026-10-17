@@ -63,3 +63,26 @@ test('setStatus on a missing user → NOT_FOUND', async () => {
   const svc = createAdminUsersService({ repo });
   await assert.rejects(() => svc.setStatus('missing', { action: 'delete' }), /NOT_FOUND|not found/i);
 });
+
+test('list presigns the profile pic best-effort and never returns the raw key', async () => {
+  const { repo } = fakeRepo({ async listUsers() { return { rows: [{ ...ROW, profilePicUrl: 'dp/1.jpg' }, { ...ROW, profilePicUrl: null }], total: 2 }; } });
+  const r2 = { async presignGet({ key }) { return `https://signed/${key}`; } };
+  const out = await createAdminUsersService({ repo, r2 }).list({ page: 1, limit: 20, status: 'all' });
+  assert.strictEqual(out.items[0].avatarUrl, 'https://signed/dp/1.jpg');
+  assert.strictEqual(out.items[1].avatarUrl, null);
+  assert.strictEqual('profilePicUrl' in out.items[0], false);
+});
+
+test('detail returns rupee payments, images and counts; NOT_FOUND for unknown id', async () => {
+  const detail = { ...ROW, profilePicUrl: null, licenseUrl: 'kyc/l.jpg', rcUrl: null, carFrontUrl: null, carBackUrl: null,
+    payments: [{ id: 'p1', amount: 14900, status: 'captured', createdAt: new Date() }], _count: { postedRides: 3 } };
+  const { repo } = fakeRepo({ async findDetail(id) { return id === USER_ID ? detail : null; } });
+  const r2 = { async presignGet() { throw new Error('r2 down'); } };
+  const svc = createAdminUsersService({ repo, r2 });
+  const u = await svc.detail(USER_ID);
+  assert.strictEqual(u.payments[0].amount, 149);
+  assert.deepStrictEqual(u.images, { licence: null, rc: null, carFront: null, carBack: null });
+  assert.deepStrictEqual(u.counts, { postedRides: 3 });
+  assert.strictEqual(u.phone, undefined);
+  await assert.rejects(svc.detail('missing'), (e) => e.code === 'NOT_FOUND');
+});

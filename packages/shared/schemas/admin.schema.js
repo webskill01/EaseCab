@@ -3,7 +3,7 @@
 const { z } = require('zod');
 const {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
-  USER_ACTION, ADMIN_USERS, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
+  USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
   USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
 } = require('../constants/admin');
@@ -66,6 +66,8 @@ const adminUsersQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(ADMIN_USERS.MAX_PAGE_SIZE).default(ADMIN_USERS.PAGE_SIZE),
   q: z.string().trim().min(1).max(100).optional(),
   status: z.enum(['active', 'deleted', 'all']).default('active'),
+  plan: z.enum(Object.values(USER_PLAN_FILTER)).default(USER_PLAN_FILTER.ALL),
+  joined: z.enum(Object.values(USER_JOINED_FILTER)).default(USER_JOINED_FILTER.ALL),
 });
 
 /** Soft-delete or restore a user (flag only). */

@@ -12,12 +12,12 @@ function wrapper({ children }) {
 beforeEach(() => vi.restoreAllMocks())
 
 describe('useUsers', () => {
-  it('loads the directory with the default active status', async () => {
+  it('loads the directory with default filters (live accounts, since launch)', async () => {
     const fetch = vi.spyOn(api, 'fetchUsers').mockResolvedValue({ users: [{ id: 'u1', phoneMasked: '••••3210' }], meta: { total: 1 } })
     const { result } = renderHook(() => useUsers(), { wrapper })
     await waitFor(() => expect(result.current.items).toHaveLength(1))
     expect(result.current.total).toBe(1)
-    expect(fetch).toHaveBeenCalledWith(1, 'active', '')
+    expect(fetch).toHaveBeenCalledWith({ page: 1, status: 'active', plan: 'all', joined: 'launch', q: '' })
   })
 
   it('re-queries when the search term changes', async () => {
@@ -25,7 +25,7 @@ describe('useUsers', () => {
     const { result } = renderHook(() => useUsers(), { wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     act(() => result.current.setQ('98765'))
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith(1, 'active', '98765'))
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith({ page: 1, status: 'active', plan: 'all', joined: 'launch', q: '98765' }))
   })
 
   it('runs the soft-delete mutation', async () => {
@@ -35,5 +35,16 @@ describe('useUsers', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     await act(async () => { await result.current.action.mutateAsync({ userId: 'u1', action: 'delete' }) })
     expect(update).toHaveBeenCalledWith('u1', 'delete')
+  })
+})
+
+describe('useUsers filters', () => {
+  it('switching plan re-queries from page 1', async () => {
+    const fetch = vi.spyOn(api, 'fetchUsers').mockResolvedValue({ users: [], meta: { total: 0 } })
+    const { result } = renderHook(() => useUsers(), { wrapper })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    act(() => result.current.setPage(3))
+    act(() => result.current.setPlan('expired'))
+    await waitFor(() => expect(fetch).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, plan: 'expired' })))
   })
 })
