@@ -12,6 +12,7 @@
     "create-admin": "node scripts/create-admin.js",
     "grant-review-access": "node scripts/grant-review-access.js",
     "grant-manual-payment": "node scripts/grant-manual-payment.js",
+    "revoke-manual-payment": "node scripts/revoke-manual-payment.js",
     "check:connections": "node scripts/check-connections.js",
     "start": "node src/server.js",
     "cron": "node src/cron/worker.js",
