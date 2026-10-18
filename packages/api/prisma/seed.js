@@ -45,9 +45,13 @@ async function seedCities() {
     });
     cityCount += 1;
 
-    // Always seed the canonical name itself as an alias (lower-cased), plus the listed aliases.
+    // Always seed the canonical name itself as an alias (lower-cased), plus the listed
+    // aliases and the Gurmukhi/Devanagari names, so script input resolves too.
     const aliasTexts = new Set(
-      [c.canonicalName, ...(c.aliases ?? [])].map((a) => a.trim().toLowerCase()).filter(Boolean),
+      [c.canonicalName, ...(c.aliases ?? []), namePa, nameHi]
+        .filter(Boolean)
+        .map((a) => a.trim().toLowerCase())
+        .filter(Boolean),
     );
 
     for (const aliasText of aliasTexts) {
