@@ -31,7 +31,7 @@ const raw = (o = {}) => ({
 });
 
 test('trackRecord derives MRR, conversion, renewal, LTV and liquidity', async () => {
-  const svc = createAdminStatsService({ repo: { async trackRecordWeekly() { return [raw()]; } } });
+  const svc = createAdminStatsService({ repo: { async trackRecordWeekly() { return [raw()]; }, async activeMembers() { return 25; } } });
   const t = await svc.trackRecord();
   assert.deepStrictEqual(t.targets, { renewalRate: 70, conversion: 10, liquidity: 60 });
   assert.deepStrictEqual(t.weeks[0], {
@@ -44,7 +44,7 @@ test('trackRecord derives MRR, conversion, renewal, LTV and liquidity', async ()
 test('trackRecord returns null ratios when there is nothing to divide', async () => {
   const empty = raw({ totalSignups: 0, renewalsDue: 0, renewed: 0, botRides: 0, postedRides: 0 });
   const full = raw({ renewalsDue: 4, renewed: 4 });
-  const svc = createAdminStatsService({ repo: { async trackRecordWeekly() { return [empty, full]; } } });
+  const svc = createAdminStatsService({ repo: { async trackRecordWeekly() { return [empty, full]; }, async activeMembers() { return 25; } } });
   const [a, b] = (await svc.trackRecord()).weeks;
   assert.strictEqual(a.conversion, null);
   assert.strictEqual(a.renewalRate, null);
@@ -52,4 +52,14 @@ test('trackRecord returns null ratios when there is nothing to divide', async ()
   assert.strictEqual(a.liquidity, null);
   assert.strictEqual(b.renewalRate, 100);
   assert.strictEqual(b.ltv, null); // zero churn → no finite LTV
+});
+
+test('trackRecord uses the live member count for the running week only', async () => {
+  const svc = createAdminStatsService({
+    repo: { async trackRecordWeekly() { return [raw({ activePaid: 30 }), raw({ activePaid: 20 })]; }, async activeMembers() { return 32; } },
+  });
+  const [now, prev] = (await svc.trackRecord()).weeks;
+  assert.strictEqual(now.activePaid, 32);
+  assert.strictEqual(now.mrr, 32 * 149);
+  assert.strictEqual(prev.activePaid, 20);
 });

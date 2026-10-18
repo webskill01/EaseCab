@@ -24,7 +24,7 @@ const METRICS = [
     good: 'Should go up every month. +10–20% a month is strong.' },
   { key: 'activePaid', label: 'Active paid', fmt: num, card: true, color: 'bg-emerald-500',
     hint: 'Drivers whose ₹149 plan is running now',
-    explain: 'Drivers who paid in the last 30 days, so their plan is still running.',
+    explain: 'Drivers whose ₹149 plan is running. This week = live count, same as the Statistics tab (includes plans added by hand for UPI/cash payments). Past weeks = drivers who paid in the 30 days before that week ended.',
     good: 'Should keep rising week after week.' },
   { key: 'renewalRate', label: 'Renewal', fmt: pct, unit: 'pct', card: true, color: 'bg-sky-500',
     hint: 'Out of 100 plans that ended, how many paid again',

@@ -68,7 +68,10 @@ function createAdminStatsService({ repo }) {
      * @returns {Promise<{ since: string, targets: object, weeks: object[] }>}
      */
     async trackRecord() {
-      const rows = await repo.trackRecordWeekly();
+      const [rows, activeNow] = await Promise.all([repo.trackRecordWeekly(), repo.activeMembers()]);
+      // Running week uses the live membership count (same as Statistics): manual
+      // grants activate a plan without a payment row, so the payment window misses them.
+      if (rows[0]) rows[0] = { ...rows[0], activePaid: activeNow };
       const { TARGETS, LAUNCH_DATE } = ADMIN_STATISTICS;
       const targets = { renewalRate: TARGETS.RENEWAL_PCT, conversion: TARGETS.CONVERSION_PCT, liquidity: TARGETS.LIQUIDITY_PCT };
       return { since: LAUNCH_DATE, targets, weeks: rows.map(toWeek) };
