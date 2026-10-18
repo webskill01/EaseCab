@@ -9,6 +9,7 @@ import { BellEdit } from '@/components/ui/icons'
 import { useRidesFeed, FEED_SUB } from '../hooks/useRidesFeed'
 import { readCityLock, writeCityLock } from '../lib/cityLock'
 import { getMembership } from '@/features/subscription/services/subscriptionApi'
+import { countVerifiedRides } from '../services/ridesApi'
 import { membershipView } from '@/features/subscription/lib/membership'
 import { SubTabs } from './SubTabs'
 import { CityFilter } from './CityFilter'
@@ -24,6 +25,8 @@ import { useSyncPushToken } from '@/features/notifications/hooks/useSyncPushToke
 import { NotificationPrePrompt } from '@/features/notifications/components/NotificationPrePrompt'
 import { permissionState, shouldShowPrePrompt } from '@/features/notifications/lib/pushFlow'
 import { isPrePromptDismissed, dismissPrePrompt } from '@/features/notifications/lib/pushStorage'
+
+const DUTIES_COUNT_POLL_MS = 30000
 
 /**
  * Rides feed — the hero surface (SCREENS §2). Composes the sub-tabs, the live
@@ -43,6 +46,14 @@ export function FeedScreen() {
   useEffect(() => { setSelectedCities(readCityLock()) }, [])
 
   const feed = useRidesFeed({ sub, cityIds: selectedCities.map((c) => c.id) })
+
+  // Driver Duties tab badge. Posted rides have no SSE, so poll (also refetches on focus).
+  const cityKey = selectedCities.map((c) => c.id).join(',')
+  const dutiesCountQuery = useQuery({
+    queryKey: ['dutiesCount', cityKey || 'all'],
+    queryFn: () => countVerifiedRides({ cityIds: cityKey ? cityKey.split(',') : [] }),
+    refetchInterval: DUTIES_COUNT_POLL_MS,
+  })
 
   const membershipQuery = useQuery({ queryKey: ['membership'], queryFn: getMembership, staleTime: 300000 })
   // Until the query resolves, `data` is undefined → membershipView() would read it
@@ -89,7 +100,7 @@ export function FeedScreen() {
           <CityFilter selected={selectedCities} onToggle={toggleCity} onClear={clearCities} />
         </div>
       </div>
-      <SubTabs sub={sub} onChange={setSub} />
+      <SubTabs sub={sub} onChange={setSub} dutiesCount={dutiesCountQuery.data ?? 0} />
       <FeedBanner membership={membership} onUpgrade={goMembership} />
 
       <div

@@ -53,6 +53,10 @@ function fakePrisma(seed = {}) {
         rows.sort((a, b) => b.createdAt - a.createdAt || (a.id < b.id ? 1 : -1));
         return rows.slice(0, take).map((r) => project(r, select));
       },
+      async count({ where }) {
+        return [...posts.values()].filter((p) => p.status === where.status && p.expiresAt > where.expiresAt.gt
+          && (!where.fromCityId || where.fromCityId.in.includes(p.fromCityId))).length;
+      },
       async findFirst({ where }) {
         const p = [...posts.values()].find((x) => x.id === where.id && x.status === where.status && x.expiresAt > where.expiresAt.gt);
         return p ? { id: p.id, phone: p.phone, postedBy: p.postedBy } : null;
@@ -123,6 +127,22 @@ test('GET /posted-rides → masked feed of active posts', async () => {
   assert.equal(res.status, 200);
   assert.equal(res.body.data.posts.length, 1);
   assert.equal('phone' in res.body.data.posts[0], false);
+});
+
+test('GET /posted-rides/count → active, unexpired posts for the city lock', async () => {
+  const base = { postedBy: 'u9', createdAt: new Date(), fromCityRaw: 'A', toCityRaw: 'B' };
+  const app = makeApp({ posts: [
+    { ...base, id: UUID(1), status: 'active', expiresAt: FUTURE, fromCityId: UUID(7) },
+    { ...base, id: UUID(2), status: 'active', expiresAt: FUTURE, fromCityId: UUID(8) },
+    { ...base, id: UUID(3), status: 'active', expiresAt: new Date(0), fromCityId: UUID(7) },
+    { ...base, id: UUID(4), status: 'closed', expiresAt: FUTURE, fromCityId: UUID(7) },
+  ] });
+  const all = await request(app).get('/api/v1/posted-rides/count').set('Cookie', cookieFor('u1'));
+  assert.equal(all.status, 200);
+  assert.equal(all.body.data.count, 2);
+  const one = await request(app).get(`/api/v1/posted-rides/count?cityIds=${UUID(7)}`).set('Cookie', cookieFor('u1'));
+  assert.equal(one.body.data.count, 1);
+  assert.equal((await request(app).get('/api/v1/posted-rides/count')).status, 401);
 });
 
 test('POST /:id/contact → 200 reveals phone for a subscribed contacter', async () => {

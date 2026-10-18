@@ -39,6 +39,11 @@ function createPostedRidesRouter({ service, parser, requireAuth }) {
     sendSuccess(res, { data: { posts }, meta: { nextCursor } });
   });
 
+  // GET /api/v1/posted-rides/count — feed size for the tab badge (same city lock; limit/cursor ignored).
+  router.get('/count', validate(postedRidesListQuerySchema, 'query'), async (req, res) => {
+    sendSuccess(res, { data: await service.countFeed(req.valid.query) });
+  });
+
   // GET /api/v1/posted-rides/mine — the caller's own posts. Literal path before params.
   router.get('/mine', async (req, res) => {
     const { posts } = await service.listMine(req.user.id);

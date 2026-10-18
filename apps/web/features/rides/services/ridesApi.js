@@ -41,6 +41,12 @@ export async function listVerifiedRides(params = {}) {
   return { posts: data.posts, nextCursor: meta?.nextCursor ?? null }
 }
 
+/** Live verified-post count for the Driver Duties tab badge (same city lock). @returns {Promise<number>} */
+export async function countVerifiedRides(params = {}) {
+  const { data } = await apiFetch(`/posted-rides/count${feedQuery({ cityIds: params.cityIds })}`)
+  return data.count
+}
+
 /** Reveal a verified post's phone at the action point (no history write). */
 export async function contactVerifiedRide(postedRideId) {
   const { data } = await apiFetch(`/posted-rides/${postedRideId}/contact`, { method: 'POST' })

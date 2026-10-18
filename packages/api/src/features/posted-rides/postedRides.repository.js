@@ -37,6 +37,17 @@ function toTime(hhmm) {
 }
 
 /**
+ * Public-feed filter: active, unexpired, poster not auto-flagged (mass-reported,
+ * pending admin review — P13-12 #5). City lock matches the FROM (pickup) city only,
+ * same rule as the bot feed. Multi-select.
+ */
+function activeFeedWhere(cityIds) {
+  const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() }, poster: { flaggedAt: null } };
+  if (cityIds && cityIds.length > 0) where.fromCityId = { in: cityIds };
+  return where;
+}
+
+/**
  * Posted-rides data access (CLAUDE.md §4 — Prisma + Redis only). Shares the
  * contact-reveal Redis counter key (`contact:<userId>`) with the bot-rides repo so
  * a user's total phone reveals are capped across both feeds.
@@ -124,10 +135,7 @@ function createPostedRidesRepository({ prisma, redis }) {
      * (createdAt, id) in (createdAt DESC, id DESC) order.
      */
     async listActivePosts({ createdAt, id, cityIds, limit }) {
-      // Exclude posts from auto-flagged (mass-reported) drivers pending admin review (P13-12 #5).
-      const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() }, poster: { flaggedAt: null } };
-      // City lock matches the FROM (pickup) city only — same rule as the bot feed. Multi-select.
-      if (cityIds && cityIds.length > 0) where.fromCityId = { in: cityIds };
+      const where = activeFeedWhere(cityIds);
       if (createdAt && id) {
         where.OR = [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }];
       }
@@ -137,6 +145,11 @@ function createPostedRidesRepository({ prisma, redis }) {
         take: limit + 1,
         select: POSTED_PUBLIC_SELECT,
       });
+    },
+
+    /** How many posts the public feed would show for this city lock (tab badge). */
+    async countActivePosts({ cityIds }) {
+      return prisma.postedRide.count({ where: activeFeedWhere(cityIds) });
     },
 
     /** The caller's own posts (any status except deleted), newest first, capped. */

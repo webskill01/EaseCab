@@ -105,6 +105,11 @@ function createPostedRidesService({ repo, logger, uploads, requireKyc = false })
       return { posts: page.map(toPublicPostedRide), nextCursor };
     },
 
+    /** Live count of feed posts for the Driver Duties tab badge. */
+    async countFeed({ cityIds }) {
+      return { count: await repo.countActivePosts({ cityIds }) };
+    },
+
     /** The caller's own posts (My Rides → posted tab), each with its chat count (P12-3). */
     async listMine(userId) {
       const rows = await repo.listMyPosts({ userId, limit: POSTED_RIDES.MINE_LIMIT });

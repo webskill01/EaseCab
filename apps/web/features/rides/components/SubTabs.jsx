@@ -4,11 +4,14 @@ import { useTranslations } from 'next-intl'
 import { Shield } from '@/components/ui/icons'
 import { FEED_SUB } from '../hooks/useRidesFeed'
 
+const BADGE_MAX = 99
+
 /**
- * Rides / Verified Rides segmented toggle (chrome.jsx SubTabs).
- * @param {{ sub: string, onChange: (sub: string) => void }} props
+ * Rides / Verified Rides segmented toggle (chrome.jsx SubTabs). `dutiesCount` puts a
+ * red live-count badge on Driver Duties so drivers see there are duties to take.
+ * @param {{ sub: string, onChange: (sub: string) => void, dutiesCount?: number }} props
  */
-export function SubTabs({ sub, onChange }) {
+export function SubTabs({ sub, onChange, dutiesCount = 0 }) {
   const t = useTranslations('rides')
   const items = [
     [FEED_SUB.RIDES, t('tabs.rides'), false],
@@ -32,6 +35,11 @@ export function SubTabs({ sub, onChange }) {
             >
               {withShield && <span className={`inline-flex ${on ? 'text-white' : 'text-ec-success'}`}><Shield size={14} /></span>}
               {label}
+              {withShield && dutiesCount > 0 && (
+                <span className="min-w-[20px] rounded-full bg-ec-danger px-1.5 text-[11px] font-extrabold leading-5 text-white">
+                  {dutiesCount > BADGE_MAX ? `${BADGE_MAX}+` : dutiesCount}
+                </span>
+              )}
             </button>
           )
         })}
