@@ -26,6 +26,10 @@ const envSchema = z.object({
   // key is backend-only and never reaches any frontend bundle (CLAUDE.md §11).
   GEMINI_API_KEY: z.string().min(1).optional(),
   GEMINI_MODEL: z.string().min(1).optional(),
+  // Operator alerts on Telegram (the bot-nitin manager bot's token + operator chat).
+  // OPTIONAL: unset → alerts stay Redis + logs only. Backend-only secret.
+  TELEGRAM_ALERT_BOT_TOKEN: z.string().min(1).optional(),
+  TELEGRAM_ALERT_CHAT_ID: z.string().min(1).optional(),
 });
 
 /**

@@ -103,3 +103,12 @@ test('toGroupRecord maps Baileys group metadata', () => {
   );
   assert.deepStrictEqual(toGroupRecord({ id: 'y@g.us' }), { jid: 'y@g.us', name: null, participants: null });
 });
+
+test('namelessJids lists enabled groups with no stored name, until one is recorded', async () => {
+  const rows = [...ROWS, { jid: 'anon@g.us', name: null, enabled: true }, { jid: 'anon-off@g.us', name: null, enabled: false }];
+  const store = createGroupStore({ prisma: fakePrisma(rows), logger });
+  await store.start();
+  assert.deepStrictEqual(store.namelessJids(), ['anon@g.us']);
+  await store.record([{ jid: 'anon@g.us', name: 'Mohali Taxi', participants: 9 }]);
+  assert.deepStrictEqual(store.namelessJids(), []);
+});

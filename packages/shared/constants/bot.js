@@ -51,13 +51,21 @@ const BOT_HEALTH = Object.freeze({
   STALL_WATCHDOG_MS: 12 * 60 * 1000,
   WATCHDOG_CHECK_MS: 60 * 1000, // how often the watchdog evaluates inbound silence
   LOST_MSG_LOG_MS: 10 * 60 * 1000, // how often the lost-group-message diagnostic is logged + stored
+  // Nameless-group lookups (timings from the multibot, proven in production): wait
+  // out Baileys' own init queries after connect (firing early timed them out at 408),
+  // then ~3 lookups/minute so the shared IQ/rate budget is never pressured.
+  GROUP_NAME_BACKFILL_GRACE_MS: 90 * 1000,
+  GROUP_NAME_BACKFILL_GAP_MS: 20 * 1000,
 });
 
 /** Reconnect backoff for transient (non-logout) disconnects on one slot. */
 const BACKOFF = Object.freeze({
-  BASE_MS: 1000, // first retry delay
-  MAX_MS: 5 * 60 * 1000, // cap
-  MAX_ATTEMPTS: 5, // after this many transient retries on a slot, mark it degraded + rotate
+  // Matches the multibot/oracle bots (3s doubling, 60s cap, 10 tries ≈ 12 min with
+  // connect timeouts): rides out a short provider network drop (5m20s on 2026-10-18)
+  // without degrading the slot. The old 1s/5-try policy gave up after ~3 min.
+  BASE_MS: 3000, // first retry delay
+  MAX_MS: 60 * 1000, // cap
+  MAX_ATTEMPTS: 10, // after this many transient retries on a slot, mark it degraded + rotate
 });
 
 // Redis keys (shared box — always namespaced via redisKey, DECISIONS.md 2026-05-30).

@@ -89,3 +89,26 @@ test('a missing logger does not break raise/clear (incl. redis failure path)', a
   const failing = createAlerter({ redis: fakeRedis({ throwOn: 'hset' }) });
   await assert.doesNotReject(() => failing.raise(ALERT_EVENT.NUMBER_BANNED, ALERT_SEV.SEV1));
 });
+
+/** Fake redis whose hset/hdel report a new/removed field like ioredis does. */
+function statefulRedis() {
+  const hash = new Map();
+  return {
+    hset: async (_k, f, v) => { const isNew = !hash.has(f); hash.set(f, v); return isNew ? 1 : 0; },
+    hdel: async (_k, f) => (hash.delete(f) ? 1 : 0),
+  };
+}
+
+test('notify fires once when an alert opens and once when it clears — not on refresh', async () => {
+  const sent = [];
+  const alerter = createAlerter({ redis: statefulRedis(), logger: fakeLogger(), notify: async (t) => sent.push(t) });
+
+  await alerter.raise(ALERT_EVENT.ALL_EXHAUSTED, ALERT_SEV.SEV1);
+  await alerter.raise(ALERT_EVENT.ALL_EXHAUSTED, ALERT_SEV.SEV1);
+  await alerter.clear(ALERT_EVENT.ALL_EXHAUSTED);
+  await alerter.clear(ALERT_EVENT.ALL_EXHAUSTED);
+
+  assert.equal(sent.length, 2);
+  assert.match(sent[0], /SEV1: all_exhausted/);
+  assert.match(sent[1], /recovered: all_exhausted/);
+});

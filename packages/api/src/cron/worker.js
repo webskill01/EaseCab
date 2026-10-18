@@ -6,7 +6,7 @@ const { env } = require('../../config/env.js');
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
-const { createAlerter, createCityResolver, CITY_LLM } = require('@easecab/shared');
+const { createAlerter, createTelegramNotifier, createCityResolver, CITY_LLM } = require('@easecab/shared');
 const { createRideLifecycleRepository } = require('../../features/rides/rideLifecycle.repository');
 const { createRideLifecycleService } = require('../../features/rides/rideLifecycle.service');
 const { createBotHealthRepository } = require('../../features/botHealth/botHealth.repository');
@@ -31,7 +31,10 @@ async function main() {
   const repository = createRideLifecycleRepository({ prisma });
   const service = createRideLifecycleService({ repository, logger });
 
-  const alerter = createAlerter({ redis, logger });
+  const notify = createTelegramNotifier({
+    token: env.TELEGRAM_ALERT_BOT_TOKEN, chatId: env.TELEGRAM_ALERT_CHAT_ID, logger,
+  });
+  const alerter = createAlerter({ redis, logger, notify });
   const botHealthRepository = createBotHealthRepository({ redis });
   const staleWatcher = createStaleWatcher({
     repository: botHealthRepository,

@@ -21,7 +21,7 @@ if (!result.success) {
   process.exit(1);
 }
 
-/** @type {Readonly<{ DATABASE_URL: string, REDIS_URL: string, WA_SESSION_PATH: string, WA_NUMBERS: string[], BOT_FEED_ENABLED: boolean }>} */
+/** @type {Readonly<{ DATABASE_URL: string, REDIS_URL: string, WA_SESSION_PATH: string, WA_NUMBERS: string[], BOT_FEED_ENABLED: boolean, TELEGRAM_ALERT_BOT_TOKEN?: string, TELEGRAM_ALERT_CHAT_ID?: string }>} */
 const env = result.data;
 
 module.exports = { env };

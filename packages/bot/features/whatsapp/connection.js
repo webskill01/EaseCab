@@ -3,11 +3,13 @@
 const makeWASocket = require('@whiskeysockets/baileys').default;
 const {
   useMultiFileAuthState,
+  makeCacheableSignalKeyStore,
   Browsers,
   fetchLatestBaileysVersion,
   NO_MESSAGE_FOUND_ERROR_TEXT,
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
+const { BOT_HEALTH } = require('@easecab/shared');
 const { toGroupRecord } = require('../groups/groupStore');
 
 /**
@@ -57,6 +59,41 @@ function getLostGroupMessageCount() {
   return lostGroupMessages;
 }
 
+const nameTried = new Set(); // process lifetime: ask WhatsApp for each nameless group once
+
+/**
+ * The bulk group fetch returns no subject for many groups on this account, so their
+ * rides carry no group name. Ask for those one at a time, slowly (multibot timings) —
+ * per-group metadata shares the rate budget the bulk call protects — and stop on the
+ * first error (e.g. rate-overlimit). Names land in wa_groups, so restarts reuse them.
+ * @param {object} sock
+ * @param {{ namelessJids: () => string[], record: (groups: object[]) => Promise<void> }} groups
+ * @param {() => boolean} isClosed
+ * @param {{ info: Function, warn: Function }} logger
+ */
+async function backfillGroupNames(sock, groups, isClosed, logger) {
+  const jids = groups.namelessJids().filter((jid) => !nameTried.has(jid));
+  if (!jids.length) return;
+  await new Promise((r) => setTimeout(r, BOT_HEALTH.GROUP_NAME_BACKFILL_GRACE_MS));
+  let named = 0;
+  for (const jid of jids) {
+    await new Promise((r) => setTimeout(r, BOT_HEALTH.GROUP_NAME_BACKFILL_GAP_MS));
+    if (isClosed()) return;
+    nameTried.add(jid);
+    try {
+      const rec = toGroupRecord(await sock.groupMetadata(jid));
+      if (rec.name) {
+        await groups.record([rec]);
+        named += 1;
+      }
+    } catch (err) {
+      logger.warn({ err: err.message, named }, 'group name backfill stopped');
+      return;
+    }
+  }
+  logger.info({ named, tried: jids.length }, 'group name backfill done');
+}
+
 /**
  * Open a READ-ONLY Baileys connection for ONE number slot and hand every inbound
  * target-group message to `onMessage`. This module NEVER sends and owns NO
@@ -72,7 +109,7 @@ function getLostGroupMessageCount() {
  *
  * @param {object} deps
  * @param {string} deps.sessionPath - this slot's multi-file auth-state dir
- * @param {{ shouldIngest: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, record: (groups: object[]) => Promise<void> }} deps.groups
+ * @param {{ shouldIngest: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, namelessJids: () => string[], record: (groups: object[]) => Promise<void> }} deps.groups
  *   - group store (Phase 18): which groups to ingest + where discovered groups are saved
  * @param {(msg: {text: string, senderJid: string, groupId: string, groupName?: string}) => Promise<unknown>} deps.onMessage
  * @param {() => void} [deps.onOpen] - called once the connection is open
@@ -88,14 +125,21 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
   const { version } = await fetchLatestBaileysVersion();
   let closed = false; // guard so we report close exactly once
 
+  const baileysLogger = pino({ level: 'silent' }); // silence Baileys internals; we log our own
   const sock = makeWASocket({
     version,
-    auth: state,
+    // In-memory cache over the on-disk signal keys (as the multibot/oracle bots do):
+    // far fewer session-file reads/writes on every group message.
+    auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, baileysLogger) },
     // Present as a Chrome desktop web session (cosmetic — the read-only bot never
     // sends, so device label has no bearing on ban risk). Shows as "Chrome (Mac OS)".
     browser: Browsers.macOS('Chrome'),
-    logger: pino({ level: 'silent' }), // silence Baileys internals; we log our own
+    logger: baileysLogger,
     markOnlineOnConnect: false, // stay invisible — read-only listener
+    // Baileys buffers EVERY event (messages.upsert included) at open until the initial
+    // history sync finishes — minutes after a reconnect. We drop non-'notify' syncs
+    // anyway, so skip it and get live messages immediately (multibot's fix).
+    shouldSyncHistoryMessage: () => false,
     shouldIgnoreJid: isIgnoredJid, // group-only: phone's own 1:1 chats broke the stream (see above)
   });
 
@@ -115,6 +159,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       sock.groupFetchAllParticipating()
         .then((all) => groups.record(Object.values(all || {}).map(toGroupRecord)))
         .then(() => logger.info('wa groups recorded'))
+        .then(() => backfillGroupNames(sock, groups, () => closed, logger))
         .catch((err) => logger.warn({ err: err.message }, 'could not fetch joined groups'));
     } else if (connection === 'close') {
       if (closed) return; // ignore duplicate close events
@@ -131,6 +176,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
         sock.ev.removeAllListeners('creds.update');
         sock.ev.removeAllListeners('messages.upsert');
         sock.ev.removeAllListeners('groups.upsert');
+        sock.ev.removeAllListeners('groups.update');
         sock.end(undefined);
       } catch {
         // socket may already be torn down — nothing to do
@@ -143,6 +189,14 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
   sock.ev.on('groups.upsert', (joined) => {
     groups.record((joined || []).map(toGroupRecord))
       .catch((err) => logger.warn({ err: err.message }, 'could not record joined group'));
+  });
+
+  // A group renamed while connected: WhatsApp pushes the new subject for free.
+  sock.ev.on('groups.update', (updates) => {
+    const renamed = (updates || []).filter((u) => u && u.id && u.subject).map(toGroupRecord);
+    if (!renamed.length) return;
+    groups.record(renamed)
+      .catch((err) => logger.warn({ err: err.message }, 'could not record renamed group'));
   });
 
   sock.ev.on('messages.upsert', async ({ messages, type }) => {

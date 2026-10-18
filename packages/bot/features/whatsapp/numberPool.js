@@ -112,6 +112,8 @@ function createNumberPool({
           lastActivityAt = Date.now(); // reset the stall window on a fresh open
           logger.info({ slot }, 'numberPool: slot active');
           setSlotState(slot, SLOT_STATE.ACTIVE);
+          // Covers a recovery by process restart too (the rescan path clears it itself).
+          alerter.clear(ALERT_EVENT.ALL_EXHAUSTED);
         },
         onClose: (code) => {
           if (stopped || myToken !== token) return;

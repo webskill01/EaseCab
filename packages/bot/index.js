@@ -9,7 +9,7 @@ const Redis = require('ioredis');
 const pino = require('pino');
 const { DisconnectReason } = require('@whiskeysockets/baileys');
 const {
-  createCityResolver, createAlerter, BOT_FILTERS_CHANGED_CHANNEL, BOT_GROUPS_CHANGED_CHANNEL,
+  createCityResolver, createAlerter, createTelegramNotifier, BOT_FILTERS_CHANGED_CHANNEL, BOT_GROUPS_CHANGED_CHANNEL,
   BOT_HEALTH, BOT_LOST_MSGS_KEY,
 } = require('@easecab/shared');
 const { createRideRepository } = require('./features/ingest/rideRepository');
@@ -110,7 +110,10 @@ async function main() {
 
   // Number-pool supervisor (Phase 2.5 6a): manages failover/rotation across the
   // configured slots; createConnection is the per-slot live-socket factory.
-  const alerter = createAlerter({ redis, logger });
+  const notify = createTelegramNotifier({
+    token: env.TELEGRAM_ALERT_BOT_TOKEN, chatId: env.TELEGRAM_ALERT_CHAT_ID, logger,
+  });
+  const alerter = createAlerter({ redis, logger, notify });
   const registry = createSlotRegistry({ sessionPath: env.WA_SESSION_PATH, slots: env.WA_NUMBERS });
   const pool = createNumberPool({
     slots: env.WA_NUMBERS,

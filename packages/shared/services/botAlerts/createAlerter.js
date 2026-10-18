@@ -17,10 +17,12 @@ const { BOT_ALERTS_KEY, ALERT_SEV } = require('../../constants/bot');
  * @param {object} deps
  * @param {{ hset: Function, hdel: Function }} deps.redis - ioredis client
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
+ * @param {(text: string) => Promise<void>} [deps.notify] - operator push (Telegram); fired
+ *   only when an alert first opens and when it clears — never on a refresh
  * @returns {{ raise: (event: string, sev: string, detail?: object) => Promise<void>,
  *            clear: (event: string) => Promise<void> }}
  */
-function createAlerter({ redis, logger }) {
+function createAlerter({ redis, logger, notify }) {
   const log = logger || { info() {}, warn() {}, error() {} };
 
   /**
@@ -32,13 +34,19 @@ function createAlerter({ redis, logger }) {
    */
   async function raise(event, sev, detail) {
     const payload = { sev, since: Date.now(), detail: detail || null };
+    let opened = false;
     try {
-      await redis.hset(BOT_ALERTS_KEY, event, JSON.stringify(payload));
+      // HSET returns 1 only when the field is new, i.e. this alert just opened.
+      opened = (await redis.hset(BOT_ALERTS_KEY, event, JSON.stringify(payload))) === 1;
     } catch (err) {
       log.error({ err: err.message, event }, 'alerter: failed to persist alert state');
     }
     const line = sev === ALERT_SEV.SEV1 ? log.error : log.warn;
     line.call(log, { event, sev, detail: detail || undefined }, `ALERT ${event}`);
+    if (opened && notify) {
+      const icon = sev === ALERT_SEV.SEV1 ? '🚨' : '⚠️';
+      await notify(`${icon} EaseCab ${sev.toUpperCase()}: ${event}${detail ? ` ${JSON.stringify(detail)}` : ''}`);
+    }
   }
 
   /**
@@ -47,13 +55,15 @@ function createAlerter({ redis, logger }) {
    * @returns {Promise<void>}
    */
   async function clear(event) {
+    let removed;
     try {
-      await redis.hdel(BOT_ALERTS_KEY, event);
+      removed = await redis.hdel(BOT_ALERTS_KEY, event);
     } catch (err) {
       log.error({ err: err.message, event }, 'alerter: failed to clear alert state');
       return;
     }
     log.info({ event }, `ALERT cleared ${event}`);
+    if (removed === 1 && notify) await notify(`✅ EaseCab recovered: ${event}`);
   }
 
   return { raise, clear };

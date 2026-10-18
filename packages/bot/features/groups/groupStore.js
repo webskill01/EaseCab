@@ -22,16 +22,20 @@ function toGroupRecord(meta) {
  * BOT_GROUPS_CHANGED_CHANNEL like the filter store.
  *
  * @param {{ prisma: object, logger: { info: Function, warn: Function } }} deps
- * @returns {{ start: () => Promise<void>, reload: () => Promise<void>, shouldIngest: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, record: (groups: object[]) => Promise<void> }}
+ * @returns {{ start: () => Promise<void>, reload: () => Promise<void>, shouldIngest: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, namelessJids: () => string[], record: (groups: object[]) => Promise<void> }}
  */
 function createGroupStore({ prisma, logger }) {
   let disabled = new Set();
   const names = new Map();
+  const known = new Set(); // every group jid seen (DB or WhatsApp)
 
   async function load() {
     const rows = await prisma.waGroup.findMany({ select: { jid: true, name: true, enabled: true } });
     disabled = new Set(rows.filter((r) => !r.enabled).map((r) => r.jid));
-    for (const r of rows) if (r.name) names.set(r.jid, r.name);
+    for (const r of rows) {
+      known.add(r.jid);
+      if (r.name) names.set(r.jid, r.name);
+    }
     logger.info({ groups: rows.length, off: disabled.size }, 'wa groups loaded');
   }
 
@@ -53,6 +57,9 @@ function createGroupStore({ prisma, logger }) {
 
     nameOf: (jid) => names.get(jid),
 
+    /** Enabled groups we still have no name for (the bulk fetch often returns no subject). */
+    namelessJids: () => [...known].filter((jid) => !names.has(jid) && !disabled.has(jid)),
+
     /**
      * Upsert groups the bot sees (connect / join). Never touches `enabled`, so an
      * admin's switch survives reconnects, and never blanks a stored name: WhatsApp
@@ -61,6 +68,7 @@ function createGroupStore({ prisma, logger }) {
      */
     async record(groups) {
       for (const { jid, name, participants } of groups) {
+        known.add(jid);
         if (name) names.set(jid, name);
         try {
           await prisma.waGroup.upsert({

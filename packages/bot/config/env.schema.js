@@ -26,6 +26,10 @@ const envSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+  // Operator alerts on Telegram (the bot-nitin manager bot's token + operator chat).
+  // OPTIONAL: unset → alerts stay Redis + logs only. Backend-only secret.
+  TELEGRAM_ALERT_BOT_TOKEN: z.string().min(1).optional(),
+  TELEGRAM_ALERT_CHAT_ID: z.string().min(1).optional(),
 });
 
 /**
