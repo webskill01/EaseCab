@@ -20,9 +20,9 @@ const VEHICLE_TYPES = Object.freeze({
 // Order matters: more specific labels checked first (Innova before SUV, Tempo before Bus).
 const VEHICLE_KEYWORDS = Object.freeze([
   [VEHICLE_TYPES.INNOVA, ['innova', 'crysta']],
-  [VEHICLE_TYPES.TEMPO_TRAVELLER, ['tempo', 'traveller', '12 seater', '14 seater', '17 seater']],
+  [VEHICLE_TYPES.TEMPO_TRAVELLER, ['tempo', 'traveller', 'travller', '12 seater', '14 seater', '17 seater']],
   [VEHICLE_TYPES.URBANIA, ['urbania', 'force urbania']],
-  [VEHICLE_TYPES.SUV, ['fortuner', 'scorpio', 'xuv', 'harrier', 'safari', 'ertiga', 'suv']],
+  [VEHICLE_TYPES.SUV, ['fortuner', 'scorpio', 'xuv', 'harrier', 'safari', 'ertiga', 'ertika', 'ertica', 'suv']],
   [VEHICLE_TYPES.BOLERO, ['bolero', 'bolero camper']],
   [VEHICLE_TYPES.BUS, ['coach', 'mini bus', '20 seater', '24 seater', 'bus']],
   [VEHICLE_TYPES.AUTO, ['e-rickshaw', 'tuk tuk', 'auto']],

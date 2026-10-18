@@ -71,3 +71,11 @@ test('misspelled vehicles and state codes are noise in raw text', () => {
   assert.equal(extractCities('jibhi hp to delhi', RAW_VOCAB).pickup, 'jibhi');
   assert.equal(extractCities('wc kasol to delhi', RAW_VOCAB).pickup, 'kasol');
 });
+
+test('live-queue noise (vehicle typos, fillers, states, stations) is stripped from raw text', () => {
+  assert.equal(extractCities('Need Ertika ferzpur to jammu drop', RAW_VOCAB).pickup, 'ferzpur');
+  assert.equal(extractCities('is going kasol to delhi', RAW_VOCAB).pickup, 'kasol');
+  assert.equal(extractCities('delhi to bhvanagar airport', RAW_VOCAB).drop, 'bhvanagar');
+  assert.equal(extractCities('uchana haryana to delhi', RAW_VOCAB).pickup, 'uchana');
+  assert.equal(extractCities('delhi to jhasi realiway station', RAW_VOCAB).drop, 'jhasi');
+});
