@@ -17,7 +17,8 @@ const { nextDelayMs } = require('./backoff');
  * same slot with exponential backoff; logout -> mark BANNED + rotate; backoff
  * exhausted / connect-timeout -> mark DEGRADED + rotate. When no eligible slot
  * remains it raises a sev-1 ALL_EXHAUSTED alert and stays alive, periodically
- * re-scanning so a backup the operator pairs later auto-recovers the feed.
+ * re-scanning so a backup the operator pairs later auto-recovers the feed — or,
+ * failing that, retrying DEGRADED slots (BANNED ones stay out for the run).
  *
  * Pure decisions live in failoverPolicy/backoff/slotRegistry (unit-tested); this
  * is socket-wiring glue — excluded from coverage, verified in the integration run.
@@ -45,7 +46,8 @@ function createNumberPool({
   connectionFactory,
   loggedOutCode,
 }) {
-  const unavailable = new Set(); // slots BANNED/DEGRADED this run — never reselected
+  const banned = new Set(); // slots logged out this run — never reselected
+  const degraded = new Set(); // slots that hit max backoff — retried only when nothing else is left
   let currentSlot = null;
   let currentSock = null;
   let attempt = 0; // consecutive transient retries on currentSlot
@@ -87,7 +89,7 @@ function createNumberPool({
 
   /** First eligible (paired) slot not banned/degraded this run, or null. */
   function pickAvailable() {
-    return registry.eligibleSlots().find((s) => !unavailable.has(s)) || null;
+    return registry.eligibleSlots().find((s) => !banned.has(s) && !degraded.has(s)) || null;
   }
 
   /** Open a connection for a slot; wire lifecycle callbacks + connect timeout. */
@@ -156,11 +158,11 @@ function createNumberPool({
 
     const slot = currentSlot;
     if (decision.ban) {
-      unavailable.add(slot);
+      banned.add(slot);
       setSlotState(slot, SLOT_STATE.BANNED, code);
       alerter.raise(ALERT_EVENT.NUMBER_BANNED, ALERT_SEV.WARN, { slot });
     } else if (decision.degrade) {
-      unavailable.add(slot);
+      degraded.add(slot);
       setSlotState(slot, SLOT_STATE.DEGRADED, code);
     }
     attempt = 0;
@@ -189,7 +191,13 @@ function createNumberPool({
     if (rescanTimer) return;
     rescanTimer = setInterval(() => {
       if (stopped) return;
-      const next = pickAvailable();
+      let next = pickAvailable();
+      if (!next && degraded.size) {
+        // Degraded = a timeout streak (e.g. a VPS network blip), not a ban. With no
+        // fresh slot left, give degraded ones another round instead of staying dark.
+        degraded.clear();
+        next = pickAvailable();
+      }
       if (next) {
         clearInterval(rescanTimer);
         rescanTimer = null;
