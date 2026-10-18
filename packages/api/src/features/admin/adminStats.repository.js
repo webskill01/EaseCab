@@ -55,8 +55,10 @@ function createAdminStatsRepository({ prisma }) {
           FROM subscriptions sb JOIN u ON u.id = sb.user_id
           WHERE sb.paid_started_at IS NOT NULL GROUP BY 1
         ),
+        -- updated_at = capture time; created_at is when the order opened (open orders are
+        -- reused, so it can be weeks earlier).
         pay AS (
-          SELECT (pm.created_at AT TIME ZONE ${TIMEZONE})::date AS d, count(*) AS n, sum(pm.amount) AS amt
+          SELECT (pm.updated_at AT TIME ZONE ${TIMEZONE})::date AS d, count(*) AS n, sum(pm.amount) AS amt
           FROM payments pm JOIN u ON u.id = COALESCE(pm.on_behalf_of_user_id, pm.user_id)
           WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED} GROUP BY 1
         )
@@ -93,7 +95,8 @@ function createAdminStatsRepository({ prisma }) {
           WHERE phone <> ALL(${phones}) AND (created_at AT TIME ZONE ${tz})::date >= ${LAUNCH_DATE}::date
         ),
         pay AS (
-          SELECT u.id AS user_id, pm.created_at, pm.amount
+          -- capture time (see growthDaily), aliased so the week maths below reads it
+          SELECT u.id AS user_id, pm.updated_at AS created_at, pm.amount
           FROM payments pm JOIN u ON u.id = COALESCE(pm.on_behalf_of_user_id, pm.user_id)
           WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED}
         ),
