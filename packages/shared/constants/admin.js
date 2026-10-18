@@ -69,6 +69,12 @@ const ADMIN_STATISTICS = Object.freeze({
   LAUNCH_DATE: '2026-10-15',
   TIMEZONE: 'Asia/Kolkata',
   EXCLUDED_PHONES: Object.freeze(['+919876543210']),
+  // Track Record tab: a ride is "liquid" if someone contacted it within this window.
+  LIQUIDITY_WINDOW_MIN: 30,
+  // A payment counts as renewed if the same user pays again by expiry + this grace.
+  RENEWAL_GRACE_DAYS: 3,
+  // Health targets (percent) the Track Record tab colours against.
+  TARGETS: Object.freeze({ RENEWAL_PCT: 70, CONVERSION_PCT: 10, LIQUIDITY_PCT: 60 }),
 });
 
 module.exports = {

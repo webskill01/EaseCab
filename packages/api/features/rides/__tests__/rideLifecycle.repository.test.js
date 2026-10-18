@@ -17,6 +17,8 @@ function mockPrisma(counts = {}) {
   };
   return {
     calls,
+    $executeRaw: async (strings, ...values) => { calls.push({ name: '$executeRaw', sql: strings.join('?'), values }); return 1; },
+    $transaction: async (ops) => Promise.all(ops),
     ride: {
       updateMany: record('ride.updateMany', counts.rideUpdate ?? 0),
       deleteMany: record('ride.deleteMany', counts.rideDelete ?? 0),
@@ -70,11 +72,21 @@ test('hardDelete removes ride rows past dbDeleteAt regardless of status', async 
   const count = await repo.hardDelete(NOW);
 
   assert.equal(count, 2);
-  const { name, args } = prisma.calls[0];
-  assert.equal(name, 'ride.deleteMany');
+  const { args } = prisma.calls.find((c) => c.name === 'ride.deleteMany');
   assert.deepEqual(args.where.dbDeleteAt, { lte: NOW });
   // never scoped by status — a 12h-old ride is deleted whatever its state
   assert.equal('status' in args.where, false);
+});
+
+test('hardDelete archives the same rows into ride_daily_stats first', async () => {
+  const prisma = mockPrisma({ rideDelete: 2 });
+  const repo = createRideLifecycleRepository({ prisma });
+
+  await repo.hardDelete(NOW);
+
+  assert.equal(prisma.calls[0].name, '$executeRaw');
+  assert.match(prisma.calls[0].sql, /INSERT INTO ride_daily_stats[\s\S]*db_delete_at <= \?/);
+  assert.ok(prisma.calls[0].values.includes(NOW));
 });
 
 test('purgeFingerprints deletes only expired fingerprints, never via ride', async () => {

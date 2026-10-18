@@ -240,6 +240,16 @@ model RideFingerprint {
   @@map("ride_fingerprints")
 }
 
+// Per-IST-day bot-ride counts, archived by the lifecycle cron just before the 12h
+// hard-delete so the admin Track Record keeps ride volume + liquidity history.
+model RideDailyStat {
+  day           DateTime @id @db.Date
+  rides         Int      @default(0)
+  contactedFast Int      @default(0) @map("contacted_fast") // contacted within LIQUIDITY_WINDOW_MIN
+
+  @@map("ride_daily_stats")
+}
+
 // Bot message filters (Phase 17.3). One row per entry so the admin panel edits
 // entries individually; the bot hot-reloads on BOT_FILTERS_CHANGED_CHANNEL.
 model BotFilterEntry {

@@ -1,6 +1,6 @@
 'use strict';
 
-const { RIDE_STATUS, POSTED_RIDE_STATUS } = require('@easecab/shared');
+const { RIDE_STATUS, POSTED_RIDE_STATUS, ADMIN_STATISTICS } = require('@easecab/shared');
 
 /**
  * Repository for the ride lifecycle cron — the ONLY DB path for aging rides.
@@ -51,14 +51,27 @@ function createRideLifecycleRepository({ prisma }) {
   /**
    * Hard-delete ride rows past their dbDeleteAt, whatever their status. The
    * dedup fingerprint lives in a separate table and is NOT touched here, so it
-   * survives ride deletion (purged separately on its own 12h TTL).
+   * survives ride deletion (purged separately on its own 12h TTL). In the same
+   * transaction the doomed rows are first counted into ride_daily_stats (per IST
+   * day + how many were contacted within LIQUIDITY_WINDOW_MIN) so the admin Track
+   * Record keeps ride history; same `now` in both statements = same row set.
    * @param {Date} now
    * @returns {Promise<number>} rows deleted
    */
   async function hardDelete(now) {
-    const { count } = await prisma.ride.deleteMany({
-      where: { dbDeleteAt: { lte: now } },
-    });
+    const { TIMEZONE, LIQUIDITY_WINDOW_MIN } = ADMIN_STATISTICS;
+    const [, { count }] = await prisma.$transaction([
+      prisma.$executeRaw`
+        INSERT INTO ride_daily_stats (day, rides, contacted_fast)
+        SELECT (r.received_at AT TIME ZONE ${TIMEZONE})::date, count(*)::int,
+               (count(*) FILTER (WHERE EXISTS (
+                 SELECT 1 FROM ride_contacts c WHERE c.ride_id = r.id
+                   AND c.contacted_at <= r.received_at + make_interval(mins => ${LIQUIDITY_WINDOW_MIN}::int))))::int
+        FROM rides r WHERE r.db_delete_at <= ${now} GROUP BY 1
+        ON CONFLICT (day) DO UPDATE SET rides = ride_daily_stats.rides + EXCLUDED.rides,
+          contacted_fast = ride_daily_stats.contacted_fast + EXCLUDED.contacted_fast`,
+      prisma.ride.deleteMany({ where: { dbDeleteAt: { lte: now } } }),
+    ]);
     return count;
   }
 
