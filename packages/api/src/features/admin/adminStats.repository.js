@@ -38,7 +38,8 @@ function createAdminStatsRepository({ prisma }) {
     /**
      * One row per IST day from launch to today (gap days filled with zeros).
      * Signups = new users; paidAccounts = subscriptions.paid_started_at on that day;
-     * payments/revenuePaise = captured payment rows. Excluded phones never count.
+     * payments/revenuePaise = captured payment rows, credited to on_behalf_of_user_id when a
+     * founder paid for a member. Excluded phones never count.
      * @returns {Promise<{ day: Date, signups: number, paidAccounts: number, payments: number, revenuePaise: number }[]>}
      */
     async growthDaily() {
@@ -56,7 +57,7 @@ function createAdminStatsRepository({ prisma }) {
         ),
         pay AS (
           SELECT (pm.created_at AT TIME ZONE ${TIMEZONE})::date AS d, count(*) AS n, sum(pm.amount) AS amt
-          FROM payments pm JOIN u ON u.id = pm.user_id
+          FROM payments pm JOIN u ON u.id = COALESCE(pm.on_behalf_of_user_id, pm.user_id)
           WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED} GROUP BY 1
         )
         SELECT g.day::date AS day,
@@ -92,7 +93,8 @@ function createAdminStatsRepository({ prisma }) {
           WHERE phone <> ALL(${phones}) AND (created_at AT TIME ZONE ${tz})::date >= ${LAUNCH_DATE}::date
         ),
         pay AS (
-          SELECT pm.user_id, pm.created_at, pm.amount FROM payments pm JOIN u ON u.id = pm.user_id
+          SELECT u.id AS user_id, pm.created_at, pm.amount
+          FROM payments pm JOIN u ON u.id = COALESCE(pm.on_behalf_of_user_id, pm.user_id)
           WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED}
         ),
         firstpay AS (SELECT user_id, min(created_at) AS at FROM pay GROUP BY 1),

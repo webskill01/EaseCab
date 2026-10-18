@@ -68,7 +68,9 @@ const ADMIN_USER_REPORTS = Object.freeze({ PAGE_SIZE: 20, MAX_PAGE_SIZE: 50 });
 const ADMIN_STATISTICS = Object.freeze({
   LAUNCH_DATE: '2026-10-15',
   TIMEZONE: 'Asia/Kolkata',
-  EXCLUDED_PHONES: Object.freeze(['+919876543210']),
+  // Play reviewer + the founder collection account (its own signup/plan is not a customer;
+  // its payments count for the member they are linked to — see COLLECTION_PHONES).
+  EXCLUDED_PHONES: Object.freeze(['+919876543210', '+916283380110']),
   // Track Record tab: a ride is "liquid" if someone contacted it within this window.
   LIQUIDITY_WINDOW_MIN: 30,
   // A payment counts as renewed if the same user pays again by expiry + this grace.
@@ -77,8 +79,19 @@ const ADMIN_STATISTICS = Object.freeze({
   TARGETS: Object.freeze({ RENEWAL_PCT: 70, CONVERSION_PCT: 10, LIQUIDITY_PCT: 60 }),
 });
 
+/**
+ * Founder collection account(s): when a member pays ₹149 on a founder's personal UPI,
+ * the founder pays ₹149 in the app from this account, then links that payment to the
+ * member in the admin panel (payments.on_behalf_of_user_id). Stats credit the member.
+ */
+const ADMIN_FOUNDER_PAYMENTS = Object.freeze({
+  COLLECTION_PHONES: Object.freeze(['+916283380110']),
+  PAGE_SIZE: 20,
+  MAX_PAGE_SIZE: 50,
+});
+
 module.exports = {
-  ADMIN_STATISTICS,
+  ADMIN_STATISTICS, ADMIN_FOUNDER_PAYMENTS,
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,

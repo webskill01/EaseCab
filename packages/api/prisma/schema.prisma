@@ -356,6 +356,7 @@ model User {
 
   subscription            Subscription?
   payments                Payment[]
+  paymentsOnBehalf        Payment[]                @relation("PaymentOnBehalfOf")
   verificationSubmissions VerificationSubmission[]
   postedRides             PostedRide[]
   contacts                RideContact[]
@@ -417,16 +418,21 @@ model Payment {
   // many NULLs under a UNIQUE constraint.
   razorpayPaymentId String?       @unique @map("razorpay_payment_id")
   amount            Int // paise — multiply rupees by 100 before inserting; ₹149 = 14900
+  // Set when a founder collection account paid for a member (UPI collected by hand);
+  // stats/member-sync credit this user instead of the payer. Null = paid for self.
+  onBehalfOfUserId  String?       @map("on_behalf_of_user_id") @db.Uuid
   status            PaymentStatus @default(created)
   createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Restrict (db-review H2): retain the financial audit trail — the hard-delete
   // cron must archive/anonymize payments before a user row can be removed.
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user       User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  onBehalfOf User? @relation("PaymentOnBehalfOf", fields: [onBehalfOfUserId], references: [id], onDelete: Restrict)
 
   // Open-order lookup = newest `created` row for a user.
   @@index([userId, status])
+  @@index([onBehalfOfUserId])
   @@map("payments")
 }
 

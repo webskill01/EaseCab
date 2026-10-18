@@ -87,6 +87,9 @@ const { createAdminUserReportsRouter } = require('./features/admin/adminUserRepo
 const { createAdminStatsRepository } = require('./features/admin/adminStats.repository');
 const { createAdminStatsService } = require('./features/admin/adminStats.service');
 const { createAdminStatsRouter } = require('./features/admin/adminStats.route');
+const { createAdminFounderPaymentsRepository } = require('./features/admin/adminFounderPayments.repository');
+const { createAdminFounderPaymentsService } = require('./features/admin/adminFounderPayments.service');
+const { createAdminFounderPaymentsRouter } = require('./features/admin/adminFounderPayments.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
 
 /**
@@ -221,6 +224,12 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     const adminStatsRepo = createAdminStatsRepository({ prisma });
     const adminStatsService = createAdminStatsService({ repo: adminStatsRepo });
     v1.use('/admin/stats', createAdminStatsRouter({ service: adminStatsService, requireAdmin }));
+
+    // Founder payments: credit ₹149 paid from a founder collection account to the real member.
+    const adminFounderPaymentsService = createAdminFounderPaymentsService({
+      repo: createAdminFounderPaymentsRepository({ prisma, redis }),
+    });
+    v1.use('/admin/founder-payments', createAdminFounderPaymentsRouter({ service: adminFounderPaymentsService, requireAdmin }));
 
     // Verifications queue (Step 24b) — submitted DL/RC review + manual driver badge.
     // `uploads` is the optional R2 client (presignGet for private KYC images); when
