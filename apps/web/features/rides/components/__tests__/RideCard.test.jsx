@@ -74,6 +74,12 @@ describe('RideCard', () => {
     expect(row('Details')).toHaveTextContent('AC car, 4 passengers')
   })
 
+  it('live bot ride keeps the compact strip (no labelled lines)', () => {
+    renderWithIntl(<RideCard ride={botRide()} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    expect(screen.getByText('Need a sedan')).toBeInTheDocument()
+    for (const label of ['Vehicle', 'Details']) expect(screen.queryByText(label)).toBeNull()
+  })
+
   it('missing details leave no empty lines', () => {
     renderWithIntl(<RideCard ride={botRide({ kind: 'verified', status: 'verified', vehicleType: null, message: null })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
     for (const label of ['Vehicle', 'Fare', 'Pickup time', 'Details']) expect(screen.queryByText(label)).toBeNull()

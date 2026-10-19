@@ -177,23 +177,38 @@ export function RideCard({ ride, now, onContact, onReport }) {
 
       {verified && ride.posterId ? <PosterRow ride={ride} /> : null}
 
-      <dl className="mt-2 space-y-1 border-t border-ec-line pt-2">
-        {ride.vehicleType ? (
-          <DetailRow label={t('card.vehicle')}>
-            <span className="inline-flex items-center gap-1.5">
+      {verified ? (
+        <dl className="mt-2 space-y-1 border-t border-ec-line pt-2">
+          {ride.vehicleType ? (
+            <DetailRow label={t('card.vehicle')}>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-flex shrink-0 text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
+                {veh(ride.vehicleType)}
+              </span>
+            </DetailRow>
+          ) : null}
+          {ride.fare ? <DetailRow label={t('card.fare')}>₹{ride.fare}</DetailRow> : null}
+          {slot ? <DetailRow label={t('card.pickupTime')}>{slot}</DetailRow> : null}
+          {ride.message ? (
+            <DetailRow label={t('card.details')}>
+              <span className="whitespace-pre-line break-words font-medium leading-snug text-ec-ink60">{ride.message}</span>
+            </DetailRow>
+          ) : null}
+        </dl>
+      ) : (
+        // Live (bot) rides keep the original compact strip — labelled lines are Driver Duties only.
+        <div className="mt-2 border-t border-ec-line pt-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] font-semibold text-ec-ink60">
+            <span className="inline-flex min-w-0 items-center gap-1.5">
               <span className="inline-flex shrink-0 text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
-              {veh(ride.vehicleType)}
+              <span className="truncate font-extrabold text-ec-ink">{veh(ride.vehicleType) || t('card.unknownCity')}</span>
             </span>
-          </DetailRow>
-        ) : null}
-        {verified && ride.fare ? <DetailRow label={t('card.fare')}>₹{ride.fare}</DetailRow> : null}
-        {slot ? <DetailRow label={t('card.pickupTime')}>{slot}</DetailRow> : null}
-        {ride.message ? (
-          <DetailRow label={t('card.details')}>
-            <span className="whitespace-pre-line break-words font-medium leading-snug text-ec-ink60">{ride.message}</span>
-          </DetailRow>
-        ) : null}
-      </dl>
+          </div>
+          {ride.message ? (
+            <p className="mt-1.5 whitespace-pre-line break-words text-[12.5px] font-medium leading-snug text-ec-ink60">{ride.message}</p>
+          ) : null}
+        </div>
+      )}
 
       <div className="mt-2">
         <CardActions ride={ride} disabled={booked} onContact={onContact} onReport={onReport} />
