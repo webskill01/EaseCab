@@ -11,7 +11,10 @@
     "viewProfile": "Profile dekho",
     "unknownCity": "—",
     "yearsExp": "{count} saal exp",
-    "rideAt": "Ride"
+    "rideAt": "Ride",
+    "fare": "Kiraya",
+    "pickupTime": "Pickup time",
+    "details": "Details"
   },
   "status": {
     "fresh": "Fresh",

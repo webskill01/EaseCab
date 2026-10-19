@@ -48,6 +48,17 @@ export function RouteRow({ from, to }) {
   )
 }
 
+/** One labelled line of ride details ("Fare   ₹2500") — written text, not chips, so a
+ * driver reads each fact on its own line. Label column is fixed so values align. */
+function DetailRow({ label, children }) {
+  return (
+    <div className="flex gap-2 text-[13px] leading-snug">
+      <dt className="w-[84px] shrink-0 font-semibold text-ec-ink60">{label}</dt>
+      <dd className="min-w-0 flex-1 font-extrabold text-ec-ink">{children}</dd>
+    </div>
+  )
+}
+
 /** WhatsApp / Call / Report. Disabled (dim) when a bot ride has aged to "booked". */
 function CardActions({ ride, disabled, onContact, onReport }) {
   const t = useTranslations('rides')
@@ -166,21 +177,23 @@ export function RideCard({ ride, now, onContact, onReport }) {
 
       {verified && ride.posterId ? <PosterRow ride={ride} /> : null}
 
-      <div className="mt-2 border-t border-ec-line pt-2">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] font-semibold text-ec-ink60">
-          <span className="inline-flex min-w-0 items-center gap-1.5">
-            <span className="inline-flex shrink-0 text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
-            <span className="truncate font-extrabold text-ec-ink">{veh(ride.vehicleType) || t('card.unknownCity')}</span>
-          </span>
-          {verified && ride.fare ? (
-            <span className="inline-flex shrink-0 items-center rounded-full bg-ec-sky px-2 py-0.5 text-[12.5px] font-extrabold text-ec-blueInk">₹{ride.fare}</span>
-          ) : null}
-          {slot ? <span className="shrink-0 text-[12.5px] font-semibold text-ec-ink60">{t('card.rideAt')} : <b className="font-extrabold text-ec-ink">{slot}</b></span> : null}
-        </div>
-        {ride.message ? (
-          <p className="mt-1.5 whitespace-pre-line break-words text-[12.5px] font-medium leading-snug text-ec-ink60">{ride.message}</p>
+      <dl className="mt-2 space-y-1 border-t border-ec-line pt-2">
+        {ride.vehicleType ? (
+          <DetailRow label={t('card.vehicle')}>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex shrink-0 text-ec-ink40"><VehicleIcon vehicleKey={vehIconKey(ride.vehicleType)} size={15} /></span>
+              {veh(ride.vehicleType)}
+            </span>
+          </DetailRow>
         ) : null}
-      </div>
+        {verified && ride.fare ? <DetailRow label={t('card.fare')}>₹{ride.fare}</DetailRow> : null}
+        {slot ? <DetailRow label={t('card.pickupTime')}>{slot}</DetailRow> : null}
+        {ride.message ? (
+          <DetailRow label={t('card.details')}>
+            <span className="whitespace-pre-line break-words font-medium leading-snug text-ec-ink60">{ride.message}</span>
+          </DetailRow>
+        ) : null}
+      </dl>
 
       <div className="mt-2">
         <CardActions ride={ride} disabled={booked} onContact={onContact} onReport={onReport} />

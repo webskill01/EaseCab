@@ -11,7 +11,10 @@
     "viewProfile": "View Profile",
     "unknownCity": "—",
     "yearsExp": "{count} yrs exp",
-    "rideAt": "Ride"
+    "rideAt": "Ride",
+    "fare": "Fare",
+    "pickupTime": "Pickup time",
+    "details": "Details"
   },
   "status": {
     "fresh": "Fresh",

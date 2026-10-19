@@ -11,7 +11,10 @@
     "viewProfile": "प्रोफ़ाइल",
     "unknownCity": "—",
     "yearsExp": "{count} साल अनुभव",
-    "rideAt": "राइड"
+    "rideAt": "राइड",
+    "fare": "किराया",
+    "pickupTime": "पिकअप समय",
+    "details": "विवरण"
   },
   "status": {
     "fresh": "नई",

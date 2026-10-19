@@ -11,7 +11,10 @@
     "viewProfile": "ਪ੍ਰੋਫਾਈਲ",
     "unknownCity": "—",
     "yearsExp": "{count} ਸਾਲ ਤਜਰਬਾ",
-    "rideAt": "ਰਾਈਡ"
+    "rideAt": "ਰਾਈਡ",
+    "fare": "ਕਿਰਾਇਆ",
+    "pickupTime": "ਪਿਕਅਪ ਸਮਾਂ",
+    "details": "ਵੇਰਵਾ"
   },
   "status": {
     "fresh": "ਨਵੀਂ",

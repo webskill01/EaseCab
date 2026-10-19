@@ -64,6 +64,21 @@ describe('RideCard', () => {
     expect(push).toHaveBeenCalledWith('/u/u9')
   })
 
+  it('driver duty lists each detail on its own labelled line', () => {
+    const ride = botRide({ kind: 'verified', status: 'verified', fare: 2500, date: '2026-06-07T00:00:00.000Z', time: '1970-01-01T17:30:00.000Z', message: 'AC car, 4 passengers' })
+    renderWithIntl(<RideCard ride={ride} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    const row = (label) => screen.getByText(label).closest('div')
+    expect(row('Vehicle')).toHaveTextContent('Sedan')
+    expect(row('Fare')).toHaveTextContent('₹2500')
+    expect(row('Pickup time')).toHaveTextContent(/07 Jun 2026.*5:30/)
+    expect(row('Details')).toHaveTextContent('AC car, 4 passengers')
+  })
+
+  it('missing details leave no empty lines', () => {
+    renderWithIntl(<RideCard ride={botRide({ kind: 'verified', status: 'verified', vehicleType: null, message: null })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    for (const label of ['Vehicle', 'Fare', 'Pickup time', 'Details']) expect(screen.queryByText(label)).toBeNull()
+  })
+
   it('verified ride without a posterId renders no poster block', () => {
     renderWithIntl(<RideCard ride={botRide({ kind: 'verified', status: 'verified' })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /view profile/i })).toBeNull()
