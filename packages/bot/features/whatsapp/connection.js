@@ -40,6 +40,11 @@ function extractText(message) {
  */
 const isIgnoredJid = (jid) => !!jid && !jid.endsWith('@g.us');
 
+// Group members on LID addressing arrive as "<opaque>@lid" in `participant`; WhatsApp
+// sends the real number alongside as `participantPn`. Prefer it so the blocked-senders
+// list (phone numbers) still matches those members.
+const senderOf = (key, groupJid) => (key && (key.participantPn || key.participant)) || groupJid;
+
 /**
  * A group message whose body never arrived ("unavailable" placeholder). Diagnostic
  * for the trade-off above.
@@ -207,7 +212,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       if (!groups.shouldIngest(jid) || m.key.fromMe) continue;
       const text = extractText(m.message);
       if (!text) continue;
-      const senderJid = m.key.participant || jid;
+      const senderJid = senderOf(m.key, jid);
       try {
         await onMessage({ text, senderJid, groupId: jid, groupName: groups.nameOf(jid) });
       } catch (err) {
@@ -221,4 +226,4 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
   return sock;
 }
 
-module.exports = { createConnection, extractText, isIgnoredJid, isLostGroupMessage, getLostGroupMessageCount };
+module.exports = { createConnection, extractText, isIgnoredJid, senderOf, isLostGroupMessage, getLostGroupMessageCount };

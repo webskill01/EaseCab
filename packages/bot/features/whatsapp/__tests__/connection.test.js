@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { isIgnoredJid, isLostGroupMessage } = require('../connection');
+const { isIgnoredJid, senderOf, isLostGroupMessage } = require('../connection');
 
 test('isIgnoredJid: only group chats get through', () => {
   assert.strictEqual(isIgnoredJid('120363000000000000@g.us'), false);
@@ -18,4 +18,11 @@ test('isLostGroupMessage: a group placeholder whose body never arrived', () => {
   assert.strictEqual(isLostGroupMessage({ ...lost, message: { conversation: 'hi' } }), false);
   assert.strictEqual(isLostGroupMessage({ ...lost, key: { remoteJid: 'x@s.whatsapp.net' } }), false);
   assert.strictEqual(isLostGroupMessage({ key: { remoteJid: 'x@g.us' }, messageStubParameters: ['Bad MAC'] }), false);
+});
+
+test('senderOf: prefers the real phone over an @lid participant', () => {
+  const g = '120363000000000000@g.us';
+  assert.strictEqual(senderOf({ participant: '111222333444555@lid', participantPn: '919462180617@s.whatsapp.net' }, g), '919462180617@s.whatsapp.net');
+  assert.strictEqual(senderOf({ participant: '919876543210@s.whatsapp.net' }, g), '919876543210@s.whatsapp.net');
+  assert.strictEqual(senderOf({}, g), g);
 });

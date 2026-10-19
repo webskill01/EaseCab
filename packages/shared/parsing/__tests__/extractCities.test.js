@@ -79,3 +79,16 @@ test('live-queue noise (vehicle typos, fillers, states, stations) is stripped fr
   assert.equal(extractCities('uchana haryana to delhi', RAW_VOCAB).pickup, 'uchana');
   assert.equal(extractCities('delhi to jhasi realiway station', RAW_VOCAB).drop, 'jhasi');
 });
+
+test('leading "DROP" is the trip type: two cities after it are pickup → drop', () => {
+  // Live 2026-10-19: "*DROP* Chandigarh tTO Ludhiana" was saved as drop=Chandigarh, no pickup.
+  const r = extractCities('*DROP* Chandigarh tTO Ludhiana *DZIRE ETIOS* *current *CALL ME* sanju patiala', VOCAB);
+  assert.equal(r.pickup, 'Chandigarh');
+  assert.equal(r.drop, 'Ludhiana');
+});
+
+test('"drop: X" with a single city still reads as the drop', () => {
+  const r = extractCities('drop: Chandigarh', VOCAB);
+  assert.equal(r.pickup, null);
+  assert.equal(r.drop, 'Chandigarh');
+});

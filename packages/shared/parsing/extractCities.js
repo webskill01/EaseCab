@@ -208,6 +208,16 @@ function extractCities(text, cities) {
     const pickupCities = scanWords(pickupWords);
     const dropCities = scanWords(dropWords);
 
+    // "DROP Chandigarh tTO Ludhiana": a leading "drop" is the trip type (one-way drop
+    // duty), so two cities after it with no explicit pickup are a pickup → drop route.
+    if (!pickupMatch && dropCities.length >= 2) {
+      return {
+        pickup: dropCities[0],
+        drop: dropCities[1],
+        allCities: dropCities,
+      };
+    }
+
     if (pickupCities.length > 0 || dropCities.length > 0) {
       return {
         pickup: pickupCities[0] || rawPlace(pickupWords),
