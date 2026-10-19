@@ -52,8 +52,9 @@
     },
     "progress": "Agle free mahine ke liye {done}/{total}",
     "earned": "{count, plural, one {# free mahina mila} other {# free mahine mile}}",
-    "share": "WhatsApp pe invite bhejo",
-    "shareText": "Bhai, EaseCab app use karo — Punjab, Haryana aur Delhi ki saari taxi duties ek jagah, roz nayi. Download karo: {link}\nSign up ke baad \"Who told you about EaseCab?\" mein mera number daalna: {phone}",
+    "share": "WhatsApp pe bhejo",
+    "shareBusiness": "WhatsApp Business pe bhejo",
+    "shareText": "Bhai, EaseCab app use karo — Punjab, Haryana aur Delhi ki saari taxi duties ek jagah, roz nayi. Download karo: {link}\nSign up ke baad \"{box}\" mein mera number {phone} daalna.",
     "how": {
       "title": "Kaise kaam karta hai",
       "step1": "WhatsApp pe apna invite share karo.",

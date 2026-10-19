@@ -8,10 +8,22 @@ import { formatPaymentDate } from '@/features/subscription/lib/paymentView'
 import { useReferrals } from '../hooks/useReferrals'
 import { ClaimReferrer } from './ClaimReferrer'
 
-/** wa.me share link with the ready-made invite (Play link + "enter my number"). */
-export function shareHref(text) {
-  return `https://wa.me/?text=${encodeURIComponent(text)}`
+/** WhatsApp app packages on Android — personal and Business can both be installed. */
+const WA_APPS = Object.freeze({ personal: 'com.whatsapp', business: 'com.whatsapp.w4b' })
+
+/**
+ * Share link for the ready-made invite. With `pkg` (Android only) it is an intent URL that
+ * opens that exact app (personal vs Business) instead of letting the OS pick; falls back
+ * to wa.me when the app isn't installed. Without `pkg` it is the plain wa.me link.
+ */
+export function shareHref(text, pkg) {
+  const waMe = `https://wa.me/?text=${encodeURIComponent(text)}`
+  if (!pkg) return waMe
+  return `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=${pkg};S.browser_fallback_url=${encodeURIComponent(waMe)};end`
 }
+
+const isAndroid = () => typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+const SHARE_BTN = 'flex h-[52px] w-full items-center justify-center gap-2 rounded-xl text-[15.5px] font-extrabold text-white'
 
 /** Paid / counted / waiting pill for one referee. */
 function StatusPill({ r, t }) {
@@ -49,7 +61,8 @@ export function ReferScreen() {
   if (!data.enabled) return null // outside the rollout (REFERRAL_TESTERS) — entry points are hidden too
 
   const myNumber = profile ? String(profile.phone).replace(/^\+91/, '') : ''
-  const invite = t('shareText', { link: PLAY_STORE_URL, phone: myNumber })
+  const invite = t('shareText', { link: PLAY_STORE_URL, phone: myNumber, box: t('claim.title') })
+  const android = isAndroid()
 
   return (
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-ec-bg p-4">
@@ -64,14 +77,16 @@ export function ReferScreen() {
         )}
       </section>
 
-      <a
-        href={shareHref(invite)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-ec-success text-[15.5px] font-extrabold text-white"
-      >
-        <Whatsapp size={20} />{t('share')}
-      </a>
+      <div className="space-y-2">
+        <a href={shareHref(invite, android ? WA_APPS.personal : undefined)} target="_blank" rel="noopener noreferrer" className={`${SHARE_BTN} bg-ec-success`}>
+          <Whatsapp size={20} />{t('share')}
+        </a>
+        {android && (
+          <a href={shareHref(invite, WA_APPS.business)} target="_blank" rel="noopener noreferrer" className={`${SHARE_BTN} bg-[#128C7E]`}>
+            <Whatsapp size={20} />{t('shareBusiness')}
+          </a>
+        )}
+      </div>
 
       <section className="rounded-2xl border border-ec-line bg-white p-4">
         <p className="text-[14px] font-extrabold text-ec-ink">{t('how.title')}</p>

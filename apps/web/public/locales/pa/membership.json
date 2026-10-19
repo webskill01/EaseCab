@@ -52,8 +52,9 @@
     },
     "progress": "ਅਗਲੇ ਮੁਫ਼ਤ ਮਹੀਨੇ ਲਈ {done}/{total}",
     "earned": "{count} ਮੁਫ਼ਤ ਮਹੀਨੇ ਮਿਲੇ",
-    "share": "WhatsApp ਤੇ ਸੱਦਾ ਭੇਜੋ",
-    "shareText": "ਭਾਈ, EaseCab ਐਪ ਵਰਤੋ — ਪੰਜਾਬ, ਹਰਿਆਣਾ ਤੇ ਦਿੱਲੀ ਦੀਆਂ ਸਾਰੀਆਂ ਟੈਕਸੀ ਡਿਊਟੀਆਂ ਇੱਕ ਥਾਂ, ਰੋਜ਼ ਨਵੀਆਂ। ਡਾਊਨਲੋਡ ਕਰੋ: {link}\nਸਾਈਨ ਅੱਪ ਤੋਂ ਬਾਅਦ \"Who told you about EaseCab?\" ਵਿੱਚ ਮੇਰਾ ਨੰਬਰ ਪਾਉਣਾ: {phone}",
+    "share": "WhatsApp ਤੇ ਭੇਜੋ",
+    "shareBusiness": "WhatsApp Business ਤੇ ਭੇਜੋ",
+    "shareText": "Veer, EaseCab app use karo — Punjab te alag alag sheher ate Delhi di saari taxi duty iko jagah, har minute current duty. Download karo: {link}\nSignup ton baad \"{box}\" vich mera number {phone} paana.",
     "how": {
       "title": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ",
       "step1": "WhatsApp ਤੇ ਆਪਣਾ ਸੱਦਾ ਸਾਂਝਾ ਕਰੋ।",

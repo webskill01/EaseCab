@@ -28,10 +28,23 @@ describe('ReferScreen', () => {
     expect(screen.getByText('1 of 2 toward your next free month')).toBeInTheDocument()
     expect(screen.getByText('Paid')).toBeInTheDocument()
     expect(screen.getByText('Not paid yet')).toBeInTheDocument()
-    const href = decodeURIComponent(screen.getByText('Invite on WhatsApp').closest('a').getAttribute('href'))
+    const href = decodeURIComponent(screen.getByText('Share on WhatsApp').closest('a').getAttribute('href'))
     expect(href).toContain('9877669671')
     expect(href).toContain('com.easecab.app')
+    expect(href.startsWith('https://wa.me/')).toBe(true)
+    expect(screen.queryByText('Share on WhatsApp Business')).not.toBeInTheDocument()
     expect(screen.queryByText('Who told you about EaseCab?')).not.toBeInTheDocument()
+  })
+
+  it('on Android offers WhatsApp and WhatsApp Business, each opening its own app', () => {
+    const ua = vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)')
+    useReferrals.mockReturnValue({ data: overview(), isLoading: false, isError: false })
+    renderWithIntl(<ReferScreen />)
+    const hrefOf = (label) => screen.getByText(label).closest('a').getAttribute('href')
+    expect(hrefOf('Share on WhatsApp')).toContain('package=com.whatsapp;')
+    expect(hrefOf('Share on WhatsApp Business')).toContain('package=com.whatsapp.w4b;')
+    expect(decodeURIComponent(hrefOf('Share on WhatsApp Business'))).toContain('9877669671')
+    ua.mockRestore()
   })
 
   it('shows months earned and the claim box while the window is open', () => {

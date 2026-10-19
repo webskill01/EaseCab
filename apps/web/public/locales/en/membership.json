@@ -52,8 +52,9 @@
     },
     "progress": "{done} of {total} toward your next free month",
     "earned": "{count, plural, one {# free month earned} other {# free months earned}}",
-    "share": "Invite on WhatsApp",
-    "shareText": "Bhai, EaseCab app use karo — Punjab, Haryana aur Delhi ki saari taxi duties ek jagah, roz nayi. Download karo: {link}\nSign up ke baad \"Who told you about EaseCab?\" mein mera number daalna: {phone}",
+    "share": "Share on WhatsApp",
+    "shareBusiness": "Share on WhatsApp Business",
+    "shareText": "Hi! Try the EaseCab app — all taxi duties across Punjab, Haryana and Delhi in one place, new ones every day. Download: {link}\nAfter you sign up, enter my number {phone} in \"{box}\".",
     "how": {
       "title": "How it works",
       "step1": "Share your invite on WhatsApp.",
