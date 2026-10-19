@@ -18,7 +18,8 @@ const DAY_MS = 86_400_000;
 
 function arg(flag) {
   const i = process.argv.indexOf(flag);
-  return i !== -1 ? process.argv[i + 1] : undefined;
+  // Join everything after the flag so "+91 84377 84306" (unquoted spaces) still works.
+  return i !== -1 ? process.argv.slice(i + 1).join(' ') : undefined;
 }
 
 /** "98765 43210" / "919876543210" / "+919876543210" → "+919876543210", else null. */
