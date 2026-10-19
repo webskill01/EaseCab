@@ -1,6 +1,6 @@
 'use strict';
 
-const { PUSH_SOURCE } = require('@easecab/shared');
+const { PUSH_SOURCE, RENEWAL_REMINDER, SUBSCRIPTION_STATUS } = require('@easecab/shared');
 
 /** Maps a push source to the per-user toggle column that gates it. */
 const SOURCE_TOGGLE = Object.freeze({
@@ -16,8 +16,9 @@ const SOURCE_TOGGLE = Object.freeze({
  *
  * @param {object} deps
  * @param {import('@prisma/client').PrismaClient} deps.prisma
+ * @param {import('ioredis').Redis} [deps.redis] - only the renewal-reminder dedupe uses it
  */
-function createPushRepository({ prisma }) {
+function createPushRepository({ prisma, redis }) {
   return {
     /** Upsert a device token for the user; idempotent on (userId, deviceToken). */
     async registerToken({ userId, deviceToken, platform }) {
@@ -82,6 +83,35 @@ function createPushRepository({ prisma }) {
         distinct: ['deviceToken'],
       });
       return rows.map((r) => r.deviceToken);
+    },
+
+    /**
+     * Device tokens of paid-active members whose window ends in (from, to] — the renewal
+     * reminder candidates (Phase 21.3). One row per device; the service groups by user.
+     * Served by the subscriptions.expires_at index.
+     */
+    async findRenewalDueTokens({ from, to }) {
+      const rows = await prisma.pushSubscription.findMany({
+        where: {
+          user: {
+            isDeleted: false,
+            subscription: { status: SUBSCRIPTION_STATUS.ACTIVE, expiresAt: { gt: from, lte: to } },
+          },
+        },
+        select: { userId: true, deviceToken: true, user: { select: { subscription: { select: { expiresAt: true } } } } },
+      });
+      return rows.map((r) => ({ userId: r.userId, deviceToken: r.deviceToken, expiresAt: r.user.subscription.expiresAt }));
+    },
+
+    /**
+     * Claim the one reminder for this user's current paid period (Redis SET NX). Keyed by
+     * expiresAt, so a renewal (new expiry) is a new period. Returns true if this call won.
+     * ponytail: Redis-only dedupe — a Redis flush inside the window could re-send once;
+     * move to a DB column if that ever matters.
+     */
+    async claimRenewalReminder({ userId, expiresAt }) {
+      const key = `${RENEWAL_REMINDER.DEDUPE_KEY_PREFIX}${userId}:${expiresAt.toISOString()}`;
+      return (await redis.set(key, '1', 'EX', RENEWAL_REMINDER.DEDUPE_TTL_SEC, 'NX')) === 'OK';
     },
 
     /** Prune tokens FCM reported as permanently invalid. Returns the deleted count. */

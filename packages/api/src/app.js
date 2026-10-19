@@ -47,6 +47,7 @@ const { createBlocksService } = require('./features/blocks/blocks.service');
 const { createBlocksRouter } = require('./features/blocks/blocks.route');
 const { createPushRepository } = require('./features/push/push.repository');
 const { createPushService } = require('./features/push/push.service');
+const { createRenewalReminderService } = require('./features/push/renewalReminder.service');
 const { createPushRouter } = require('./features/push/push.route');
 const { createPushDispatcher } = require('./features/push/pushDispatcher');
 const { createUploadsService } = require('./features/uploads/uploads.service');
@@ -366,7 +367,7 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
   // preferences. The live city-targeted fan-out runs via a dedicated subscriber,
   // started only when BOTH it and the FCM sender are provided (other harnesses omit
   // them, exactly like chatStore — the routes themselves never touch pushSender).
-  const pushRepo = createPushRepository({ prisma });
+  const pushRepo = createPushRepository({ prisma, redis });
   const pushService = createPushService({ repo: pushRepo, pushSender });
   v1.use('/push', createPushRouter({ service: pushService, requireAuth }));
   if (pushSubscriber && pushSender) {
@@ -374,6 +375,8 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     pushDispatcher.start().catch((err) => logger.error({ err: err.message }, 'push dispatcher subscribe failed'));
     app.locals.pushDispatcher = pushDispatcher;
   }
+  // Renewal reminder push (Phase 21.3) — server.js runs the sweep on an interval.
+  if (pushSender) app.locals.renewalReminder = createRenewalReminderService({ repo: pushRepo, pushSender });
 
   app.use('/api/v1', v1);
 

@@ -6,7 +6,7 @@ const { serverEnv } = require('../config/serverEnv');
 const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
-const { PAYMENT_RECONCILE } = require('@easecab/shared');
+const { PAYMENT_RECONCILE, RENEWAL_REMINDER } = require('@easecab/shared');
 const { buildApp } = require('./app');
 const { createFirebaseIdentity } = require('./lib/firebaseAdmin');
 const { createChatStore } = require('./lib/firestoreChat');
@@ -160,9 +160,21 @@ async function main() {
   }
   const reconcileTimer = serverEnv.CASHFREE_STUB ? null : setInterval(reconcilePayments, PAYMENT_RECONCILE.INTERVAL_MS);
 
+  // Renewal reminder push (Phase 21.3): one push per paid period, ~1 day before expiry.
+  async function remindRenewals() {
+    try {
+      const out = await app.locals.renewalReminder.sweep();
+      if (out.users > 0) logger.info(out, 'renewal reminders sent');
+    } catch (err) {
+      logger.error({ err }, 'renewal reminder sweep failed');
+    }
+  }
+  const renewalTimer = setInterval(remindRenewals, RENEWAL_REMINDER.SWEEP_INTERVAL_MS);
+
   const shutdown = (signal) => {
     logger.info({ signal }, 'shutting down api server');
     if (reconcileTimer) clearInterval(reconcileTimer);
+    clearInterval(renewalTimer);
     server.close(async () => {
       await app.locals.rideFeed?.close().catch(() => {});
       await app.locals.pushDispatcher?.close().catch(() => {});

@@ -13,4 +13,16 @@ describe('SubTabs', () => {
     await user.click(screen.getByRole('tab', { name: /driver duties/i }))
     expect(onChange).toHaveBeenCalledWith('verified')
   })
+
+  it('pins the duties count badge to the tab corner, capped at 99+', () => {
+    renderWithIntl(<SubTabs sub="rides" onChange={vi.fn()} dutiesCount={150} />)
+    const badge = screen.getByText('99+')
+    expect(badge.className).toMatch(/absolute/)
+    expect(screen.getByRole('tab', { name: /driver duties/i })).toContainElement(badge)
+  })
+
+  it('no badge when there are no duties', () => {
+    renderWithIntl(<SubTabs sub="rides" onChange={vi.fn()} dutiesCount={0} />)
+    expect(screen.queryByText('0')).not.toBeInTheDocument()
+  })
 })

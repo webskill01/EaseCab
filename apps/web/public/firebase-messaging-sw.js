@@ -51,7 +51,7 @@ self.addEventListener('push', (event) => {
       tag: d.source ? `ride-${d.source}` : 'ride',
       renotify: true,
       data: { url: d.url || '/feed' },
-      actions: [{ action: 'view', title: 'View ride' }],
+      actions: [{ action: 'view', title: d.action || 'View ride' }],
     }),
   )
 })

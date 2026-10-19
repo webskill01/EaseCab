@@ -46,7 +46,12 @@
   "banner": {
     "expiredTitle": "Membership ended",
     "expiredSub": "Renew to contact drivers again.",
-    "renew": "Renew"
+    "renew": "Renew",
+    "joinTitle": "Become an EaseCab member",
+    "joinSub": "₹149/month — call & WhatsApp drivers for any ride.",
+    "join": "Join now",
+    "endingTitle": "{days, plural, one {Membership ends in # day} other {Membership ends in # days}}",
+    "endingSub": "Renew now — your new 30 days add on top."
   },
   "pill": {
     "newRides": "new rides"

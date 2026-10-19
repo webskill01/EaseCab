@@ -16,8 +16,28 @@ describe('FeedBanner', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('renders nothing for a never-subscribed user (gate fires only at contact)', () => {
-    const { container } = renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.NONE }} onUpgrade={vi.fn()} />)
+  it('never-subscribed user gets the Join banner → membership', async () => {
+    const onUpgrade = vi.fn()
+    const user = userEvent.setup()
+    renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.NONE }} onUpgrade={onUpgrade} />)
+    expect(screen.getByText('Become an EaseCab member')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /join now/i }))
+    expect(onUpgrade).toHaveBeenCalled()
+  })
+
+  it('active member with ≤7 days left gets the ending banner', () => {
+    renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.ACTIVE, daysLeft: 3 }} onUpgrade={vi.fn()} />)
+    expect(screen.getByText('Membership ends in 3 days')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /renew/i })).toBeInTheDocument()
+  })
+
+  it('singular day copy', () => {
+    renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.ACTIVE, daysLeft: 1 }} onUpgrade={vi.fn()} />)
+    expect(screen.getByText('Membership ends in 1 day')).toBeInTheDocument()
+  })
+
+  it('active member with 8+ days left sees nothing', () => {
+    const { container } = renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.ACTIVE, daysLeft: 8 }} onUpgrade={vi.fn()} />)
     expect(container).toBeEmptyDOMElement()
   })
 

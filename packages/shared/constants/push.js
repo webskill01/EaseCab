@@ -31,4 +31,25 @@ const PUSH = Object.freeze({
 /** Which feed a push originates from — drives both the toggle and the copy. */
 const PUSH_SOURCE = Object.freeze({ BOT: 'bot', POSTED: 'posted' });
 
-module.exports = { PUSH, PUSH_SOURCE };
+/**
+ * Renewal reminder push (Phase 21.3). One push per paid period, sent in IST daytime only,
+ * at the first sweep inside LEAD_HOURS of expiry — so every expiry gets ~1 day's notice
+ * without a 3am alert. A renewal stacks expiresAt forward, which drops the user out of
+ * the window AND changes the dedupe key, so renewed users are skipped automatically.
+ */
+const RENEWAL_REMINDER = Object.freeze({
+  SWEEP_INTERVAL_MS: 15 * 60 * 1000,
+  LEAD_HOURS: 36,
+  SEND_HOUR_START_IST: 9, // inclusive
+  SEND_HOUR_END_IST: 21, // exclusive
+  DEDUPE_TTL_SEC: 3 * 24 * 60 * 60, // outlives LEAD_HOURS
+  DEDUPE_KEY_PREFIX: 'easecab:push:renewal:',
+  TYPE: 'renewal',
+  SOURCE: 'renewal', // the service worker collapses by `ride-${source}`
+  CLICK_PATH: '/membership',
+  ACTION: 'Renew',
+  TITLE: '⏰ Membership khatam hone wali hai',
+  BODY: 'Aapki membership {date} ko khatam ho rahi hai. Renew karo aur rides contact karte raho.',
+});
+
+module.exports = { PUSH, PUSH_SOURCE, RENEWAL_REMINDER };

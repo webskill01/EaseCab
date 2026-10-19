@@ -46,7 +46,12 @@
   "banner": {
     "expiredTitle": "Membership khatam ho gayi",
     "expiredSub": "Driver se baat karne ke liye renew karein.",
-    "renew": "Renew"
+    "renew": "Renew",
+    "joinTitle": "EaseCab member baniye",
+    "joinSub": "₹149/month — kisi bhi ride ke driver ko call & WhatsApp karein.",
+    "join": "Join karein",
+    "endingTitle": "{days, plural, one {Membership # din mein khatam} other {Membership # din mein khatam}}",
+    "endingSub": "Abhi renew karein — naye 30 din upar se jud jayenge."
   },
   "pill": {
     "newRides": "nayi rides"

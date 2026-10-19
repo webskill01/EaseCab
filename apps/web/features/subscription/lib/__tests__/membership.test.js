@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { membershipView, MEMBERSHIP_STATE } from '../membership'
 
 describe('membershipView', () => {
-  it('active paid → ACTIVE', () => {
-    expect(membershipView({ status: 'active', isActive: true, expiresAt: '2036-01-01T00:00:00Z' })).toEqual({ state: MEMBERSHIP_STATE.ACTIVE })
+  it('active paid → ACTIVE with days left (rounded up)', () => {
+    const now = new Date('2026-11-10T00:00:00Z')
+    expect(membershipView({ status: 'active', isActive: true, expiresAt: '2026-11-13T03:00:00Z' }, now)).toEqual({ state: MEMBERSHIP_STATE.ACTIVE, daysLeft: 4 })
+    expect(membershipView({ status: 'active', isActive: true, expiresAt: '2026-11-10T02:00:00Z' }, now).daysLeft).toBe(1)
   })
 
   it('never had a membership → NONE', () => {
