@@ -43,5 +43,49 @@
     "feat1": "Unlimited driver contacts",
     "feat2": "Post unlimited duties",
     "feat3": "Renews every 30 days · cancel anytime"
+  },
+  "refer": {
+    "title": "Refer & Earn",
+    "hero": {
+      "title": "Refer {count} drivers, get 1 month free",
+      "sub": "Counts when your friend buys membership (₹149). No limit — more friends, more free months."
+    },
+    "progress": "{done} of {total} toward your next free month",
+    "earned": "{count, plural, one {# free month earned} other {# free months earned}}",
+    "share": "Invite on WhatsApp",
+    "shareText": "Bhai, EaseCab app use karo — Punjab, Haryana aur Delhi ki saari taxi duties ek jagah, roz nayi. Download karo: {link}\nSign up ke baad \"Who told you about EaseCab?\" mein mera number daalna: {phone}",
+    "how": {
+      "title": "How it works",
+      "step1": "Share your invite on WhatsApp.",
+      "step2": "Your friend installs EaseCab and enters your mobile number.",
+      "step3": "When {count} friends buy membership, you get 30 days free — added to your plan automatically."
+    },
+    "referredBy": "You were referred by {name}",
+    "list": {
+      "title": "Your referrals ({count})",
+      "empty": "No referrals yet. Share your invite to start.",
+      "joined": "Joined {date}"
+    },
+    "status": {
+      "paid": "Paid",
+      "counted": "Counted ✓",
+      "waiting": "Not paid yet"
+    },
+    "error": "Could not load referrals. Try again.",
+    "claim": {
+      "title": "Who told you about EaseCab?",
+      "sub": "Optional — enter their mobile number so they get credit.",
+      "placeholder": "10-digit mobile",
+      "save": "Save",
+      "done": "Referred by {name}",
+      "driver": "Driver",
+      "error": {
+        "notFound": "No EaseCab account with this number.",
+        "already": "You have already added who referred you.",
+        "invalid": "Enter a different driver’s 10-digit number.",
+        "tooMany": "Too many tries. Try again in an hour.",
+        "generic": "Something went wrong. Try again."
+      }
+    }
   }
 }

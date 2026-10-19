@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, BarChart3, TrendingUp, BadgeCheck, Flag, UserX, Users, MapPin, Route, Filter, MessagesSquare, Car, X, HandCoins,
+  LayoutDashboard, BarChart3, TrendingUp, BadgeCheck, Flag, UserX, Users, MapPin, Route, Filter, MessagesSquare, Car, X, HandCoins, Gift,
 } from 'lucide-react'
 import { useStats } from '@/features/dashboard/hooks/useStats'
 import { cn } from '@/lib/utils'
@@ -26,6 +26,7 @@ const NAV = [
   { group: 'Manage', items: [
     { href: '/users', label: 'Users', icon: Users },
     { href: '/founder-payments', label: 'Founder Payments', icon: HandCoins },
+    { href: '/referrals', label: 'Referrals', icon: Gift },
     { href: '/bot-filters', label: 'Bot Filters', icon: Filter },
     { href: '/wa-groups', label: 'WhatsApp Groups', icon: MessagesSquare },
   ] },

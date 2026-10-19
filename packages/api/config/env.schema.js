@@ -137,6 +137,17 @@ const serverEnvSchema = envSchema.extend({
   // when). Unset → /member-sync is not mounted. Separate from FLEET_SYNC_TOKEN, which
   // can write block lists.
   MEMBER_SYNC_TOKEN: z.string().min(32).optional(),
+  // Referral program rollout (Phase 22). Unset/empty = off for everyone; "*" = live for
+  // everyone; otherwise a comma list of 10-digit mobiles that see it (hidden testing).
+  REFERRAL_TESTERS: z
+    .string()
+    .default('')
+    .transform((s) => {
+      const v = s.trim();
+      if (v === '*') return { all: true, phones: [] };
+      const phones = v.split(',').map((x) => x.replace(/\D/g, '').slice(-10)).filter((x) => x.length === 10);
+      return { all: false, phones: phones.map((x) => `+91${x}`) };
+    }),
   FLEET_PEERS: z
     .string()
     .default('[]')

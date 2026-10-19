@@ -92,6 +92,12 @@ const { createAdminFounderPaymentsRepository } = require('./features/admin/admin
 const { createAdminFounderPaymentsService } = require('./features/admin/adminFounderPayments.service');
 const { createAdminFounderPaymentsRouter } = require('./features/admin/adminFounderPayments.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
+const { createReferralsRepository } = require('./features/referrals/referrals.repository');
+const { createReferralsService } = require('./features/referrals/referrals.service');
+const { createReferralsRouter } = require('./features/referrals/referrals.route');
+const { createAdminReferralsRepository } = require('./features/admin/adminReferrals.repository');
+const { createAdminReferralsService } = require('./features/admin/adminReferrals.service');
+const { createAdminReferralsRouter } = require('./features/admin/adminReferrals.route');
 
 /**
  * Assemble the Express application — pure wiring, no `listen` (server.js owns the
@@ -180,8 +186,18 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
 
   // Subscription service (Step 11). The webhook must read the RAW body for HMAC, so
   // it is mounted with express.raw() BEFORE the global express.json() below.
+  // Referral rewards (Phase 22) run after every credit. A failure is logged and never fails
+  // the payment. ponytail: no retry queue — the next paid referee or claim re-runs it.
+  const referralsService = createReferralsService({ repo: createReferralsRepository({ prisma, redis }), pushSender, access: config.referrals });
+  const onPaid = async (userId) => {
+    try {
+      await referralsService.rewardFor(userId);
+    } catch (err) {
+      logger.error({ err, userId }, 'referral reward failed');
+    }
+  };
   const subscriptionRepo = createSubscriptionRepository({ prisma, redis });
-  const subscriptionService = createSubscriptionService({ repo: subscriptionRepo, cashfree, config });
+  const subscriptionService = createSubscriptionService({ repo: subscriptionRepo, cashfree, config, onPaid });
   app.locals.subscriptionService = subscriptionService; // server.js runs the reconcile sweep on it
   app.use(
     '/api/v1/subscriptions/webhook',
@@ -229,8 +245,13 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     // Founder payments: credit ₹149 paid from a founder collection account to the real member.
     const adminFounderPaymentsService = createAdminFounderPaymentsService({
       repo: createAdminFounderPaymentsRepository({ prisma, redis }),
+      onPaid,
     });
     v1.use('/admin/founder-payments', createAdminFounderPaymentsRouter({ service: adminFounderPaymentsService, requireAdmin }));
+
+    // Referrals (Phase 22) — read-only list + totals + rollout state.
+    const adminReferralsService = createAdminReferralsService({ repo: createAdminReferralsRepository({ prisma }), access: config.referrals });
+    v1.use('/admin/referrals', createAdminReferralsRouter({ service: adminReferralsService, requireAdmin }));
 
     // Verifications queue (Step 24b) — submitted DL/RC review + manual driver badge.
     // `uploads` is the optional R2 client (presignGet for private KYC images); when
@@ -314,6 +335,8 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
 
   // Subscriptions (Step 11) — authed checkout/verify/me (webhook mounted above).
   v1.use('/subscriptions', createSubscriptionRouter({ service: subscriptionService, requireAuth }));
+  // Referrals (Phase 22) — Refer & Earn overview + "who referred you?" claim.
+  v1.use('/referrals', createReferralsRouter({ service: referralsService, requireAuth }));
 
   // Verification (Step 12) — authed Surepass KYC flows (aadhaar otp/verify, dl, rc, me).
   // Phase 19: mounted only when VERIFICATION_ENABLED — v1 does no KYC at all, so the

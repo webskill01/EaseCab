@@ -97,7 +97,9 @@
     "blocked": "ਬਲਾਕ ਕੀਤੇ ਵਰਤੋਂਕਾਰ",
     "privacy": "ਪ੍ਰਾਈਵੇਸੀ ਨੀਤੀ",
     "terms": "ਨਿਯਮ ਤੇ ਸ਼ਰਤਾਂ",
-    "notificationsCount": "{count, plural, one {# ਸ਼ਹਿਰ} other {# ਸ਼ਹਿਰ}}"
+    "notificationsCount": "{count, plural, one {# ਸ਼ਹਿਰ} other {# ਸ਼ਹਿਰ}}",
+    "refer": "ਰੈਫ਼ਰ ਕਰੋ, ਕਮਾਓ",
+    "referValue": "1 ਮਹੀਨਾ ਮੁਫ਼ਤ"
   },
   "perms": {
     "title": "ਐਪ ਅਨੁਮਤੀਆਂ",

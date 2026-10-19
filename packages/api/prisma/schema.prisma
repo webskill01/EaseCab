@@ -350,6 +350,10 @@ model User {
   // (P13-12 #5). Non-null → their posted rides are hidden from the feed pending admin
   // review. Cleared by an admin to reinstate.
   flaggedAt          DateTime?          @map("flagged_at") @db.Timestamptz(6)
+  // Referral program (Phase 22): who this user named as their referrer, and when this
+  // user (once paid) was consumed into one of the referrer's free months.
+  referredById       String?            @map("referred_by_id") @db.Uuid
+  referralRewardedAt DateTime?          @map("referral_rewarded_at") @db.Timestamptz(6)
   isDeleted          Boolean            @default(false) @map("is_deleted")
   deletedAt          DateTime?          @map("deleted_at") @db.Timestamptz(6)
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -369,10 +373,13 @@ model User {
   sentMessages            ChatMessage[]
   blocksMade              UserBlock[]              @relation("BlocksMade")
   blocksReceived          UserBlock[]              @relation("BlocksReceived")
+  referredBy              User?                    @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals               User[]                   @relation("Referrals")
 
   @@index([isDeleted])
   @@index([flaggedAt])
   @@index([createdAt])
+  @@index([referredById])
   // Push targeting (Step 15) does notification_cities && ARRAY[rideCityIds] on every
   // new-ride event — B-tree can't serve array-overlap, so GIN is required. Plain
   // CREATE INDEX here (MVP table is tiny, near-zero lock); switch to CONCURRENTLY in

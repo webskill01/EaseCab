@@ -16,8 +16,9 @@ const alreadyLinked = () => new AppError(ERROR_CODES.VALIDATION_ERROR, 'This pay
  *
  * @param {object} deps
  * @param {ReturnType<import('./adminFounderPayments.repository').createAdminFounderPaymentsRepository>} deps.repo
+ * @param {(userId: string) => Promise<void>} [deps.onPaid] - the member now has a real payment (referral rewards); must not throw
  */
-function createAdminFounderPaymentsService({ repo }) {
+function createAdminFounderPaymentsService({ repo, onPaid = async () => {} }) {
   return {
     /** Offset page of founder payments + how many still need linking. */
     async list({ page, limit }) {
@@ -49,6 +50,7 @@ function createAdminFounderPaymentsService({ repo }) {
       const renewal = grantMembership ? computeRenewal(member.subscription) : null;
       if (!(await repo.link({ paymentId, userId: member.id, renewal }))) throw alreadyLinked();
       if (renewal) await repo.invalidateSubCache(member.id);
+      await onPaid(member.id);
       return {
         member: { id: member.id, name: member.name, phoneMasked: maskPhone(phone) },
         validUntil: renewal ? renewal.newExpiresAt : null,

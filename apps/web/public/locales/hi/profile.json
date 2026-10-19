@@ -97,7 +97,9 @@
     "blocked": "ब्लॉक किए गए यूज़र",
     "privacy": "प्राइवेसी नीति",
     "terms": "नियम व शर्तें",
-    "notificationsCount": "{count, plural, one {# शहर} other {# शहर}}"
+    "notificationsCount": "{count, plural, one {# शहर} other {# शहर}}",
+    "refer": "रेफ़र करें, कमाएँ",
+    "referValue": "1 महीना फ़्री"
   },
   "perms": {
     "title": "ऐप अनुमतियाँ",

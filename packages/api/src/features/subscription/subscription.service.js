@@ -33,8 +33,9 @@ function toPublicPayment(p) {
  * @param {ReturnType<import('./subscription.repository').createSubscriptionRepository>} deps.repo
  * @param {ReturnType<import('../../lib/cashfree').createCashfreeClient>} deps.cashfree
  * @param {{ cashfree: { secretKey: string, env: 'sandbox'|'production', stub?: boolean } }} deps.config
+ * @param {(userId: string) => Promise<void>} [deps.onPaid] - after a fresh credit (referral rewards); must not throw
  */
-function createSubscriptionService({ repo, cashfree, config }) {
+function createSubscriptionService({ repo, cashfree, config, onPaid = async () => {} }) {
   const { secretKey, stub, env } = config.cashfree;
 
   /** Shared idempotent credit path for an already-verified payment on a known order. */
@@ -55,6 +56,7 @@ function createSubscriptionService({ repo, cashfree, config }) {
     if (duplicate) return { credited: false, reason: 'duplicate' };
 
     await repo.invalidateSubCache(order.userId);
+    await onPaid(order.userId);
     return { credited: true };
   }
 

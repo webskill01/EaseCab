@@ -6,6 +6,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 vi.mock('../../hooks/useProfile', () => ({ useProfile: vi.fn() }))
 vi.mock('@/features/subscription/hooks/useMembership', () => ({ useMembership: () => ({ data: { isActive: true } }) }))
 vi.mock('@/features/notifications/hooks/usePushPreferences', () => ({ usePushPreferences: vi.fn() }))
+vi.mock('@/features/referrals/hooks/useReferrals', () => ({ useReferrals: () => ({ data: { enabled: false } }) }))
 vi.mock('@/features/shell/components/LogoutButton', () => ({ LogoutButton: () => <div /> }))
 import { useProfile } from '../../hooks/useProfile'
 import { usePushPreferences } from '@/features/notifications/hooks/usePushPreferences'

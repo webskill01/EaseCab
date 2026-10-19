@@ -43,5 +43,49 @@
     "feat1": "Unlimited driver contacts",
     "feat2": "Unlimited duties post karein",
     "feat3": "Har 30 din mein renew · kabhi bhi cancel"
+  },
+  "refer": {
+    "title": "Refer karo, kamao",
+    "hero": {
+      "title": "{count} driver refer karo, 1 mahina free pao",
+      "sub": "Tab count hoga jab aapka dost membership (₹149) lega. Koi limit nahi — jitne dost, utne free mahine."
+    },
+    "progress": "Agle free mahine ke liye {done}/{total}",
+    "earned": "{count, plural, one {# free mahina mila} other {# free mahine mile}}",
+    "share": "WhatsApp pe invite bhejo",
+    "shareText": "Bhai, EaseCab app use karo — Punjab, Haryana aur Delhi ki saari taxi duties ek jagah, roz nayi. Download karo: {link}\nSign up ke baad \"Who told you about EaseCab?\" mein mera number daalna: {phone}",
+    "how": {
+      "title": "Kaise kaam karta hai",
+      "step1": "WhatsApp pe apna invite share karo.",
+      "step2": "Dost EaseCab install karke aapka mobile number daale.",
+      "step3": "Jab {count} dost membership le lenge, aapko 30 din free — plan mein apne aap jud jayenge."
+    },
+    "referredBy": "Aapko {name} ne refer kiya",
+    "list": {
+      "title": "Aapke referrals ({count})",
+      "empty": "Abhi koi referral nahi. Invite share karke shuru karo.",
+      "joined": "Joined {date}"
+    },
+    "status": {
+      "paid": "Paid",
+      "counted": "Count hua ✓",
+      "waiting": "Abhi paid nahi"
+    },
+    "error": "Referrals load nahi hue. Dobara try karo.",
+    "claim": {
+      "title": "EaseCab ke baare mein kisne bataya?",
+      "sub": "Optional — unka mobile number daalo taaki unko credit mile.",
+      "placeholder": "10 digit mobile",
+      "save": "Save",
+      "done": "{name} ne refer kiya",
+      "driver": "Driver",
+      "error": {
+        "notFound": "Is number ka EaseCab account nahi hai.",
+        "already": "Aap pehle hi refer karne wale ka number daal chuke ho.",
+        "invalid": "Kisi aur driver ka 10 digit number daalo.",
+        "tooMany": "Bahut zyada try. Ek ghante baad try karo.",
+        "generic": "Kuch galat ho gaya. Dobara try karo."
+      }
+    }
   }
 }

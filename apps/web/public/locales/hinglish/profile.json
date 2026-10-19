@@ -97,7 +97,9 @@
     "blocked": "Blocked users",
     "privacy": "Privacy Policy",
     "terms": "Terms & Conditions",
-    "notificationsCount": "{count, plural, one {# city} other {# cities}}"
+    "notificationsCount": "{count, plural, one {# city} other {# cities}}",
+    "refer": "Refer karo, kamao",
+    "referValue": "1 mahina free"
   },
   "perms": {
     "title": "App permissions",

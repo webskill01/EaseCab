@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { Shield, Crown, BellEdit, ChevR, Pin, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock, Ban, Bolt } from '@/components/ui/icons'
+import { Shield, Crown, BellEdit, ChevR, Pin, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock, Ban, Bolt, Whatsapp } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { env } from '@/config/env'
 import { LOCALE_NAMES } from '@/i18n/config'
 import { useMembership } from '@/features/subscription/hooks/useMembership'
+import { useReferrals } from '@/features/referrals/hooks/useReferrals'
 import { membershipView, MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { usePushPreferences } from '@/features/notifications/hooks/usePushPreferences'
 import { useProfile } from '../hooks/useProfile'
@@ -62,6 +63,7 @@ export function ProfileScreen() {
   const [permsOpen, setPermsOpen] = useState(false)
   const { data: profile, isLoading, isError } = useProfile()
   const { data: sub } = useMembership()
+  const { data: referrals } = useReferrals()
   // Subscribed alert-city count for the Notifications row (P12-6); 0 → no value shown.
   const { prefs: pushPrefs } = usePushPreferences()
   const alertCityCount = pushPrefs?.notificationCities?.length ?? 0
@@ -163,6 +165,7 @@ export function ProfileScreen() {
           onClick={() => router.push('/verify?intent=driver')} /> : null}
         {env.NEXT_PUBLIC_VERIFICATION_ENABLED ? <NavRow icon={<Pencil size={16} />} tone="blue" label={t('nav.editReverify')} value={t('edit')} onClick={() => router.push('/verify?intent=center')} /> : null}
         <NavRow icon={<Crown size={16} />} tone={memTone || 'warning'} label={t('nav.membership')} value={memValue} valueTint={memTint} onClick={() => router.push('/membership')} />
+        {referrals?.enabled && <NavRow icon={<Whatsapp size={18} />} tone="success" label={t('nav.refer')} value={t('nav.referValue')} valueTint="text-ec-success" onClick={() => router.push('/refer')} />}
         <NavRow icon={<BellEdit size={18} />} tone="blue" label={t('nav.notifications')} value={alertCityCount > 0 ? t('nav.notificationsCount', { count: alertCityCount }) : undefined} onClick={() => router.push('/notifications')} />
         <NavRow icon={<Globe size={18} />} tone="blue" label={t('nav.language')} value={LOCALE_NAMES[locale] ?? locale} onClick={() => router.push('/profile/language')} last />
       </nav>

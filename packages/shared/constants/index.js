@@ -25,4 +25,5 @@ module.exports = {
   ...require('./reports'),
   ...require('./users'),
   ...require('./memberSync'),
+  ...require('./referrals'),
 };
