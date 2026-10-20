@@ -137,6 +137,9 @@ const serverEnvSchema = envSchema.extend({
   // when). Unset → /member-sync is not mounted. Separate from FLEET_SYNC_TOKEN, which
   // can write block lists.
   MEMBER_SYNC_TOKEN: z.string().min(32).optional(),
+  // Read-only daily earnings for the EaseCab Finance panel. Unset → /finance-sync is
+  // not mounted.
+  FINANCE_SYNC_TOKEN: z.string().min(32).optional(),
   // Referral program rollout (Phase 22). Unset/empty = off for everyone; "*" = live for
   // everyone; otherwise a comma list of 10-digit mobiles that see it (hidden testing).
   REFERRAL_TESTERS: z

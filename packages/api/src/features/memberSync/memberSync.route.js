@@ -18,6 +18,28 @@ function tokenMatches(given, expected) {
 }
 
 /**
+ * x-token gate shared by the read-only sync APIs. An IP with AUTH_MAX_FAILURES bad
+ * tokens in the window gets 429, checked BEFORE the token so a blocked guesser can't
+ * land a hit (CLAUDE.md §6).
+ * @param {{ name: string, token: string, redis: import('ioredis').Redis, logger: { warn: Function } }} deps
+ * @returns {import('express').RequestHandler}
+ */
+function createSyncTokenGate({ name, token, redis, logger }) {
+  return async (req, _res, next) => {
+    const failKey = redisKey(name, 'auth-fail', req.ip);
+    if (Number(await redis.get(failKey)) >= MEMBER_SYNC.AUTH_MAX_FAILURES) {
+      throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
+    }
+    if (!tokenMatches(req.headers['x-token'], token)) {
+      await fixedWindowIncr(redis, failKey, MEMBER_SYNC.AUTH_WINDOW_SEC);
+      logger.warn(`${name}: rejected token`);
+      throw new AppError(ERROR_CODES.AUTH_REQUIRED, 'Invalid or missing token', HTTP_STATUS.UNAUTHORIZED);
+    }
+    next();
+  };
+}
+
+/**
  * Read-only member-sync API for the WhatsApp manager bots, mounted at
  * /api/v1/member-sync only when MEMBER_SYNC_TOKEN is set. Auth: x-token. An IP with
  * AUTH_MAX_FAILURES bad tokens in the window gets 429, checked BEFORE the token so a
@@ -34,18 +56,7 @@ function tokenMatches(given, expected) {
 function createMemberSyncRouter({ service, token, redis, logger }) {
   const router = express.Router();
 
-  router.use(async (req, _res, next) => {
-    const failKey = redisKey('member-sync', 'auth-fail', req.ip);
-    if (Number(await redis.get(failKey)) >= MEMBER_SYNC.AUTH_MAX_FAILURES) {
-      throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
-    }
-    if (!tokenMatches(req.headers['x-token'], token)) {
-      await fixedWindowIncr(redis, failKey, MEMBER_SYNC.AUTH_WINDOW_SEC);
-      logger.warn('member sync: rejected token');
-      throw new AppError(ERROR_CODES.AUTH_REQUIRED, 'Invalid or missing token', HTTP_STATUS.UNAUTHORIZED);
-    }
-    next();
-  });
+  router.use(createSyncTokenGate({ name: 'member-sync', token, redis, logger }));
 
   router.get('/memberships', validate(membershipsQuerySchema, 'query'), async (req, res) => {
     const { now, members, truncated } = await service.listMemberships(req.valid.query);
@@ -60,4 +71,4 @@ function createMemberSyncRouter({ service, token, redis, logger }) {
   return router;
 }
 
-module.exports = { createMemberSyncRouter };
+module.exports = { createMemberSyncRouter, createSyncTokenGate };

@@ -76,6 +76,8 @@ async function main() {
     fleet: { syncToken: serverEnv.FLEET_SYNC_TOKEN, peers: serverEnv.FLEET_PEERS },
     // Read-only member sync for the manager bots.
     memberSync: { token: serverEnv.MEMBER_SYNC_TOKEN },
+    // Read-only daily earnings for the finance panel.
+    financeSync: { token: serverEnv.FINANCE_SYNC_TOKEN },
   };
 
   const identity = createFirebaseIdentity({

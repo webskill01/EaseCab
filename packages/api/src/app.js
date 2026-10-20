@@ -75,6 +75,7 @@ const { createFleetSyncRouter } = require('./features/fleetSync/fleetSync.route'
 const { createMemberSyncRepository } = require('./features/memberSync/memberSync.repository');
 const { createMemberSyncService } = require('./features/memberSync/memberSync.service');
 const { createMemberSyncRouter } = require('./features/memberSync/memberSync.route');
+const { createFinanceSyncRouter } = require('./features/financeSync/financeSync.route');
 const { createAdminWaGroupsRepository } = require('./features/admin/adminWaGroups.repository');
 const { createAdminWaGroupsService } = require('./features/admin/adminWaGroups.service');
 const { createAdminWaGroupsRouter } = require('./features/admin/adminWaGroups.route');
@@ -305,6 +306,13 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
       v1.use('/member-sync', createMemberSyncRouter({
         service: createMemberSyncService({ repo: createMemberSyncRepository({ prisma }) }),
         token: config.memberSync.token, redis, logger,
+      }));
+    }
+
+    // Read-only daily earnings for the finance panel — mounted only when FINANCE_SYNC_TOKEN is set.
+    if (config.financeSync && config.financeSync.token) {
+      v1.use('/finance-sync', createFinanceSyncRouter({
+        repo: createAdminStatsRepository({ prisma }), token: config.financeSync.token, redis, logger,
       }));
     }
 
