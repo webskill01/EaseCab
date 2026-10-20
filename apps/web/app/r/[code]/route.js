@@ -10,9 +10,10 @@ const APP_ID = 'com.easecab.app'
  * installed app / iPhone / desktop → into EaseCab. The Play link also carries the code as
  * `referrer` for a future Install Referrer read in the native app.
  */
-export function GET(request, { params }) {
-  const { code } = params
-  if (!INVITE_CODE_RE.test(code)) return Response.redirect(new URL('/', request.url), 302)
+export async function GET(_request, { params }) {
+  const { code } = await params // a Promise in Next 15+
+  // Relative Location: behind nginx, request.url's host is localhost:3000.
+  if (!INVITE_CODE_RE.test(code)) return new Response(null, { status: 302, headers: { location: '/' } })
 
   const referrer = encodeURIComponent(`ref=${code}`)
   const play = `https://play.google.com/store/apps/details?id=${APP_ID}&referrer=${referrer}`
