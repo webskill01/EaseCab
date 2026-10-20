@@ -52,13 +52,12 @@
     },
     "progress": "{done} of {total} toward your next free month",
     "earned": "{count, plural, one {# free month earned} other {# free months earned}}",
-    "share": "Share on WhatsApp",
-    "shareBusiness": "Share on WhatsApp Business",
-    "shareText": "Hi! Try the EaseCab app — all taxi duties across Punjab, Haryana and Delhi in one place, new ones every day. Download: {link}\nAfter you sign up, enter my number {phone} in \"{box}\".",
+    "share": "Share invite link",
+    "shareText": "Veer, EaseCab app use karo — Punjab te alag alag sheher ate Delhi di saari taxi duty iko jagah, har minute current duty. Is link ton download karo: {link}",
     "how": {
       "title": "How it works",
-      "step1": "Share your invite on WhatsApp.",
-      "step2": "Your friend installs EaseCab and enters your mobile number.",
+      "step1": "Share your invite link on WhatsApp.",
+      "step2": "Your friend installs EaseCab from your link — they are linked to you automatically.",
       "step3": "When {count} friends buy membership, you get 30 days free — added to your plan automatically."
     },
     "referredBy": "You were referred by {name}",
@@ -73,20 +72,6 @@
       "waiting": "Not paid yet"
     },
     "error": "Could not load referrals. Try again.",
-    "claim": {
-      "title": "Who told you about EaseCab?",
-      "sub": "Optional — enter their mobile number so they get credit.",
-      "placeholder": "10-digit mobile",
-      "save": "Save",
-      "done": "Referred by {name}",
-      "driver": "Driver",
-      "error": {
-        "notFound": "No EaseCab account with this number.",
-        "already": "You have already added who referred you.",
-        "invalid": "Enter a different driver’s 10-digit number.",
-        "tooMany": "Too many tries. Try again in an hour.",
-        "generic": "Something went wrong. Try again."
-      }
-    }
+    "driver": "Driver"
   }
 }

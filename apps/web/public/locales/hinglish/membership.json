@@ -52,13 +52,12 @@
     },
     "progress": "Agle free mahine ke liye {done}/{total}",
     "earned": "{count, plural, one {# free mahina mila} other {# free mahine mile}}",
-    "share": "WhatsApp pe bhejo",
-    "shareBusiness": "WhatsApp Business pe bhejo",
-    "shareText": "Bhai, EaseCab app use karo — Punjab, Haryana aur Delhi ki saari taxi duties ek jagah, roz nayi. Download karo: {link}\nSign up ke baad \"{box}\" mein mera number {phone} daalna.",
+    "share": "Invite link bhejo",
+    "shareText": "Bhai, EaseCab app use karo — Punjab, Haryana aur Delhi ki saari taxi duties ek jagah, roz nayi. Is link se download karo: {link}",
     "how": {
       "title": "Kaise kaam karta hai",
       "step1": "WhatsApp pe apna invite share karo.",
-      "step2": "Dost EaseCab install karke aapka mobile number daale.",
+      "step2": "Dost aapke link se EaseCab install kare — woh apne aap aapse jud jayega.",
       "step3": "Jab {count} dost membership le lenge, aapko 30 din free — plan mein apne aap jud jayenge."
     },
     "referredBy": "Aapko {name} ne refer kiya",
@@ -73,20 +72,6 @@
       "waiting": "Abhi paid nahi"
     },
     "error": "Referrals load nahi hue. Dobara try karo.",
-    "claim": {
-      "title": "EaseCab ke baare mein kisne bataya?",
-      "sub": "Optional — unka mobile number daalo taaki unko credit mile.",
-      "placeholder": "10 digit mobile",
-      "save": "Save",
-      "done": "{name} ne refer kiya",
-      "driver": "Driver",
-      "error": {
-        "notFound": "Is number ka EaseCab account nahi hai.",
-        "already": "Aap pehle hi refer karne wale ka number daal chuke ho.",
-        "invalid": "Kisi aur driver ka 10 digit number daalo.",
-        "tooMany": "Bahut zyada try. Ek ghante baad try karo.",
-        "generic": "Kuch galat ho gaya. Dobara try karo."
-      }
-    }
+    "driver": "Driver"
   }
 }

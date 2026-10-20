@@ -24,7 +24,7 @@ function makeApp() {
       async findUnique({ where }) {
         return { id: where.id, phone: '+919000000001', createdAt: new Date(), referredById: null, referredBy: null };
       },
-      async findFirst() { return { id: 'ref', name: 'SUNIL' }; },
+      async findFirst() { return { id: 'ref', name: 'SUNIL', phone: '+919877669671' }; },
       async updateMany(args) { updates.push(args); return { count: 1 }; },
       async findMany() { return []; },
     },
@@ -43,14 +43,14 @@ function makeApp() {
 
 test('POST /referrals/claim → 200 sets the referrer from a loosely typed number', async () => {
   const app = makeApp();
-  const res = await request(app).post('/api/v1/referrals/claim').set('Cookie', cookieFor('u1')).send({ phone: '98776 69671' });
+  const res = await request(app).post('/api/v1/referrals/claim').set('Cookie', cookieFor('u1')).send({ code: '11111111-1111-1111-1111-111111111111' });
   assert.equal(res.status, 200);
   assert.equal(res.body.data.referrer.name, 'SUNIL');
   assert.deepEqual(app.locals._updates[0], { where: { id: 'u1', referredById: null }, data: { referredById: 'ref' } });
 });
 
 test('POST /referrals/claim → 422 on a bad number', async () => {
-  const res = await request(makeApp()).post('/api/v1/referrals/claim').set('Cookie', cookieFor('u1')).send({ phone: '12345' });
+  const res = await request(makeApp()).post('/api/v1/referrals/claim').set('Cookie', cookieFor('u1')).send({ code: 'not-a-uuid' });
   assert.equal(res.status, 422);
 });
 

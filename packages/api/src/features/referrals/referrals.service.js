@@ -10,8 +10,8 @@ function canClaim(createdAt, referredBy, now) {
 }
 
 /**
- * Referral program (Phase 22). A new driver names their referrer by mobile number within
- * CLAIM_WINDOW_DAYS of signup; every PER_REWARD referees who pay earn the referrer one
+ * Referral program (Phase 22). A new driver who opened a referrer's invite link is linked
+ * to them automatically (the web claims the stored code) within CLAIM_WINDOW_DAYS of signup; every PER_REWARD referees who pay earn the referrer one
  * free plan period, stacked like a renewal. `rewardFor` runs after any payment credit,
  * founder-payment link, or claim — it is idempotent (spent referees are marked).
  *
@@ -59,8 +59,8 @@ function createReferralsService({ repo, pushSender, access = { all: false, phone
       return { months };
     },
 
-    /** "Who referred you?" — set once, inside the window, never yourself. */
-    async claim(userId, { phone }, now = Date.now()) {
+    /** Link me to the referrer whose invite I opened — set once, inside the window, never yourself. */
+    async claim(userId, { code }, now = Date.now()) {
       const attempts = await repo.incrClaimAttempts(userId, REFERRAL.CLAIM_RATE_LIMIT.WINDOW_SEC);
       if (attempts > REFERRAL.CLAIM_RATE_LIMIT.MAX_PER_WINDOW) throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       const me = await repo.findClaimant(userId);
@@ -68,9 +68,9 @@ function createReferralsService({ repo, pushSender, access = { all: false, phone
       if (me.referredById) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'Referrer already set', 409);
       if (!canClaim(me.createdAt, null, now)) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'Referral window has closed', 422);
       // Reviewer/founder can't be referrers — unless listed as a tester (pre-launch testing).
-      const blocked = ADMIN_STATISTICS.EXCLUDED_PHONES.includes(phone) && !access.phones.includes(phone);
-      const referrer = blocked ? null : await repo.findUserByPhone(phone);
-      if (!referrer) throw AppError.fromCode(ERROR_CODES.NOT_FOUND, 'No EaseCab account with this number');
+      const referrer = await repo.findReferrer(code);
+      const blocked = referrer && ADMIN_STATISTICS.EXCLUDED_PHONES.includes(referrer.phone) && !access.phones.includes(referrer.phone);
+      if (!referrer || blocked) throw AppError.fromCode(ERROR_CODES.NOT_FOUND, 'Invite link is not valid');
       if (referrer.id === userId) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'You cannot refer yourself', 422);
       if (!(await repo.setReferrer({ userId, referrerId: referrer.id }))) {
         throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'Referrer already set', 409);
@@ -94,6 +94,7 @@ function createReferralsService({ repo, pushSender, access = { all: false, phone
       const rewardedCount = referrals.filter((r) => r.rewarded).length;
       return {
         enabled: true,
+        code: userId, // my invite link: easecab.com/r/<code>
         referrals,
         perReward: REFERRAL.PER_REWARD,
         monthsEarned: Math.floor(rewardedCount / REFERRAL.PER_REWARD),

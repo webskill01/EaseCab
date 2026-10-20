@@ -52,13 +52,12 @@
     },
     "progress": "ਅਗਲੇ ਮੁਫ਼ਤ ਮਹੀਨੇ ਲਈ {done}/{total}",
     "earned": "{count} ਮੁਫ਼ਤ ਮਹੀਨੇ ਮਿਲੇ",
-    "share": "WhatsApp ਤੇ ਭੇਜੋ",
-    "shareBusiness": "WhatsApp Business ਤੇ ਭੇਜੋ",
-    "shareText": "Veer, EaseCab app use karo — Punjab te alag alag sheher ate Delhi di saari taxi duty iko jagah, har minute current duty. Download karo: {link}\nSignup ton baad \"{box}\" vich mera number {phone} paana.",
+    "share": "ਸੱਦਾ ਲਿੰਕ ਭੇਜੋ",
+    "shareText": "Veer, EaseCab app use karo — Punjab te alag alag sheher ate Delhi di saari taxi duty iko jagah, har minute current duty. Is link ton download karo: {link}",
     "how": {
       "title": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ",
       "step1": "WhatsApp ਤੇ ਆਪਣਾ ਸੱਦਾ ਸਾਂਝਾ ਕਰੋ।",
-      "step2": "ਦੋਸਤ EaseCab ਇੰਸਟਾਲ ਕਰਕੇ ਤੁਹਾਡਾ ਮੋਬਾਈਲ ਨੰਬਰ ਪਾਵੇ।",
+      "step2": "ਦੋਸਤ ਤੁਹਾਡੇ ਲਿੰਕ ਤੋਂ EaseCab ਇੰਸਟਾਲ ਕਰੇ — ਉਹ ਆਪਣੇ ਆਪ ਤੁਹਾਡੇ ਨਾਲ ਜੁੜ ਜਾਵੇਗਾ।",
       "step3": "ਜਦੋਂ {count} ਦੋਸਤ ਮੈਂਬਰਸ਼ਿਪ ਲੈ ਲੈਣਗੇ, ਤੁਹਾਨੂੰ 30 ਦਿਨ ਮੁਫ਼ਤ — ਪਲਾਨ ਵਿੱਚ ਆਪਣੇ ਆਪ ਜੁੜ ਜਾਣਗੇ।"
     },
     "referredBy": "ਤੁਹਾਨੂੰ {name} ਨੇ ਰੈਫ਼ਰ ਕੀਤਾ",
@@ -73,20 +72,6 @@
       "waiting": "ਅਜੇ ਭੁਗਤਾਨ ਨਹੀਂ"
     },
     "error": "ਰੈਫ਼ਰਲ ਲੋਡ ਨਹੀਂ ਹੋਏ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
-    "claim": {
-      "title": "EaseCab ਬਾਰੇ ਕਿਸ ਨੇ ਦੱਸਿਆ?",
-      "sub": "ਚੋਣਵਾਂ — ਉਹਨਾਂ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ ਪਾਓ ਤਾਂ ਜੋ ਉਹਨਾਂ ਨੂੰ ਕ੍ਰੈਡਿਟ ਮਿਲੇ।",
-      "placeholder": "10 ਅੰਕਾਂ ਦਾ ਮੋਬਾਈਲ",
-      "save": "ਸੇਵ",
-      "done": "{name} ਨੇ ਰੈਫ਼ਰ ਕੀਤਾ",
-      "driver": "ਡਰਾਈਵਰ",
-      "error": {
-        "notFound": "ਇਸ ਨੰਬਰ ਦਾ EaseCab ਖਾਤਾ ਨਹੀਂ ਹੈ।",
-        "already": "ਤੁਸੀਂ ਪਹਿਲਾਂ ਹੀ ਰੈਫ਼ਰ ਕਰਨ ਵਾਲੇ ਦਾ ਨੰਬਰ ਪਾ ਚੁੱਕੇ ਹੋ।",
-        "invalid": "ਕਿਸੇ ਹੋਰ ਡਰਾਈਵਰ ਦਾ 10 ਅੰਕਾਂ ਦਾ ਨੰਬਰ ਪਾਓ।",
-        "tooMany": "ਬਹੁਤ ਜ਼ਿਆਦਾ ਕੋਸ਼ਿਸ਼ਾਂ। ਇੱਕ ਘੰਟੇ ਬਾਅਦ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
-        "generic": "ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
-      }
-    }
+    "driver": "ਡਰਾਈਵਰ"
   }
 }

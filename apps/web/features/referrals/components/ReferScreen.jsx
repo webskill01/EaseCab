@@ -2,28 +2,21 @@
 
 import { useTranslations } from 'next-intl'
 import { Whatsapp, Crown, Check } from '@/components/ui/icons'
-import { PLAY_STORE_URL } from '@/features/landing/components/LandingHero'
-import { useProfile } from '@/features/profile/hooks/useProfile'
 import { formatPaymentDate } from '@/features/subscription/lib/paymentView'
 import { useReferrals } from '../hooks/useReferrals'
-import { ClaimReferrer } from './ClaimReferrer'
-
-/** WhatsApp app packages on Android — personal and Business can both be installed. */
-const WA_APPS = Object.freeze({ personal: 'com.whatsapp', business: 'com.whatsapp.w4b' })
+import { INVITE_BASE } from '../lib/invite'
 
 /**
- * Share link for the ready-made invite. With `pkg` (Android only) it is an intent URL that
- * opens that exact app (personal vs Business) instead of letting the OS pick; falls back
- * to wa.me when the app isn't installed. Without `pkg` it is the plain wa.me link.
+ * Share the invite through the OS share sheet (Android lists WhatsApp and WhatsApp Business
+ * side by side); wa.me where Web Share isn't available (desktop).
  */
-export function shareHref(text, pkg) {
-  const waMe = `https://wa.me/?text=${encodeURIComponent(text)}`
-  if (!pkg) return waMe
-  return `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=${pkg};S.browser_fallback_url=${encodeURIComponent(waMe)};end`
+export async function shareInvite(text) {
+  if (navigator.share) {
+    try { await navigator.share({ text }) } catch { /* user closed the sheet */ }
+    return
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
 }
-
-const isAndroid = () => typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
-const SHARE_BTN = 'flex h-[52px] w-full items-center justify-center gap-2 rounded-xl text-[15.5px] font-extrabold text-white'
 
 /** Paid / counted / waiting pill for one referee. */
 function StatusPill({ r, t }) {
@@ -53,16 +46,13 @@ function Progress({ done, total, t }) {
 export function ReferScreen() {
   const t = useTranslations('membership.refer')
   const { data, isLoading, isError } = useReferrals()
-  const { data: profile } = useProfile()
 
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
   if (isError) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error')}</div>
 
   if (!data.enabled) return null // outside the rollout (REFERRAL_TESTERS) — entry points are hidden too
 
-  const myNumber = profile ? String(profile.phone).replace(/^\+91/, '') : ''
-  const invite = t('shareText', { link: PLAY_STORE_URL, phone: myNumber, box: t('claim.title') })
-  const android = isAndroid()
+  const invite = t('shareText', { link: INVITE_BASE + data.code })
 
   return (
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-ec-bg p-4">
@@ -77,16 +67,13 @@ export function ReferScreen() {
         )}
       </section>
 
-      <div className="space-y-2">
-        <a href={shareHref(invite, android ? WA_APPS.personal : undefined)} target="_blank" rel="noopener noreferrer" className={`${SHARE_BTN} bg-ec-success`}>
-          <Whatsapp size={20} />{t('share')}
-        </a>
-        {android && (
-          <a href={shareHref(invite, WA_APPS.business)} target="_blank" rel="noopener noreferrer" className={`${SHARE_BTN} bg-[#128C7E]`}>
-            <Whatsapp size={20} />{t('shareBusiness')}
-          </a>
-        )}
-      </div>
+      <button
+        type="button"
+        onClick={() => shareInvite(invite)}
+        className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-ec-success text-[15.5px] font-extrabold text-white"
+      >
+        <Whatsapp size={20} />{t('share')}
+      </button>
 
       <section className="rounded-2xl border border-ec-line bg-white p-4">
         <p className="text-[14px] font-extrabold text-ec-ink">{t('how.title')}</p>
@@ -95,9 +82,8 @@ export function ReferScreen() {
         </ol>
       </section>
 
-      {data.canClaim && <ClaimReferrer />}
       {data.referredBy && (
-        <p className="text-center text-[12.5px] font-semibold text-ec-ink40">{t('referredBy', { name: data.referredBy.name || t('claim.driver') })}</p>
+        <p className="text-center text-[12.5px] font-semibold text-ec-ink40">{t('referredBy', { name: data.referredBy.name || t('driver') })}</p>
       )}
 
       <section className="rounded-2xl border border-ec-line bg-white">
@@ -109,7 +95,7 @@ export function ReferScreen() {
             {data.referrals.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-3 border-b border-ec-line px-4 py-3 last:border-0">
                 <div className="min-w-0">
-                  <p className="truncate text-[14px] font-bold text-ec-ink">{r.name || t('claim.driver')}</p>
+                  <p className="truncate text-[14px] font-bold text-ec-ink">{r.name || t('driver')}</p>
                   <p className="text-[11.5px] font-semibold text-ec-ink40">{t('list.joined', { date: formatPaymentDate(r.joinedAt) })}</p>
                 </div>
                 <StatusPill r={r} t={t} />

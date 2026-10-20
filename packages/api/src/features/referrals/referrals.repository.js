@@ -31,8 +31,8 @@ function createReferralsRepository({ prisma, redis }) {
     },
 
     /** Live (not deleted) user by full phone. */
-    async findUserByPhone(phone) {
-      return prisma.user.findFirst({ where: { phone, isDeleted: false }, select: { id: true, name: true } });
+    async findReferrer(id) {
+      return prisma.user.findFirst({ where: { id, isDeleted: false }, select: { id: true, name: true, phone: true } });
     },
 
     /** Set the referrer only if none is set yet. @returns {Promise<boolean>} false if already set. */

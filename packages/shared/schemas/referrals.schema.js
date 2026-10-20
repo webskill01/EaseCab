@@ -3,12 +3,8 @@
 const { z } = require('zod');
 const { REFERRAL } = require('../constants/referrals');
 
-/** "Who referred you?" — accepts "98765 43210", "919876543210", "+91 98765-43210". */
-const referralClaimSchema = z.object({
-  phone: z.string().trim().max(20)
-    .transform((v) => v.replace(/\D/g, '').replace(/^(?:91|0)?(\d{10})$/, '+91$1'))
-    .pipe(z.string().regex(/^\+91[6-9]\d{9}$/, 'enter a 10-digit mobile number')),
-}).strict();
+/** Auto-claim from an invite link (easecab.com/r/<code>); the code is the referrer's user id. */
+const referralClaimSchema = z.object({ code: z.string().uuid() }).strict();
 
 /** Admin referrals list (offset pagination is fine for admin, §8). */
 const adminReferralsQuerySchema = z.object({

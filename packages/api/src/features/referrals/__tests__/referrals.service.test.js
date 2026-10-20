@@ -14,7 +14,7 @@ function fakeRepo(over = {}) {
     calls,
     incrClaimAttempts: async () => 1,
     findClaimant: async () => ({ id: 'me', phone: '+919000000001', createdAt: new Date(NOW - DAY), referredById: null }),
-    findUserByPhone: async () => ({ id: 'ref', name: 'SUNIL' }),
+    findReferrer: async () => ({ id: 'ref', name: 'SUNIL', phone: '+919877669671' }),
     setReferrer: async (a) => { calls.set = a; return true; },
     findReferrerId: async () => 'ref',
     listUnrewardedPaidReferees: async () => [],
@@ -69,7 +69,7 @@ test('rewardFor: lost race grants nothing and sends no push', async () => {
 
 test('claim: sets the referrer and returns their name', async () => {
   const repo = fakeRepo();
-  const out = await createReferralsService({ access: ALL, repo }).claim('me', { phone: '+919877669671' }, NOW);
+  const out = await createReferralsService({ access: ALL, repo }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW);
   assert.deepEqual(out, { referrer: { name: 'SUNIL' } });
   assert.deepEqual(repo.calls.set, { userId: 'me', referrerId: 'ref' });
 });
@@ -78,27 +78,28 @@ const rejectsWith = (p, status) => assert.rejects(p, (e) => e.statusCode === sta
 
 test('claim: refuses after the 7-day window', async () => {
   const repo = fakeRepo({ findClaimant: async () => ({ id: 'me', phone: '+919000000001', createdAt: new Date(NOW - 8 * DAY), referredById: null }) });
-  await rejectsWith(createReferralsService({ access: ALL, repo }).claim('me', { phone: '+919877669671' }, NOW), 422);
+  await rejectsWith(createReferralsService({ access: ALL, repo }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), 422);
 });
 
 test('claim: refuses yourself, a second claim, an unknown number and the reviewer', async () => {
-  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findUserByPhone: async () => ({ id: 'me' }) }) }).claim('me', { phone: '+919877669671' }, NOW), 422);
-  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findClaimant: async () => ({ phone: '+919000000001', createdAt: new Date(NOW), referredById: 'x' }) }) }).claim('me', { phone: '+919877669671' }, NOW), 409);
-  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findUserByPhone: async () => null }) }).claim('me', { phone: '+919877669671' }, NOW), 404);
-  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo() }).claim('me', { phone: '+919876543210' }, NOW), 404);
+  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findReferrer: async () => ({ id: 'me', phone: '+919000000001' }) }) }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), 422);
+  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findClaimant: async () => ({ phone: '+919000000001', createdAt: new Date(NOW), referredById: 'x' }) }) }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), 409);
+  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findReferrer: async () => null }) }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), 404);
+  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findReferrer: async () => ({ id: 'rv', phone: '+919876543210' }) }) }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), 404);
 });
 
 test('claim: founder number is blocked unless it is a listed tester', async () => {
   const founder = '+916283380110';
-  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo() }).claim('me', { phone: founder }, NOW), 404);
+  const findReferrer = async () => ({ id: 'f', name: 'Founder', phone: founder });
+  await rejectsWith(createReferralsService({ access: ALL, repo: fakeRepo({ findReferrer }) }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), 404);
   const access = { all: false, phones: ['+919000000001', founder] };
-  const repo = fakeRepo({ findClaimant: async () => ({ phone: '+919000000001', createdAt: new Date(NOW), referredById: null }) });
-  assert.ok((await createReferralsService({ access, repo }).claim('me', { phone: founder }, NOW)).referrer);
+  const repo = fakeRepo({ findReferrer, findClaimant: async () => ({ phone: '+919000000001', createdAt: new Date(NOW), referredById: null }) });
+  assert.ok((await createReferralsService({ access, repo }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW)).referrer);
 });
 
 test('claim: rate limited after 5 tries an hour', async () => {
   const repo = fakeRepo({ incrClaimAttempts: async () => 6 });
-  await assert.rejects(createReferralsService({ access: ALL, repo }).claim('me', { phone: '+919877669671' }, NOW), (e) => e.code === ERROR_CODES.RATE_LIMITED);
+  await assert.rejects(createReferralsService({ access: ALL, repo }).claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), (e) => e.code === ERROR_CODES.RATE_LIMITED);
 });
 
 test('overview: progress, months earned and claim window', async () => {
@@ -128,6 +129,6 @@ test('rollout gate: outsiders get enabled:false and cannot claim; listed testers
   });
   const svc = createReferralsService({ repo: outsider, access: testers });
   assert.deepEqual(await svc.overview('me', NOW), { enabled: false });
-  await rejectsWith(svc.claim('me', { phone: '+919877669671' }, NOW), 404);
+  await rejectsWith(svc.claim('me', { code: '11111111-1111-1111-1111-111111111111' }, NOW), 404);
   assert.equal(outsider.calls.set, null);
 });

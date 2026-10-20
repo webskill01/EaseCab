@@ -1,57 +1,52 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { screen, fireEvent, render, waitFor } from '@testing-library/react'
 import { renderWithIntl } from '@/test/intl'
 
 vi.mock('../../hooks/useReferrals', () => ({ useReferrals: vi.fn(), useClaimReferrer: vi.fn() }))
-vi.mock('@/features/profile/hooks/useProfile', () => ({ useProfile: () => ({ data: { phone: '+919877669671' } }) }))
 
 import { useReferrals, useClaimReferrer } from '../../hooks/useReferrals'
 import { ReferScreen } from '../ReferScreen'
-import { ClaimReferrer } from '../ClaimReferrer'
+import { AutoClaimReferral } from '../AutoClaimReferral'
+import { saveInvite, readInvite } from '../../lib/invite'
 
+const CODE = '11111111-1111-4111-8111-111111111111'
 const overview = (over = {}) => ({
   enabled: true,
+  code: CODE,
   referrals: [
     { id: 'a', name: 'SUNIL', joinedAt: '2026-10-18T00:00:00Z', paid: true, rewarded: false },
     { id: 'b', name: null, joinedAt: '2026-10-19T00:00:00Z', paid: false, rewarded: false },
   ],
   perReward: 2, monthsEarned: 0, towardNext: 1, referredBy: null, canClaim: false, ...over,
 })
-const claimStub = (over = {}) => ({ mutate: vi.fn(), isPending: false, isSuccess: false, error: null, ...over })
+const claimStub = (over = {}) => ({ mutate: vi.fn(), isPending: false, isSuccess: false, isError: false, ...over })
 
-beforeEach(() => { vi.clearAllMocks(); useClaimReferrer.mockReturnValue(claimStub()) })
+beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); useClaimReferrer.mockReturnValue(claimStub()) })
+afterEach(() => { delete navigator.share })
 
 describe('ReferScreen', () => {
-  it('shows progress, statuses and a WhatsApp invite carrying my number + Play link', () => {
+  it('shows progress + statuses and shares my invite link through the OS share sheet', async () => {
+    navigator.share = vi.fn().mockResolvedValue()
     useReferrals.mockReturnValue({ data: overview(), isLoading: false, isError: false })
     renderWithIntl(<ReferScreen />)
     expect(screen.getByText('1 of 2 toward your next free month')).toBeInTheDocument()
     expect(screen.getByText('Paid')).toBeInTheDocument()
     expect(screen.getByText('Not paid yet')).toBeInTheDocument()
-    const href = decodeURIComponent(screen.getByText('Share on WhatsApp').closest('a').getAttribute('href'))
-    expect(href).toContain('9877669671')
-    expect(href).toContain('com.easecab.app')
-    expect(href.startsWith('https://wa.me/')).toBe(true)
-    expect(screen.queryByText('Share on WhatsApp Business')).not.toBeInTheDocument()
-    expect(screen.queryByText('Who told you about EaseCab?')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText('Share invite link'))
+    await waitFor(() => expect(navigator.share).toHaveBeenCalledTimes(1))
+    const { text } = navigator.share.mock.calls[0][0]
+    expect(text).toContain(`https://easecab.com/r/${CODE}`)
+    expect(text).toMatch(/^Veer, EaseCab app use karo/)
   })
 
-  it('on Android offers WhatsApp and WhatsApp Business, each opening its own app', () => {
-    const ua = vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14)')
-    useReferrals.mockReturnValue({ data: overview(), isLoading: false, isError: false })
-    renderWithIntl(<ReferScreen />)
-    const hrefOf = (label) => screen.getByText(label).closest('a').getAttribute('href')
-    expect(hrefOf('Share on WhatsApp')).toContain('package=com.whatsapp;')
-    expect(hrefOf('Share on WhatsApp Business')).toContain('package=com.whatsapp.w4b;')
-    expect(decodeURIComponent(hrefOf('Share on WhatsApp Business'))).toContain('9877669671')
-    ua.mockRestore()
-  })
-
-  it('shows months earned and the claim box while the window is open', () => {
-    useReferrals.mockReturnValue({ data: overview({ monthsEarned: 2, canClaim: true }), isLoading: false, isError: false })
+  it('falls back to wa.me without Web Share', () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+    useReferrals.mockReturnValue({ data: overview({ monthsEarned: 2 }), isLoading: false, isError: false })
     renderWithIntl(<ReferScreen />)
     expect(screen.getByText('2 free months earned')).toBeInTheDocument()
-    expect(screen.getByText('Who told you about EaseCab?')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Share invite link'))
+    expect(open.mock.calls[0][0]).toMatch(/^https:\/\/wa\.me\/\?text=/)
+    open.mockRestore()
   })
 
   it('renders nothing outside the rollout', () => {
@@ -61,25 +56,34 @@ describe('ReferScreen', () => {
   })
 })
 
-describe('ClaimReferrer', () => {
-  it('submits the typed number once 10 digits are in', () => {
-    const mutate = vi.fn()
+describe('AutoClaimReferral', () => {
+  it('claims a stored invite once and clears it', () => {
+    saveInvite(CODE)
+    const mutate = vi.fn((_b, { onSettled }) => onSettled())
     useClaimReferrer.mockReturnValue(claimStub({ mutate }))
-    renderWithIntl(<ClaimReferrer />)
-    const save = screen.getByText('Save')
-    expect(save).toBeDisabled()
-    fireEvent.change(screen.getByPlaceholderText('10-digit mobile'), { target: { value: '98776 69671' } })
-    fireEvent.click(save)
-    expect(mutate).toHaveBeenCalledWith({ phone: '98776 69671' })
+    useReferrals.mockReturnValue({ data: overview({ canClaim: true }) })
+    render(<AutoClaimReferral />)
+    expect(useReferrals).toHaveBeenCalledWith({ enabled: true })
+    expect(mutate).toHaveBeenCalledWith({ code: CODE }, expect.any(Object))
+    expect(readInvite()).toBeNull()
   })
 
-  it('maps a 404 to "no account" and shows the referrer on success', () => {
-    useClaimReferrer.mockReturnValue(claimStub({ error: { status: 404 } }))
-    const { unmount } = renderWithIntl(<ClaimReferrer />)
-    expect(screen.getByText('No EaseCab account with this number.')).toBeInTheDocument()
+  it('drops the invite when the claim window is over; does nothing without one', () => {
+    saveInvite(CODE)
+    useReferrals.mockReturnValue({ data: overview({ canClaim: false }) })
+    const { unmount } = render(<AutoClaimReferral />)
+    expect(readInvite()).toBeNull()
     unmount()
-    useClaimReferrer.mockReturnValue(claimStub({ isSuccess: true, data: { referrer: { name: 'SUNIL' } } }))
-    renderWithIntl(<ClaimReferrer />)
-    expect(screen.getByText('Referred by SUNIL')).toBeInTheDocument()
+    const mutate = vi.fn()
+    useClaimReferrer.mockReturnValue(claimStub({ mutate }))
+    useReferrals.mockReturnValue({ data: undefined })
+    render(<AutoClaimReferral />)
+    expect(useReferrals).toHaveBeenLastCalledWith({ enabled: false })
+    expect(mutate).not.toHaveBeenCalled()
+  })
+
+  it('ignores a malformed code', () => {
+    saveInvite('../../evil')
+    expect(readInvite()).toBeNull()
   })
 })
