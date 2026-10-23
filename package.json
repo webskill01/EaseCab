@@ -5,7 +5,8 @@
   "engines": { "node": ">=20.9" },
   "overrides": {
     "next": "16.4.2",
-    "undici": "^6.27.0"
+    "undici": "^6.27.0",
+    "@firebase/firestore": { "@grpc/grpc-js": "^1.14.6" }
   },
   "scripts": {
     "dev:web": "npm run dev --workspace=apps/web",
