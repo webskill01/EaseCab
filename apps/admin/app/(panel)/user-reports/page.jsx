@@ -16,7 +16,6 @@ export default function UserReportsPage() {
         icon={UserX}
         title="User Reports"
         count={total}
-        tone="from-orange-500 to-red-500"
         description="Drivers reported by others. Reinstate if the auto-hide was wrong, or keep them hidden."
       />
 

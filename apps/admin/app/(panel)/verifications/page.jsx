@@ -32,7 +32,6 @@ export default function VerificationsPage() {
         icon={BadgeCheck}
         title="Verifications"
         count={total}
-        tone="from-amber-400 to-orange-500"
         description="Driving licence and RC submissions waiting for review, grouped per driver."
       />
 

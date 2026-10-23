@@ -8,7 +8,7 @@
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
-    --primary: 217 90% 63%;            /* #4D8DF6 EaseCab Blue (lightened, locked) */
+    --primary: 221 83% 53%;            /* #2563EB — finance/manager panel blue */
     --primary-foreground: 0 0% 100%;
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
@@ -16,7 +16,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 217 90% 63%;
+    --ring: 221 83% 53%;
     --radius: 0.75rem;
   }
 }
@@ -26,9 +26,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-ec-bg text-ec-ink;
+    font-feature-settings: 'cv11', 'ss01';
   }
   html {
-    font-family: system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
   }
 }

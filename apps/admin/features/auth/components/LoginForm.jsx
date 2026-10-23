@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Car, Mail, Lock, Loader2 } from 'lucide-react'
+import { Mail, Lock, Loader2 } from 'lucide-react'
 import { useAdminLogin } from '../hooks/useAdminLogin'
 import { button, input } from '@/lib/ui'
 
@@ -18,15 +18,14 @@ export function LoginForm() {
   const [password, setPassword] = useState('')
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-ec-blueInk p-4">
+    <div className="flex min-h-screen items-center justify-center bg-ec-bg p-4">
       <form
         onSubmit={(e) => { e.preventDefault(); submit(email, password) }}
-        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+        className="w-full max-w-sm rounded-ec-card border border-ec-line bg-white p-6 shadow-ec-card sm:p-8"
       >
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-ec-blue to-ec-blueInk text-white shadow-lg shadow-ec-blue/40">
-          <Car size={26} />
-        </span>
-        <h1 className="mt-4 text-center text-xl font-bold text-ec-ink">EaseCab Admin</h1>
+        {/* eslint-disable-next-line @next/next/no-img-element -- static 192px brand icon */}
+        <img src="/logo.png" alt="" className="mx-auto h-12 w-12 rounded-xl" />
+        <h1 className="mt-4 text-center text-xl font-semibold tracking-tight text-ec-ink">EaseCab Admin</h1>
         <p className="mt-1 text-center text-sm text-ec-ink60">Sign in to manage the platform</p>
 
         <div className="mt-6 flex flex-col gap-3">

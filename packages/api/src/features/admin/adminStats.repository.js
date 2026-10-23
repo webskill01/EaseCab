@@ -39,7 +39,7 @@ function createAdminStatsRepository({ prisma }) {
      * One row per IST day from launch to today (gap days filled with zeros).
      * Signups = new users; paidAccounts = subscriptions.paid_started_at on that day;
      * payments/revenuePaise = captured payment rows, credited to on_behalf_of_user_id when a
-     * founder paid for a member. Excluded phones never count.
+     * founder paid for a member. Excluded phones and free members never count.
      * @returns {Promise<{ day: Date, signups: number, paidAccounts: number, payments: number, revenuePaise: number }[]>}
      */
     async growthDaily() {
@@ -48,7 +48,7 @@ function createAdminStatsRepository({ prisma }) {
       // ponytail: three GROUP BYs over full tables, fine at thousands of rows; add
       // created_at range predicates if users/payments grow past ~1M.
       return prisma.$queryRaw`
-        WITH u AS (SELECT id, created_at FROM users WHERE phone <> ALL(${phones})),
+        WITH u AS (SELECT id, created_at FROM users WHERE phone <> ALL(${phones}) AND NOT EXISTS (SELECT 1 FROM complimentary_members cm WHERE cm.user_id = users.id)),
         s AS (SELECT (created_at AT TIME ZONE ${TIMEZONE})::date AS d, count(*) AS n FROM u GROUP BY 1),
         p AS (
           SELECT (sb.paid_started_at AT TIME ZONE ${TIMEZONE})::date AS d, count(*) AS n
@@ -80,7 +80,8 @@ function createAdminStatsRepository({ prisma }) {
      * with a captured payment in the PERIOD_DAYS before the week end (or now, for the
      * running week). Renewal cohort = payments whose period ended in the week and whose
      * grace window has passed. Bot rides = archived ride_daily_stats + live rows.
-     * Only users who joined on/after launch count (earlier rows are test data).
+     * Only users who joined on/after launch count (earlier rows are test data); free
+     * members never count.
      * @returns {Promise<object[]>}
      */
     async trackRecordWeekly() {
@@ -93,6 +94,7 @@ function createAdminStatsRepository({ prisma }) {
         WITH u AS (
           SELECT id, created_at FROM users
           WHERE phone <> ALL(${phones}) AND (created_at AT TIME ZONE ${tz})::date >= ${LAUNCH_DATE}::date
+            AND NOT EXISTS (SELECT 1 FROM complimentary_members cm WHERE cm.user_id = users.id)
         ),
         pay AS (
           -- capture time (see growthDaily), aliased so the week maths below reads it
@@ -146,7 +148,7 @@ function createAdminStatsRepository({ prisma }) {
         FROM w ORDER BY w.wk DESC`;
     },
 
-    /** Members with time left right now who joined since launch, excluding reviewer phones. */
+    /** Members with time left right now who joined since launch, excluding reviewer phones + free members. */
     async activeMembers() {
       return prisma.subscription.count({
         where: {
@@ -154,6 +156,7 @@ function createAdminStatsRepository({ prisma }) {
           expiresAt: { gt: new Date() },
           user: {
             phone: { notIn: [...ADMIN_STATISTICS.EXCLUDED_PHONES] },
+            complimentary: { is: null }, // free (barter) members are not customers
             createdAt: { gte: new Date(`${ADMIN_STATISTICS.LAUNCH_DATE}T00:00:00+05:30`) }, // pre-launch = test data
           },
         },

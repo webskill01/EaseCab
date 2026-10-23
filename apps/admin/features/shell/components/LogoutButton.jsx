@@ -16,9 +16,9 @@ export function LogoutButton() {
   return (
     <button
       onClick={onLogout}
-      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+      className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-ec-ink60 transition hover:bg-red-50 hover:text-ec-danger"
     >
-      <LogOut size={17} />
+      <LogOut size={16} />
       Log out
     </button>
   )

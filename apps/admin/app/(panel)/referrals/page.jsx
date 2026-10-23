@@ -35,7 +35,6 @@ export default function ReferralsPage() {
       <PageHeader
         icon={Gift}
         title="Referrals"
-        tone="from-emerald-500 to-teal-600"
         description="Who joined on whose number. A referral counts once the new driver pays ₹149; every 2 paid referrals give the referrer 1 free month, added automatically."
         actions={rolloutLabel(r.rollout)}
       />

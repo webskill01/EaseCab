@@ -49,7 +49,6 @@ export default function FounderPaymentsPage() {
       <PageHeader
         icon={HandCoins}
         title="Founder payments"
-        tone="from-amber-500 to-orange-600"
         description="When a driver pays you ₹149 on your own UPI, pay ₹149 in the app from the founder account, then link that payment to the driver here. Stats then count the driver as the payer. Untick “Also add 30 days” if you already added their plan by hand."
         actions={<span className={pill({ tone: f.unlinked ? 'amber' : 'green' })}>{f.unlinked} to link</span>}
       />

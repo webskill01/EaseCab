@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { BadgeCheck, Flag, MapPin, Car, UserPlus, Crown, IndianRupee, LayoutDashboard, ArrowRight } from 'lucide-react'
+import { BadgeCheck, Flag, UserPlus, Crown, IndianRupee, Percent, LayoutDashboard, ArrowRight } from 'lucide-react'
 import { useStats } from '@/features/dashboard/hooks/useStats'
 import { StatCard } from '@/features/dashboard/components/StatCard'
 import { useGrowth } from '@/features/statistics/hooks/useGrowth'
@@ -10,15 +10,15 @@ import { PageHeader } from '@/features/shell/components/PageHeader'
 import { ErrorState } from '@/features/shell/components/QueryState'
 import { card } from '@/lib/ui'
 
-/** Open queues (clickable) + today's ingested rides. */
+/** Open queues (clickable). */
 const QUEUES = [
   { key: 'pendingVerifications', label: 'Pending verifications', href: '/verifications', icon: BadgeCheck, tone: 'amber' },
   { key: 'openReports', label: 'Open reports', href: '/reports', icon: Flag, tone: 'red' },
-  { key: 'unresolvedCities', label: 'Unresolved cities', href: '/city-strings', icon: MapPin, tone: 'violet' },
-  { key: 'ridesToday', label: 'Rides today', href: null, icon: Car, tone: 'blue' },
 ]
 
 const inr = (n) => `₹${n.toLocaleString('en-IN')}`
+/** Paid ÷ signups as "31.6%"; a dash when there are no signups to divide by. */
+const ratio = (paid, signups) => (signups > 0 ? `${Math.round((paid / signups) * 1000) / 10}%` : '—')
 
 function greeting() {
   const h = new Date().getHours()
@@ -29,18 +29,27 @@ export default function DashboardPage() {
   const { data, isLoading, isError } = useStats()
   const growth = useGrowth()
   const today = growth.data?.days[0]
+  const totals = growth.data?.totals
   const last14 = (growth.data?.days ?? []).slice(0, 14).reverse().map((d) => ({ label: d.day, value: d.signups }))
+  const wait = '…'
 
   return (
     <div>
-      <PageHeader icon={LayoutDashboard} title="Dashboard" description={`${greeting()} — here's what needs attention.`} />
+      <PageHeader icon={LayoutDashboard} title="Dashboard" description={`${greeting()} — here's today so far.`} />
 
-      {isError && <div className="mb-4"><ErrorState message="Failed to load stats." /></div>}
+      {(isError || growth.isError) && <div className="mb-4"><ErrorState message="Failed to load stats." /></div>}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {QUEUES.map(({ key, ...c }) => (
-          <StatCard key={key} {...c} value={isLoading ? '…' : (data?.[key] ?? 0)} />
-        ))}
+        <StatCard label="Signups today" value={today ? today.signups : wait} icon={UserPlus} tone="sky" />
+        <StatCard label="Paid accounts today" value={today ? today.paidAccounts : wait} icon={Crown} tone="green" />
+        <StatCard label="Revenue today" value={today ? inr(today.revenue) : wait} icon={IndianRupee} tone="violet" />
+        <StatCard
+          label="Signups → paid"
+          value={totals ? ratio(totals.paidAccounts, totals.signups) : wait}
+          icon={Percent}
+          tone="amber"
+          hint={totals && today ? `${totals.paidAccounts} of ${totals.signups} since launch · today ${ratio(today.paidAccounts, today.signups)}` : null}
+        />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
@@ -54,10 +63,10 @@ export default function DashboardPage() {
           {last14.length > 0 ? <BarChart data={last14} /> : <div className="h-40 animate-pulse rounded-lg bg-slate-100" />}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-          <StatCard label="Signups today" value={today ? today.signups : '…'} icon={UserPlus} tone="sky" />
-          <StatCard label="Paid accounts today" value={today ? today.paidAccounts : '…'} icon={Crown} tone="green" />
-          <StatCard label="Revenue today" value={today ? inr(today.revenue) : '…'} icon={IndianRupee} tone="violet" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          {QUEUES.map(({ key, ...c }) => (
+            <StatCard key={key} {...c} value={isLoading ? wait : (data?.[key] ?? 0)} />
+          ))}
         </div>
       </div>
     </div>

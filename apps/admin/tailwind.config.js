@@ -37,12 +37,12 @@ module.exports = {
           foreground: 'hsl(var(--card-foreground))',
         },
         ec: {
-          // Brand blue shares the locked web palette (docs/design/DESIGN-SYSTEM.md §1).
-          blue: '#4D8DF6',
-          blueDeep: '#3674E8',
-          blueInk: '#2C5BD8',
-          sky: '#EFF6FF',
-          skyDeep: '#DCEAFE',
+          // Same palette as the finance + manager-bot panels: one blue accent, slate text.
+          blue: '#2563EB',
+          blueDeep: '#1E40AF',
+          blueInk: '#1E3A8A',
+          sky: '#EFF4FF',
+          skyDeep: '#DBE7FE',
           bg: '#F8FAFC',
           line: '#E2E8F0',
           ink: '#0F172A',
@@ -53,15 +53,16 @@ module.exports = {
           danger: '#EF4444',
         },
       },
+      fontFamily: { sans: ['var(--font-inter)', 'system-ui', 'sans-serif'] },
       boxShadow: {
-        'ec-card': '0 1px 3px rgba(15,23,42,0.08)',
+        'ec-card': '0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06)',
         'ec-float': '0 8px 24px rgba(15,23,42,0.12)',
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
-        'ec-card': '16px',
+        'ec-card': '12px',
       },
     },
   },

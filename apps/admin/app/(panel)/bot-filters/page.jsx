@@ -43,7 +43,6 @@ export default function BotFiltersPage() {
         icon={Filter}
         title="Bot Filters"
         count={f.total}
-        tone="from-slate-600 to-slate-800"
         description="Changes reach the WhatsApp bot within seconds. No restart needed."
       />
 

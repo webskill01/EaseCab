@@ -22,7 +22,6 @@ export default function ReportsPage() {
         icon={Flag}
         title="Reports"
         count={total}
-        tone="from-rose-500 to-red-600"
         description="Rides drivers flagged. Dismiss false alarms or take the ride down."
         actions={<Segmented options={STATUSES} value={status} onChange={setStatus} />}
       />

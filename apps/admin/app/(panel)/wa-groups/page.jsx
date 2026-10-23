@@ -45,7 +45,6 @@ export default function WaGroupsPage() {
       <PageHeader
         icon={MessagesSquare}
         title="WhatsApp Groups"
-        tone="from-green-500 to-emerald-600"
         description="Every group the bot's number is in shows up here and is read by default. Switch a group off to stop taking rides from it — the bot applies it within seconds."
         actions={
           <>

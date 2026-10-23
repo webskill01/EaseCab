@@ -54,12 +54,12 @@ test('trackRecord returns null ratios when there is nothing to divide', async ()
   assert.strictEqual(b.ltv, null); // zero churn → no finite LTV
 });
 
-test('trackRecord uses the live member count for the running week only', async () => {
+test('trackRecord counts active paid from payments only, never the live member count', async () => {
   const svc = createAdminStatsService({
     repo: { async trackRecordWeekly() { return [raw({ activePaid: 30 }), raw({ activePaid: 20 })]; }, async activeMembers() { return 32; } },
   });
   const [now, prev] = (await svc.trackRecord()).weeks;
-  assert.strictEqual(now.activePaid, 32);
-  assert.strictEqual(now.mrr, 32 * 149);
+  assert.strictEqual(now.activePaid, 30);
+  assert.strictEqual(now.mrr, 30 * 149);
   assert.strictEqual(prev.activePaid, 20);
 });

@@ -79,7 +79,6 @@ export default function TrackRecordPage() {
       <PageHeader
         icon={TrendingUp}
         title="Track Record"
-        tone="from-emerald-500 to-teal-600"
         description={`Weekly health since launch${data ? ` (${data.since})` : ''} · Mon–Sun IST · this week is still running · reviewer excluded`}
       />
 

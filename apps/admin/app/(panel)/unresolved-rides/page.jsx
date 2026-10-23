@@ -16,7 +16,6 @@ export default function UnresolvedRidesPage() {
         icon={Route}
         title="Unresolved Rides"
         count={total}
-        tone="from-teal-500 to-emerald-600"
         description="Live bot rides missing a pickup or drop city. Set the right city, or hide the ride."
       />
 

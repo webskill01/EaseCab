@@ -48,7 +48,7 @@ export default function UsersPage() {
 
   return (
     <div>
-      <PageHeader icon={Users} title="Users" count={u.total} tone="from-sky-500 to-blue-600" description="Find drivers, see who is a paying member, open a full profile, soft-delete or restore." />
+      <PageHeader icon={Users} title="Users" count={u.total} description="Find drivers, see who is a paying member, open a full profile, soft-delete or restore." />
 
       <div className="mb-4 space-y-3 rounded-ec-card border border-ec-line bg-white p-4 shadow-ec-card">
         <form onSubmit={submitSearch} className="flex gap-2 sm:max-w-md">

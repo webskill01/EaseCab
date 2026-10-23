@@ -92,6 +92,9 @@ const { createAdminStatsRouter } = require('./features/admin/adminStats.route');
 const { createAdminFounderPaymentsRepository } = require('./features/admin/adminFounderPayments.repository');
 const { createAdminFounderPaymentsService } = require('./features/admin/adminFounderPayments.service');
 const { createAdminFounderPaymentsRouter } = require('./features/admin/adminFounderPayments.route');
+const { createAdminComplimentaryRepository } = require('./features/admin/adminComplimentary.repository');
+const { createAdminComplimentaryService } = require('./features/admin/adminComplimentary.service');
+const { createAdminComplimentaryRouter } = require('./features/admin/adminComplimentary.route');
 const { createPasswordHasher } = require('./lib/passwordHasher');
 const { createReferralsRepository } = require('./features/referrals/referrals.repository');
 const { createReferralsService } = require('./features/referrals/referrals.service');
@@ -249,6 +252,12 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
       onPaid,
     });
     v1.use('/admin/founder-payments', createAdminFounderPaymentsRouter({ service: adminFounderPaymentsService, requireAdmin }));
+
+    // Free members (barter/help): plan time without payment, left out of analytics.
+    const adminComplimentaryService = createAdminComplimentaryService({
+      repo: createAdminComplimentaryRepository({ prisma, redis }),
+    });
+    v1.use('/admin/complimentary', createAdminComplimentaryRouter({ service: adminComplimentaryService, requireAdmin }));
 
     // Referrals (Phase 22) — read-only list + totals + rollout state.
     const adminReferralsService = createAdminReferralsService({ repo: createAdminReferralsRepository({ prisma }), access: config.referrals });

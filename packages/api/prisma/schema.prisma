@@ -375,6 +375,7 @@ model User {
   blocksReceived          UserBlock[]              @relation("BlocksReceived")
   referredBy              User?                    @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals               User[]                   @relation("Referrals")
+  complimentary           ComplimentaryMember?
 
   @@index([isDeleted])
   @@index([flaggedAt])
@@ -688,6 +689,24 @@ model AdminUser {
   reviewedSubmissions VerificationSubmission[]
   reviewedReports     RideReport[]
   reviewedUserReports UserReport[]
+  complimentaryGrants ComplimentaryMember[]
 
   @@map("admin_users")
+}
+
+/// Free membership given for barter/help. These users are left out of every admin
+/// analytics number (signups, paid, revenue, MRR) — see adminStats.repository.
+model ComplimentaryMember {
+  userId        String     @id @map("user_id") @db.Uuid
+  note          String?
+  monthsGranted Int        @default(0) @map("months_granted")
+  grantedById   String?    @map("granted_by_id") @db.Uuid
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy AdminUser? @relation(fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@index([grantedById])
+  @@map("complimentary_members")
 }

@@ -49,7 +49,6 @@ export default function StatisticsPage() {
       <PageHeader
         icon={BarChart3}
         title="Statistics"
-        tone="from-violet-500 to-purple-600"
         description={`Since launch${data ? ` (${data.since})` : ''} · IST days · Play reviewer excluded · refreshes every minute`}
       />
 

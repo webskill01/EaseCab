@@ -5,7 +5,7 @@ const {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
-  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS, ADMIN_FOUNDER_PAYMENTS,
+  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY,
 } = require('../constants/admin');
 const { BOT_FILTER_LIST } = require('../constants/botFilters');
 const { VERIFICATION_STATUS } = require('../constants/enums');
@@ -182,7 +182,18 @@ const adminFounderPaymentLinkSchema = z.object({
   grantMembership: z.boolean().default(true),
 });
 
+/** Add a free member: same phone parsing as founder-payment links. */
+const adminComplimentaryCreateSchema = z.object({
+  phone: adminFounderPaymentLinkSchema.shape.phone,
+  months: z.number().int().min(0).max(ADMIN_COMPLIMENTARY.MAX_MONTHS),
+  note: z.string().trim().max(ADMIN_COMPLIMENTARY.NOTE_MAX).optional(),
+});
+
+const adminComplimentaryUserParamSchema = z.object({ userId: z.string().uuid() });
+
 module.exports = {
+  adminComplimentaryCreateSchema,
+  adminComplimentaryUserParamSchema,
   adminFounderPaymentsQuerySchema,
   adminFounderPaymentIdParamSchema,
   adminFounderPaymentLinkSchema,

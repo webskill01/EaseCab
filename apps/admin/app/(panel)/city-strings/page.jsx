@@ -16,7 +16,6 @@ export default function CityStringsPage() {
         icon={MapPin}
         title="City Strings"
         count={total}
-        tone="from-violet-500 to-purple-600"
         description="Unresolved city names from the bot feed. Resolve each to a city or dismiss junk."
       />
 
