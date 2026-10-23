@@ -29,6 +29,7 @@ function createAdminComplimentaryService({ repo }) {
       const rows = await repo.list();
       return rows.map((r) => ({
         userId: r.userId,
+        label: r.label,
         name: r.user.name,
         phoneMasked: maskPhone(r.user.phone),
         note: r.note,
@@ -42,7 +43,7 @@ function createAdminComplimentaryService({ repo }) {
      * Mark the user with `phone` as free and add `months` of plan time (0 = only mark).
      * 404 unknown user, 422 founder or reviewer account.
      */
-    async add({ phone, months, note }, adminId) {
+    async add({ phone, months, label, note }, adminId) {
       const internal = [...ADMIN_FOUNDER_PAYMENTS.COLLECTION_PHONES, ...ADMIN_STATISTICS.EXCLUDED_PHONES];
       if (internal.includes(phone)) {
         throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'This is an internal account, it is already left out of stats', 422);
@@ -51,7 +52,7 @@ function createAdminComplimentaryService({ repo }) {
       if (!user) throw AppError.fromCode(ERROR_CODES.NOT_FOUND, 'No user with this number — they must sign in to the app once');
 
       const expiresAt = months > 0 ? extendBy(user.subscription, months) : null;
-      await repo.grant({ userId: user.id, months, note, adminId, expiresAt });
+      await repo.grant({ userId: user.id, months, label: label || undefined, note: note || undefined, adminId, expiresAt });
       if (expiresAt) await repo.invalidateSubCache(user.id);
       return {
         userId: user.id, name: user.name, phoneMasked: maskPhone(phone),

@@ -145,7 +145,7 @@ test('serverEnvSchema requires ADMIN_JWT secrets ≥32 chars and defaults the TT
   assert.equal(ok.success, true);
   assert.equal(ok.data.ADMIN_JWT_ACCESS_SECRET, ADMIN_SECRET_A);
   assert.equal(ok.data.ADMIN_JWT_ACCESS_TTL, '15m');
-  assert.equal(ok.data.ADMIN_JWT_REFRESH_TTL, '8h');
+  assert.equal(ok.data.ADMIN_JWT_REFRESH_TTL, '7d');
 
   const bad = parseServerEnv({ ...BASE, ADMIN_JWT_ACCESS_SECRET: 'short' });
   assert.equal(bad.success, false);

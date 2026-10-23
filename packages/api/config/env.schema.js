@@ -59,7 +59,7 @@ const serverEnvSchema = envSchema.extend({
   ADMIN_JWT_ACCESS_SECRET: z.string().min(32),
   ADMIN_JWT_REFRESH_SECRET: z.string().min(32),
   ADMIN_JWT_ACCESS_TTL: z.string().default('15m'),
-  ADMIN_JWT_REFRESH_TTL: z.string().default('8h'),
+  ADMIN_JWT_REFRESH_TTL: z.string().default('7d'), // sliding: every refresh re-issues it
   // Parent domain for the admin auth cookies (security-review M2). Set to
   // `.easecab.com` in production so the cookie reaches admin.easecab.com and the
   // Next middleware can route-gate on it. Leave UNSET in dev/test → host-only cookie

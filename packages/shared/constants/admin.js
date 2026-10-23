@@ -94,7 +94,7 @@ const ADMIN_FOUNDER_PAYMENTS = Object.freeze({
  * Free (barter/help) members: admin gives N months of plan time; these users are left
  * out of every analytics number. 0 months = just mark someone who already has time.
  */
-const ADMIN_COMPLIMENTARY = Object.freeze({ MAX_MONTHS: 12, NOTE_MAX: 200 });
+const ADMIN_COMPLIMENTARY = Object.freeze({ MAX_MONTHS: 12, NOTE_MAX: 200, LABEL_MAX: 60 });
 
 module.exports = {
   ADMIN_STATISTICS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY,

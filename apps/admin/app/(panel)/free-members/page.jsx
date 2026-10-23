@@ -11,16 +11,21 @@ const MONTHS = [0, 1, 2, 3, 6, 12]
 const date = (iso) => new Date(iso).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })
 
 function AddForm({ add }) {
+  const [label, setLabel] = useState('')
   const [phone, setPhone] = useState('')
   const [months, setMonths] = useState(1)
   const [note, setNote] = useState('')
   const submit = (e) => {
     e.preventDefault()
-    add.mutate({ phone, months, note: note.trim() }, { onSuccess: () => { setPhone(''); setNote('') } })
+    add.mutate({ phone, months, label: label.trim(), note: note.trim() }, { onSuccess: () => { setLabel(''); setPhone(''); setNote('') } })
   }
 
   return (
-    <form onSubmit={submit} className={`${card} mb-6 grid gap-3 sm:grid-cols-[1fr_auto_1.5fr_auto] sm:items-end`}>
+    <form onSubmit={submit} className={`${card} mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_1.5fr_auto] lg:items-end`}>
+      <label className="text-xs font-medium text-ec-ink60">
+        Name
+        <input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={60} placeholder="Who is this?" className={`${input} mt-1`} />
+      </label>
       <label className="text-xs font-medium text-ec-ink60">
         Mobile number
         <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="98765 43210" className={`${input} mt-1`} />
@@ -47,7 +52,10 @@ function Row({ m, remove }) {
   return (
     <li className="flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <p className="font-medium text-ec-ink">{m.name || 'No name'} <span className="text-ec-ink60">({m.phoneMasked})</span></p>
+        <p className="font-medium text-ec-ink">
+          {m.label || m.name || 'No name'} <span className="text-ec-ink60">({m.phoneMasked})</span>
+          {m.label && m.name && m.label !== m.name && <span className="ml-1 text-xs font-normal text-ec-ink40">· app name {m.name}</span>}
+        </p>
         <p className="mt-0.5 text-xs text-ec-ink60">
           {m.monthsGranted} month{m.monthsGranted === 1 ? '' : 's'} given · added {date(m.addedAt)}{m.note ? ` · ${m.note}` : ''}
         </p>

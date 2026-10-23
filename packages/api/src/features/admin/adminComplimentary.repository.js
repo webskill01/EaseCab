@@ -18,7 +18,7 @@ function createAdminComplimentaryRepository({ prisma, redis }) {
       return prisma.complimentaryMember.findMany({
         orderBy: { createdAt: 'desc' },
         select: {
-          userId: true, note: true, monthsGranted: true, createdAt: true,
+          userId: true, label: true, note: true, monthsGranted: true, createdAt: true,
           user: { select: { name: true, phone: true, subscription: { select: { status: true, expiresAt: true } } } },
         },
       });
@@ -37,12 +37,12 @@ function createAdminComplimentaryRepository({ prisma, redis }) {
      * Adding someone again adds to their months. paidStartedAt is never touched: a free
      * plan is not a first payment.
      */
-    async grant({ userId, months, note, adminId, expiresAt }) {
+    async grant({ userId, months, label, note, adminId, expiresAt }) {
       await prisma.$transaction(async (tx) => {
         await tx.complimentaryMember.upsert({
           where: { userId },
-          create: { userId, monthsGranted: months, note, grantedById: adminId },
-          update: { monthsGranted: { increment: months }, ...(note ? { note } : {}), grantedById: adminId },
+          create: { userId, monthsGranted: months, label, note, grantedById: adminId },
+          update: { monthsGranted: { increment: months }, ...(label ? { label } : {}), ...(note ? { note } : {}), grantedById: adminId },
         });
         if (expiresAt) {
           const data = { status: SUBSCRIPTION_STATUS.ACTIVE, expiresAt };

@@ -186,6 +186,7 @@ const adminFounderPaymentLinkSchema = z.object({
 const adminComplimentaryCreateSchema = z.object({
   phone: adminFounderPaymentLinkSchema.shape.phone,
   months: z.number().int().min(0).max(ADMIN_COMPLIMENTARY.MAX_MONTHS),
+  label: z.string().trim().max(ADMIN_COMPLIMENTARY.LABEL_MAX).optional(),
   note: z.string().trim().max(ADMIN_COMPLIMENTARY.NOTE_MAX).optional(),
 });
 

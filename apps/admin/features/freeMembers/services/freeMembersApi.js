@@ -7,10 +7,10 @@ export async function fetchFreeMembers() {
 }
 
 /** POST /admin/complimentary → { userId, name, phoneMasked, validUntil }. */
-export async function addFreeMember({ phone, months, note }) {
+export async function addFreeMember({ phone, months, label, note }) {
   const { data } = await apiFetch('/admin/complimentary', {
     method: 'POST',
-    body: JSON.stringify({ phone, months, ...(note ? { note } : {}) }),
+    body: JSON.stringify({ phone, months, ...(label ? { label } : {}), ...(note ? { note } : {}) }),
   })
   return data
 }

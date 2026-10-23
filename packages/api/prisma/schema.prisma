@@ -698,6 +698,7 @@ model AdminUser {
 /// analytics number (signups, paid, revenue, MRR) — see adminStats.repository.
 model ComplimentaryMember {
   userId        String     @id @map("user_id") @db.Uuid
+  label         String? // admin's own name for them, to spot them in the list
   note          String?
   monthsGranted Int        @default(0) @map("months_granted")
   grantedById   String?    @map("granted_by_id") @db.Uuid

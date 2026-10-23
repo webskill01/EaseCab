@@ -93,7 +93,7 @@ export function Sidebar({ open = false, onClose = () => {} }) {
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto p-3">
+        <div className="flex-1 space-y-5 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map((section) => (
             <div key={section.group}>
               <p className="mb-1.5 px-3 text-[11px] font-medium uppercase tracking-wider text-ec-ink40">{section.group}</p>
