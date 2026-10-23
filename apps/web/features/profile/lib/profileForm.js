@@ -42,8 +42,7 @@ const filled = (s) => typeof s === 'string' && s.trim().length > 0
  */
 export function canSaveProfile(f) {
   if (!f) return false
-  const stringsOk = [f.name, f.bio, f.baseCity, f.vehicle].every(filled)
-  return stringsOk && Array.isArray(f.languages) && f.languages.length > 0
+  return [f.name, f.bio, f.baseCity, f.vehicle].every(filled)
 }
 
 /** L1 completeness (mirrors shared isProfileComplete; adds the DP). Indicator only — never blocks save. */

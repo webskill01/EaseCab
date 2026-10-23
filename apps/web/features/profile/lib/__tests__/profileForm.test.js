@@ -18,11 +18,11 @@ describe('profileForm', () => {
   it('profileToForm tolerates a null profile (onboarding)', () => {
     expect(profileToForm(null)).toMatchObject({ name: '', languages: [], dpKey: null, dpPreview: null })
   })
-  it('canSaveProfile needs the core fields + ≥1 language but NOT a DP (#19 soft-gate)', () => {
+  it('canSaveProfile needs the core fields but NOT a DP or languages (#19 soft-gate)', () => {
     const f = profileToForm(FULL)
     expect(canSaveProfile(f)).toBe(true)
     expect(canSaveProfile({ ...f, dpPreview: null, dpKey: null })).toBe(true) // savable without a DP
-    expect(canSaveProfile({ ...f, languages: [] })).toBe(false)
+    expect(canSaveProfile({ ...f, languages: [] })).toBe(true)
     expect(canSaveProfile({ ...f, bio: '  ' })).toBe(false)
   })
   it('isProfileFormComplete (L1 indicator) still needs a DP on top of the core fields', () => {

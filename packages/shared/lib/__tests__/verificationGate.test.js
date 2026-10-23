@@ -14,7 +14,7 @@ test('isProfileComplete: true only when every required field is present', () => 
   assert.strictEqual(isProfileComplete(null), false);
   assert.strictEqual(isProfileComplete({ ...full, bio: '   ' }), false);
   assert.strictEqual(isProfileComplete({ ...full, profilePicUrl: null }), false);
-  assert.strictEqual(isProfileComplete({ ...full, languagesSpoken: [] }), false);
+  assert.strictEqual(isProfileComplete({ ...full, languagesSpoken: [] }), true);
 });
 
 test('hasSubmittedKyc: L1 = aadhaarVerified AND profileComplete', () => {

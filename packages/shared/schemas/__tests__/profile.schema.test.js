@@ -11,13 +11,13 @@ test('profileUpdateSchema accepts a full valid body (dpKey optional)', () => {
   assert.strictEqual(ok.success, true);
 });
 
-test('profileUpdateSchema rejects unknown vehicleType + empty languages', () => {
+test('profileUpdateSchema rejects unknown vehicleType, allows empty languages', () => {
   assert.strictEqual(profileUpdateSchema.safeParse({
     name: 'A', bio: 'x', baseCity: 'Ludhiana', vehicleType: 'Spaceship', languagesSpoken: ['pa'],
   }).success, false);
   assert.strictEqual(profileUpdateSchema.safeParse({
     name: 'Gurpreet', bio: 'x', baseCity: 'Ludhiana', vehicleType: 'Innova', languagesSpoken: [],
-  }).success, false);
+  }).success, true);
 });
 
 test('imageAttachSchema requires a known purpose + key', () => {

@@ -6,7 +6,7 @@ const PROFILE_REQUIRED_STRINGS = Object.freeze(['name', 'bio', 'baseCity', 'vehi
 /**
  * Derived profile-completeness check (Step 21b). Pure; single source of truth for
  * L1 — no stored flag. Required: a self-uploaded DP, bio, name, base city, vehicle
- * type, and at least one language. Safe on null/undefined.
+ * type. Languages are optional. Safe on null/undefined.
  *
  * @param {{ name?: string, bio?: string, baseCity?: string, vehicleType?: string,
  *   profilePicUrl?: string, languagesSpoken?: string[] }|null} user
@@ -17,7 +17,7 @@ function isProfileComplete(user) {
   const stringsOk = PROFILE_REQUIRED_STRINGS.every(
     (f) => typeof user[f] === 'string' && user[f].trim().length > 0,
   );
-  return stringsOk && Array.isArray(user.languagesSpoken) && user.languagesSpoken.length > 0;
+  return stringsOk;
 }
 
 /**
