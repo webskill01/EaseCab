@@ -20,9 +20,9 @@ export const COMPANY = Object.freeze({
   legalName: 'Easecab Mobility Solutions Private Limited',
   email: 'support@easecab.com',
   /** E.164 for tel: links. */
-  phone: '+916284992669',
+  phone: '+919914623976',
   /** Grouped for display. */
-  phoneDisplay: '+91 62849 92669',
+  phoneDisplay: '+91 99146 23976',
   address: ADDRESS,
   /** Two display lines, in postal order. */
   addressLines: Object.freeze([
