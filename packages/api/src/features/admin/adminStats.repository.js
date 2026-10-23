@@ -37,7 +37,7 @@ function createAdminStatsRepository({ prisma }) {
 
     /**
      * One row per IST day from launch to today (gap days filled with zeros).
-     * Signups = new users; paidAccounts = subscriptions.paid_started_at on that day;
+     * Signups = new users; paidAccounts = members whose first captured payment fell that day;
      * payments/revenuePaise = captured payment rows, credited to on_behalf_of_user_id when a
      * founder paid for a member. Excluded phones and free members never count.
      * @returns {Promise<{ day: Date, signups: number, paidAccounts: number, payments: number, revenuePaise: number }[]>}
@@ -50,10 +50,15 @@ function createAdminStatsRepository({ prisma }) {
       return prisma.$queryRaw`
         WITH u AS (SELECT id, created_at FROM users WHERE phone <> ALL(${phones}) AND NOT EXISTS (SELECT 1 FROM complimentary_members cm WHERE cm.user_id = users.id)),
         s AS (SELECT (created_at AT TIME ZONE ${TIMEZONE})::date AS d, count(*) AS n FROM u GROUP BY 1),
+        -- First captured payment per member, not paid_started_at: referral rewards and
+        -- grants set that too without any money changing hands.
         p AS (
-          SELECT (sb.paid_started_at AT TIME ZONE ${TIMEZONE})::date AS d, count(*) AS n
-          FROM subscriptions sb JOIN u ON u.id = sb.user_id
-          WHERE sb.paid_started_at IS NOT NULL GROUP BY 1
+          SELECT f.d, count(*) AS n FROM (
+            SELECT min((pm.updated_at AT TIME ZONE ${TIMEZONE})::date) AS d
+            FROM payments pm JOIN u ON u.id = COALESCE(pm.on_behalf_of_user_id, pm.user_id)
+            WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED}
+            GROUP BY COALESCE(pm.on_behalf_of_user_id, pm.user_id)
+          ) f GROUP BY 1
         ),
         -- updated_at = capture time; created_at is when the order opened (open orders are
         -- reused, so it can be weeks earlier).
