@@ -92,3 +92,23 @@ test('"drop: X" with a single city still reads as the drop', () => {
   assert.equal(r.pickup, null);
   assert.equal(r.drop, 'Chandigarh');
 });
+
+// Live misreads 2026-10-24: numbered stand alias was cut off ("Stand"); vehicle typo
+// "crista" was kept as part of the drop.
+test('extractCities keeps a leading number on the pickup ("43 bus stand")', () => {
+  const r = extractCities('SEDAN W/C NEAT CLEAN 43 bus stand to kasauli CRUNNT RATE:1800', [...RAW_VOCAB, '43 bus stand']);
+  assert.equal(r.pickup, '43 bus stand');
+  assert.equal(r.drop, 'Kasauli');
+});
+
+test('extractCities drops vehicle typo "crista" from a raw drop', () => {
+  const r = extractCities('REQUIRED REQUIRED JAIPUR TO PUSKER CRISTA 8.00AM SAMPAT KUMAR', ['Jaipur']);
+  assert.equal(r.pickup, 'Jaipur');
+  assert.equal(r.drop, 'pusker');
+});
+
+test('extractCities never keeps "stand" as a raw place', () => {
+  const r = extractCities('bus stand to kasauli', RAW_VOCAB);
+  assert.equal(r.pickup, null);
+  assert.equal(r.drop, 'Kasauli');
+});

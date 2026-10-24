@@ -107,7 +107,8 @@ function extractCities(text, cities) {
 
   // Pattern 1: "from X to Y" → pickup: X, drop: Y
   // Dest group is greedy so multi-word drops ("lajpat nagar dehli") aren't truncated.
-  const fromToPattern = /\bfrom\s+([a-z\s]+?)\s+to\s+([a-z\s]+)/i;
+  // Pickup may start with one number: "43 bus stand" is a vocab alias.
+  const fromToPattern = /\bfrom\s+((?:\d+\s+)?[a-z\s]+?)\s+to\s+([a-z\s]+)/i;
   const fromToMatch = normalized.match(fromToPattern);
 
   if (fromToMatch) {
@@ -173,7 +174,7 @@ function extractCities(text, cities) {
 
   // Pattern 4: "X to Y" → pickup: X, drop: Y
   // Dest group is greedy so multi-word drops ("lajpat nagar dehli") aren't truncated.
-  const toPattern = /\b([a-z\s]+?)\s+to\s+([a-z\s]+)/i;
+  const toPattern = /\b((?:\d+\s+)?[a-z\s]+?)\s+to\s+([a-z\s]+)/i;
   const toMatch = normalized.match(toPattern);
 
   if (toMatch) {

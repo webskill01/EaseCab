@@ -27,6 +27,7 @@ const NOISE = Object.freeze(new Set([
   'with', 'carrier', 'career', 'is', 'going', 'droop', 'dropped', 'off', 'requirement',
   'amount', 'ammount', 'around', 'sudden', 'near', 'da', 'di', 'baje', 'bje', // live queue 2026-10-18
   'airport', 'station', 'railway', 'relwaye', 'realiway', 'jn', 'junction',
+  'crista', 'cresta', 'krista', 'stand', 'rate', // 2026-10-24: vehicle typo, "bus stand"
   'punjab', 'haryana', 'himachal', 'himacha', 'rajasthan', 'rj', 'bihar', 'uk',
   // time / date
   'am', 'pm', 'time', 'date', 'today', 'tomorrow', 'tonight', 'kal', 'aaj', 'parso', 'subah',
