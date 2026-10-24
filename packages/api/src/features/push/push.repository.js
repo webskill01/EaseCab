@@ -8,6 +8,11 @@ const SOURCE_TOGGLE = Object.freeze({
   [PUSH_SOURCE.POSTED]: 'notifyPostedRides',
 });
 
+/** The preference fields the settings screen reads + writes. */
+const PREFS_SELECT = Object.freeze({
+  notificationCities: true, notifyBotRides: true, notifyPostedRides: true, notifyGeoCityId: true,
+});
+
 /**
  * Push data access (CLAUDE.md §4 — Prisma only). Token registration is idempotent
  * on the (userId, deviceToken) unique; the targeting query joins push tokens to the
@@ -52,7 +57,7 @@ function createPushRepository({ prisma, redis }) {
     async getPreferences(userId) {
       return prisma.user.findUnique({
         where: { id: userId },
-        select: { notificationCities: true, notifyBotRides: true, notifyPostedRides: true },
+        select: PREFS_SELECT,
       });
     },
 
@@ -61,15 +66,16 @@ function createPushRepository({ prisma, redis }) {
       return prisma.user.update({
         where: { id: userId },
         data,
-        select: { notificationCities: true, notifyBotRides: true, notifyPostedRides: true },
+        select: PREFS_SELECT,
       });
     },
 
     /**
-     * Distinct device tokens to notify for a new ride: tokens of users who (a) opted
-     * into at least one of the ride's cities, (b) have the source toggle on, and
-     * (c) aren't soft-deleted. One push per device (DISTINCT) — a multi-device user
-     * is notified on each device. Empty city list → no targets.
+     * Distinct device tokens to notify for a new ride: tokens of users who (a) match the
+     * ride's city — it's in their feed-filter list, OR it's their geo city, OR they have
+     * neither ("All rides", the default; turning geo on switches that off) — (b) have the
+     * source toggle on, and (c) aren't soft-deleted. One push per device (DISTINCT) — a
+     * multi-device user is notified on each device. No ride cities → no targets.
      */
     async findTargetTokens({ cityIds, source }) {
       if (!cityIds.length) return [];
@@ -77,7 +83,20 @@ function createPushRepository({ prisma, redis }) {
       if (!toggle) return [];
       const rows = await prisma.pushSubscription.findMany({
         where: {
-          user: { isDeleted: false, notificationCities: { hasSome: cityIds }, [toggle]: true },
+          user: {
+            isDeleted: false,
+            [toggle]: true,
+            // The column is nullable with no default, and Prisma's isEmpty skips NULL — match both.
+            // ponytail: the empty/NULL branch can't use the GIN index; add a partial index if users grows large.
+            OR: [
+              { notificationCities: { hasSome: cityIds } },
+              { notifyGeoCityId: { in: cityIds } },
+              {
+                notifyGeoCityId: null,
+                OR: [{ notificationCities: { isEmpty: true } }, { notificationCities: { equals: null } }],
+              },
+            ],
+          },
         },
         select: { deviceToken: true },
         distinct: ['deviceToken'],

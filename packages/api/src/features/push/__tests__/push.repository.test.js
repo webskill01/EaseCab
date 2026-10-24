@@ -43,8 +43,12 @@ function fakePrisma(seed = {}) {
           const owner = users.get(s.userId);
           if (!owner) return false;
           if (owner.isDeleted !== u.isDeleted) return false;
-          const overlap = (owner.notificationCities || []).some((c) => u.notificationCities.hasSome.includes(c));
-          if (!overlap) return false;
+          const hasSome = u.OR[0].notificationCities.hasSome;
+          const list = owner.notificationCities ?? [];
+          const geo = owner.notifyGeoCityId ?? null;
+          // filter-city match OR geo-city match OR "All rides" (no filter AND geo off)
+          const hit = list.some((c) => hasSome.includes(c)) || (geo !== null && hasSome.includes(geo)) || (geo === null && list.length === 0);
+          if (!hit) return false;
           // the dynamic toggle column key (notifyBotRides / notifyPostedRides)
           const toggleKey = Object.keys(u).find((k) => k.startsWith('notify'));
           return owner[toggleKey] === u[toggleKey];
@@ -137,6 +141,35 @@ test('findTargetTokens: city overlap + source toggle + not-deleted, distinct tok
   assert.deepEqual(botTokens.sort(), ['t1']); // only u1: u2 toggle off, u3 wrong city, u4 deleted; dup deduped
   const postedTokens = await repo.findTargetTokens({ cityIds: [CITY_A], source: 'posted' });
   assert.deepEqual(postedTokens.sort(), ['t1', 't2']); // posted toggle on for u1 + u2
+});
+
+test('findTargetTokens: empty or NULL city list = All rides (still honours toggle + deleted)', async () => {
+  const prisma = fakePrisma({
+    users: [
+      { id: 'u1', isDeleted: false, notificationCities: [], notifyBotRides: true },
+      { id: 'u2', isDeleted: false, notificationCities: null, notifyBotRides: true },
+      { id: 'u3', isDeleted: false, notificationCities: [CITY_B], notifyBotRides: true }, // filtered elsewhere
+      { id: 'u4', isDeleted: false, notificationCities: [], notifyBotRides: false }, // toggle off
+      { id: 'u5', isDeleted: true, notificationCities: [], notifyBotRides: true }, // deleted
+    ],
+    subs: ['u1', 'u2', 'u3', 'u4', 'u5'].map((u, i) => ({ id: `p${i}`, userId: u, deviceToken: `t${i + 1}`, platform: 'android' })),
+  });
+  const tokens = await createPushRepository({ prisma }).findTargetTokens({ cityIds: [CITY_A], source: 'bot' });
+  assert.deepEqual(tokens.sort(), ['t1', 't2']);
+});
+
+test('findTargetTokens: geo city adds to filter cities and switches off All rides', async () => {
+  const prisma = fakePrisma({
+    users: [
+      { id: 'u1', isDeleted: false, notificationCities: [], notifyGeoCityId: CITY_A, notifyBotRides: true }, // geo = A
+      { id: 'u2', isDeleted: false, notificationCities: [], notifyGeoCityId: CITY_B, notifyBotRides: true }, // geo elsewhere → no all-rides
+      { id: 'u3', isDeleted: false, notificationCities: [CITY_B], notifyGeoCityId: CITY_A, notifyBotRides: true }, // filter B + geo A
+    ],
+    subs: ['u1', 'u2', 'u3'].map((u, i) => ({ id: `p${i}`, userId: u, deviceToken: `t${i + 1}`, platform: 'android' })),
+  });
+  const repo = createPushRepository({ prisma });
+  assert.deepEqual((await repo.findTargetTokens({ cityIds: [CITY_A], source: 'bot' })).sort(), ['t1', 't3']);
+  assert.deepEqual((await repo.findTargetTokens({ cityIds: [CITY_B], source: 'bot' })).sort(), ['t2', 't3']);
 });
 
 test('findTargetTokens short-circuits on empty cities or unknown source', async () => {

@@ -15,6 +15,15 @@ export async function geoDenied() {
   }
 }
 
+/** True when location is already allowed — lets boot-time refreshes skip any OS prompt. @returns {Promise<boolean>} */
+export async function geoGranted() {
+  try {
+    return (await navigator.permissions.query({ name: 'geolocation' })).state === 'granted'
+  } catch {
+    return false
+  }
+}
+
 export function getCurrentPosition() {
   if (process.env.NEXT_PUBLIC_E2E === 'true') return window.__ecGeoSeam.getCurrentPosition()
   return new Promise((resolve, reject) => {

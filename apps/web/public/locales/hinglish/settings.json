@@ -9,10 +9,18 @@
     "cities": {
       "title": "Alert cities",
       "add": "City add karo",
-      "empty": "Abhi koi city nahi — alert ke liye ek add karo.",
+      "empty": "All rides — har nayi ride ka alert milega. Sirf us city ki rides ke liye city add karo (feed filter jaisa hi).",
       "max": "Aap max {max} cities add kar sakte ho.",
       "remove": "{city} hatao"
-    }
+    },
+    "master": "Ride alerts",
+    "modeAll": "Har nayi ride. Sirf kuch cities chahiye to feed filter mein city chuno.",
+    "modeFilter": "Aapke feed filter ki rides: {cities}",
+    "modeGeo": "Sirf aapki current city ki rides.",
+    "geo": "Meri location ke alerts",
+    "geoHint": "Jis city mein ho uski rides add hongi. All-rides alerts band ho jayenge.",
+    "geoCity": "Aapki city: {city} — saath mein feed filter ki cities bhi.",
+    "filterNote": "Kis city ke alert aayenge, ye aapke feed city filter se tay hota hai."
   },
   "language": {
     "title": "Language"

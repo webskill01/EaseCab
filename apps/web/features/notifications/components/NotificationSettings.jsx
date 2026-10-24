@@ -2,9 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/button'
-import { BellEdit, Pin, Trash } from '@/components/ui/icons'
-import { CityPicker } from '@/features/rides/components/CityPicker'
+import { BellEdit, Pin } from '@/components/ui/icons'
 import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
 import { useNearestCity } from '../hooks/useNearestCity'
@@ -12,12 +10,9 @@ import { permissionState } from '../lib/pushFlow'
 import { geoDenied } from '../services/geoClient'
 import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
 
-// SCREENS §6 "up to 5 city slots" (visual SoT). Always ≤ the server cap (25), so valid.
-const ALERT_CITIES_MAX = 5
-
-function Toggle({ on, onChange, label, hint }) {
+function Toggle({ on, onChange, label, hint, disabled }) {
   return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} className="flex w-full items-center justify-between gap-3 py-3 text-left">
+    <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)} className="flex w-full items-center justify-between gap-3 py-3 text-left disabled:opacity-50">
       <span className="min-w-0">
         <span className="block text-[14px] font-bold text-ec-ink">{label}</span>
         <span className="block text-[12px] font-medium text-ec-ink60">{hint}</span>
@@ -29,7 +24,13 @@ function Toggle({ on, onChange, label, hint }) {
   )
 }
 
-/** Ride-alert preferences: per-source toggles + alert-city manager (Step 21d). */
+/**
+ * Ride-alert settings (2026-10-24). Two controls only: the master on/off and alerts for
+ * the city I'm in. WHICH rides alert is otherwise the feed city filter (one shared list,
+ * useCityFilter): no filter = every ride; filter = those cities; geo on = filter cities +
+ * my city, and the all-rides default switches off. Master off sets both per-source
+ * toggles false server-side, so it holds across devices.
+ */
 export function NotificationSettings() {
   const t = useTranslations('settings')
   const tn = useTranslations('notifications')
@@ -41,15 +42,22 @@ export function NotificationSettings() {
   if (isLoading) return <div className="text-ec-ink40">…</div>
   if (isError || !prefs) return <p className="text-[13px] font-semibold text-ec-danger">{t('error.load')}</p>
 
-  const cities = prefs.cities ?? []
-  const ids = prefs.notificationCities ?? []
-  const atMax = cities.length >= ALERT_CITIES_MAX
+  const masterOn = permissionState() === 'granted' && (!!prefs.notifyBotRides || !!prefs.notifyPostedRides)
+  const filterNames = (prefs.cities ?? []).map((c) => c.name).join(', ')
+  const mode = filterNames ? t('notifications.modeFilter', { cities: filterNames }) : prefs.geoCity ? t('notifications.modeGeo') : t('notifications.modeAll')
 
-  const addCity = (city) => { if (!ids.includes(city.id) && !atMax) update({ notificationCities: [...ids, city.id] }) }
-  const removeCity = (id) => update({ notificationCities: ids.filter((c) => c !== id) })
-  const useMyLocation = async () => {
+  const setMaster = async (next) => {
+    if (!next) return update({ notifyBotRides: false, notifyPostedRides: false })
+    if (permissionState() === 'denied') return setHelp(BLOCKED_PERM.NOTIFICATIONS)
+    const res = await alerts.enable()
+    if (res.permission === 'granted') update({ notifyBotRides: true, notifyPostedRides: true })
+    else if (res.permission === 'denied') setHelp(BLOCKED_PERM.NOTIFICATIONS)
+  }
+
+  const setGeo = async (next) => {
+    if (!next) return update({ notifyGeoCityId: null })
     const city = await nearest.locate()
-    if (city) addCity({ id: city.id, name: city.canonicalName })
+    if (city) update({ notifyGeoCityId: city.id })
     else if (await geoDenied()) setHelp(BLOCKED_PERM.LOCATION)
   }
 
@@ -57,56 +65,21 @@ export function NotificationSettings() {
     <section className="rounded-2xl border border-ec-line bg-white p-4">
       <h2 className="flex items-center gap-2 text-[15px] font-extrabold text-ec-ink"><BellEdit size={16} /> {t('notifications.title')}</h2>
       <div className="mt-1 divide-y divide-ec-line">
-        <Toggle on={!!prefs.notifyBotRides} onChange={(v) => update({ notifyBotRides: v })} label={t('notifications.botRides')} hint={t('notifications.botRidesHint')} />
-        <Toggle on={!!prefs.notifyPostedRides} onChange={(v) => update({ notifyPostedRides: v })} label={t('notifications.postedRides')} hint={t('notifications.postedRidesHint')} />
+        <Toggle on={masterOn} onChange={setMaster} disabled={alerts.isEnabling} label={t('notifications.master')} hint={mode} />
+        <Toggle
+          on={!!prefs.geoCity}
+          onChange={setGeo}
+          disabled={!masterOn || nearest.isLocating}
+          label={t('notifications.geo')}
+          hint={prefs.geoCity ? t('notifications.geoCity', { city: prefs.geoCity.name }) : t('notifications.geoHint')}
+        />
       </div>
-
-      {permissionState() !== 'granted' && (
-        <Button
-          type="button"
-          size="md"
-          onClick={() => (permissionState() === 'denied' ? setHelp(BLOCKED_PERM.NOTIFICATIONS) : alerts.enable())}
-          disabled={alerts.isEnabling}
-          className="mt-3 w-full"
-        >
-          {tn('enable')}
-        </Button>
-      )}
-
-      <div className="mt-3">
-        <p className="text-[13px] font-extrabold text-ec-ink">{t('notifications.cities.title')}</p>
-        {cities.length === 0 ? (
-          <p className="mt-1 text-[12px] font-medium text-ec-ink40">{t('notifications.cities.empty')}</p>
-        ) : (
-          <ul className="mt-2 flex flex-col gap-2">
-            {cities.map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-ec-line bg-ec-sky px-3.5 py-3">
-                <span className="flex min-w-0 items-center gap-2 text-[14px] font-bold text-ec-blue"><Pin size={15} /> <span className="truncate">{c.name}</span></span>
-                <button type="button" aria-label={t('notifications.cities.remove', { city: c.name })} onClick={() => removeCity(c.id)} className="shrink-0 text-ec-ink40 hover:text-ec-danger"><Trash size={16} /></button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {atMax ? (
-          <p className="mt-2 text-[12px] font-medium text-ec-ink40">{t('notifications.cities.max', { max: ALERT_CITIES_MAX })}</p>
-        ) : (
-          <div className="mt-3">
-            <CityPicker label={t('notifications.cities.add')} value={null} onPick={addCity} />
-            <button
-              type="button"
-              onClick={useMyLocation}
-              disabled={nearest.isLocating}
-              className="mt-2 flex items-center gap-1.5 text-[12px] font-bold text-ec-blue disabled:opacity-60"
-            >
-              <Pin size={12} /> {tn('useMyLocation')}
-            </button>
-          </div>
-        )}
-      </div>
+      {nearest.errorKey && !help && <p className="mt-1 text-[12px] font-semibold text-ec-danger">{tn(nearest.errorKey)}</p>}
+      <p className="mt-2 flex items-start gap-1.5 text-[12px] font-medium text-ec-ink40"><Pin size={12} /> {t('notifications.filterNote')}</p>
       {help && (
         <PermBlockedSheet
           kind={help}
-          onRetry={help === BLOCKED_PERM.LOCATION ? useMyLocation : () => alerts.enable()}
+          onRetry={help === BLOCKED_PERM.LOCATION ? () => setGeo(true) : () => setMaster(true)}
           onClose={() => setHelp(null)}
         />
       )}

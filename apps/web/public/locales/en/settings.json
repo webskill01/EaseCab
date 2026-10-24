@@ -9,10 +9,18 @@
     "cities": {
       "title": "Alert cities",
       "add": "Add a city",
-      "empty": "No cities yet — add one to get alerts.",
+      "empty": "All rides — you get an alert for every new ride. Add a city to get only its rides (same as your feed filter).",
       "max": "You can add up to {max} cities.",
       "remove": "Remove {city}"
-    }
+    },
+    "master": "Ride alerts",
+    "modeAll": "Every new ride. Pick cities in the feed filter to get only those.",
+    "modeFilter": "Rides from your feed filter: {cities}",
+    "modeGeo": "Rides from your current city only.",
+    "geo": "Alerts for my location",
+    "geoHint": "Adds rides from the city you're in. Turns off all-rides alerts.",
+    "geoCity": "Your city: {city} — plus any feed-filter cities.",
+    "filterNote": "Which cities alert you follows your feed city filter."
   },
   "language": {
     "title": "Language"

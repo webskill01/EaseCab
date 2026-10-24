@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 import { env } from '@/config/env'
 import { BellEdit } from '@/components/ui/icons'
 import { useRidesFeed, FEED_SUB } from '../hooks/useRidesFeed'
-import { readCityLock, writeCityLock } from '../lib/cityLock'
+import { useCityFilter } from '../hooks/useCityFilter'
 import { getMembership } from '@/features/subscription/services/subscriptionApi'
 import { countVerifiedRides } from '../services/ridesApi'
 import { membershipView } from '@/features/subscription/lib/membership'
@@ -22,6 +22,7 @@ import { ReportSheet } from './ReportSheet'
 import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
 import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
 import { useSyncPushToken } from '@/features/notifications/hooks/useSyncPushToken'
+import { useSyncGeoCity } from '@/features/notifications/hooks/useSyncGeoCity'
 import { NotificationPrePrompt } from '@/features/notifications/components/NotificationPrePrompt'
 import { permissionState, shouldShowPrePrompt } from '@/features/notifications/lib/pushFlow'
 import { isPrePromptDismissed, dismissPrePrompt } from '@/features/notifications/lib/pushStorage'
@@ -38,12 +39,11 @@ export function FeedScreen() {
   const router = useRouter()
   const t = useTranslations('rides')
   const [sub, setSub] = useState(FEED_SUB.RIDES)
-  const [selectedCities, setSelectedCities] = useState([])
   const [contactRideVM, setContactRideVM] = useState(null)
   const [reportRideVM, setReportRideVM] = useState(null)
 
-  // Hydrate the persisted lock after mount (cookie read can't run on the server).
-  useEffect(() => { setSelectedCities(readCityLock()) }, [])
+  // Feed filter = alert cities (one server-side list, empty = All rides).
+  const { selected: selectedCities, toggle: toggleCity, clear: clearCities } = useCityFilter()
 
   const feed = useRidesFeed({ sub, cityIds: selectedCities.map((c) => c.id) })
 
@@ -60,17 +60,6 @@ export function FeedScreen() {
   // as EXPIRED and flash the red banner. Hold a neutral state while loading.
   const membership = membershipQuery.data ? membershipView(membershipQuery.data) : { state: null }
 
-  // Multi-select: toggle a city in/out of the lock; "All cities" clears the whole set.
-  const toggleCity = (city) => {
-    setSelectedCities((prev) => {
-      const next = prev.some((c) => c.id === city.id)
-        ? prev.filter((c) => c.id !== city.id)
-        : [...prev, { id: city.id, name: city.name }]
-      writeCityLock(next)
-      return next
-    })
-  }
-  const clearCities = () => { writeCityLock([]); setSelectedCities([]) }
   const goMembership = () => router.push('/membership')
 
   // Push pre-prompt (Step 23): count viewed cards; once enough are seen and the OS
@@ -78,6 +67,7 @@ export function FeedScreen() {
   const [prePromptOpen, setPrePromptOpen] = useState(true)
   const alerts = useEnableAlerts()
   useSyncPushToken() // re-mint + re-register the token on load when permission is already granted
+  useSyncGeoCity() // geo alerts follow the driver's current city
   const tracker = useRideViewTracker({ enabled: prePromptOpen })
   const showPrePrompt =
     prePromptOpen &&

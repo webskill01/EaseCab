@@ -144,6 +144,7 @@ model City {
   dropRides       Ride[]                 @relation("RideDropCity")
   fromPostedRides PostedRide[]           @relation("PostedRideFromCity")
   toPostedRides   PostedRide[]           @relation("PostedRideToCity")
+  geoAlertUsers   User[]                 @relation("UserGeoAlertCity")
 
   @@unique([canonicalName, state]) // natural key — idempotent seeding
   @@index([state])
@@ -345,6 +346,10 @@ model User {
   notificationCities String[]           @map("notification_cities") // City UUIDs the user opted into (Step 15 push targeting key)
   notifyBotRides     Boolean            @default(true) @map("notify_bot_rides") // per-source push toggle: bot-feed rides
   notifyPostedRides  Boolean            @default(true) @map("notify_posted_rides") // per-source push toggle: app-posted verified rides
+  // Geo alerts (2026-10-24): the city the driver is in, from the Notifications screen's
+  // location toggle. Non-null → alerts for this city PLUS their feed-filter cities, and the
+  // "no filter = all rides" default is switched off. Null → geo alerts off.
+  notifyGeoCityId    String?            @map("notify_geo_city_id") @db.Uuid
   lastKnownCity      String?            @map("last_known_city")
   // Auto-set when ≥ USER_REPORT.AUTOHIDE_THRESHOLD distinct reporters flag this user
   // (P13-12 #5). Non-null → their posted rides are hidden from the feed pending admin
@@ -376,11 +381,13 @@ model User {
   referredBy              User?                    @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals               User[]                   @relation("Referrals")
   complimentary           ComplimentaryMember?
+  notifyGeoCity           City?                    @relation("UserGeoAlertCity", fields: [notifyGeoCityId], references: [id], onDelete: SetNull)
 
   @@index([isDeleted])
   @@index([flaggedAt])
   @@index([createdAt])
   @@index([referredById])
+  @@index([notifyGeoCityId]) // push targeting: notify_geo_city_id = ride pickup
   // Push targeting (Step 15) does notification_cities && ARRAY[rideCityIds] on every
   // new-ride event — B-tree can't serve array-overlap, so GIN is required. Plain
   // CREATE INDEX here (MVP table is tiny, near-zero lock); switch to CONCURRENTLY in

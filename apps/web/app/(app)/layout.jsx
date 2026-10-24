@@ -4,6 +4,7 @@ import { TopBar } from '@/features/shell/components/TopBar'
 import { AppBottomNav } from '@/features/shell/components/AppBottomNav'
 import { PageTransition } from '@/features/shell/components/PageTransition'
 import { AutoClaimReferral } from '@/features/referrals/components/AutoClaimReferral'
+import { PushSoundPlayer } from '@/features/notifications/components/PushSoundPlayer'
 
 /**
  * Authenticated app shell. AuthGuard (client) gates the whole subtree on a
@@ -15,6 +16,7 @@ export default async function AppLayout({ children }) {
   return (
     <AuthGuard>
       <AutoClaimReferral />
+      <PushSoundPlayer />
       {/* fixed inset-0, not h-[100dvh]: Android Chrome/TWA can keep a stale dvh after
           returning from wa.me/tel:, pushing the bottom nav under the phone's nav bar. */}
       <div className="fixed inset-0 flex flex-col bg-ec-bg">

@@ -3,73 +3,72 @@ import { screen, fireEvent } from '@testing-library/react'
 import { renderWithIntl } from '@/test/intl'
 
 vi.mock('../../hooks/usePushPreferences', () => ({ usePushPreferences: vi.fn() }))
-// CityPicker pulls the /cities typeahead; stub it to a button that picks a fixed city.
-vi.mock('@/features/rides/components/CityPicker', () => ({
-  CityPicker: ({ onPick }) => <button type="button" onClick={() => onPick({ id: 'c2', name: 'Mohali' })}>add-city</button>,
-}))
 const enable = vi.fn()
 const locate = vi.fn().mockResolvedValue({ id: 'c9', canonicalName: 'Mohali' })
 vi.mock('../../hooks/useEnableAlerts', () => ({ useEnableAlerts: () => ({ enable, isEnabling: false }) }))
-vi.mock('../../hooks/useNearestCity', () => ({ useNearestCity: () => ({ locate, isLocating: false }) }))
+vi.mock('../../hooks/useNearestCity', () => ({ useNearestCity: () => ({ locate, isLocating: false, errorKey: null }) }))
 import { usePushPreferences } from '../../hooks/usePushPreferences'
 import { NotificationSettings } from '../NotificationSettings'
 
-const stub = (over = {}) => ({ prefs: { notificationCities: ['c1'], cities: [{ id: 'c1', name: 'Ludhiana' }], notifyBotRides: true, notifyPostedRides: false }, isLoading: false, isError: false, update: vi.fn(), ...over })
+const PREFS = { notificationCities: [], cities: [], geoCity: null, notifyGeoCityId: null, notifyBotRides: true, notifyPostedRides: true }
+const stub = (prefs = {}, over = {}) => ({ prefs: { ...PREFS, ...prefs }, isLoading: false, isError: false, update: vi.fn(), ...over })
+const master = () => screen.getByRole('switch', { name: 'Ride alerts' })
+const geo = () => screen.getByRole('switch', { name: 'Alerts for my location' })
 
-beforeEach(() => { vi.clearAllMocks(); global.Notification = { permission: 'default' } })
+beforeEach(() => { vi.clearAllMocks(); global.Notification = { permission: 'granted' } })
 afterEach(() => { delete global.Notification })
 
 describe('NotificationSettings', () => {
-  it('renders both toggles reflecting prefs', () => {
+  it('only offers the master + geo toggles (no city list, no per-source toggles)', () => {
     usePushPreferences.mockReturnValue(stub())
     renderWithIntl(<NotificationSettings />)
-    expect(screen.getByRole('switch', { name: 'Live rides' })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('switch', { name: 'Verified rides' })).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getAllByRole('switch')).toHaveLength(2)
+    expect(master()).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByText(/Every new ride/)).toBeInTheDocument() // no filter = all rides
   })
 
-  it('flips a toggle via update', () => {
-    const update = vi.fn()
-    usePushPreferences.mockReturnValue(stub({ update }))
+  it('describes the feed-filter cities when a filter is set', () => {
+    usePushPreferences.mockReturnValue(stub({ cities: [{ id: 'p1', name: 'Patiala' }] }))
     renderWithIntl(<NotificationSettings />)
-    fireEvent.click(screen.getByRole('switch', { name: 'Verified rides' }))
-    expect(update).toHaveBeenCalledWith({ notifyPostedRides: true })
+    expect(screen.getByText('Rides from your feed filter: Patiala')).toBeInTheDocument()
   })
 
-  it('removes an alert city via update with the filtered ids', () => {
-    const update = vi.fn()
-    usePushPreferences.mockReturnValue(stub({ update }))
+  it('master off clears both source toggles server-side', () => {
+    const s = stub()
+    usePushPreferences.mockReturnValue(s)
     renderWithIntl(<NotificationSettings />)
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Ludhiana' }))
-    expect(update).toHaveBeenCalledWith({ notificationCities: [] })
+    fireEvent.click(master())
+    expect(s.update).toHaveBeenCalledWith({ notifyBotRides: false, notifyPostedRides: false })
   })
 
-  it('adds a city via the picker, appending its id', () => {
-    const update = vi.fn()
-    usePushPreferences.mockReturnValue(stub({ update }))
+  it('master on runs the permission flow, then turns both sources on', async () => {
+    global.Notification = { permission: 'default' }
+    enable.mockResolvedValue({ permission: 'granted' })
+    const s = stub({ notifyBotRides: false, notifyPostedRides: false })
+    usePushPreferences.mockReturnValue(s)
     renderWithIntl(<NotificationSettings />)
-    fireEvent.click(screen.getByText('add-city'))
-    expect(update).toHaveBeenCalledWith({ notificationCities: ['c1', 'c2'] })
+    fireEvent.click(master())
+    await vi.waitFor(() => expect(s.update).toHaveBeenCalledWith({ notifyBotRides: true, notifyPostedRides: true }))
   })
 
-  it('shows the enable button when permission is undecided and calls enable', () => {
-    usePushPreferences.mockReturnValue(stub())
+  it('geo on saves the nearest city; geo off clears it', async () => {
+    const s = stub()
+    usePushPreferences.mockReturnValue(s)
+    const { unmount } = renderWithIntl(<NotificationSettings />)
+    fireEvent.click(geo())
+    await vi.waitFor(() => expect(s.update).toHaveBeenCalledWith({ notifyGeoCityId: 'c9' }))
+    unmount()
+    const on = stub({ notifyGeoCityId: 'c9', geoCity: { id: 'c9', name: 'Mohali' } })
+    usePushPreferences.mockReturnValue(on)
     renderWithIntl(<NotificationSettings />)
-    fireEvent.click(screen.getByRole('button', { name: 'Enable notifications' }))
-    expect(enable).toHaveBeenCalled()
+    expect(screen.getByText('Rides from your current city only.')).toBeInTheDocument()
+    fireEvent.click(geo())
+    expect(on.update).toHaveBeenCalledWith({ notifyGeoCityId: null })
   })
 
-  it('hides the enable button once notifications are granted', () => {
-    global.Notification = { permission: 'granted' }
-    usePushPreferences.mockReturnValue(stub())
+  it('geo toggle is disabled while alerts are off', () => {
+    usePushPreferences.mockReturnValue(stub({ notifyBotRides: false, notifyPostedRides: false }))
     renderWithIntl(<NotificationSettings />)
-    expect(screen.queryByRole('button', { name: 'Enable notifications' })).not.toBeInTheDocument()
-  })
-
-  it('use-my-location adds the resolved nearest city', async () => {
-    const update = vi.fn()
-    usePushPreferences.mockReturnValue(stub({ update }))
-    renderWithIntl(<NotificationSettings />)
-    fireEvent.click(screen.getByRole('button', { name: 'Use my location' }))
-    await vi.waitFor(() => expect(update).toHaveBeenCalledWith({ notificationCities: ['c1', 'c9'] }))
+    expect(geo()).toBeDisabled()
   })
 })

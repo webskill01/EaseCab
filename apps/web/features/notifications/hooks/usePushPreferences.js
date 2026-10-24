@@ -11,7 +11,9 @@ export function usePushPreferences() {
   const q = useQuery({ queryKey: ['pushPreferences'], queryFn: getPreferences, staleTime: 300000 })
   const m = useMutation({
     mutationFn: (body) => updatePreferences(body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['pushPreferences'] }),
+    // onSettled (not onSuccess): a failed save refetches too, snapping the shared
+    // feed-filter/alert-city list back to what the server really holds.
+    onSettled: () => qc.invalidateQueries({ queryKey: ['pushPreferences'] }),
   })
   return {
     prefs: q.data ?? null,

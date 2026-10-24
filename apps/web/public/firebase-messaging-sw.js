@@ -35,6 +35,24 @@ self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim(
 // Backend sends DATA-ONLY messages; FCM wraps the custom map under `.data` (older/edge
 // deliveries put it at the top level — handle both). `tag` collapses repeat alerts of
 // the same source; the action + body-tap both deep-link via the notificationclick handler.
+// Custom sound: a web notification can't pick its own sound (the `sound` option is
+// unsupported everywhere), so while an app window is VISIBLE we ask it to play
+// /sounds/notification.mp3 and show the notification silently. Resolves true only once the
+// window confirms it actually played (autoplay can block it before any tap, or the
+// page may have no player mounted) — otherwise the phone's default sound plays as before.
+const PLAY_ACK_MS = 1000
+async function playInApp() {
+  const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+  const win = wins.find((w) => w.visibilityState === 'visible')
+  if (!win) return false
+  return new Promise((resolve) => {
+    const ch = new MessageChannel()
+    ch.port1.onmessage = (e) => resolve(!!(e.data && e.data.played))
+    setTimeout(() => resolve(false), PLAY_ACK_MS)
+    win.postMessage({ type: 'ec-play-sound' }, [ch.port2])
+  })
+}
+
 self.addEventListener('push', (event) => {
   let d = {}
   try {
@@ -44,7 +62,8 @@ self.addEventListener('push', (event) => {
     d = {} // unparseable payload — still show a generic tap-through rather than nothing
   }
   event.waitUntil(
-    self.registration.showNotification(d.title || 'EaseCab', {
+    playInApp().catch(() => false).then((played) => self.registration.showNotification(d.title || 'EaseCab', {
+      silent: played,
       body: d.body || '',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-96.png',
@@ -52,7 +71,7 @@ self.addEventListener('push', (event) => {
       renotify: true,
       data: { url: d.url || '/feed' },
       actions: [{ action: 'view', title: d.action || 'View ride' }],
-    }),
+    })),
   )
 })
 

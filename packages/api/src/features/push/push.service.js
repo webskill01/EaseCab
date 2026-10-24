@@ -34,8 +34,8 @@ function createPushService({ repo, pushSender }) {
 
     /**
      * Read the caller's notification preferences. NOT_FOUND if the user is gone.
-     * Also resolves the stored city UUIDs to `cities:[{id,name}]` so the settings UI
-     * can render saved alert cities by name (Step 21d).
+     * Also resolves the stored city UUIDs to `cities:[{id,name}]` (the feed filter) and
+     * `geoCity:{id,name}|null` so the UI can render them by name (Step 21d).
      */
     async getPreferences(userId) {
       const prefs = await repo.getPreferences(userId);
@@ -43,15 +43,20 @@ function createPushService({ repo, pushSender }) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }
       const ids = prefs.notificationCities ?? [];
-      const cities = ids.length ? await repo.listCitiesByIds(ids) : [];
-      return { ...prefs, cities };
+      const geoId = prefs.notifyGeoCityId;
+      const all = [...new Set([...ids, ...(geoId ? [geoId] : [])])];
+      const named = all.length ? await repo.listCitiesByIds(all) : [];
+      const cities = named.filter((c) => ids.includes(c.id));
+      const geoCity = named.find((c) => c.id === geoId) ?? null;
+      return { ...prefs, cities, geoCity };
     },
 
     /** Update preferences; any picked city ids must exist + be active (else VALIDATION_ERROR). */
     async updatePreferences(userId, body) {
-      if (body.notificationCities && body.notificationCities.length > 0) {
-        const existing = await repo.findExistingCityIds(body.notificationCities);
-        if (body.notificationCities.some((id) => !existing.has(id))) {
+      const picked = [...(body.notificationCities ?? []), ...(body.notifyGeoCityId ? [body.notifyGeoCityId] : [])];
+      if (picked.length > 0) {
+        const existing = await repo.findExistingCityIds(picked);
+        if (picked.some((id) => !existing.has(id))) {
           throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
         }
       }

@@ -29,13 +29,15 @@ const pushPreferencesSchema = z
     notificationCities: z.array(z.string().uuid()).max(PUSH.NOTIFICATION_CITIES_MAX).optional(),
     notifyBotRides: z.boolean().optional(),
     notifyPostedRides: z.boolean().optional(),
+    notifyGeoCityId: z.string().uuid().nullable().optional(), // null = geo alerts off
   })
   .strict()
   .refine(
     (d) =>
       d.notificationCities !== undefined ||
       d.notifyBotRides !== undefined ||
-      d.notifyPostedRides !== undefined,
+      d.notifyPostedRides !== undefined ||
+      d.notifyGeoCityId !== undefined,
     { message: 'at least one preference field is required' },
   );
 

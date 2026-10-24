@@ -52,7 +52,9 @@ function fakePrisma(seed = {}) {
         let rows = subs.filter((s) => {
           const o = users.get(s.userId);
           return o && o.isDeleted === u.isDeleted && o[toggleKey] === u[toggleKey]
-            && (o.notificationCities || []).some((c) => u.notificationCities.hasSome.includes(c));
+            && ((o.notificationCities || []).some((c) => u.OR[0].notificationCities.hasSome.includes(c))
+              || (o.notifyGeoCityId && u.OR[0].notificationCities.hasSome.includes(o.notifyGeoCityId))
+              || (!o.notifyGeoCityId && !(o.notificationCities || []).length)); // filter OR geo OR All rides
         });
         if (distinct) { const seen = new Set(); rows = rows.filter((r) => (seen.has(r.deviceToken) ? false : seen.add(r.deviceToken))); }
         return rows.map((r) => ({ deviceToken: r.deviceToken }));

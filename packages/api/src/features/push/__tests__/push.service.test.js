@@ -36,6 +36,21 @@ test('unregisterToken reports the removed count', async () => {
   assert.deepEqual(await svc.unregisterToken('u1', { deviceToken: 'tok' }), { removed: 1 });
 });
 
+test('getPreferences resolves the geo city separately from the filter cities', async () => {
+  const repo = fakeRepo({ prefs: { notificationCities: ['aaaa-1'], notifyGeoCityId: 'bbbb-2', notifyBotRides: true, notifyPostedRides: true } });
+  const out = await createPushService({ repo }).getPreferences('u1');
+  assert.deepEqual(out.cities, [{ id: 'aaaa-1', name: 'City-aaaa' }]);
+  assert.deepEqual(out.geoCity, { id: 'bbbb-2', name: 'City-bbbb' });
+});
+
+test('updatePreferences rejects an unknown geo city; null turns geo off without a lookup', async () => {
+  const bad = fakeRepo({ existing: new Set() });
+  await assert.rejects(createPushService({ repo: bad }).updatePreferences('u1', { notifyGeoCityId: 'zzzz-9' }), (e) => e.code === 'VALIDATION_ERROR');
+  const ok = fakeRepo();
+  await createPushService({ repo: ok }).updatePreferences('u1', { notifyGeoCityId: null });
+  assert.equal(ok.calls.cities.length, 0);
+});
+
 test('getPreferences throws NOT_FOUND when the user is gone', async () => {
   const svc = createPushService({ repo: fakeRepo({ prefs: null }) });
   await assert.rejects(svc.getPreferences('ghost'), (e) => e.code === 'NOT_FOUND');
