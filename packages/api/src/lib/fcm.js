@@ -57,7 +57,8 @@ function createPushSender({ projectId, clientEmail, privateKey }) {
       const staleTokens = [];
       for (let i = 0; i < tokens.length; i += PUSH.TOKENS_PER_MULTICAST) {
         const batch = tokens.slice(i, i + PUSH.TOKENS_PER_MULTICAST);
-        const res = await messaging.sendEachForMulticast({ tokens: batch, data: stringData });
+        // High priority: a ride alert must wake a dozing Android phone (native app); web ignores it.
+        const res = await messaging.sendEachForMulticast({ tokens: batch, data: stringData, android: { priority: 'high' } });
         successCount += res.successCount;
         res.responses.forEach((r, idx) => {
           if (!r.success && isStaleTokenError(r.error)) staleTokens.push(batch[idx]);

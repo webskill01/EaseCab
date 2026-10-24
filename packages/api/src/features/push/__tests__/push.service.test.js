@@ -19,6 +19,8 @@ function fakeRepo(over = {}) {
     async updatePreferences(id, data) { calls.update.push([id, data]); return { notificationCities: data.notificationCities ?? [], notifyBotRides: true, notifyPostedRides: true }; },
     async findTargetTokens(a) { calls.find.push(a); return over.tokens ?? []; },
     async pruneTokens(t) { calls.prune.push(t); return t.length; },
+    async findPaidNativeTokens(t) { calls.paid = t; return (over.paidTokens ?? []).filter((x) => t.includes(x)); },
+    async getRidePhone(id) { calls.phoneFor = id; return over.phone ?? null; },
   };
 }
 
@@ -120,7 +122,7 @@ test('dispatchForRide: no matching tokens → no send', async () => {
 test('dispatchForRide: sends source-specific copy + data, dedupes cities', async () => {
   const repo = fakeRepo({ tokens: ['t1', 't2'] });
   const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 2, staleTokens: [] }; } };
-  const out = await createPushService({ repo, pushSender: sender }).dispatchForRide({ source: 'posted', rideId: 'r9', cityIds: [CITY, CITY] });
+  const out = await createPushService({ repo, pushSender: sender, random: () => 0 }).dispatchForRide({ source: 'posted', rideId: 'r9', cityIds: [CITY, CITY] });
   assert.deepEqual(repo.calls.find[0].cityIds, [CITY]); // deduped
   assert.equal(repo.calls.find[0].source, 'posted');
   const sent = sender.calls[0];
@@ -129,11 +131,14 @@ test('dispatchForRide: sends source-specific copy + data, dedupes cities', async
     type: 'new_ride',
     source: 'posted',
     rideId: 'r9',
-    title: '✅ Verified ride mili!',
-    // pickup === drop (same CITY) → single-city route prepended to the Hinglish body
-    body: 'City-1111 · Verified driver ne abhi post ki — tap karke dekho aur contact karo.',
+    // first variant (random → 0); pickup === drop (same CITY) → single-city route
+    title: '✅ Verified duty: City-1111',
+    body: 'Verified driver ne abhi post ki — tap karke dekho',
     url: '/feed',
+    from: 'City-1111',
+    to: 'City-1111',
   });
+  assert.equal(repo.calls.paid, undefined); // verified rides never carry the phone
   assert.deepEqual(out, { targeted: 2, successCount: 2, pruned: 0 });
 });
 
@@ -147,7 +152,39 @@ test('dispatchForRide: names the pickup→drop route in the body', async () => {
   const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 1, staleTokens: [] }; } };
   await createPushService({ repo, pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [A, B] });
   assert.deepEqual(repo.calls.find[0].cityIds, [A]); // targets PICKUP only — drop (B) never triggers
-  assert.match(sender.calls[0].data.body, /^Amritsar → Delhi · /);
+  assert.match(`${sender.calls[0].data.title} ${sender.calls[0].data.body}`, /Amritsar|Amritsar → Delhi/);
+  assert.equal(sender.calls[0].data.from, 'Amritsar');
+  assert.equal(sender.calls[0].data.to, 'Delhi');
+});
+
+test('dispatchForRide: every variant fills its placeholders and never says "customer"', async () => {
+  const { PUSH } = require('@easecab/shared');
+  for (const source of ['bot', 'posted']) {
+    const all = PUSH.NOTIFICATION[source];
+    for (let i = 0; i < all.length; i += 1) {
+      const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 1, staleTokens: [] }; } };
+      const random = () => i / all.length;
+      await createPushService({ repo: fakeRepo({ tokens: ['t1'] }), pushSender: sender, random }).dispatchForRide({ source, rideId: 'r1', cityIds: [CITY] });
+      const { title, body } = sender.calls[0].data;
+      assert.doesNotMatch(title + body, /\{|\}|customer/i);
+    }
+  }
+});
+
+test('dispatchForRide: unknown pickup name falls back to the no-route copy', async () => {
+  const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: 1, staleTokens: [] }; } };
+  await createPushService({ repo: fakeRepo({ tokens: ['t1'], cityNames: [] }), pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [CITY] });
+  assert.equal(sender.calls[0].data.title, '🚕 Nayi duty available!');
+});
+
+test('dispatchForRide: only paid native tokens get the poster phone (bot rides)', async () => {
+  const repo = fakeRepo({ tokens: ['free', 'paid'], paidTokens: ['paid'], phone: '+919800000000' });
+  const sender = { calls: [], async sendToTokens(a) { this.calls.push(a); return { successCount: a.tokens.length, staleTokens: [] }; } };
+  const out = await createPushService({ repo, pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [CITY] });
+  assert.equal(repo.calls.phoneFor, 'r1');
+  const byToken = Object.fromEntries(sender.calls.map((c) => [c.tokens.join(), c.data.phone]));
+  assert.deepEqual(byToken, { free: undefined, paid: '+919800000000' });
+  assert.equal(out.successCount, 2);
 });
 
 test('dispatchForRide: prunes the tokens FCM reports as dead', async () => {

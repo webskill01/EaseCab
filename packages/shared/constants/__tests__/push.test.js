@@ -13,8 +13,11 @@ test('PUSH exposes frozen bounds + per-source copy', () => {
   assert.equal(PUSH.TOKENS_PER_MULTICAST, 500);
   assert.equal(PUSH.DEVICE_TOKEN_MAX, 4096);
   assert.equal(PUSH.TYPE, 'new_ride');
-  assert.equal(typeof PUSH.NOTIFICATION.bot.title, 'string');
-  assert.equal(typeof PUSH.NOTIFICATION.posted.body, 'string');
+  for (const source of ['bot', 'posted']) {
+    assert.ok(PUSH.NOTIFICATION[source].length >= 3); // several variants per source
+    assert.ok(PUSH.NOTIFICATION[source].every((v) => Object.isFrozen(v) && v.title && v.body));
+    assert.ok(PUSH.NO_ROUTE[source].title);
+  }
 });
 
 test('PUSH_SOURCE is the frozen bot/posted discriminator', () => {

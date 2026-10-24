@@ -47,6 +47,36 @@ function createPushRepository({ prisma, redis }) {
       return new Set(rows.map((r) => r.id));
     },
 
+    /**
+     * The subset of `tokens` that belong to the native Android app of a paid-active member
+     * — they get the poster's number for one-tap Call/WhatsApp on the alert.
+     * @param {string[]} tokens
+     * @returns {Promise<string[]>}
+     */
+    async findPaidNativeTokens(tokens) {
+      if (!tokens.length) return [];
+      const rows = await prisma.pushSubscription.findMany({
+        where: {
+          deviceToken: { in: tokens },
+          platform: 'android',
+          user: { subscription: { is: { status: SUBSCRIPTION_STATUS.ACTIVE, expiresAt: { gt: new Date() } } } },
+        },
+        select: { deviceToken: true },
+        distinct: ['deviceToken'],
+      });
+      return rows.map((r) => r.deviceToken);
+    },
+
+    /**
+     * A bot ride's poster number (paid-member alert only). null when the ride is gone.
+     * @param {string} rideId
+     * @returns {Promise<?string>}
+     */
+    async getRidePhone(rideId) {
+      const ride = await prisma.ride.findUnique({ where: { id: rideId }, select: { phoneNumber: true } });
+      return ride?.phoneNumber ?? null;
+    },
+
     /** Resolve stored city ids to `{id,name}` for the settings UI (Step 21d). */
     async listCitiesByIds(ids) {
       const rows = await prisma.city.findMany({ where: { id: { in: ids } }, select: { id: true, canonicalName: true } });

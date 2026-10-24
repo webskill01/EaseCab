@@ -164,5 +164,5 @@ test('LIVE dispatch: a posted-ride event uses the posted toggle + copy', async (
   assert.equal(sent.length, 1);
   assert.equal(sent[0].data.source, 'posted');
   assert.equal(sent[0].notification, undefined); // data-only payload
-  assert.equal(sent[0].data.title, '✅ Verified ride mili!');
+  assert.match(sent[0].data.title, /verified duty/i); // one of the posted variants
 });

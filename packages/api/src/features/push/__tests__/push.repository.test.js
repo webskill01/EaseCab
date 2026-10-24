@@ -185,3 +185,23 @@ test('pruneTokens deletes the dead tokens; no-op on empty', async () => {
   assert.equal(await repo.pruneTokens(['dead']), 1);
   assert.deepEqual(prisma._subs.map((s) => s.deviceToken), ['live']);
 });
+
+test('findPaidNativeTokens: android + active unexpired sub only; empty input skips the query', async () => {
+  let where;
+  const prisma = { pushSubscription: { async findMany(a) { where = a.where; return [{ deviceToken: 't1' }]; } } };
+  const repo = createPushRepository({ prisma });
+  assert.deepEqual(await repo.findPaidNativeTokens([]), []);
+  assert.equal(where, undefined);
+  assert.deepEqual(await repo.findPaidNativeTokens(['t1', 't2']), ['t1']);
+  assert.equal(where.platform, 'android');
+  assert.deepEqual(where.deviceToken, { in: ['t1', 't2'] });
+  assert.equal(where.user.subscription.is.status, 'active');
+  assert.ok(where.user.subscription.is.expiresAt.gt instanceof Date);
+});
+
+test('getRidePhone: returns the ride number or null', async () => {
+  const prisma = { ride: { async findUnique({ where }) { return where.id === 'r1' ? { phoneNumber: '+9198' } : null; } } };
+  const repo = createPushRepository({ prisma });
+  assert.equal(await repo.getRidePhone('r1'), '+9198');
+  assert.equal(await repo.getRidePhone('gone'), null);
+});

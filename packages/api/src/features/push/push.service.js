@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, PUSH } = require('@easecab/shared');
+const { AppError, ERROR_CODES, PUSH, PUSH_SOURCE } = require('@easecab/shared');
 
 /** Client-safe view of a registered subscription — never echoes the raw token back. */
 function toPublicSubscription(s) {
@@ -18,7 +18,21 @@ function toPublicSubscription(s) {
  * @param {ReturnType<import('./push.repository').createPushRepository>} deps.repo
  * @param {{ sendToTokens: Function }} [deps.pushSender]
  */
-function createPushService({ repo, pushSender }) {
+/** Fill {from}/{to}/{route} in one copy variant. */
+function fillCopy(copy, vars) {
+  const fill = (s) => s.replace(/\{(from|to|route)\}/g, (_, k) => vars[k]);
+  return { title: fill(copy.title), body: fill(copy.body) };
+}
+
+/** One random copy variant for this ride (NO_ROUTE when the pickup name is unknown). */
+function rideCopy(source, from, to, random) {
+  if (!from) return PUSH.NO_ROUTE[source];
+  const route = to && to !== from ? `${from} → ${to}` : from;
+  const variants = PUSH.NOTIFICATION[source];
+  return fillCopy(variants[Math.floor(random() * variants.length)], { from, to: to || from, route });
+}
+
+function createPushService({ repo, pushSender, random = Math.random }) {
   return {
     /** Register (upsert) the caller's FCM device token. */
     async registerToken(userId, { deviceToken, platform }) {
@@ -81,20 +95,29 @@ function createPushService({ repo, pushSender }) {
       const tokens = await repo.findTargetTokens({ cityIds: [pickupId], source });
       if (tokens.length === 0) return empty;
       // Resolve the ride's pickup→drop names so the notification names the actual route
-      // ("Amritsar → Delhi · …") instead of a generic line — display only, both cities.
-      // cityIds arrives as [pickup, drop]; fall back gracefully when only one resolves.
+      // ("Amritsar → Delhi") instead of a generic line — display only, both cities.
       const nameById = new Map((await repo.listCitiesByIds([...new Set(all)])).map((c) => [c.id, c.name]));
-      const [from, to] = (cityIds || []).map((id) => nameById.get(id));
-      const route = from && to && from !== to ? `${from} → ${to}` : (from || to || '');
+      const [from = '', to = ''] = (cityIds || []).map((id) => nameById.get(id) || '');
       // Data-only payload: title/body travel in `data` so FCM does NOT auto-display
-      // a second (icon-less) notification — the service worker renders the only one.
-      const copy = PUSH.NOTIFICATION[source];
-      const body = route ? `${route} · ${copy.body}` : copy.body;
-      const { successCount, staleTokens } = await pushSender.sendToTokens({
-        tokens,
-        data: { type: PUSH.TYPE, source, rideId, title: copy.title, body, url: PUSH.CLICK_PATH },
-      });
-      const pruned = staleTokens.length > 0 ? await repo.pruneTokens(staleTokens) : 0;
+      // a second (icon-less) notification — the service worker / native app renders it.
+      const data = { type: PUSH.TYPE, source, rideId, ...rideCopy(source, from, to, random), url: PUSH.CLICK_PATH, from, to };
+      // Paid members on the native app get the poster's number for one-tap Call/WhatsApp
+      // (bot rides only — verified rides keep their in-app verification gate).
+      const paid = source === PUSH_SOURCE.BOT ? await repo.findPaidNativeTokens(tokens) : [];
+      const phone = paid.length > 0 ? await repo.getRidePhone(rideId) : null;
+      const paidSet = new Set(phone ? paid : []);
+      const batches = [
+        { tokens: tokens.filter((t) => !paidSet.has(t)), data },
+        { tokens: [...paidSet], data: { ...data, phone } },
+      ].filter((b) => b.tokens.length > 0);
+      let successCount = 0;
+      const stale = [];
+      for (const b of batches) {
+        const res = await pushSender.sendToTokens(b);
+        successCount += res.successCount;
+        stale.push(...res.staleTokens);
+      }
+      const pruned = stale.length > 0 ? await repo.pruneTokens(stale) : 0;
       return { targeted: tokens.length, successCount, pruned };
     },
   };
