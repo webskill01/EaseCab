@@ -1,5 +1,7 @@
 'use strict';
 
+const { CITY_NEAREST } = require('@easecab/shared');
+
 /**
  * Cities data access (CLAUDE.md §4 — DB only). `searchCities` is the typeahead
  * query: it reuses the CityResolver's pg_trgm pattern (UNION over canonical names
@@ -58,15 +60,15 @@ function createCitiesRepository({ prisma }) {
     },
 
     /**
-     * Closest active city to (lat,lng) with non-null coords, within maxRadiusKm.
-     * Haversine (great-circle, km) computed in SQL; all inputs are bound params.
+     * Active city whose area (centre + REACH_KM by type) is closest to (lat,lng),
+     * within maxRadiusKm. Haversine (km) in SQL over the nearest few; all inputs bound.
      * @param {{ lat: number, lng: number, maxRadiusKm: number }} args
      * @returns {Promise<{ id: string, canonicalName: string, distanceKm: number } | null>}
      */
     async findNearest({ lat, lng, maxRadiusKm }) {
       const rows = await prisma.$queryRaw`
-        SELECT id AS city_id, canonical_name, distance_km FROM (
-          SELECT c.id, c.canonical_name,
+        SELECT id AS city_id, canonical_name, type, distance_km FROM (
+          SELECT c.id, c.canonical_name, c.type::text AS type,
             6371 * acos(LEAST(1, GREATEST(-1,
               cos(radians(${lat})) * cos(radians(c.lat::float8)) *
               cos(radians(c.lng::float8) - radians(${lng})) +
@@ -77,10 +79,11 @@ function createCitiesRepository({ prisma }) {
         ) d
         WHERE d.distance_km <= ${maxRadiusKm}
         ORDER BY d.distance_km ASC
-        LIMIT 1
+        LIMIT ${CITY_NEAREST.CANDIDATES}
       `;
       if (rows.length === 0) return null;
-      const r = rows[0];
+      const edge = (row) => Number(row.distance_km) - (CITY_NEAREST.REACH_KM[row.type] ?? 0);
+      const r = rows.reduce((best, row) => (edge(row) < edge(best) ? row : best));
       return { id: r.city_id, canonicalName: r.canonical_name, distanceKm: Number(r.distance_km) };
     },
   };

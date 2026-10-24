@@ -55,3 +55,30 @@ test('listAll: returns active cities with localized names, ordered by canonical 
   assert.deepEqual(captured.orderBy, { canonicalName: 'asc' });
   assert.deepEqual(captured.select, { id: true, canonicalName: true, namePa: true, nameHi: true });
 });
+
+test('findNearest: a fix inside a city beats a nearer town centre (Patiala vs Sanaur)', async () => {
+  const prisma = {
+    async $queryRaw() {
+      return [
+        { city_id: 's', canonical_name: 'Sanaur', type: 'town', distance_km: 4.5 },
+        { city_id: 'p', canonical_name: 'Patiala', type: 'city', distance_km: 5.5 },
+      ];
+    },
+  };
+  const out = await createCitiesRepository({ prisma }).findNearest({ lat: 30.33, lng: 76.43, maxRadiusKm: 150 });
+  assert.equal(out.canonicalName, 'Patiala');
+  assert.equal(out.distanceKm, 5.5);
+});
+
+test('findNearest: standing in the town itself still picks the town', async () => {
+  const prisma = {
+    async $queryRaw() {
+      return [
+        { city_id: 's', canonical_name: 'Sanaur', type: 'town', distance_km: 0.3 },
+        { city_id: 'p', canonical_name: 'Patiala', type: 'city', distance_km: 8.2 },
+      ];
+    },
+  };
+  const out = await createCitiesRepository({ prisma }).findNearest({ lat: 30.30, lng: 76.46, maxRadiusKm: 150 });
+  assert.equal(out.canonicalName, 'Sanaur');
+});

@@ -17,7 +17,13 @@ const CITY_SEARCH = Object.freeze({
  * MAX_RADIUS_KM so a user outside the PB/HR/NCR footprint gets `null` (manual pick)
  * rather than a meaningless far suggestion.
  */
-const CITY_NEAREST = Object.freeze({ MAX_RADIUS_KM: 150 });
+const CITY_NEAREST = Object.freeze({
+  MAX_RADIUS_KM: 150,
+  CANDIDATES: 5,
+  // How far a place "reaches" from its centre point: a city spreads km past its centre,
+  // so a fix inside Patiala must not snap to Sanaur just because Sanaur's dot is nearer.
+  REACH_KM: Object.freeze({ metro: 15, city: 8, town: 2, village: 1, landmark: 0.5 }),
+});
 
 /**
  * Full active-city list (Batch C — the "All Locations" overlay). Cached in Redis
