@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { requestPermissionAndToken } from '../services/fcmClient'
-import { registerToken } from '../services/pushApi'
-import { setStoredToken } from '../lib/pushStorage'
+import { registerToken, unregisterToken } from '../services/pushApi'
+import { getStoredToken, setStoredToken } from '../lib/pushStorage'
+import { pushPlatform, takePendingContacts } from '../services/nativePush'
+import { logContactRide } from '@/features/rides/services/ridesApi'
 import { permissionState } from '../lib/pushFlow'
 
 /**
@@ -21,12 +23,18 @@ export function useSyncPushToken() {
   useEffect(() => {
     if (ran.current) return
     ran.current = true
+    // Calls made from a native notification's Call/WhatsApp button → Contacted tab.
+    for (const id of takePendingContacts()) logContactRide(id).catch(() => {})
     if (permissionState() !== 'granted') return // only sync for users already opted in
     ;(async () => {
       try {
         const { token } = await requestPermissionAndToken()
         if (!token) return
-        await registerToken({ deviceToken: token, platform: 'web' })
+        await registerToken({ deviceToken: token, platform: pushPlatform() })
+        // Moving to the Play app's native push: drop the old browser token so alerts
+        // don't arrive twice (once from the app, once from Brave/Chrome).
+        const old = getStoredToken()
+        if (old && old !== token) await unregisterToken({ deviceToken: old }).catch(() => {})
         setStoredToken(token)
       } catch {
         // best-effort: minting/register can fail on a bad VAPID key or offline — the

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { BellEdit, Pin } from '@/components/ui/icons'
+import { BellEdit, Pin, Battery } from '@/components/ui/icons'
 import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
 import { useNearestCity } from '../hooks/useNearestCity'
@@ -10,6 +10,7 @@ import { permissionState } from '../lib/pushFlow'
 import { geoDenied } from '../services/geoClient'
 import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
 import { bubbleSupported, bubbleOn, setBubble } from '@/features/pwa/services/twaBubble'
+import { batteryRestricted, openAppSettings } from '../services/nativePush'
 
 function Toggle({ on, onChange, label, hint, disabled }) {
   return (
@@ -77,6 +78,15 @@ export function NotificationSettings() {
         />
         {bubbleSupported() && (
           <Toggle on={bubble} onChange={(next) => { setBubbleState(next); setBubble(next) }} label={t('notifications.bubble')} hint={t('notifications.bubbleHint')} />
+        )}
+        {masterOn && batteryRestricted() && (
+          <button type="button" onClick={openAppSettings} className="flex w-full items-start gap-2.5 py-3 text-left">
+            <Battery size={18} className="mt-0.5 shrink-0 text-ec-danger" />
+            <span className="min-w-0">
+              <span className="block text-[14px] font-bold text-ec-danger">{t('notifications.battery')}</span>
+              <span className="block text-[12px] font-medium text-ec-ink60">{t('notifications.batteryHint')}</span>
+            </span>
+          </button>
         )}
       </div>
       {nearest.errorKey && !help && <p className="mt-1 text-[12px] font-semibold text-ec-danger">{tn(nearest.errorKey)}</p>}

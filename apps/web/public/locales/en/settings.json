@@ -21,8 +21,10 @@
     "geoHint": "Adds rides from the city you're in. Turns off all-rides alerts.",
     "geoCity": "Your city: {city} — plus any feed-filter cities.",
     "filterNote": "Which cities alert you follows your feed city filter.",
-    "bubble": "Floating button",
-    "bubbleHint": "A round EaseCab button over other apps. Tap it to come back here."
+    "bubble": "Display over other apps button",
+    "bubbleHint": "A round EaseCab button over other apps. Tap it to come back here.",
+    "battery": "Battery: set to Unrestricted",
+    "batteryHint": "Without this, the phone may stop duty alerts when EaseCab is closed. Tap → Battery → Unrestricted."
   },
   "language": {
     "title": "Language"

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { requestPermissionAndToken } from '../services/fcmClient'
 import { registerToken, unregisterToken } from '../services/pushApi'
+import { pushPlatform } from '../services/nativePush'
 import { getStoredToken, setStoredToken, clearStoredToken } from '../lib/pushStorage'
 
 /**
@@ -18,7 +19,7 @@ export function useEnableAlerts() {
       const { permission: perm, token } = await requestPermissionAndToken()
       setPermission(perm)
       if (perm !== 'granted' || !token) return { permission: perm }
-      await registerToken({ deviceToken: token, platform: 'web' })
+      await registerToken({ deviceToken: token, platform: pushPlatform() })
       setStoredToken(token)
       return { permission: 'granted' }
     } finally {

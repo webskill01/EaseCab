@@ -1,6 +1,7 @@
 import { getToken, onMessage } from 'firebase/messaging'
 import { getFirebaseMessaging } from '@/features/auth/lib/firebaseClient'
 import { env } from '@/config/env'
+import { isNative, nativePermissionAndToken } from './nativePush'
 
 /**
  * FCM web boundary (Step 23) — mirrors otpClient. In E2E mode
@@ -20,6 +21,7 @@ function swUrl() {
 
 export async function requestPermissionAndToken() {
   if (process.env.NEXT_PUBLIC_E2E === 'true') return window.__ecFcmSeam.requestPermissionAndToken()
+  if (isNative()) return nativePermissionAndToken() // Play app: Android notifications, not the browser's
   if (typeof Notification === 'undefined') return { permission: 'unsupported', token: null }
   // Always surface the OS permission prompt FIRST so the user can grant/deny and the
   // duty-alerts toggle reflects the real permission — independent of whether a push

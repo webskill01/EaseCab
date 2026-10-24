@@ -9,6 +9,7 @@ import { Lock, Pin, BellEdit, Battery, Check } from '@/components/ui/icons'
 import { PERM } from '../lib/appPerms'
 import { useAppPerms } from '../hooks/useAppPerms'
 import { PermBlockedSheet, BLOCKED_PERM } from '@/features/notifications/components/PermBlockedSheet'
+import { isNative, batteryRestricted, openAppSettings } from '@/features/notifications/services/nativePush'
 
 /** Left icon tile — green/filled once granted, sky/outline otherwise (mockup PermsSheet). */
 function PermTile({ icon, granted }) {
@@ -70,7 +71,7 @@ export function AppPermsSheet({ onClose }) {
       <div className="flex flex-col gap-2.5">
         <PermRow icon={<Pin size={20} />} title={t('perms.location')} sub={t('perms.locationSub')} state={location} hint={blockedHint(location)} onAllow={requestLocation} onFix={() => setHelp(BLOCKED_PERM.LOCATION)} />
         <PermRow icon={<BellEdit size={20} />} title={t('perms.push')} sub={t('perms.pushSub')} state={push} hint={blockedHint(push)} onAllow={requestPush} onFix={() => setHelp(BLOCKED_PERM.NOTIFICATIONS)} />
-        <PermRow icon={<Battery size={20} />} title={t('perms.battery')} sub={t('perms.batterySub')} state={PERM.UNSUPPORTED} hint={t('perms.phoneHint')} />
+        <PermRow icon={<Battery size={20} />} title={t('perms.battery')} sub={t('perms.batterySub')} state={!isNative() ? PERM.UNSUPPORTED : batteryRestricted() ? PERM.PROMPT : PERM.GRANTED} hint={t('perms.phoneHint')} onAllow={openAppSettings} />
       </div>
 
       <Button type="button" size="lg" onClick={onClose} className="mt-4 w-full">

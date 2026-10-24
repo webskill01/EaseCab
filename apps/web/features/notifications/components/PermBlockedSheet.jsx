@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Button } from '@/components/ui/button'
 import { BellEdit, Pin } from '@/components/ui/icons'
+import { isNative, openAppSettings } from '../services/nativePush'
 
 /** Which blocked permission the dialog explains. */
 export const BLOCKED_PERM = Object.freeze({ NOTIFICATIONS: 'notifications', LOCATION: 'location' })
@@ -34,7 +35,11 @@ export function PermBlockedSheet({ kind, onRetry, onClose }) {
           </li>
         ))}
       </ol>
-      <p className="mt-2.5 text-[11.5px] font-medium leading-snug text-ec-ink40">{t('permHelp.browser')}</p>
+      {isNative() ? (
+        <Button type="button" size="lg" onClick={openAppSettings} className="mt-3 w-full">{t('permHelp.openSettings')}</Button>
+      ) : (
+        <p className="mt-2.5 text-[11.5px] font-medium leading-snug text-ec-ink40">{t('permHelp.browser')}</p>
+      )}
       <div className="mt-4 flex gap-2">
         <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">{t('permHelp.later')}</Button>
         {onRetry && (

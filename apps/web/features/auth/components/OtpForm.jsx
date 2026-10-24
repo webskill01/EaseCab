@@ -25,6 +25,25 @@ export function OtpForm({ phone, onSubmit, onChangeNumber, loading, error }) {
     return () => clearInterval(id)
   }, [])
 
+  // WebOTP (Chrome/Brave on Android): reads the code from an SMS whose last line is
+  // "@easecab.com #123456" after one "Allow" tap, then verifies right away.
+  const submitRef = useRef(onSubmit)
+  submitRef.current = onSubmit
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('OTPCredential' in window)) return
+    const ac = new AbortController()
+    ;(async () => {
+      try {
+        const otp = await navigator.credentials.get({ otp: { transport: ['sms'] }, signal: ac.signal })
+        const c = (otp?.code ?? '').replace(/\D/g, '').slice(0, 6)
+        if (c.length !== 6) return
+        setCode(c)
+        submitRef.current(c)
+      } catch { /* aborted, dismissed or unsupported — the user types the code */ }
+    })()
+    return () => ac.abort()
+  }, [])
+
   const national = phone.replace(/^\+91/, '')
   const prettyPhone = `+91 ${national.replace(/(\d{5})(\d{5})/, '$1 $2') || national}`
 

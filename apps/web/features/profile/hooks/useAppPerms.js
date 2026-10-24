@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { requestPermissionAndToken } from '@/features/notifications/services/fcmClient'
 import { PERM, normPerm } from '../lib/appPerms'
+import { permissionState } from '@/features/notifications/lib/pushFlow'
 
 /**
  * Live app-permission state for the Profile sheet (T2-D). Reads the real browser
@@ -14,7 +15,7 @@ export function useAppPerms() {
   const [location, setLocation] = useState(PERM.UNSUPPORTED)
 
   const readPush = useCallback(() => {
-    setPush(typeof Notification === 'undefined' ? PERM.UNSUPPORTED : normPerm(Notification.permission))
+    setPush(normPerm(permissionState()))
   }, [])
 
   const readLocation = useCallback(async () => {

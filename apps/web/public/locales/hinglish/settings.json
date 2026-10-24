@@ -21,8 +21,10 @@
     "geoHint": "Jis city mein ho uski rides add hongi. All-rides alerts band ho jayenge.",
     "geoCity": "Aapki city: {city} — saath mein feed filter ki cities bhi.",
     "filterNote": "Kis city ke alert aayenge, ye aapke feed city filter se tay hota hai.",
-    "bubble": "Floating button",
-    "bubbleHint": "Dusre apps ke upar gol EaseCab button. Tap karke yahan wapas aao."
+    "bubble": "Display over other apps button",
+    "bubbleHint": "Dusre apps ke upar gol EaseCab button. Tap karke yahan wapas aao.",
+    "battery": "Battery: Unrestricted karo",
+    "batteryHint": "Iske bina app band hone par phone duty alerts rok sakta hai. Tap karo → Battery → Unrestricted."
   },
   "language": {
     "title": "Language"

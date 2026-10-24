@@ -31,6 +31,7 @@
     "step3": "Allow chunein, phir yahan wapas aayein",
     "browser": "Chrome mein use kar rahe hain? Address bar ke left wale icon par tap karein → Permissions.",
     "retry": "Maine chalu kar diya",
+    "openSettings": "Settings kholo",
     "later": "Abhi nahi",
     "perm": {
       "notifications": "Notifications",
