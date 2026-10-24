@@ -20,7 +20,9 @@
     "geo": "Alerts for my location",
     "geoHint": "Adds rides from the city you're in. Turns off all-rides alerts.",
     "geoCity": "Your city: {city} — plus any feed-filter cities.",
-    "filterNote": "Which cities alert you follows your feed city filter."
+    "filterNote": "Which cities alert you follows your feed city filter.",
+    "bubble": "Floating button",
+    "bubbleHint": "A round EaseCab button over other apps. Tap it to come back here."
   },
   "language": {
     "title": "Language"

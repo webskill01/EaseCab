@@ -20,6 +20,10 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.browser.customtabs.CustomTabsCallback;
+
+import com.google.androidbrowserhelper.trusted.QualityEnforcer;
+
 
 
 public class LauncherActivity
@@ -40,12 +44,29 @@ public class LauncherActivity
         } else {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         }
+        BubbleService.appVisible = true;
+        BubbleService.startIfAllowed(this);
+    }
+
+    @Override
+    protected CustomTabsCallback getCustomTabsCallback() {
+        // Keep the library's quality checks; also tell the floating button when the
+        // EaseCab tab goes to the background (show bubble) or comes back (hide it).
+        return new QualityEnforcer() {
+            @Override
+            public void onNavigationEvent(int navigationEvent, Bundle extras) {
+                if (navigationEvent == TAB_SHOWN) BubbleService.onAppVisible(true);
+                else if (navigationEvent == TAB_HIDDEN) BubbleService.onAppVisible(false);
+            }
+        };
     }
 
     @Override
     protected Uri getLaunchingUrl() {
         // Get the original launch Url.
         Uri uri = super.getLaunchingUrl();
+        // Tells the web app this build has the floating button (shows its toggle).
+        uri = uri.buildUpon().appendQueryParameter("bubble", "1").build();
 
         
 

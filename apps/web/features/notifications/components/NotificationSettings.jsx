@@ -9,6 +9,7 @@ import { useNearestCity } from '../hooks/useNearestCity'
 import { permissionState } from '../lib/pushFlow'
 import { geoDenied } from '../services/geoClient'
 import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
+import { bubbleSupported, bubbleOn, setBubble } from '@/features/pwa/services/twaBubble'
 
 function Toggle({ on, onChange, label, hint, disabled }) {
   return (
@@ -38,6 +39,7 @@ export function NotificationSettings() {
   const alerts = useEnableAlerts()
   const nearest = useNearestCity()
   const [help, setHelp] = useState(null) // BLOCKED_PERM while the fix dialog is open
+  const [bubble, setBubbleState] = useState(bubbleOn)
 
   if (isLoading) return <div className="text-ec-ink40">…</div>
   if (isError || !prefs) return <p className="text-[13px] font-semibold text-ec-danger">{t('error.load')}</p>
@@ -73,6 +75,9 @@ export function NotificationSettings() {
           label={t('notifications.geo')}
           hint={prefs.geoCity ? t('notifications.geoCity', { city: prefs.geoCity.name }) : t('notifications.geoHint')}
         />
+        {bubbleSupported() && (
+          <Toggle on={bubble} onChange={(next) => { setBubbleState(next); setBubble(next) }} label={t('notifications.bubble')} hint={t('notifications.bubbleHint')} />
+        )}
       </div>
       {nearest.errorKey && !help && <p className="mt-1 text-[12px] font-semibold text-ec-danger">{tn(nearest.errorKey)}</p>}
       <p className="mt-2 flex items-start gap-1.5 text-[12px] font-medium text-ec-ink40"><Pin size={12} /> {t('notifications.filterNote')}</p>

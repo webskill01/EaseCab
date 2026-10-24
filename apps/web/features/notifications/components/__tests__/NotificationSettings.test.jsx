@@ -71,4 +71,15 @@ describe('NotificationSettings', () => {
     renderWithIntl(<NotificationSettings />)
     expect(geo()).toBeDisabled()
   })
+
+  it('shows the floating-button toggle only inside the v10+ Play app', () => {
+    usePushPreferences.mockReturnValue(stub())
+    const { unmount } = renderWithIntl(<NotificationSettings />)
+    expect(screen.queryByRole('switch', { name: 'Floating button' })).toBeNull()
+    unmount()
+    sessionStorage.setItem('ec_bubble', '1')
+    renderWithIntl(<NotificationSettings />)
+    expect(screen.getByRole('switch', { name: 'Floating button' })).toHaveAttribute('aria-checked', 'false')
+    sessionStorage.clear()
+  })
 })

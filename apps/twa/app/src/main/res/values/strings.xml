@@ -39,4 +39,7 @@
     }]
     
   </string>  
+  <string name="bubbleChannel">Floating button</string>
+  <string name="bubbleOn">EaseCab floating button is on</string>
+  <string name="bubbleTurnOff">Turn off</string>
 </resources>
