@@ -67,6 +67,12 @@ async function seedCities() {
       });
       aliasCount += 1;
     }
+
+    // An alias listed here belongs to this city only: drop any copy left on another
+    // city, so moving a town out of its hub (samana: Patiala → Samana) takes effect.
+    await prisma.cityAlias.deleteMany({
+      where: { aliasText: { in: [...aliasTexts] }, cityId: { not: city.id } },
+    });
   }
 
   return { cityCount, aliasCount };
