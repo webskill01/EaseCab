@@ -91,12 +91,6 @@ export default function Refunds() {
       <h2>Contact</h2>
       <p>
         {COMPANY.legalName}
-        {COMPANY.addressLines.map((line) => (
-          <span key={line}>
-            <br />
-            {line}
-          </span>
-        ))}
         <br />
         Email: <strong>{COMPANY.email}</strong>
         <br />

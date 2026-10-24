@@ -33,15 +33,6 @@ const ORG_JSON_LD = {
   url: 'https://easecab.com',
   logo: 'https://easecab.com/icons/icon-512.png',
   email: COMPANY.email,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: COMPANY.address.street,
-    addressLocality: COMPANY.address.city,
-    addressRegion: COMPANY.address.state,
-    postalCode: COMPANY.address.postalCode,
-    addressCountry: 'IN',
-  },
-  hasMap: COMPANY.mapsUrl,
 }
 
 const JSON_LD = {

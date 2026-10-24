@@ -56,11 +56,8 @@
     "contact": "Contact Us"
   },
   "contact": {
-    "title": "Hamara registered office",
-    "officeLabel": "Registered office",
+    "title": "Humse sampark karo",
     "emailLabel": "Email",
-    "phoneLabel": "Phone",
-    "directions": "Google Maps mein kholo",
-    "mapTitle": "Google Maps pe EaseCab office ki location"
+    "phoneLabel": "Phone"
   }
 }

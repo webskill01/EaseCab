@@ -283,8 +283,6 @@ export default function TermsAndConditions() {
       <p>
         <strong>Entity:</strong> {COMPANY.legalName}
         <br />
-        <strong>Registered office:</strong> {COMPANY.addressLines.join(', ')}
-        <br />
         <strong>Email:</strong> {COMPANY.email}
         <br />
         <strong>Phone:</strong> {COMPANY.phoneDisplay}

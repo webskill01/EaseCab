@@ -17,22 +17,6 @@ export default function Contact() {
         we answer in English, Hindi and Punjabi.
       </p>
 
-      <h2>Registered office</h2>
-      <p>
-        <strong>{COMPANY.legalName}</strong>
-        {COMPANY.addressLines.map((line) => (
-          <span key={line}>
-            <br />
-            {line}
-          </span>
-        ))}
-      </p>
-      <p>
-        <a href={COMPANY.mapsUrl} target="_blank" rel="noopener noreferrer">
-          View on Google Maps
-        </a>
-      </p>
-
       <h2>Email</h2>
       <p>
         <strong>{COMPANY.email}</strong> &mdash; for account, payment, verification and general

@@ -56,11 +56,8 @@
     "contact": "ਸੰਪਰਕ ਕਰੋ"
   },
   "contact": {
-    "title": "ਸਾਡਾ ਰਜਿਸਟਰਡ ਦਫ਼ਤਰ",
-    "officeLabel": "ਰਜਿਸਟਰਡ ਦਫ਼ਤਰ",
+    "title": "ਸਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੋ",
     "emailLabel": "ਈਮੇਲ",
-    "phoneLabel": "ਫ਼ੋਨ",
-    "directions": "Google Maps ਵਿੱਚ ਖੋਲ੍ਹੋ",
-    "mapTitle": "Google Maps ਉੱਤੇ EaseCab ਦਫ਼ਤਰ ਦਾ ਟਿਕਾਣਾ"
+    "phoneLabel": "ਫ਼ੋਨ"
   }
 }

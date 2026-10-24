@@ -56,11 +56,8 @@
     "contact": "संपर्क करें"
   },
   "contact": {
-    "title": "हमारा पंजीकृत कार्यालय",
-    "officeLabel": "पंजीकृत कार्यालय",
+    "title": "हमसे संपर्क करें",
     "emailLabel": "ईमेल",
-    "phoneLabel": "फोन",
-    "directions": "Google Maps में खोलें",
-    "mapTitle": "Google Maps पर EaseCab कार्यालय का स्थान"
+    "phoneLabel": "फोन"
   }
 }
