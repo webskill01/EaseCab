@@ -132,7 +132,7 @@ test('dispatchForRide: sends source-specific copy + data, dedupes cities', async
     source: 'posted',
     rideId: 'r9',
     // first variant (random → 0); pickup === drop (same CITY) → single-city route
-    title: '✅ Verified duty: City-1111',
+    title: '✅ City-1111',
     body: 'Verified driver ne abhi post ki — tap karke dekho',
     url: '/feed',
     pickup: 'City-1111',
@@ -168,6 +168,7 @@ test('dispatchForRide: every variant fills its placeholders and never says "cust
       await createPushService({ repo: fakeRepo({ tokens: ['t1'] }), pushSender: sender, random }).dispatchForRide({ source, rideId: 'r1', cityIds: [CITY] });
       const { title, body } = sender.calls[0].data;
       assert.doesNotMatch(title + body, /\{|\}|customer|kh?aa?li/i);
+      assert.match(title, /^\S+ [^ ]+( → [^ ]+)?$/u, `title is emoji + route only: ${title}`);
     }
   }
 });

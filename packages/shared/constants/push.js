@@ -7,7 +7,8 @@
  *
  * Copy is Hinglish (widest reach for our driver base); per-user locale push is
  * deferred. Driver-to-driver app: copy never says "customer" or "khali". Each new ride picks one
- * variant at random so alerts don't read the same every time; {from}/{to}/{route} are
+ * variant at random so alerts don't read the same every time. Titles are emoji + route
+ * only ("Patiala → Delhi"); {from}/{to}/{route} are
  * filled from the ride's cities, and NO_ROUTE is used when the pickup name is missing.
  * The client routes on `data.type` + `data.rideId`.
  */
@@ -19,19 +20,19 @@ const PUSH = Object.freeze({
   CLICK_PATH: '/feed', // where a notification tap opens the app
   NOTIFICATION: Object.freeze({
     bot: Object.freeze([
-      { title: '🚕 {from} se nayi duty', body: '{route} · Pehle call karne wale driver ko milti hai — abhi dekho' },
-      { title: '🔥 Fresh duty: {route}', body: 'Abhi abhi aayi hai. Jaldi call karo, duty haath se na jaaye' },
-      { title: '📍 {from} mein nayi duty', body: '{route} · Driver bhai ko gaadi chahiye, tap karke dekho' },
-      { title: '⚡ Nayi duty aayi — {route}', body: 'Late mat karo, fresh duties minto mein book ho jaati hain' },
-      { title: '💰 Kamai ka mauka: {route}', body: 'Nayi duty available hai — abhi kholo aur seedha baat karo' },
-      { title: '🛣️ {route} duty', body: 'Bilkul fresh hai. Sabse pehle tum call karo' },
-      { title: '🚖 {from} ki duty, abhi abhi', body: '{route} · Detail dekho, driver se turant baat karo' },
+      { title: '🚕 {route}', body: 'Nayi duty — pehle call karne wale driver ko milti hai, abhi dekho' },
+      { title: '🔥 {route}', body: 'Abhi abhi aayi hai. Jaldi call karo, duty haath se na jaaye' },
+      { title: '📍 {route}', body: 'Driver bhai ko gaadi chahiye, tap karke dekho' },
+      { title: '⚡ {route}', body: 'Late mat karo, fresh duties minto mein book ho jaati hain' },
+      { title: '💰 {route}', body: 'Nayi duty available hai — abhi kholo aur seedha baat karo' },
+      { title: '🛣️ {route}', body: 'Bilkul fresh hai. Sabse pehle tum call karo' },
+      { title: '🚖 {route}', body: 'Detail dekho, driver se turant baat karo' },
     ].map(Object.freeze)),
     posted: Object.freeze([
-      { title: '✅ Verified duty: {route}', body: 'Verified driver ne abhi post ki — tap karke dekho' },
-      { title: '🛡️ Bharosemand duty — {route}', body: 'Verified driver ki duty, seedha baat karo' },
-      { title: '✅ {from} se verified duty', body: '{route} · Pehle aao, pehle pao' },
-      { title: '⭐ Nayi verified duty: {route}', body: 'Fresh post hai — abhi dekho, baad mein late ho jaoge' },
+      { title: '✅ {route}', body: 'Verified driver ne abhi post ki — tap karke dekho' },
+      { title: '🛡️ {route}', body: 'Verified driver ki duty, seedha baat karo' },
+      { title: '🏅 {route}', body: 'Verified duty — pehle aao, pehle pao' },
+      { title: '⭐ {route}', body: 'Verified driver ki fresh post — abhi dekho' },
     ].map(Object.freeze)),
   }),
   NO_ROUTE: Object.freeze({
