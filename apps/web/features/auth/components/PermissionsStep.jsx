@@ -66,9 +66,9 @@ export function PermissionsStep({ onContinue }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col">
       <div className="px-[22px] pt-5">
-        <div className="mb-3.5 flex h-[52px] w-[52px] items-center justify-center rounded-[15px] bg-ec-sky text-ec-blue">
+        <div className="ec-glass mb-3.5 flex h-[56px] w-[56px] items-center justify-center rounded-[18px] text-ec-blue">
           <Lock size={26} />
         </div>
         <h1 className="text-[21px] font-extrabold tracking-tight text-ec-ink">{t('perms.title')}</h1>
@@ -84,12 +84,12 @@ export function PermissionsStep({ onContinue }) {
               key={key}
               type="button"
               onClick={() => !on && fire([key])}
-              className={`flex w-full items-center gap-3 rounded-2xl border-[1.5px] p-3.5 text-left ${
-                on ? 'border-ec-success/40 bg-ec-successBg/50' : 'border-ec-line bg-white'
+              className={`ec-glass flex w-full items-center gap-3 rounded-[22px] p-3.5 text-left ${
+                on ? 'border-ec-success/40 bg-ec-successBg' : ''
               }`}
             >
               <div
-                className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
+                className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl shadow-ec-card ${
                   on ? 'bg-ec-success text-white' : 'bg-ec-sky text-ec-blue'
                 }`}
               >
@@ -116,7 +116,7 @@ export function PermissionsStep({ onContinue }) {
         })}
       </div>
 
-      <div className="border-t border-ec-line p-[22px]">
+      <div className="ec-glass mx-3.5 mb-3 rounded-[26px] p-[18px]">
         {allDone ? (
           <Button type="button" size="lg" onClick={onContinue} className="w-full">
             {t('perms.continue')}

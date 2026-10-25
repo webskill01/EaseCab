@@ -53,26 +53,30 @@ export function OtpForm({ phone, onSubmit, onChangeNumber, loading, error }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-1 flex-col bg-white px-[22px] pb-[22px] pt-3.5">
+    <form onSubmit={handleSubmit} className="flex flex-1 flex-col px-[22px] pb-[22px] pt-3.5">
       <button
         type="button"
         onClick={onChangeNumber}
         aria-label={t('otp.back')}
-        className="-ml-2 self-start p-2 text-ec-ink"
+        className="ec-glass -ml-1 self-start rounded-full p-2 text-ec-ink"
       >
         <ChevL size={24} />
       </button>
 
-      {/* compact brandmark */}
-      <div className="mt-2 flex items-center gap-[11px]">
-        <Image src="/icons/icon-192.png" unoptimized alt="EaseCab" width={46} height={46} priority className="shrink-0 rounded-[13px] shadow-ec-blue" />
-        <div>
-          <p className="text-[18px] font-extrabold leading-none tracking-tight text-ec-ink">{t('brand.name')}</p>
-          <p className="mt-[3px] text-[11.5px] font-semibold text-ec-ink40">{t('brand.tagline')}</p>
+      {/* compact brandmark: glass chip + region pill, like the login hero */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="ec-glass flex items-center gap-[10px] rounded-[22px] py-1.5 pl-1.5 pr-4">
+          <Image src="/icons/icon-192.png" unoptimized alt="EaseCab" width={42} height={42} priority className="shrink-0 rounded-[14px]" />
+          <div>
+            <p className="text-[17px] font-extrabold leading-none tracking-tight text-ec-ink">{t('brand.name')}</p>
+            <p className="mt-[3px] text-[11px] font-semibold text-ec-ink60">{t('brand.tagline')}</p>
+          </div>
         </div>
+        <span className="ec-glass rounded-full px-3 py-1 text-[11px] font-bold tracking-wide text-ec-blueInk">{t('brand.regions')}</span>
       </div>
 
-      <div className="mt-6">
+      {/* glass card: heading, code boxes, resend */}
+      <div className="ec-glass mt-6 rounded-[26px] p-[18px]">
         <h1 className="text-[21px] font-extrabold tracking-tight text-ec-ink">{t('otp.title')}</h1>
         <p className="mt-1.5 text-[14px] text-ec-ink60">
           {t('otp.sentTo', { phone: prettyPhone })}{' '}
@@ -80,46 +84,46 @@ export function OtpForm({ phone, onSubmit, onChangeNumber, loading, error }) {
             {t('otp.change')}
           </button>
         </p>
-      </div>
 
-      {/* six boxes driven by a hidden input */}
-      <div className="relative mt-6" onClick={() => inputRef.current?.focus()}>
-        <input
-          ref={inputRef}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          aria-label={t('otp.title') + ' verification code'}
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          className="absolute h-px w-px opacity-0"
-        />
-        <div className="flex gap-[9px]">
-          {Array.from({ length: 6 }).map((_, i) => {
-            const ch = code[i] ?? ''
-            const filled = ch !== ''
-            const cursor = i === code.length
-            return (
-              <div
-                key={i}
-                className={`flex h-14 flex-1 items-center justify-center rounded-xl border-[1.5px] text-[22px] font-extrabold text-ec-ink ${
-                  filled ? 'border-ec-blue bg-ec-sky' : cursor ? 'border-ec-blue bg-white' : 'border-ec-line bg-white'
-                }`}
-              >
-                {ch}
-              </div>
-            )
-          })}
+        {/* six boxes driven by a hidden input */}
+        <div className="relative mt-6" onClick={() => inputRef.current?.focus()}>
+          <input
+            ref={inputRef}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            aria-label={t('otp.title') + ' verification code'}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="absolute h-px w-px opacity-0"
+          />
+          <div className="flex gap-[9px]">
+            {Array.from({ length: 6 }).map((_, i) => {
+              const ch = code[i] ?? ''
+              const filled = ch !== ''
+              const cursor = i === code.length
+              return (
+                <div
+                  key={i}
+                  className={`flex h-14 flex-1 items-center justify-center rounded-xl border-[1.5px] text-[22px] font-extrabold text-ec-ink shadow-ec-card ${
+                    filled ? 'border-ec-blue bg-ec-sky' : cursor ? 'border-ec-blue bg-white' : 'border-ec-line bg-white'
+                  }`}
+                >
+                  {ch}
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-4 text-right text-[13px] font-semibold text-ec-ink60">
-        {secs > 0 ? (
-          t('otp.resendIn', { seconds: secs })
-        ) : (
-          <button type="button" onClick={() => setSecs(30)} className="font-bold text-ec-blue">
-            {t('otp.resend')}
-          </button>
-        )}
+        <div className="mt-4 text-right text-[13px] font-semibold text-ec-ink60">
+          {secs > 0 ? (
+            t('otp.resendIn', { seconds: secs })
+          ) : (
+            <button type="button" onClick={() => setSecs(30)} className="font-bold text-ec-blue">
+              {t('otp.resend')}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1" />

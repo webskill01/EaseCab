@@ -23,7 +23,7 @@ export default function LoginPage() {
   useEffect(() => { prewarmOtp() }, [])
 
   return (
-    <main className="mx-auto flex min-h-[100svh] max-w-md flex-col bg-white">
+    <main className="mx-auto flex min-h-[100svh] max-w-md flex-col ec-top-wash">
       {s.phase === 'phone' && (
         <PhoneForm onSubmit={s.submitPhone} loading={s.loading} error={s.error} />
       )}
@@ -40,14 +40,14 @@ export default function LoginPage() {
       {s.phase === 'done' && <DoneScreen onEnter={s.goToFeed} />}
 
       {s.phase !== 'done' && (
-        <div className="flex justify-center gap-1.5 bg-white pb-3.5">
+        <div className="flex justify-center gap-1.5 pb-3.5">
           {STEPS.map((step) => (
             <span
               key={step}
               className={
                 step === s.phase
                   ? 'h-2 w-2 rounded-full bg-ec-blue transition-colors'
-                  : 'h-2 w-2 rounded-full bg-ec-line transition-colors'
+                  : 'h-2 w-2 rounded-full bg-ec-ink/15 transition-colors'
               }
             />
           ))}
