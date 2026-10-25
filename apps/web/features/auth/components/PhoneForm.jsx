@@ -25,7 +25,7 @@ export function PhoneForm({ onSubmit, loading, error }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
+    <div className="flex flex-1 flex-col">
       {/* curved-bottom brand hero */}
       <div
         className="ec-hero-brand relative flex h-[300px] shrink-0 flex-col items-center justify-center overflow-hidden pb-8 text-white"
