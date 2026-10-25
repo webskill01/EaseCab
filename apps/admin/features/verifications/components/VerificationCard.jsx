@@ -63,12 +63,13 @@ function SubmissionBlock({ submission, onApprove, onReject }) {
  */
 export function VerificationCard({ group, onApprove, onReject, onBadge }) {
   const { user, submissions } = group
+  const dp = submissions.find((s) => s.images?.dp)?.images.dp
   const car = [user.carMake, user.carModel, user.carRegNo].filter(Boolean).join(' ') || '—'
   return (
     <div className={card}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <Avatar name={user.name} />
+          <Avatar name={user.name} src={dp} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2">
               <span className="font-semibold text-ec-ink">{user.name ?? '—'}</span>

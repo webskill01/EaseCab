@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchFounderPayments, linkFounderPayment } from '../services/founderPaymentsApi'
+import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 /** Founder payments list (linked/unlinked + member search, by capture time) + the link mutation (the refetched row then shows the member). */
 export function useFounderPayments() {
   const qc = useQueryClient()
-  const [page, setPage] = useState(1)
-  const [filters, setFilters] = useState({ status: 'all', sort: 'newest', q: '' })
+  const [page, setPage] = useSessionState('founder:page', 1)
+  const [filters, setFilters] = useSessionState('founder:filters', { status: 'all', sort: 'newest', q: '' })
   const query = useQuery({
     queryKey: ['founderPayments', filters, page],
     queryFn: () => fetchFounderPayments({ page, ...filters }),

@@ -3,6 +3,7 @@
 const {
   AppError, ERROR_CODES, ADMIN_FOUNDER_PAYMENTS, ADMIN_STATISTICS, SUBSCRIPTION_PLAN, isSubscriptionActive,
 } = require('@easecab/shared');
+const { createPresign } = require('./presign');
 
 const DAY_MS = 86_400_000;
 
@@ -18,22 +19,25 @@ function extendBy(sub, months, now = new Date()) {
  *
  * @param {object} deps
  * @param {ReturnType<import('./adminComplimentary.repository').createAdminComplimentaryRepository>} deps.repo
+ * @param {{ presignGet(args: { key: string }): Promise<string> }} [deps.r2] - optional R2 client (DP thumbnails)
  */
-function createAdminComplimentaryService({ repo }) {
+function createAdminComplimentaryService({ repo, r2 }) {
+  const presign = createPresign(r2);
   return {
     /** All free members with plan status. */
     async list() {
       const rows = await repo.list();
-      return rows.map((r) => ({
+      return Promise.all(rows.map(async (r) => ({
         userId: r.userId,
         label: r.label,
         name: r.user.name,
         phone: r.user.phone ?? null,
+        avatarUrl: await presign(r.user.profilePicUrl),
         note: r.note,
         monthsGranted: r.monthsGranted,
         addedAt: r.createdAt,
         validUntil: isSubscriptionActive(r.user.subscription) ? r.user.subscription.expiresAt : null,
-      }));
+      })));
     },
 
     /**

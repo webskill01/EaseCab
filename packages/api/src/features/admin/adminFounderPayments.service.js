@@ -1,6 +1,7 @@
 'use strict';
 
 const { AppError, ERROR_CODES, ADMIN_FOUNDER_PAYMENTS, computeRenewal } = require('@easecab/shared');
+const { createPresign } = require('./presign');
 
 const alreadyLinked = () => new AppError(ERROR_CODES.VALIDATION_ERROR, 'This payment is already linked', 409);
 
@@ -10,19 +11,23 @@ const alreadyLinked = () => new AppError(ERROR_CODES.VALIDATION_ERROR, 'This pay
  *
  * @param {object} deps
  * @param {ReturnType<import('./adminFounderPayments.repository').createAdminFounderPaymentsRepository>} deps.repo
+ * @param {{ presignGet(args: { key: string }): Promise<string> }} [deps.r2] - optional R2 client (DP thumbnails)
  * @param {(userId: string) => Promise<void>} [deps.onPaid] - the member now has a real payment (referral rewards); must not throw
  */
-function createAdminFounderPaymentsService({ repo, onPaid = async () => {} }) {
+function createAdminFounderPaymentsService({ repo, onPaid = async () => {}, r2 }) {
+  const presign = createPresign(r2);
+  const member = async (u) => (u ? { id: u.id, name: u.name, phone: u.phone ?? null, avatarUrl: await presign(u.profilePicUrl) } : null);
+
   return {
     /** Offset page of founder payments + how many still need linking. */
     async list({ page, limit, q, status, sort }) {
       const { rows, total, unlinked } = await repo.list({ page, limit, q, status, sort });
-      const items = rows.map((r) => ({
+      const items = await Promise.all(rows.map(async (r) => ({
         id: r.id,
         amount: r.amount,
         paidAt: r.updatedAt,
-        member: r.onBehalfOf ? { id: r.onBehalfOf.id, name: r.onBehalfOf.name, phone: r.onBehalfOf.phone ?? null } : null,
-      }));
+        member: await member(r.onBehalfOf),
+      })));
       return { items, total, page, limit, unlinked };
     },
 

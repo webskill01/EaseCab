@@ -7,14 +7,14 @@ const REPORTER_SELECT = Object.freeze({ id: true, name: true, phone: true });
 
 /** Reported bot-ride summary. */
 const RIDE_SELECT = Object.freeze({
-  id: true, displayText: true, status: true, pickupRaw: true, dropRaw: true,
+  id: true, displayText: true, status: true, pickupRaw: true, dropRaw: true, receivedAt: true,
   pickupCity: { select: { canonicalName: true } },
   dropCity: { select: { canonicalName: true } },
 });
 
 /** Reported app-posted-ride summary. */
 const POSTED_RIDE_SELECT = Object.freeze({
-  id: true, status: true, fromCityRaw: true, toCityRaw: true,
+  id: true, status: true, fromCityRaw: true, toCityRaw: true, createdAt: true,
   fromCity: { select: { canonicalName: true } },
   toCity: { select: { canonicalName: true } },
   poster: { select: { name: true } },

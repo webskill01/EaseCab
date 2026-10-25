@@ -25,4 +25,16 @@ describe('ReportCard', () => {
     expect(onAction).toHaveBeenCalledWith('r1', 'dismiss')
     expect(onAction).toHaveBeenCalledWith('r1', 'remove')
   })
+
+  it('shows when the ride was posted', () => {
+    render(<ReportCard item={{ ...item, target: { ...item.target, postedAt: '2026-10-25T06:00:00Z' } }} onAction={() => {}} />)
+    expect(screen.getByText(/Posted 25 Oct 2026, 11:30/)).toBeTruthy()
+  })
+
+  it('a resolved report shows its verdict and no action buttons', () => {
+    render(<ReportCard item={{ ...item, reviewedAt: '2026-10-25T06:00:00Z', reviewAction: 'remove' }} onAction={() => {}} />)
+    expect(screen.getByText('Ride removed')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /dismiss/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /remove ride/i })).toBeNull()
+  })
 })

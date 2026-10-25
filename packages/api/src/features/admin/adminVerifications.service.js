@@ -1,6 +1,7 @@
 'use strict';
 
 const { AppError, ERROR_CODES, REVIEW_ACTION, VERIFICATION_STATUS } = require('@easecab/shared');
+const { createPresign } = require('./presign');
 
 /**
  * Admin verifications business logic (CLAUDE.md §4). Enriches the queue with
@@ -13,14 +14,7 @@ const { AppError, ERROR_CODES, REVIEW_ACTION, VERIFICATION_STATUS } = require('@
  * @param {{ presignGet(args: { key: string }): Promise<string> }} [deps.r2] - optional R2 client
  */
 function createAdminVerificationsService({ repo, r2 }) {
-  async function presign(key) {
-    if (!key || !r2) return null;
-    try {
-      return await r2.presignGet({ key });
-    } catch {
-      return null;
-    }
-  }
+  const presign = createPresign(r2);
 
   async function toItem(row) {
     const u = row.user;

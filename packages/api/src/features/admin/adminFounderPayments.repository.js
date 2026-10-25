@@ -42,7 +42,7 @@ function createAdminFounderPaymentsRepository({ prisma, redis }) {
           orderBy: [{ updatedAt: dir }, { id: dir }],
           skip: (page - 1) * limit,
           take: limit,
-          select: { id: true, amount: true, updatedAt: true, onBehalfOf: { select: { id: true, name: true, phone: true } } },
+          select: { id: true, amount: true, updatedAt: true, onBehalfOf: { select: { id: true, name: true, phone: true, profilePicUrl: true } } },
         }),
         prisma.payment.count({ where }),
         prisma.payment.count({ where: { ...FOUNDER_WHERE, onBehalfOfUserId: null } }),

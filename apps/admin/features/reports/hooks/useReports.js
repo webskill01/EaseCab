@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchReports, reviewReport } from '../services/reportsApi'
+import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 /**
  * Reports queue controller: paginated query + dismiss/remove mutation. The mutation
@@ -10,8 +10,8 @@ import { fetchReports, reviewReport } from '../services/reportsApi'
  */
 export function useReports() {
   const qc = useQueryClient()
-  const [page, setPage] = useState(1)
-  const [status, setStatus] = useState('open')
+  const [page, setPage] = useSessionState('reports:page', 1)
+  const [status, setStatus] = useSessionState('reports:status', 'open')
 
   const query = useQuery({ queryKey: ['reports', status, page], queryFn: () => fetchReports(page, status), placeholderData: keepPreviousData })
   const invalidate = () => qc.invalidateQueries({ queryKey: ['reports'] })

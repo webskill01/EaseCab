@@ -10,6 +10,7 @@ function toTarget(row) {
       kind: 'bot',
       id: r.id,
       status: r.status,
+      postedAt: r.receivedAt,
       displayText: r.displayText,
       fromCity: r.pickupCity?.canonicalName ?? r.pickupRaw ?? null,
       toCity: r.dropCity?.canonicalName ?? r.dropRaw ?? null,
@@ -22,6 +23,7 @@ function toTarget(row) {
       kind: 'posted',
       id: p.id,
       status: p.status,
+      postedAt: p.createdAt,
       displayText: null,
       fromCity: p.fromCity?.canonicalName ?? p.fromCityRaw ?? null,
       toCity: p.toCity?.canonicalName ?? p.toCityRaw ?? null,
@@ -61,6 +63,7 @@ function createAdminReportsService({ repo, r2 }) {
       screenshotUrl: await presign(row.screenshotKey),
       createdAt: row.createdAt,
       reviewedAt: row.reviewedAt,
+      reviewAction: row.reviewAction ?? null,
       reporter: { id: row.reporter.id, name: row.reporter.name, phone: row.reporter.phone ?? null },
       target: toTarget(row),
     };

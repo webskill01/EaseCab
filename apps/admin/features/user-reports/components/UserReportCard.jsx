@@ -14,7 +14,7 @@ export function UserReportCard({ item, onAction }) {
   return (
     <div className={card}>
       <div className="flex items-start gap-3">
-        <Avatar name={user.name} />
+        <Avatar name={user.name} src={user.avatarUrl} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-ec-ink">{user.name ?? '—'}</span>

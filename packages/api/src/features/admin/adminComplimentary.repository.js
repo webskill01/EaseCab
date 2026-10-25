@@ -19,7 +19,7 @@ function createAdminComplimentaryRepository({ prisma, redis }) {
         orderBy: { createdAt: 'desc' },
         select: {
           userId: true, label: true, note: true, monthsGranted: true, createdAt: true,
-          user: { select: { name: true, phone: true, subscription: { select: { status: true, expiresAt: true } } } },
+          user: { select: { name: true, phone: true, profilePicUrl: true, subscription: { select: { status: true, expiresAt: true } } } },
         },
       });
     },

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchUsers, fetchUser, updateUser } from '../services/usersApi'
+import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 /** Soft-delete/restore mutation shared by the directory and the profile page. */
 function useUserAction() {
@@ -20,8 +20,8 @@ function useUserAction() {
  * change goes back to page 1.
  */
 export function useUsers() {
-  const [page, setPage] = useState(1)
-  const [filters, setFilters] = useState({ status: 'active', plan: 'all', joined: 'launch', q: '' })
+  const [page, setPage] = useSessionState('users:page', 1)
+  const [filters, setFilters] = useSessionState('users:filters', { status: 'active', plan: 'all', joined: 'launch', q: '' })
 
   const query = useQuery({
     queryKey: ['users', filters, page],

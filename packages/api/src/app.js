@@ -250,17 +250,19 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     const adminFounderPaymentsService = createAdminFounderPaymentsService({
       repo: createAdminFounderPaymentsRepository({ prisma, redis }),
       onPaid,
+      r2: uploads,
     });
     v1.use('/admin/founder-payments', createAdminFounderPaymentsRouter({ service: adminFounderPaymentsService, requireAdmin }));
 
     // Free members (barter/help): plan time without payment, left out of analytics.
     const adminComplimentaryService = createAdminComplimentaryService({
       repo: createAdminComplimentaryRepository({ prisma, redis }),
+      r2: uploads,
     });
     v1.use('/admin/complimentary', createAdminComplimentaryRouter({ service: adminComplimentaryService, requireAdmin }));
 
     // Referrals (Phase 22) — read-only list + totals + rollout state.
-    const adminReferralsService = createAdminReferralsService({ repo: createAdminReferralsRepository({ prisma }), access: config.referrals });
+    const adminReferralsService = createAdminReferralsService({ repo: createAdminReferralsRepository({ prisma }), access: config.referrals, r2: uploads });
     v1.use('/admin/referrals', createAdminReferralsRouter({ service: adminReferralsService, requireAdmin }));
 
     // Verifications queue (Step 24b) — submitted DL/RC review + manual driver badge.

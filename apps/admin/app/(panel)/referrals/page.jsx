@@ -6,6 +6,7 @@ import { PageHeader } from '@/features/shell/components/PageHeader'
 import { QueryState } from '@/features/shell/components/QueryState'
 import { Pagination } from '@/features/shell/components/Pagination'
 import { ListFilters } from '@/features/shell/components/ListFilters'
+import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { pill } from '@/lib/ui'
 
@@ -84,9 +85,16 @@ export default function ReferralsPage() {
         <ul className="divide-y divide-ec-line overflow-hidden rounded-ec-card border border-ec-line bg-white shadow-ec-card">
           {r.items.map((x) => (
             <li key={x.id} className="flex flex-col gap-2 px-4 py-3 text-sm lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="font-medium text-ec-ink"><Who p={x.referee} /></p>
-                <p className="mt-0.5 text-xs text-ec-ink60">Referred by <Who p={x.referrer} /> · joined {when(x.joinedAt)}</p>
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar name={x.referee?.name} src={x.referee?.avatarUrl} />
+                <div className="min-w-0">
+                  <p className="font-medium text-ec-ink"><Who p={x.referee} /></p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-ec-ink60">
+                    Referred by
+                    {x.referrer && <Avatar name={x.referrer.name} src={x.referrer.avatarUrl} size="h-5 w-5 text-[9px] ring-1" />}
+                    <Who p={x.referrer} /> · joined {when(x.joinedAt)}
+                  </p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <span className={pill({ tone: x.paid ? 'green' : 'gray' })}>{x.paid ? 'Paid' : 'Not paid'}</span>

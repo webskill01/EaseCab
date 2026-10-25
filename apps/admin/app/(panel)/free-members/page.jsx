@@ -6,9 +6,11 @@ import { useFreeMembers } from '@/features/freeMembers/hooks/useFreeMembers'
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { QueryState } from '@/features/shell/components/QueryState'
 import { ListFilters } from '@/features/shell/components/ListFilters'
+import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { filterMembers } from '@/features/freeMembers/lib/filterMembers'
 import { button, pill, input, card } from '@/lib/ui'
+import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 const STATUSES = [
   { id: 'all', label: 'All' },
@@ -66,14 +68,17 @@ function Row({ m, remove }) {
   const [confirm, setConfirm] = useState(false)
   return (
     <li className="flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <p className="font-medium text-ec-ink">
-          {m.label || m.name || 'No name'} <PhoneLink phone={m.phone} />
-          {m.label && m.name && m.label !== m.name && <span className="ml-1 text-xs font-normal text-ec-ink40">· app name {m.name}</span>}
-        </p>
-        <p className="mt-0.5 text-xs text-ec-ink60">
-          {m.monthsGranted} month{m.monthsGranted === 1 ? '' : 's'} given · added {date(m.addedAt)}{m.note ? ` · ${m.note}` : ''}
-        </p>
+      <div className="flex min-w-0 items-center gap-3">
+        <Avatar name={m.label || m.name} src={m.avatarUrl} />
+        <div className="min-w-0">
+          <p className="font-medium text-ec-ink">
+            {m.label || m.name || 'No name'} <PhoneLink phone={m.phone} />
+            {m.label && m.name && m.label !== m.name && <span className="ml-1 text-xs font-normal text-ec-ink40">· app name {m.name}</span>}
+          </p>
+          <p className="mt-0.5 text-xs text-ec-ink60">
+            {m.monthsGranted} month{m.monthsGranted === 1 ? '' : 's'} given · added {date(m.addedAt)}{m.note ? ` · ${m.note}` : ''}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <span className={pill({ tone: m.validUntil ? 'green' : 'slate' })}>{m.validUntil ? `Active till ${date(m.validUntil)}` : 'Plan ended'}</span>
@@ -92,7 +97,7 @@ function Row({ m, remove }) {
 
 export default function FreeMembersPage() {
   const f = useFreeMembers()
-  const [filters, setFilters] = useState({ q: '', status: 'all', sort: 'newest' })
+  const [filters, setFilters] = useSessionState('freeMembers:filters', { q: '', status: 'all', sort: 'newest' })
   const set = (key) => (value) => setFilters((x) => ({ ...x, [key]: value }))
   const shown = useMemo(() => filterMembers(f.items, filters), [f.items, filters])
   return (

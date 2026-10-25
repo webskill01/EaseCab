@@ -22,8 +22,8 @@ function buildCsp() {
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
-    // Profile/KYC photos are presigned Cloudflare R2 GETs.
-    "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com",
+    // KYC photos are presigned Cloudflare R2 GETs; DPs are public on the CDN (R2_PUBLIC_BASE_URL).
+    "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://cdn.easecab.com",
     "font-src 'self'",
     `connect-src 'self' ${apiOrigin}`.trim(),
     "frame-ancestors 'none'",

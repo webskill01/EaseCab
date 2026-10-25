@@ -7,6 +7,7 @@ import { PageHeader } from '@/features/shell/components/PageHeader'
 import { QueryState } from '@/features/shell/components/QueryState'
 import { Pagination } from '@/features/shell/components/Pagination'
 import { ListFilters } from '@/features/shell/components/ListFilters'
+import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { button, pill, input } from '@/lib/ui'
 
@@ -87,11 +88,14 @@ export default function FounderPaymentsPage() {
         <ul className="divide-y divide-ec-line overflow-hidden rounded-ec-card border border-ec-line bg-white shadow-ec-card">
           {f.items.map((p) => (
             <li key={p.id} className="flex flex-col gap-3 px-4 py-3 text-sm lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="font-medium text-ec-ink">{inr(p.amount)} · {when(p.paidAt)}</p>
-                {p.member
-                  ? <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 size={13} /> For {p.member.name || 'member'} <PhoneLink phone={p.member.phone} className="font-medium text-emerald-700" /></p>
-                  : <p className="mt-0.5 text-xs text-amber-700">Not linked yet</p>}
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar name={p.member?.name} src={p.member?.avatarUrl} />
+                <div className="min-w-0">
+                  <p className="font-medium text-ec-ink">{inr(p.amount)} · {when(p.paidAt)}</p>
+                  {p.member
+                    ? <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 size={13} /> For {p.member.name || 'member'} <PhoneLink phone={p.member.phone} className="font-medium text-emerald-700" /></p>
+                    : <p className="mt-0.5 text-xs text-amber-700">Not linked yet</p>}
+                </div>
               </div>
               {!p.member && <LinkForm id={p.id} link={f.link} />}
             </li>

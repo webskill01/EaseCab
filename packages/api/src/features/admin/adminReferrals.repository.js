@@ -47,8 +47,8 @@ function createAdminReferralsRepository({ prisma }) {
           skip: (page - 1) * limit,
           take: limit,
           select: {
-            id: true, name: true, phone: true, createdAt: true, referralRewardedAt: true,
-            referredBy: { select: { id: true, name: true, phone: true } },
+            id: true, name: true, phone: true, profilePicUrl: true, createdAt: true, referralRewardedAt: true,
+            referredBy: { select: { id: true, name: true, phone: true, profilePicUrl: true } },
             _count: { select: { payments: CAPTURED, paymentsOnBehalf: CAPTURED } },
           },
         }),

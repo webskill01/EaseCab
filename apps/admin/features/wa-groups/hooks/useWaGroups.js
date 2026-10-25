@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchWaGroups, setWaGroupEnabled, setAllWaGroupsEnabled } from '../services/waGroupsApi'
+import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 /**
  * WhatsApp groups controller: paginated, searchable, filterable list plus a
@@ -11,9 +11,9 @@ import { fetchWaGroups, setWaGroupEnabled, setAllWaGroupsEnabled } from '../serv
  */
 export function useWaGroups() {
   const qc = useQueryClient()
-  const [page, setPage] = useState(1)
-  const [status, setStatusState] = useState('all')
-  const [q, setQState] = useState('')
+  const [page, setPage] = useSessionState('waGroups:page', 1)
+  const [status, setStatusState] = useSessionState('waGroups:status', 'all')
+  const [q, setQState] = useSessionState('waGroups:q', '')
 
   const query = useQuery({ queryKey: ['waGroups', page, status, q], queryFn: () => fetchWaGroups({ page, status, q }), placeholderData: keepPreviousData })
   const invalidate = () => qc.invalidateQueries({ queryKey: ['waGroups'] })

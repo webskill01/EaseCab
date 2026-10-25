@@ -29,7 +29,7 @@ function createAdminUserReportsRepository({ prisma }) {
           skip: (page - 1) * limit,
           take: limit,
           select: {
-            id: true, name: true, baseCity: true, vehicleType: true, flaggedAt: true,
+            id: true, name: true, profilePicUrl: true, baseCity: true, vehicleType: true, flaggedAt: true,
             reportsReceived: {
               where: { reviewedAt: null },
               orderBy: { createdAt: 'desc' },

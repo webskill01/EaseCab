@@ -1,6 +1,7 @@
 'use strict';
 
 const { AppError, ERROR_CODES, USER_ACTION } = require('@easecab/shared');
+const { createPresign } = require('./presign');
 
 /** Flatten the subscription to status + validUntil (paid expiry). */
 function toSubscription(sub) {
@@ -18,14 +19,7 @@ function toSubscription(sub) {
  * @param {{ presignGet(args: { key: string }): Promise<string> }} [deps.r2] - optional R2 client
  */
 function createAdminUsersService({ repo, r2 }) {
-  async function presign(key) {
-    if (!key || !r2) return null;
-    try {
-      return await r2.presignGet({ key });
-    } catch {
-      return null;
-    }
-  }
+  const presign = createPresign(r2);
 
   async function toItem(row) {
     const { subscription, profilePicUrl, ...rest } = row;

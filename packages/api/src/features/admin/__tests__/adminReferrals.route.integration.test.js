@@ -67,8 +67,8 @@ test('GET lists referees with full phones, paid/rewarded, totals and rollout', a
   const res = await (await adminAgent(app)).get('/api/v1/admin/referrals?page=2&limit=10');
   assert.strictEqual(res.status, 200);
   const [a, b] = res.body.data.referrals;
-  assert.deepStrictEqual(a.referee, { id: 'r1', name: 'Gurpreet', phone: '+919811111111' });
-  assert.deepStrictEqual(a.referrer, { id: 'u1', name: 'Sunil', phone: '+919822222222' });
+  assert.deepStrictEqual(a.referee, { id: 'r1', name: 'Gurpreet', phone: '+919811111111', avatarUrl: null });
+  assert.deepStrictEqual(a.referrer, { id: 'u1', name: 'Sunil', phone: '+919822222222', avatarUrl: null });
   assert.strictEqual(a.paid, true);
   assert.strictEqual(a.rewarded, true);
   assert.strictEqual(b.paid, false);

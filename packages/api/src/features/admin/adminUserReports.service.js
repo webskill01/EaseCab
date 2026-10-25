@@ -36,7 +36,7 @@ function createAdminUserReportsService({ repo, r2 }) {
 
   async function toItem(u) {
     return {
-      user: { id: u.id, name: u.name, baseCity: u.baseCity, vehicleType: u.vehicleType, flagged: Boolean(u.flaggedAt) },
+      user: { id: u.id, name: u.name, avatarUrl: await presign(u.profilePicUrl), baseCity: u.baseCity, vehicleType: u.vehicleType, flagged: Boolean(u.flaggedAt) },
       reportCount: u.reportsReceived.length,
       reports: await Promise.all(u.reportsReceived.map(toReport)),
     };

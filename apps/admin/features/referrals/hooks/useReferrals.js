@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { fetchReferrals } from '../services/referralsApi'
+import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 /** Referrals list filtered by paid state + search, sorted by join date, plus program totals + rollout. */
 export function useReferrals() {
-  const [page, setPage] = useState(1)
-  const [filters, setFilters] = useState({ status: 'all', sort: 'newest', q: '' })
+  const [page, setPage] = useSessionState('referrals:page', 1)
+  const [filters, setFilters] = useSessionState('referrals:filters', { status: 'all', sort: 'newest', q: '' })
   const query = useQuery({
     queryKey: ['referrals', filters, page],
     queryFn: () => fetchReferrals({ page, ...filters }),
