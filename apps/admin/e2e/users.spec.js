@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 const ADMIN = { id: 'a1', email: 'a@x.com', role: 'super' }
 const USER_ID = '22222222-2222-2222-2222-222222222222'
 const USER = {
-  id: USER_ID, name: 'Gurpreet', phoneMasked: '••••3210', aadhaarVerified: true,
+  id: USER_ID, name: 'Gurpreet', phone: '+919876543210', aadhaarVerified: true,
   verificationStatus: 'approved', baseCity: 'Amritsar', vehicleType: 'sedan',
   createdAt: new Date().toISOString(), isDeleted: false, deletedAt: null,
   subscription: { status: 'active', validUntil: new Date('2026-07-01').toISOString() },
@@ -27,7 +27,7 @@ test('users directory lists a user and soft-deletes them', async ({ page }) => {
 
   await page.context().addCookies([{ name: 'ec_admin_rt', value: 'test-session', url: 'http://localhost:3101' }])
   await page.goto('/users')
-  await expect(page.getByText('••••3210')).toBeVisible()
+  await expect(page.getByText('+91 98765 43210')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Users/i })).toBeVisible()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await expect.poll(() => deleted).toBe(true)

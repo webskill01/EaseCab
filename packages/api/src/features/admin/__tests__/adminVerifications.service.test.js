@@ -20,15 +20,14 @@ const repo = {
 };
 const r2 = { presignGet: async ({ key }) => `https://signed/${key}` };
 
-test('list masks phone, drops raw keys, presigns present images, nulls absent', async () => {
+test('list returns phone, drops raw keys, presigns present images, nulls absent', async () => {
   const svc = createAdminVerificationsService({ repo, r2 });
   const { items, total, page, limit } = await svc.list({ page: 1, limit: 20 });
   assert.equal(total, 1);
   assert.equal(page, 1);
   assert.equal(limit, 20);
   const it = items[0];
-  assert.equal(it.user.phoneMasked, '••••3210');
-  assert.equal(it.user.phone, undefined);
+  assert.equal(it.user.phone, '+919876543210');
   assert.equal(it.images.dp, 'https://signed/dp/u1/x.jpg');
   assert.equal(it.images.licence, 'https://signed/lic/u1/y.jpg');
   assert.equal(it.images.rc, null);

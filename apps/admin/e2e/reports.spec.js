@@ -4,7 +4,7 @@ const ADMIN = { id: 'a1', email: 'a@x.com', role: 'super' }
 const REPORT = {
   id: '11111111-1111-1111-1111-111111111111',
   reason: 'spam', remarks: 'junk', screenshotUrl: null, createdAt: new Date().toISOString(),
-  reporter: { id: 'u1', name: 'Reporter', phoneMasked: '••••3210' },
+  reporter: { id: 'u1', name: 'Reporter', phone: '+919876543210' },
   target: { kind: 'bot', id: 'ride1', status: 'fresh', displayText: 'A to B', fromCity: 'Amritsar', toCity: 'Delhi', posterName: null },
 }
 
@@ -27,7 +27,7 @@ test('reports queue lists a report and removes the ride', async ({ page }) => {
 
   await page.context().addCookies([{ name: 'ec_admin_rt', value: 'test-session', url: 'http://localhost:3101' }])
   await page.goto('/reports')
-  await expect(page.getByText('••••3210')).toBeVisible()
+  await expect(page.getByText('+91 98765 43210')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Reports/i })).toBeVisible()
   await page.getByRole('button', { name: /remove ride/i }).click()
   await expect.poll(() => removed).toBe(true)

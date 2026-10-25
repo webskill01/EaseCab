@@ -1,6 +1,6 @@
 'use strict';
 
-const { PAYMENT_STATUS, SUBSCRIPTION_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_STATISTICS } = require('@easecab/shared');
+const { PAYMENT_STATUS, SUBSCRIPTION_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_STATISTICS, ADMIN_SORT } = require('@easecab/shared');
 const { delCachedSub } = require('../../lib/subscriptionCache');
 
 const SINCE = new Date(`${ADMIN_STATISTICS.LAUNCH_DATE}T00:00:00+05:30`);
@@ -9,6 +9,18 @@ const FOUNDER_WHERE = Object.freeze({
   updatedAt: { gte: SINCE },
   user: { phone: { in: ADMIN_FOUNDER_PAYMENTS.COLLECTION_PHONES } },
 });
+const LINK_WHERE = Object.freeze({
+  [ADMIN_FOUNDER_PAYMENTS.FILTER.LINKED]: { onBehalfOfUserId: { not: null } },
+  [ADMIN_FOUNDER_PAYMENTS.FILTER.UNLINKED]: { onBehalfOfUserId: null },
+});
+
+/** Founder payments matching the filters; `q` hits the linked member's name or phone. */
+function buildWhere({ q, status }) {
+  const and = [FOUNDER_WHERE];
+  if (LINK_WHERE[status]) and.push(LINK_WHERE[status]);
+  if (q) and.push({ onBehalfOf: { is: { OR: [{ phone: { contains: q } }, { name: { contains: q, mode: 'insensitive' } }] } } });
+  return { AND: and };
+}
 
 /**
  * Founder-payments data access (Prisma only). Payments made in the app by a founder
@@ -20,17 +32,19 @@ const FOUNDER_WHERE = Object.freeze({
  */
 function createAdminFounderPaymentsRepository({ prisma, redis }) {
   return {
-    /** Newest first. `updatedAt` is the capture time. */
-    async list({ page, limit }) {
+    /** Filtered page by capture time (`updatedAt`); `unlinked` ignores the filters. */
+    async list({ page, limit, q, status, sort }) {
+      const dir = sort === ADMIN_SORT.OLDEST ? 'asc' : 'desc';
+      const where = buildWhere({ q, status });
       const [rows, total, unlinked] = await prisma.$transaction([
         prisma.payment.findMany({
-          where: FOUNDER_WHERE,
-          orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+          where,
+          orderBy: [{ updatedAt: dir }, { id: dir }],
           skip: (page - 1) * limit,
           take: limit,
           select: { id: true, amount: true, updatedAt: true, onBehalfOf: { select: { id: true, name: true, phone: true } } },
         }),
-        prisma.payment.count({ where: FOUNDER_WHERE }),
+        prisma.payment.count({ where }),
         prisma.payment.count({ where: { ...FOUNDER_WHERE, onBehalfOfUserId: null } }),
       ]);
       return { rows, total, unlinked };

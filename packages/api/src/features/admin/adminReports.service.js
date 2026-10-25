@@ -2,12 +2,6 @@
 
 const { AppError, ERROR_CODES } = require('@easecab/shared');
 
-/** Last-4 masked phone for the admin queue (full number never surfaced — §10). */
-function maskPhone(phone) {
-  if (!phone) return null;
-  return `••••${String(phone).slice(-4)}`;
-}
-
 /** Shape the reported target (bot ride or posted ride) into a flat summary. */
 function toTarget(row) {
   if (row.ride) {
@@ -67,7 +61,7 @@ function createAdminReportsService({ repo, r2 }) {
       screenshotUrl: await presign(row.screenshotKey),
       createdAt: row.createdAt,
       reviewedAt: row.reviewedAt,
-      reporter: { id: row.reporter.id, name: row.reporter.name, phoneMasked: maskPhone(row.reporter.phone) },
+      reporter: { id: row.reporter.id, name: row.reporter.name, phone: row.reporter.phone ?? null },
       target: toTarget(row),
     };
   }

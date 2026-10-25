@@ -1,8 +1,10 @@
 import { apiFetch } from '@/lib/api/client'
 
-/** GET /admin/founder-payments?page= → { payments, unlinked, meta }. */
-export async function fetchFounderPayments(page = 1) {
-  const { data, meta } = await apiFetch(`/admin/founder-payments?page=${page}`)
+/** GET /admin/founder-payments?page=&status=&sort=&q= → { payments, unlinked, meta }. */
+export async function fetchFounderPayments({ page = 1, status = 'all', sort = 'newest', q = '' } = {}) {
+  const params = new URLSearchParams({ page: String(page), status, sort })
+  if (q) params.set('q', q)
+  const { data, meta } = await apiFetch(`/admin/founder-payments?${params.toString()}`)
   return { ...data, meta }
 }
 

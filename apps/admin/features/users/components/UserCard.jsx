@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { MapPin, Car, ShieldCheck, Crown, Trash2, RotateCcw, CalendarDays, ChevronRight } from 'lucide-react'
 import { Avatar } from '@/features/shell/components/Avatar'
+import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { button, pill, card } from '@/lib/ui'
 import { planOf, fmtDate } from '../lib/plan'
 
@@ -27,7 +28,7 @@ export function UserCard({ user, onAction }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link href={`/users/${user.id}`} className="font-semibold text-ec-ink hover:text-ec-blue hover:underline">{user.name ?? '—'}</Link>
-            <span className="font-mono text-sm text-ec-ink60">{user.phoneMasked}</span>
+            <PhoneLink phone={user.phone} />
             {user.isDeleted && <span className={pill({ tone: 'red' })}>Deleted</span>}
             {user.aadhaarVerified && <span className={pill({ tone: 'blue' })}><ShieldCheck size={12} />Aadhaar ✓</span>}
           </div>

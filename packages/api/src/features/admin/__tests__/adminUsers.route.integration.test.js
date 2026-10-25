@@ -73,15 +73,14 @@ test('GET /admin/users without a session → 401', async () => {
   assert.strictEqual(res.body.error.code, 'AUTH_REQUIRED');
 });
 
-test('GET /admin/users returns the directory envelope + meta with masked phone', async () => {
+test('GET /admin/users returns the directory envelope + meta with full phone', async () => {
   const agent = await adminAgent();
   const res = await agent.get('/api/v1/admin/users');
   assert.strictEqual(res.status, 200);
   assert.deepStrictEqual(res.body.meta, { page: 1, limit: 20, total: 1 });
   const u = res.body.data.users[0];
-  assert.strictEqual(u.phoneMasked, '••••3210');
-  assert.strictEqual(u.phone, undefined);
-  assert.strictEqual(u.subscription.status, 'active');
+  assert.strictEqual(u.phone, '+919876543210');
+    assert.strictEqual(u.subscription.status, 'active');
 });
 
 test('GET /admin/users with a bad status → 422', async () => {

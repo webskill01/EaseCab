@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { button } from '@/lib/ui'
+import { formatPhone } from '@/features/shell/components/PhoneLink'
 
 export function RejectDialog({ item, onCancel, onConfirm }) {
   const [reason, setReason] = useState('')
@@ -13,7 +14,7 @@ export function RejectDialog({ item, onCancel, onConfirm }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="font-semibold text-ec-ink">
-          Reject {item.docType.toUpperCase()} — {item.user.name ?? item.user.phoneMasked}
+          Reject {item.docType.toUpperCase()} — {item.user.name ?? formatPhone(item.user.phone)}
         </h2>
         <p className="mt-1 text-xs text-ec-ink60">The user sees this reason in the app.</p>
         <textarea

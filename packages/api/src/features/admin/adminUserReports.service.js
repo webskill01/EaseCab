@@ -2,12 +2,6 @@
 
 const { AppError, ERROR_CODES } = require('@easecab/shared');
 
-/** Last-4 masked phone for the admin queue (full number never surfaced — §10). */
-function maskPhone(phone) {
-  if (!phone) return null;
-  return `••••${String(phone).slice(-4)}`;
-}
-
 /**
  * Admin user-reports business logic (CLAUDE.md §4). Masks reporter phones, presigns
  * each report's screenshot (§12 — never surface a raw R2 key/bucket URL), and applies
@@ -36,7 +30,7 @@ function createAdminUserReportsService({ repo, r2 }) {
       remarks: r.remarks,
       screenshotUrl: await presign(r.screenshotKey),
       createdAt: r.createdAt,
-      reporter: { id: r.reporter.id, name: r.reporter.name, phoneMasked: maskPhone(r.reporter.phone) },
+      reporter: { id: r.reporter.id, name: r.reporter.name, phone: r.reporter.phone ?? null },
     };
   }
 

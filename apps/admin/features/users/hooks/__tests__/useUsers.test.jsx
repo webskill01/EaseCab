@@ -13,7 +13,7 @@ beforeEach(() => vi.restoreAllMocks())
 
 describe('useUsers', () => {
   it('loads the directory with default filters (live accounts, since launch)', async () => {
-    const fetch = vi.spyOn(api, 'fetchUsers').mockResolvedValue({ users: [{ id: 'u1', phoneMasked: '••••3210' }], meta: { total: 1 } })
+    const fetch = vi.spyOn(api, 'fetchUsers').mockResolvedValue({ users: [{ id: 'u1', phone: '+919876543210' }], meta: { total: 1 } })
     const { result } = renderHook(() => useUsers(), { wrapper })
     await waitFor(() => expect(result.current.items).toHaveLength(1))
     expect(result.current.total).toBe(1)

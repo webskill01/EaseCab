@@ -23,15 +23,14 @@ function fakeRepo(overrides = {}) {
   return { repo, calls };
 }
 
-test('list masks the phone and flattens subscription validUntil', async () => {
+test('list returns the full phone and flattens subscription validUntil', async () => {
   const { repo } = fakeRepo();
   const svc = createAdminUsersService({ repo });
   const out = await svc.list({ page: 1, limit: 20, status: 'active' });
   assert.strictEqual(out.total, 1);
   const u = out.items[0];
-  assert.strictEqual(u.phoneMasked, '••••3210');
-  assert.strictEqual(u.phone, undefined);
-  assert.strictEqual(u.subscription.status, 'active');
+  assert.strictEqual(u.phone, '+919876543210');
+    assert.strictEqual(u.subscription.status, 'active');
   assert.deepStrictEqual(u.subscription.validUntil, new Date('2026-07-01'));
 });
 
@@ -42,13 +41,13 @@ test('list returns null subscription when the user has none', async () => {
   assert.strictEqual(out.items[0].subscription, null);
 });
 
-test('setStatus(delete) flips the flag and returns the masked user', async () => {
+test('setStatus(delete) flips the flag and returns the user', async () => {
   const { repo, calls } = fakeRepo();
   const svc = createAdminUsersService({ repo });
   const out = await svc.setStatus(USER_ID, { action: 'delete' });
   assert.deepStrictEqual(calls.setDeleted[0], [USER_ID, true]);
   assert.strictEqual(out.isDeleted, true);
-  assert.strictEqual(out.phoneMasked, '••••3210');
+  assert.strictEqual(out.phone, '+919876543210');
 });
 
 test('setStatus(restore) clears the flag', async () => {
@@ -83,6 +82,5 @@ test('detail returns rupee payments, images and counts; NOT_FOUND for unknown id
   assert.strictEqual(u.payments[0].amount, 149);
   assert.deepStrictEqual(u.images, { licence: null, rc: null, carFront: null, carBack: null });
   assert.deepStrictEqual(u.counts, { postedRides: 3 });
-  assert.strictEqual(u.phone, undefined);
-  await assert.rejects(svc.detail('missing'), (e) => e.code === 'NOT_FOUND');
+    await assert.rejects(svc.detail('missing'), (e) => e.code === 'NOT_FOUND');
 });

@@ -42,7 +42,7 @@ function fakePrisma(state) {
       async findFirst({ where }) { return where.id === ADMIN.id ? { ...ADMIN } : null; },
     },
     payment: {
-      async findMany() { return [{ id: PAY_ID, amount: 14900, updatedAt: new Date(), onBehalfOf: null }]; },
+      async findMany(args) { state.lists.push(args); return [{ id: PAY_ID, amount: 14900, updatedAt: new Date(), onBehalfOf: null }]; },
       async count({ where }) { return where.onBehalfOfUserId === null ? 1 : 2; },
       async findFirst({ where }) {
         if (where.id === PAY_ID) return { id: PAY_ID, onBehalfOfUserId: null };
@@ -59,7 +59,7 @@ const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, as
 const surepass = { async generateAadhaarOtp() { return {}; }, async submitAadhaarOtp() { return {}; }, async verifyDl() { return {}; }, async verifyRc() { return {}; } };
 
 function setup() {
-  const state = { raw: 0, rawResult: 1, upserts: [] };
+  const state = { raw: 0, rawResult: 1, upserts: [], lists: [] };
   const redis = fakeRedis();
   const app = buildApp({
     prisma: fakePrisma(state), redis, logger: pino({ level: 'silent' }), config: CONFIG,
@@ -90,12 +90,23 @@ test('GET lists payments with the unlinked count', async () => {
   assert.strictEqual(res.body.meta.total, 2);
 });
 
+test('GET filters linked payments by member search, oldest first', async () => {
+  const { app, state } = setup();
+  const res = await (await adminAgent(app)).get('/api/v1/admin/founder-payments?status=linked&q=98123&sort=oldest');
+  assert.strictEqual(res.status, 200);
+  const { where, orderBy } = state.lists[0];
+  assert.deepStrictEqual(orderBy, [{ updatedAt: 'asc' }, { id: 'asc' }]);
+  assert.ok(where.AND.some((c) => c.onBehalfOfUserId && c.onBehalfOfUserId.not === null), 'linked clause');
+  assert.strictEqual(where.AND.find((c) => c.onBehalfOf).onBehalfOf.is.OR[0].phone.contains, '98123');
+  assert.strictEqual(res.body.data.unlinked, 1);
+});
+
 test('link with membership: normalises the phone, links, extends 30 days, drops sub cache', async () => {
   const { state, redis, app } = setup();
   const res = await (await adminAgent(app)).post(linkUrl(PAY_ID)).send({ phone: '98123 45678' });
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.body.data.member.name, 'Khushvinder');
-  assert.strictEqual(res.body.data.member.phoneMasked, '••••5678');
+  assert.strictEqual(res.body.data.member.phone, '+919812345678');
   assert.strictEqual(state.raw, 1);
   assert.strictEqual(state.upserts.length, 1);
   const days = (new Date(res.body.data.validUntil) - Date.now()) / 86400000;

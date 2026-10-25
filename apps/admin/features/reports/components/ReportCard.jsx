@@ -2,6 +2,7 @@
 
 import { ArrowRight, ImageIcon, X, Trash2 } from 'lucide-react'
 import { button, pill, card, REASONS } from '@/lib/ui'
+import { PhoneLink } from '@/features/shell/components/PhoneLink'
 
 export function ReportCard({ item, onAction }) {
   const { reporter, target } = item
@@ -12,7 +13,7 @@ export function ReportCard({ item, onAction }) {
         <span className={pill({ tone: reason.tone })}>{reason.label}</span>
         {target && <span className={pill({ tone: target.kind === 'posted' ? 'blue' : 'violet' })}>{target.kind}</span>}
         <span className="text-sm text-ec-ink60">by {reporter.name ?? '—'}</span>
-        <span className="font-mono text-sm text-ec-ink60">{reporter.phoneMasked}</span>
+        <PhoneLink phone={reporter.phone} />
       </div>
 
       <div className="mt-3 rounded-xl bg-slate-50 p-3">

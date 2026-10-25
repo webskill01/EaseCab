@@ -4,11 +4,17 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchFounderPayments, linkFounderPayment } from '../services/founderPaymentsApi'
 
-/** Founder payments list + the link mutation (the refetched row then shows the member). */
+/** Founder payments list (linked/unlinked + member search, by capture time) + the link mutation (the refetched row then shows the member). */
 export function useFounderPayments() {
   const qc = useQueryClient()
   const [page, setPage] = useState(1)
-  const query = useQuery({ queryKey: ['founderPayments', page], queryFn: () => fetchFounderPayments(page), placeholderData: keepPreviousData })
+  const [filters, setFilters] = useState({ status: 'all', sort: 'newest', q: '' })
+  const query = useQuery({
+    queryKey: ['founderPayments', filters, page],
+    queryFn: () => fetchFounderPayments({ page, ...filters }),
+    placeholderData: keepPreviousData,
+  })
+  const setFilter = (key) => (value) => { setFilters((f) => ({ ...f, [key]: value })); setPage(1) }
   const link = useMutation({
     mutationFn: linkFounderPayment,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['founderPayments'] }),
@@ -17,6 +23,8 @@ export function useFounderPayments() {
 
   return {
     page, setPage,
+    ...filters,
+    setStatus: setFilter('status'), setSort: setFilter('sort'), setQ: setFilter('q'),
     items: query.data?.payments ?? [],
     unlinked: query.data?.unlinked ?? 0,
     total: query.data?.meta?.total ?? 0,

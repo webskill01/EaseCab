@@ -2,9 +2,7 @@
 
 const { REFERRAL } = require('@easecab/shared');
 
-/** Last-4 masked phone (full number never surfaced — §10). */
-const maskPhone = (phone) => (phone ? `••••${String(phone).slice(-4)}` : null);
-const person = (u) => (u ? { id: u.id, name: u.name ?? null, phoneMasked: maskPhone(u.phone) } : null);
+const person = (u) => (u ? { id: u.id, name: u.name ?? null, phone: u.phone ?? null } : null);
 
 /**
  * Admin referrals view (Phase 22): who referred whom, who has paid, which pairs were
@@ -16,8 +14,8 @@ const person = (u) => (u ? { id: u.id, name: u.name ?? null, phoneMasked: maskPh
  */
 function createAdminReferralsService({ repo, access = { all: false, phones: [] } }) {
   return {
-    async list({ page, limit }) {
-      const { rows, total, paid, rewarded, referrers } = await repo.list({ page, limit });
+    async list({ page, limit, q, status, sort }) {
+      const { rows, matched, total, paid, rewarded, referrers } = await repo.list({ page, limit, q, status, sort });
       const items = rows.map((r) => ({
         id: r.id,
         referee: person(r),
@@ -30,7 +28,7 @@ function createAdminReferralsService({ repo, access = { all: false, phones: [] }
         items,
         page,
         limit,
-        total,
+        total: matched,
         summary: { referrals: total, paid, referrers, monthsGranted: Math.floor(rewarded / REFERRAL.PER_REWARD) },
         rollout: { all: access.all, testers: access.phones.length },
       };

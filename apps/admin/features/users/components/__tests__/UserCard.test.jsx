@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { UserCard } from '../UserCard'
 
 const base = {
-  id: 'u1', name: 'Gurpreet', phoneMasked: '••••3210', aadhaarVerified: true,
+  id: 'u1', name: 'Gurpreet', phone: '+919876543210', aadhaarVerified: true,
   verificationStatus: 'approved', baseCity: 'Amritsar', vehicleType: 'sedan',
   createdAt: new Date().toISOString(), isDeleted: false, deletedAt: null,
   subscription: { status: 'active', validUntil: new Date('2026-07-01').toISOString() },
@@ -13,7 +13,7 @@ describe('UserCard', () => {
   it('shows the name, masked phone, and city', () => {
     render(<UserCard user={base} onAction={() => {}} />)
     expect(screen.getByText('Gurpreet')).toBeTruthy()
-    expect(screen.getByText('••••3210')).toBeTruthy()
+    expect(screen.getByText('+91 98765 43210')).toBeTruthy()
     expect(screen.getByText(/Amritsar/)).toBeTruthy()
   })
 

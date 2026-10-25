@@ -6,7 +6,20 @@ import { useFounderPayments } from '@/features/founderPayments/hooks/useFounderP
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { QueryState } from '@/features/shell/components/QueryState'
 import { Pagination } from '@/features/shell/components/Pagination'
+import { ListFilters } from '@/features/shell/components/ListFilters'
+import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { button, pill, input } from '@/lib/ui'
+
+const STATUSES = [
+  { id: 'all', label: 'All' },
+  { id: 'unlinked', label: 'Not linked' },
+  { id: 'linked', label: 'Linked' },
+]
+
+const SORTS = [
+  { id: 'newest', label: 'Newest' },
+  { id: 'oldest', label: 'Oldest' },
+]
 
 const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
 const inr = (paise) => `₹${(paise / 100).toLocaleString('en-IN')}`
@@ -53,12 +66,22 @@ export default function FounderPaymentsPage() {
         actions={<span className={pill({ tone: f.unlinked ? 'amber' : 'green' })}>{f.unlinked} to link</span>}
       />
 
+      <ListFilters
+        q={f.q}
+        onSearch={f.setQ}
+        placeholder="Search linked member"
+        rows={[
+          { label: 'Status', options: STATUSES, value: f.status, onChange: f.setStatus },
+          { label: 'Sort', options: SORTS, value: f.sort, onChange: f.setSort },
+        ]}
+      />
+
       <QueryState
         isLoading={f.isLoading}
         isError={f.isError}
         isEmpty={f.items.length === 0}
+        emptyMessage={f.q || f.status !== 'all' ? 'No payments match these filters.' : 'No founder payments yet'}
         errorMessage="Failed to load payments."
-        emptyMessage="No founder payments yet"
         emptyHint="Payments made in the app from the founder account since launch show up here."
       >
         <ul className="divide-y divide-ec-line overflow-hidden rounded-ec-card border border-ec-line bg-white shadow-ec-card">
@@ -67,7 +90,7 @@ export default function FounderPaymentsPage() {
               <div>
                 <p className="font-medium text-ec-ink">{inr(p.amount)} · {when(p.paidAt)}</p>
                 {p.member
-                  ? <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 size={13} /> For {p.member.name || 'member'} ({p.member.phoneMasked})</p>
+                  ? <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 size={13} /> For {p.member.name || 'member'} <PhoneLink phone={p.member.phone} className="font-medium text-emerald-700" /></p>
                   : <p className="mt-0.5 text-xs text-amber-700">Not linked yet</p>}
               </div>
               {!p.member && <LinkForm id={p.id} link={f.link} />}

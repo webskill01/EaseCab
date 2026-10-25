@@ -3,6 +3,7 @@
 import { ImageIcon, Eye, EyeOff } from 'lucide-react'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { button, pill, card, REASONS } from '@/lib/ui'
+import { PhoneLink } from '@/features/shell/components/PhoneLink'
 
 /**
  * One reported user + all their open reports. `reinstate` un-hides the driver (clears
@@ -31,7 +32,7 @@ export function UserReportCard({ item, onAction }) {
             <li key={r.id} className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={pill({ tone: reason.tone })}>{reason.label}</span>
-                <span className="text-ec-ink60">by {r.reporter.name ?? '—'} {r.reporter.phoneMasked}</span>
+                <span className="text-ec-ink60">by {r.reporter.name ?? '—'} <PhoneLink phone={r.reporter.phone} className="text-ec-ink60" /></span>
                 {r.screenshotUrl && (
                   <a href={r.screenshotUrl} target="_blank" rel="noreferrer" className="ml-auto flex items-center gap-1 text-xs font-medium text-ec-blue hover:underline">
                     <ImageIcon size={13} /> Screenshot

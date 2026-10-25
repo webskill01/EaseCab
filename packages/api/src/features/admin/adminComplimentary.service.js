@@ -6,9 +6,6 @@ const {
 
 const DAY_MS = 86_400_000;
 
-/** Last-4 masked phone (full number never surfaced — §10). */
-const maskPhone = (phone) => (phone ? `••••${String(phone).slice(-4)}` : null);
-
 /** New expiry: `months` plan periods stacked on any time still left. */
 function extendBy(sub, months, now = new Date()) {
   const base = isSubscriptionActive(sub, now) ? sub.expiresAt.getTime() : now.getTime();
@@ -31,7 +28,7 @@ function createAdminComplimentaryService({ repo }) {
         userId: r.userId,
         label: r.label,
         name: r.user.name,
-        phoneMasked: maskPhone(r.user.phone),
+        phone: r.user.phone ?? null,
         note: r.note,
         monthsGranted: r.monthsGranted,
         addedAt: r.createdAt,
@@ -55,7 +52,7 @@ function createAdminComplimentaryService({ repo }) {
       await repo.grant({ userId: user.id, months, label: label || undefined, note: note || undefined, adminId, expiresAt });
       if (expiresAt) await repo.invalidateSubCache(user.id);
       return {
-        userId: user.id, name: user.name, phoneMasked: maskPhone(phone),
+        userId: user.id, name: user.name, phone,
         validUntil: expiresAt ?? (isSubscriptionActive(user.subscription) ? user.subscription.expiresAt : null),
       };
     },

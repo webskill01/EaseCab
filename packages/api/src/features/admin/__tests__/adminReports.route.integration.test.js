@@ -94,8 +94,7 @@ test('GET /admin/reports returns the queue envelope + meta', async () => {
   assert.deepStrictEqual(res.body.meta, { page: 1, limit: 20, total: 1 });
   const item = res.body.data.reports[0];
   assert.strictEqual(item.id, REPORT_ID);
-  assert.strictEqual(item.reporter.phoneMasked, '••••3210');
-  assert.strictEqual(item.reporter.phone, undefined);
+  assert.strictEqual(item.reporter.phone, '+919876543210');
   assert.strictEqual(item.target.kind, 'bot');
 });
 

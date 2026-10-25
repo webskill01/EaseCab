@@ -2,12 +2,6 @@
 
 const { AppError, ERROR_CODES, USER_ACTION } = require('@easecab/shared');
 
-/** Last-4 masked phone for the admin directory (full number never surfaced — §10). */
-function maskPhone(phone) {
-  if (!phone) return null;
-  return `••••${String(phone).slice(-4)}`;
-}
-
 /** Flatten the subscription to status + validUntil (paid expiry). */
 function toSubscription(sub) {
   if (!sub) return null;
@@ -15,7 +9,7 @@ function toSubscription(sub) {
 }
 
 /**
- * Admin user-directory business logic (CLAUDE.md §4). Masks the phone, flattens the
+ * Admin user-directory business logic (CLAUDE.md §4). Flattens the
  * subscription, presigns images (best-effort: a missing key or R2 error → null), and
  * applies flag-only soft-delete / restore.
  *
@@ -34,10 +28,9 @@ function createAdminUsersService({ repo, r2 }) {
   }
 
   async function toItem(row) {
-    const { phone, subscription, profilePicUrl, ...rest } = row;
+    const { subscription, profilePicUrl, ...rest } = row;
     return {
       ...rest,
-      phoneMasked: maskPhone(phone),
       subscription: toSubscription(subscription),
       avatarUrl: await presign(profilePicUrl),
     };
@@ -68,7 +61,7 @@ function createAdminUsersService({ repo, r2 }) {
       return toDetail(row);
     },
 
-    /** Soft-delete or restore. NOT_FOUND if the user is gone. Returns the masked user. */
+    /** Soft-delete or restore. NOT_FOUND if the user is gone. Returns the user. */
     async setStatus(id, { action }) {
       const user = await repo.findById(id);
       if (!user) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);

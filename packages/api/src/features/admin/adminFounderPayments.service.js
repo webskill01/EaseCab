@@ -2,12 +2,6 @@
 
 const { AppError, ERROR_CODES, ADMIN_FOUNDER_PAYMENTS, computeRenewal } = require('@easecab/shared');
 
-/** Last-4 masked phone (full number never surfaced — §10). */
-function maskPhone(phone) {
-  if (!phone) return null;
-  return `••••${String(phone).slice(-4)}`;
-}
-
 const alreadyLinked = () => new AppError(ERROR_CODES.VALIDATION_ERROR, 'This payment is already linked', 409);
 
 /**
@@ -21,13 +15,13 @@ const alreadyLinked = () => new AppError(ERROR_CODES.VALIDATION_ERROR, 'This pay
 function createAdminFounderPaymentsService({ repo, onPaid = async () => {} }) {
   return {
     /** Offset page of founder payments + how many still need linking. */
-    async list({ page, limit }) {
-      const { rows, total, unlinked } = await repo.list({ page, limit });
+    async list({ page, limit, q, status, sort }) {
+      const { rows, total, unlinked } = await repo.list({ page, limit, q, status, sort });
       const items = rows.map((r) => ({
         id: r.id,
         amount: r.amount,
         paidAt: r.updatedAt,
-        member: r.onBehalfOf ? { id: r.onBehalfOf.id, name: r.onBehalfOf.name, phoneMasked: maskPhone(r.onBehalfOf.phone) } : null,
+        member: r.onBehalfOf ? { id: r.onBehalfOf.id, name: r.onBehalfOf.name, phone: r.onBehalfOf.phone ?? null } : null,
       }));
       return { items, total, page, limit, unlinked };
     },
@@ -52,7 +46,7 @@ function createAdminFounderPaymentsService({ repo, onPaid = async () => {} }) {
       if (renewal) await repo.invalidateSubCache(member.id);
       await onPaid(member.id);
       return {
-        member: { id: member.id, name: member.name, phoneMasked: maskPhone(phone) },
+        member: { id: member.id, name: member.name, phone },
         validUntil: renewal ? renewal.newExpiresAt : null,
       };
     },

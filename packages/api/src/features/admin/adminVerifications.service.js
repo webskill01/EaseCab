@@ -2,12 +2,6 @@
 
 const { AppError, ERROR_CODES, REVIEW_ACTION, VERIFICATION_STATUS } = require('@easecab/shared');
 
-/** Last-4 masked phone for the admin queue (full number never surfaced — §10). */
-function maskPhone(phone) {
-  if (!phone) return null;
-  return `••••${String(phone).slice(-4)}`;
-}
-
 /**
  * Admin verifications business logic (CLAUDE.md §4). Enriches the queue with
  * best-effort presigned GET URLs for the user's KYC images (private licence/rc +
@@ -43,7 +37,7 @@ function createAdminVerificationsService({ repo, r2 }) {
       user: {
         id: u.id,
         name: u.name,
-        phoneMasked: maskPhone(u.phone),
+        phone: u.phone ?? null,
         aadhaarLast4: u.aadhaarLast4,
         carMake: u.carMake,
         carModel: u.carModel,

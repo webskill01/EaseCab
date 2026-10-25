@@ -6,7 +6,7 @@ export async function fetchFreeMembers() {
   return data.members
 }
 
-/** POST /admin/complimentary → { userId, name, phoneMasked, validUntil }. */
+/** POST /admin/complimentary → { userId, name, phone, validUntil }. */
 export async function addFreeMember({ phone, months, label, note }) {
   const { data } = await apiFetch('/admin/complimentary', {
     method: 'POST',

@@ -4,7 +4,7 @@ import { ReportCard } from '../ReportCard'
 
 const item = {
   id: 'r1', reason: 'spam', remarks: 'junk', screenshotUrl: null, createdAt: new Date().toISOString(),
-  reporter: { id: 'u1', name: 'Reporter', phoneMasked: '••••3210' },
+  reporter: { id: 'u1', name: 'Reporter', phone: '+919876543210' },
   target: { kind: 'bot', id: 'ride1', status: 'fresh', displayText: 'A to B', fromCity: 'Amritsar', toCity: 'Delhi', posterName: null },
 }
 
@@ -12,7 +12,7 @@ describe('ReportCard', () => {
   it('shows the reason, masked reporter phone, and target route', () => {
     render(<ReportCard item={item} onAction={() => {}} />)
     expect(screen.getByText('Spam')).toBeTruthy()
-    expect(screen.getByText('••••3210')).toBeTruthy()
+    expect(screen.getByText('+91 98765 43210')).toBeTruthy()
     expect(screen.getByText(/Amritsar/)).toBeTruthy()
     expect(screen.getByText(/Delhi/)).toBeTruthy()
   })

@@ -20,12 +20,11 @@ function fakeRepo(overrides = {}) {
   };
 }
 
-test('list masks the reporter phone and exposes a bot-ride target summary', async () => {
+test('list returns the reporter phone and exposes a bot-ride target summary', async () => {
   const svc = createAdminReportsService({ repo: fakeRepo() });
   const out = await svc.list({ page: 1, limit: 20, status: 'open' });
   const item = out.items[0];
-  assert.strictEqual(item.reporter.phoneMasked, '••••3210');
-  assert.strictEqual(item.reporter.phone, undefined);
+  assert.strictEqual(item.reporter.phone, '+919876543210');
   assert.strictEqual(item.target.kind, 'bot');
   assert.strictEqual(item.target.fromCity, 'Amritsar');
   assert.strictEqual(item.target.toCity, 'Delhi');

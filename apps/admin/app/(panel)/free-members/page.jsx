@@ -1,11 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { HeartHandshake } from 'lucide-react'
 import { useFreeMembers } from '@/features/freeMembers/hooks/useFreeMembers'
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { QueryState } from '@/features/shell/components/QueryState'
+import { ListFilters } from '@/features/shell/components/ListFilters'
+import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { filterMembers } from '@/features/freeMembers/lib/filterMembers'
 import { button, pill, input, card } from '@/lib/ui'
+
+const STATUSES = [
+  { id: 'all', label: 'All' },
+  { id: 'active', label: 'Active' },
+  { id: 'ended', label: 'Plan ended' },
+]
+
+const SORTS = [
+  { id: 'newest', label: 'Newest added' },
+  { id: 'ending', label: 'Ending soonest' },
+  { id: 'months', label: 'Most months' },
+]
 
 const MONTHS = [0, 1, 2, 3, 6, 12]
 const date = (iso) => new Date(iso).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })
@@ -53,7 +68,7 @@ function Row({ m, remove }) {
     <li className="flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <p className="font-medium text-ec-ink">
-          {m.label || m.name || 'No name'} <span className="text-ec-ink60">({m.phoneMasked})</span>
+          {m.label || m.name || 'No name'} <PhoneLink phone={m.phone} />
           {m.label && m.name && m.label !== m.name && <span className="ml-1 text-xs font-normal text-ec-ink40">· app name {m.name}</span>}
         </p>
         <p className="mt-0.5 text-xs text-ec-ink60">
@@ -77,6 +92,9 @@ function Row({ m, remove }) {
 
 export default function FreeMembersPage() {
   const f = useFreeMembers()
+  const [filters, setFilters] = useState({ q: '', status: 'all', sort: 'newest' })
+  const set = (key) => (value) => setFilters((x) => ({ ...x, [key]: value }))
+  const shown = useMemo(() => filterMembers(f.items, filters), [f.items, filters])
   return (
     <div>
       <PageHeader
@@ -86,16 +104,25 @@ export default function FreeMembersPage() {
         description="People you gave a free plan for barter or help. They can contact rides like any member, but never count in signups, paid accounts, revenue, MRR or active paid. Removing someone keeps their plan time; they just count in stats again."
       />
       <AddForm add={f.add} />
+      <ListFilters
+        q={filters.q}
+        onSearch={set('q')}
+        placeholder="Search name, note or last 4 digits"
+        rows={[
+          { label: 'Status', options: STATUSES, value: filters.status, onChange: set('status') },
+          { label: 'Sort', options: SORTS, value: filters.sort, onChange: set('sort') },
+        ]}
+      />
       <QueryState
         isLoading={f.isLoading}
         isError={f.isError}
-        isEmpty={f.items.length === 0}
+        isEmpty={shown.length === 0}
         errorMessage="Failed to load free members."
-        emptyMessage="No free members yet"
-        emptyHint="Add someone above to give them free months and keep them out of the stats."
+        emptyMessage={f.items.length ? 'No free members match these filters.' : 'No free members yet'}
+        emptyHint={f.items.length ? undefined : 'Add someone above to give them free months and keep them out of the stats.'}
       >
         <ul className="divide-y divide-ec-line overflow-hidden rounded-ec-card border border-ec-line bg-white shadow-ec-card">
-          {f.items.map((m) => <Row key={m.userId} m={m} remove={f.remove} />)}
+          {shown.map((m) => <Row key={m.userId} m={m} remove={f.remove} />)}
         </ul>
       </QueryState>
     </div>

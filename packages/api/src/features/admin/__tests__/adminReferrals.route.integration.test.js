@@ -62,13 +62,13 @@ test('GET /admin/referrals without a session → 401', async () => {
   assert.strictEqual((await request(setup().app).get('/api/v1/admin/referrals')).status, 401);
 });
 
-test('GET lists referees with masked phones, paid/rewarded, totals and rollout', async () => {
+test('GET lists referees with full phones, paid/rewarded, totals and rollout', async () => {
   const { app, calls } = setup();
   const res = await (await adminAgent(app)).get('/api/v1/admin/referrals?page=2&limit=10');
   assert.strictEqual(res.status, 200);
   const [a, b] = res.body.data.referrals;
-  assert.deepStrictEqual(a.referee, { id: 'r1', name: 'Gurpreet', phoneMasked: '••••1111' });
-  assert.deepStrictEqual(a.referrer, { id: 'u1', name: 'Sunil', phoneMasked: '••••2222' });
+  assert.deepStrictEqual(a.referee, { id: 'r1', name: 'Gurpreet', phone: '+919811111111' });
+  assert.deepStrictEqual(a.referrer, { id: 'u1', name: 'Sunil', phone: '+919822222222' });
   assert.strictEqual(a.paid, true);
   assert.strictEqual(a.rewarded, true);
   assert.strictEqual(b.paid, false);
@@ -77,7 +77,22 @@ test('GET lists referees with masked phones, paid/rewarded, totals and rollout',
   assert.deepStrictEqual(res.body.data.rollout, { all: false, testers: 1 });
   assert.deepStrictEqual(res.body.meta, { page: 2, limit: 10, total: 2 });
   assert.strictEqual(calls[0].skip, 10);
-  assert.ok(!JSON.stringify(res.body).includes('9811111111'));
+});
+
+test('GET filters by search + status and sorts oldest first; summary stays program-wide', async () => {
+  const { app, calls } = setup();
+  const res = await (await adminAgent(app)).get('/api/v1/admin/referrals?q=Sunil&status=unpaid&sort=oldest');
+  assert.strictEqual(res.status, 200);
+  const { where, orderBy } = calls[0];
+  assert.deepStrictEqual(orderBy, [{ createdAt: 'asc' }, { id: 'asc' }]);
+  assert.ok(where.AND.some((c) => c.payments?.none && c.paymentsOnBehalf?.none), 'unpaid clause');
+  const search = where.AND.find((c) => c.OR?.some((o) => o.referredBy));
+  assert.strictEqual(search.OR[1].referredBy.is.OR[1].name.contains, 'Sunil');
+  assert.strictEqual(res.body.data.summary.referrals, 2);
+});
+
+test('GET rejects an unknown status → 422', async () => {
+  assert.strictEqual((await (await adminAgent(setup().app)).get('/api/v1/admin/referrals?status=bogus')).status, 422);
 });
 
 test('GET rejects a bad page size → 422', async () => {

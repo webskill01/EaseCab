@@ -95,8 +95,7 @@ test('GET /admin/verifications returns the queue envelope + meta', async () => {
   const item = res.body.data.verifications[0];
   assert.strictEqual(item.id, SUB_ID);
   assert.strictEqual(item.docType, 'dl');
-  assert.strictEqual(item.user.phoneMasked, '••••3210');
-  assert.strictEqual(item.user.phone, undefined); // raw phone never leaves the service
+  assert.strictEqual(item.user.phone, '+919876543210');
   assert.strictEqual(item.images.licence, null);  // no r2 in this harness
 });
 

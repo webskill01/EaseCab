@@ -6,8 +6,8 @@ const item = {
   user: { id: 'u1', name: 'Gurpreet', baseCity: 'Ludhiana', vehicleType: 'Innova', flagged: true },
   reportCount: 2,
   reports: [
-    { id: 'rep1', reason: 'spam', remarks: 'junk', screenshotUrl: null, createdAt: new Date().toISOString(), reporter: { id: 'a', name: 'A', phoneMasked: '••••3210' } },
-    { id: 'rep2', reason: 'fake', remarks: null, screenshotUrl: null, createdAt: new Date().toISOString(), reporter: { id: 'b', name: null, phoneMasked: '••••3334' } },
+    { id: 'rep1', reason: 'spam', remarks: 'junk', screenshotUrl: null, createdAt: new Date().toISOString(), reporter: { id: 'a', name: 'A', phone: '+919876543210' } },
+    { id: 'rep2', reason: 'fake', remarks: null, screenshotUrl: null, createdAt: new Date().toISOString(), reporter: { id: 'b', name: null, phone: '+919876543334' } },
   ],
 }
 
@@ -18,7 +18,7 @@ describe('UserReportCard', () => {
     expect(screen.getByText('Hidden')).toBeTruthy()
     expect(screen.getByText('2 reports')).toBeTruthy()
     expect(screen.getByText('Spam')).toBeTruthy()
-    expect(screen.getByText(/••••3210/)).toBeTruthy()
+    expect(screen.getByText('+91 98765 43210')).toBeTruthy()
   })
 
   it('fires onAction with reinstate and uphold by userId', () => {

@@ -21,14 +21,13 @@ function fakeRepo(overrides = {}) {
   };
 }
 
-test('list shapes a reported user, masks reporter phones, counts open reports', async () => {
+test('list shapes a reported user, returns reporter phones, counts open reports', async () => {
   const out = await createAdminUserReportsService({ repo: fakeRepo() }).list({ page: 1, limit: 20 });
   const item = out.items[0];
   assert.strictEqual(item.user.id, 'u1');
   assert.strictEqual(item.user.flagged, true);
   assert.strictEqual(item.reportCount, 2);
-  assert.strictEqual(item.reports[0].reporter.phoneMasked, '••••3210');
-  assert.strictEqual(item.reports[0].reporter.phone, undefined);
+  assert.strictEqual(item.reports[0].reporter.phone, '+919876543210');
   assert.deepStrictEqual({ page: out.page, limit: out.limit, total: out.total }, { page: 1, limit: 20, total: 1 });
 });
 

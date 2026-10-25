@@ -24,7 +24,7 @@ test('extendBy stacks months on time left, or starts from now', () => {
   assert.strictEqual(extendBy({ status: 'expired', expiresAt: new Date(now.getTime() - DAY) }, 1, now).getTime(), now.getTime() + 30 * DAY);
 });
 
-test('add grants months, drops the sub cache, masks the phone', async () => {
+test('add grants months, drops the sub cache, returns the full phone', async () => {
   const repo = fakeRepo({ id: 'u1', name: 'Shiv', subscription: null });
   const out = await createAdminComplimentaryService({ repo }).add({ phone: '+919999955552', months: 2, label: 'Shiv (groups)', note: 'barter' }, 'a1');
   assert.strictEqual(repo.calls.grant[0].months, 2);
@@ -32,7 +32,7 @@ test('add grants months, drops the sub cache, masks the phone', async () => {
   assert.strictEqual(repo.calls.grant[0].adminId, 'a1');
   assert.ok(repo.calls.grant[0].expiresAt instanceof Date);
   assert.deepStrictEqual(repo.calls.cache, ['u1']);
-  assert.strictEqual(out.phoneMasked, '••••5552');
+  assert.strictEqual(out.phone, '+919999955552');
 });
 
 test('add with 0 months only marks the user, plan untouched', async () => {

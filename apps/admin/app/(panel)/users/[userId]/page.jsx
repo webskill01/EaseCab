@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, ShieldCheck, Crown, Trash2, RotateCcw, ExternalLink, Car, User, Receipt, Activity, Bell } from 'lucide-react'
 import { useUser } from '@/features/users/hooks/useUsers'
+import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { ListSkeleton, ErrorState } from '@/features/shell/components/QueryState'
 import { planOf, fmtDate } from '@/features/users/lib/plan'
@@ -63,7 +64,7 @@ export default function UserProfilePage() {
         <Avatar name={user.name} src={user.avatarUrl} size="h-20 w-20 text-2xl" />
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold text-ec-ink sm:text-2xl">{user.name ?? 'No name'}</h1>
-          <p className="font-mono text-sm text-ec-ink60">{user.phoneMasked}</p>
+          <p><PhoneLink phone={user.phone} /></p>
           <div className="mt-2 flex flex-wrap gap-2">
             {user.isDeleted && <span className={pill({ tone: 'red' })}>Deleted {fmtDate(user.deletedAt)}</span>}
             {user.flaggedAt && <span className={pill({ tone: 'red' })}>Hidden by reports</span>}

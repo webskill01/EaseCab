@@ -11,6 +11,7 @@ const REFERRAL = Object.freeze({
   LIST_LIMIT: 100, // ponytail: no pagination — top referrer has 7; add a cursor past 100
   ADMIN_PAGE_SIZE: 20, // admin list (offset pagination, §8)
   ADMIN_MAX_PAGE_SIZE: 50,
+  ADMIN_FILTER: Object.freeze({ ALL: 'all', PAID: 'paid', UNPAID: 'unpaid', REWARDED: 'rewarded' }),
   CLAIM_RATE_LIMIT: Object.freeze({ MAX_PER_WINDOW: 5, WINDOW_SEC: 3600 }), // number-probing cap
   PUSH: Object.freeze({
     TYPE: 'referral',
