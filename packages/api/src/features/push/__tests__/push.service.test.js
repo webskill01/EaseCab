@@ -158,7 +158,7 @@ test('dispatchForRide: names the pickup→drop route in the body', async () => {
   assert.ok(!('from' in sender.calls[0].data), 'from is FCM-reserved: the send fails for every token');
 });
 
-test('dispatchForRide: every variant fills its placeholders and never says "customer"', async () => {
+test('dispatchForRide: every variant fills its placeholders and never says "customer" or "khali"', async () => {
   const { PUSH } = require('@easecab/shared');
   for (const source of ['bot', 'posted']) {
     const all = PUSH.NOTIFICATION[source];
@@ -167,7 +167,7 @@ test('dispatchForRide: every variant fills its placeholders and never says "cust
       const random = () => i / all.length;
       await createPushService({ repo: fakeRepo({ tokens: ['t1'] }), pushSender: sender, random }).dispatchForRide({ source, rideId: 'r1', cityIds: [CITY] });
       const { title, body } = sender.calls[0].data;
-      assert.doesNotMatch(title + body, /\{|\}|customer/i);
+      assert.doesNotMatch(title + body, /\{|\}|customer|kh?aa?li/i);
     }
   }
 });

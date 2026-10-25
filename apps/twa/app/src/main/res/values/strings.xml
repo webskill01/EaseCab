@@ -45,6 +45,5 @@
   <string name="pushCall">📞 Call</string>
   <string name="pushWhatsapp">💬 WhatsApp</string>
   <string name="pushView">Ride dekho</string>
-  <string name="pushMute">1 ghanta mute</string>
   <string name="pushGroup">%1$s ki nayi duties</string>
 </resources>

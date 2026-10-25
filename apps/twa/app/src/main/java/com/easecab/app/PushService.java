@@ -24,7 +24,7 @@ import java.util.Map;
  * website; here the app draws it itself, so it reads "EaseCab" (not "Brave · easecab.com"),
  * arrives with the browser closed, rings on the Ride alerts channel, stacks per pickup
  * city and carries Call / WhatsApp (paid members only — the API adds `phone` just for
- * them), View ride and Mute 1 hr buttons.
+ * them) or View ride buttons.
  *
  * The web app learns the token through the launch URL fragment (launchUri) and
  * registers it as platform "android"; the API never needs to know this class exists.
@@ -32,10 +32,8 @@ import java.util.Map;
 public class PushService extends FirebaseMessagingService {
     static final String PREFS = "push";
     private static final String KEY_TOKEN = "token";
-    private static final String KEY_MUTE_UNTIL = "mute_until";
     private static final String KEY_PENDING = "pending_contacts";
     private static final String TYPE_RIDE = "new_ride"; // = PUSH.TYPE (packages/shared)
-    static final long MUTE_MS = 60 * 60 * 1000L;
 
     static SharedPreferences prefs(Context c) {
         return c.getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -92,16 +90,11 @@ public class PushService extends FirebaseMessagingService {
         p.edit().putString(KEY_PENDING, cur.isEmpty() ? rideId : cur + "," + rideId).apply();
     }
 
-    static void muteForAnHour(Context c) {
-        prefs(c).edit().putLong(KEY_MUTE_UNTIL, System.currentTimeMillis() + MUTE_MS).apply();
-    }
-
     @Override
     public void onMessageReceived(RemoteMessage message) {
         Map<String, String> d = message.getData();
         String type = d.get("type");
         boolean ride = TYPE_RIDE.equals(type);
-        if (ride && System.currentTimeMillis() < prefs(this).getLong(KEY_MUTE_UNTIL, 0)) return;
         if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) return;
         DelegationService.ensureChannel(this);
 
@@ -122,7 +115,6 @@ public class PushService extends FirebaseMessagingService {
         } else if (ride) {
             b.addAction(0, getString(R.string.pushView), open(d.get("url"), id));
         }
-        if (ride) b.addAction(0, getString(R.string.pushMute), mute(id));
         if (group != null) b.setGroup(group);
 
         NotificationManagerCompat nm = NotificationManagerCompat.from(this);
@@ -169,12 +161,6 @@ public class PushService extends FirebaseMessagingService {
                 .putExtra(ContactActivity.EXTRA_NOTIF, notifId)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getActivity(this, (mode + notifId).hashCode(), i,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-    }
-
-    private PendingIntent mute(int notifId) {
-        Intent i = new Intent(this, MuteReceiver.class).putExtra(ContactActivity.EXTRA_NOTIF, notifId);
-        return PendingIntent.getBroadcast(this, ("mute" + notifId).hashCode(), i,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 

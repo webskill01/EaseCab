@@ -202,7 +202,6 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
         <activity android:name="com.google.androidbrowserhelper.locationdelegation.PermissionRequestActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-        <receiver android:name=".MuteReceiver" android:exported="false"/>
         <service android:name=".PushService" android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>

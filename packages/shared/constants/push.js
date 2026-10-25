@@ -6,7 +6,7 @@
  * per-source toggle a new-ride event honours (notifyBotRides / notifyPostedRides).
  *
  * Copy is Hinglish (widest reach for our driver base); per-user locale push is
- * deferred. Driver-to-driver app: copy never says "customer". Each new ride picks one
+ * deferred. Driver-to-driver app: copy never says "customer" or "khali". Each new ride picks one
  * variant at random so alerts don't read the same every time; {from}/{to}/{route} are
  * filled from the ride's cities, and NO_ROUTE is used when the pickup name is missing.
  * The client routes on `data.type` + `data.rideId`.
@@ -21,10 +21,10 @@ const PUSH = Object.freeze({
     bot: Object.freeze([
       { title: '🚕 {from} se nayi duty', body: '{route} · Pehle call karne wale driver ko milti hai — abhi dekho' },
       { title: '🔥 Fresh duty: {route}', body: 'Abhi abhi aayi hai. Jaldi call karo, duty haath se na jaaye' },
-      { title: '📍 {from} mein duty khaali', body: '{route} · Driver bhai ko gaadi chahiye, tap karke dekho' },
+      { title: '📍 {from} mein nayi duty', body: '{route} · Driver bhai ko gaadi chahiye, tap karke dekho' },
       { title: '⚡ Nayi duty aayi — {route}', body: 'Late mat karo, fresh duties minto mein book ho jaati hain' },
       { title: '💰 Kamai ka mauka: {route}', body: 'Nayi duty available hai — abhi kholo aur seedha baat karo' },
-      { title: '🛣️ {route} duty', body: 'Fresh hai, khaali hai. Sabse pehle tum call karo' },
+      { title: '🛣️ {route} duty', body: 'Bilkul fresh hai. Sabse pehle tum call karo' },
       { title: '🚖 {from} ki duty, abhi abhi', body: '{route} · Detail dekho, driver se turant baat karo' },
     ].map(Object.freeze)),
     posted: Object.freeze([
