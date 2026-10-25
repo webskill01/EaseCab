@@ -100,7 +100,8 @@ function createPushService({ repo, pushSender, random = Math.random }) {
       const [from = '', to = ''] = (cityIds || []).map((id) => nameById.get(id) || '');
       // Data-only payload: title/body travel in `data` so FCM does NOT auto-display
       // a second (icon-less) notification — the service worker / native app renders it.
-      const data = { type: PUSH.TYPE, source, rideId, ...rideCopy(source, from, to, random), url: PUSH.CLICK_PATH, from, to };
+      const data = { type: PUSH.TYPE, source, rideId, ...rideCopy(source, from, to, random), url: PUSH.CLICK_PATH, pickup: from, drop: to };
+      // ponytail: never `from` — FCM reserves it and rejects the WHOLE message (invalid-argument).
       // Paid members on the native app get the poster's number for one-tap Call/WhatsApp
       // (bot rides only — verified rides keep their in-app verification gate).
       const paid = source === PUSH_SOURCE.BOT ? await repo.findPaidNativeTokens(tokens) : [];

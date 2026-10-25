@@ -106,7 +106,7 @@ public class PushService extends FirebaseMessagingService {
         DelegationService.ensureChannel(this);
 
         String rideId = d.get("rideId");
-        String from = d.get("from");
+        String from = d.get("pickup"); // not "from": FCM reserves that key
         String phone = d.get("phone");
         int id = (rideId != null ? rideId : String.valueOf(type)).hashCode();
         String group = ride && from != null ? "city:" + from : null;

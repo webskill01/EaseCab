@@ -135,8 +135,8 @@ test('dispatchForRide: sends source-specific copy + data, dedupes cities', async
     title: '✅ Verified duty: City-1111',
     body: 'Verified driver ne abhi post ki — tap karke dekho',
     url: '/feed',
-    from: 'City-1111',
-    to: 'City-1111',
+    pickup: 'City-1111',
+    drop: 'City-1111',
   });
   assert.equal(repo.calls.paid, undefined); // verified rides never carry the phone
   assert.deepEqual(out, { targeted: 2, successCount: 2, pruned: 0 });
@@ -153,8 +153,9 @@ test('dispatchForRide: names the pickup→drop route in the body', async () => {
   await createPushService({ repo, pushSender: sender }).dispatchForRide({ source: 'bot', rideId: 'r1', cityIds: [A, B] });
   assert.deepEqual(repo.calls.find[0].cityIds, [A]); // targets PICKUP only — drop (B) never triggers
   assert.match(`${sender.calls[0].data.title} ${sender.calls[0].data.body}`, /Amritsar|Amritsar → Delhi/);
-  assert.equal(sender.calls[0].data.from, 'Amritsar');
-  assert.equal(sender.calls[0].data.to, 'Delhi');
+  assert.equal(sender.calls[0].data.pickup, 'Amritsar');
+  assert.equal(sender.calls[0].data.drop, 'Delhi');
+  assert.ok(!('from' in sender.calls[0].data), 'from is FCM-reserved: the send fails for every token');
 });
 
 test('dispatchForRide: every variant fills its placeholders and never says "customer"', async () => {

@@ -3,10 +3,14 @@
 const admin = require('firebase-admin');
 const { PUSH } = require('@easecab/shared');
 
-/** FCM error codes that mean a token is permanently dead → prune it. */
+/**
+ * FCM error codes that mean a token is permanently dead → prune it. NOT invalid-argument:
+ * that is also what a bad payload returns (e.g. a reserved data key), and pruning on it
+ * wiped every token in one send.
+ */
 function isStaleTokenError(err) {
   const code = err && err.code;
-  return code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-argument';
+  return code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token';
 }
 
 /**
