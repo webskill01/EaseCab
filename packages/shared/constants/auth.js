@@ -88,6 +88,9 @@ const TWO_FACTOR = Object.freeze({
   BASE_URL: 'https://2factor.in/API/V1',
   HTTP_TIMEOUT_MS: 10_000,
   STATUS_SUCCESS: 'Success',
+  // 6-digit code range for crypto.randomInt (max exclusive) — matches the otp schema.
+  OTP_MIN: 100_000,
+  OTP_MAX: 1_000_000,
 });
 
 /** Role embedded in the user JWT payload (requireAuth → req.user.role). Admin is separate (§6). */

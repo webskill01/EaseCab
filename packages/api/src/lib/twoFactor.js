@@ -1,5 +1,6 @@
 'use strict';
 
+const { randomInt } = require('node:crypto');
 const { TWO_FACTOR } = require('@easecab/shared');
 
 /**
@@ -26,7 +27,11 @@ function createTwoFactorClient({ apiKey, template }) {
      * @param {string} phone - E.164 (+91…)
      */
     async sendOtp(phone) {
-      const { status, body } = await call(`/SMS/${phone}/AUTOGEN/${encodeURIComponent(template)}`);
+      // We generate the code (not AUTOGEN): the WebOTP template has a 2nd {#num#} after
+      // "@easecab.com #" that only var1 fills. 2Factor still stores it → VERIFY by session.
+      const otp = String(randomInt(TWO_FACTOR.OTP_MIN, TWO_FACTOR.OTP_MAX));
+      const tpl = encodeURIComponent(template);
+      const { status, body } = await call(`/SMS/${phone}/${otp}/${tpl}?var1=${otp}`);
       if (body.Status !== TWO_FACTOR.STATUS_SUCCESS || !body.Details) {
         // Details is 2Factor's error text (e.g. insufficient balance) — no PII.
         throw new Error(`TWOFACTOR_SEND_${status}: ${body.Details || ''}`.trim());
