@@ -19,7 +19,7 @@ function toWeek(r) {
     week: r.week.toISOString().slice(0, 10),
     signups: r.signups, newPayers: r.newPayers, payments: r.payments,
     revenue: r.revenuePaise / 100,
-    activePaid: r.activePaid, mrr: r.activePaid * PRICE,
+    activePaid: r.activePaid, mrr: Math.round(r.mrrPaise / 100), // per-plan monthly share (₹1,199/yr → ₹99)
     conversion: pct(r.totalPayers, r.totalSignups),
     renewalsDue: r.renewalsDue, renewalRate,
     ltv: churn ? Math.round(PRICE / churn) : null,

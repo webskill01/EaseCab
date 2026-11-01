@@ -16,11 +16,13 @@ export async function getMembership() {
 }
 
 /**
- * Create (or reuse) the ₹149 Cashfree order for the checkout modal.
+ * Create (or reuse) the Cashfree order for the chosen plan.
+ * @param {string} [plan] - m1/m3/m6/m12; omitted = API default (m1)
  * @returns {Promise<{ orderId: string, paymentSessionId: string, amount: number, mode: string } | { alreadyPaid: true }>}
  */
-export async function createCheckout() {
-  const { data } = await apiFetch('/subscriptions/checkout', { method: 'POST' })
+export async function createCheckout(plan) {
+  const body = plan ? { body: JSON.stringify({ plan }) } : {}
+  const { data } = await apiFetch('/subscriptions/checkout', { method: 'POST', ...body })
   return data
 }
 

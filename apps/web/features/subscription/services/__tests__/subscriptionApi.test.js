@@ -23,6 +23,12 @@ describe('createCheckout', () => {
     expect(apiFetch).toHaveBeenCalledWith('/subscriptions/checkout', { method: 'POST' })
     expect(out.orderId).toBe('order_1')
   })
+
+  it('sends the chosen plan in the body', async () => {
+    apiFetch.mockResolvedValue({ data: { orderId: 'order_2' } })
+    await createCheckout('m6')
+    expect(apiFetch).toHaveBeenCalledWith('/subscriptions/checkout', { method: 'POST', body: JSON.stringify({ plan: 'm6' }) })
+  })
 })
 
 describe('verifyPayment', () => {

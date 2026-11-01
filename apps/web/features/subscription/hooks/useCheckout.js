@@ -15,13 +15,14 @@ export function useCheckout() {
   const [succeeded, setSucceeded] = useState(false)
   const [pending, setPending] = useState(false)
 
-  async function start() {
+  /** @param {string} [planId] - plan id (m1/m3/m6/m12); the API defaults to m1 */
+  async function start(planId) {
     setErrorKey(null)
     setSucceeded(false)
     setPending(false)
     setCheckingOut(true)
     try {
-      const order = await createCheckout()
+      const order = await createCheckout(planId)
       // alreadyPaid = an earlier checkout was paid but never confirmed; the API just credited it.
       if (!order.alreadyPaid) {
         await openCheckout({ order })

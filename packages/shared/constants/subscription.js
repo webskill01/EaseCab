@@ -11,6 +11,21 @@ const SUBSCRIPTION_PLAN = Object.freeze({
   CURRENCY: 'INR',
 });
 
+/** Plan ids accepted by POST /subscriptions/checkout. */
+const PLAN_ID = Object.freeze({ M1: 'm1', M3: 'm3', M6: 'm6', M12: 'm12' });
+
+/**
+ * Prepaid plans (2026-11-01). Each price is unique: a payment's amount identifies its
+ * plan at credit time, so orders need no plan column. 12 months = 365 days.
+ * M1 must stay equal to SUBSCRIPTION_PLAN (manual grants, referrals, stats use that).
+ */
+const SUBSCRIPTION_PLANS = Object.freeze([
+  Object.freeze({ id: PLAN_ID.M1, months: 1, days: 30, pricePaise: 14900 }),
+  Object.freeze({ id: PLAN_ID.M3, months: 3, days: 90, pricePaise: 39900 }),
+  Object.freeze({ id: PLAN_ID.M6, months: 6, days: 180, pricePaise: 74900 }),
+  Object.freeze({ id: PLAN_ID.M12, months: 12, days: 365, pricePaise: 119900 }),
+]);
+
 /** `payments.status` lifecycle (plain string column, not a Prisma enum). */
 const PAYMENT_STATUS = Object.freeze({
   CREATED: 'created', // order created at /checkout, not yet paid
@@ -70,5 +85,5 @@ const PAYMENT_RECONCILE = Object.freeze({
 const PAYMENTS = Object.freeze({ PAGE_LIMIT_DEFAULT: 20, PAGE_LIMIT_MAX: 50 });
 
 module.exports = {
-  SUBSCRIPTION_PLAN, PAYMENT_STATUS, CASHFREE, CHECKOUT_RATE_LIMIT, VERIFY_RATE_LIMIT, WEBHOOK_RATE_LIMIT, PAYMENT_RECONCILE, PAYMENTS,
+  SUBSCRIPTION_PLAN, PLAN_ID, SUBSCRIPTION_PLANS, PAYMENT_STATUS, CASHFREE, CHECKOUT_RATE_LIMIT, VERIFY_RATE_LIMIT, WEBHOOK_RATE_LIMIT, PAYMENT_RECONCILE, PAYMENTS,
 };

@@ -11,11 +11,13 @@ export default function Refunds() {
   return (
     <article className="prose prose-gray max-w-none">
       <h1>Refund &amp; Cancellation Policy</h1>
-      <p className="text-sm text-gray-500">Last Updated: September 14, 2026</p>
+      <p className="text-sm text-gray-500">Last Updated: November 1, 2026</p>
 
       <p>
-        EaseCab sells a single digital service: a 30-day subscription priced at{' '}
-        <strong>&#8377;149</strong> that unlocks contact details on ride leads. Browsing the feed
+        EaseCab sells a single digital service: a prepaid subscription that unlocks contact
+        details on ride leads, offered as 1 month (30 days) for <strong>&#8377;149</strong>, 3
+        months (90 days) for <strong>&#8377;399</strong>, 6 months (180 days) for{' '}
+        <strong>&#8377;749</strong>, or 12 months (365 days) for <strong>&#8377;1,199</strong>. Browsing the feed
         and posting rides are free and require no payment. This policy explains when that
         subscription fee is and is not refunded.
       </p>
@@ -23,8 +25,8 @@ export default function Refunds() {
       <h2>Cancellation</h2>
       <p>
         There is nothing to cancel. EaseCab does not set up any auto-debit, mandate, or standing
-        instruction on your card, bank account, or UPI. Each &#8377;149 payment is a one-time
-        charge that adds 30 days of access. When those days run out, access simply stops unless you
+        instruction on your card, bank account, or UPI. Each payment is a one-time
+        charge that adds the days of the plan you chose. When those days run out, access simply stops unless you
         choose to pay again.
       </p>
       <p>
@@ -41,7 +43,7 @@ export default function Refunds() {
         part-way through a paid period.
       </p>
       <p>
-        If you pay again before your current period ends, the new 30 days are added to your
+        If you pay again before your current period ends, the new plan days are added to your
         remaining days. No time is lost and nothing is reset.
       </p>
 
@@ -49,7 +51,7 @@ export default function Refunds() {
       <p>We refund in full, without requiring a reason, in these cases:</p>
       <ul>
         <li>
-          <strong>Duplicate payment</strong> — you were charged more than once for the same 30-day
+          <strong>Duplicate payment</strong> — you were charged more than once for the same plan
           period.
         </li>
         <li>
@@ -57,8 +59,8 @@ export default function Refunds() {
           not activated.
         </li>
         <li>
-          <strong>Incorrect amount</strong> — you were charged anything other than the &#8377;149
-          shown at checkout.
+          <strong>Incorrect amount</strong> — you were charged anything other than the price of
+          the plan shown at checkout.
         </li>
       </ul>
 

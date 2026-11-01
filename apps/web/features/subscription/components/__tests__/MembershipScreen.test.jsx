@@ -21,10 +21,23 @@ describe('MembershipScreen', () => {
     useCheckout.mockReturnValue(checkoutStub({ start }))
     renderWithIntl(<MembershipScreen />)
     expect(screen.getByText('EaseCab · Not subscribed')).toBeInTheDocument()
-    expect(screen.getByText('Monthly Plan')).toBeInTheDocument()
-    const cta = screen.getByText('Subscribe now')
-    fireEvent.click(cta)
-    expect(start).toHaveBeenCalled()
+    // New users default to the 1-month plan
+    fireEvent.click(screen.getByText('Subscribe now · ₹149'))
+    expect(start).toHaveBeenCalledWith('m1')
+  })
+
+  it('shows discount badges and checks out the picked plan', () => {
+    useMembership.mockReturnValue({ data: { status: 'expired', isActive: false, expiresAt: null }, isLoading: false, isError: false })
+    const start = vi.fn()
+    useCheckout.mockReturnValue(checkoutStub({ start }))
+    renderWithIntl(<MembershipScreen />)
+    expect(screen.getByText('Save ₹589 · 33% OFF')).toBeInTheDocument()
+    expect(screen.getByText('₹1,788')).toHaveClass('line-through')
+    expect(screen.getByText('Most popular')).toBeInTheDocument()
+    expect(screen.getByText('Just ₹100/month')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('12 months'))
+    fireEvent.click(screen.getByText('Subscribe now · ₹1,199'))
+    expect(start).toHaveBeenCalledWith('m12')
   })
 
   it('lapsed member sees Membership ended + Renew', () => {
@@ -33,6 +46,8 @@ describe('MembershipScreen', () => {
     renderWithIntl(<MembershipScreen />)
     expect(screen.getByText('Your membership ended. Renew to contact drivers again.')).toBeInTheDocument()
     expect(screen.queryByText(/trial/i)).not.toBeInTheDocument()
+    // Returning members default to the popular 6-month plan
+    expect(screen.getByText('Renew membership · ₹749')).toBeInTheDocument()
   })
 
   it('shows the success panel after a credited checkout', () => {

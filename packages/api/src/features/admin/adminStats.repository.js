@@ -3,6 +3,7 @@
 const {
   VERIFICATION_STATUS, ADMIN_VERIFICATIONS, ADMIN_STATISTICS, PAYMENT_STATUS, SUBSCRIPTION_STATUS,
   SUBSCRIPTION_PLAN,
+  SUBSCRIPTION_PLANS,
 } = require('@easecab/shared');
 
 /** Start of the current server-day (00:00:00.000) — boundary for "today's rides". */
@@ -82,7 +83,7 @@ function createAdminStatsRepository({ prisma }) {
     /**
      * Track Record: one row per IST week (Monday start) since launch, newest first.
      * Raw counts only; ratios are the service's job. `activePaid` = distinct users
-     * with a captured payment in the PERIOD_DAYS before the week end (or now, for the
+     * with a captured payment whose window (plan days) covers the week end (or now, for the
      * running week). Renewal cohort = payments whose period ended in the week and whose
      * grace window has passed. Bot rides = archived ride_daily_stats + live rows.
      * Only users who joined on/after launch count (earlier rows are test data); free
@@ -93,6 +94,8 @@ function createAdminStatsRepository({ prisma }) {
       const { LAUNCH_DATE, TIMEZONE: tz, EXCLUDED_PHONES, LIQUIDITY_WINDOW_MIN, RENEWAL_GRACE_DAYS } = ADMIN_STATISTICS;
       const phones = [...EXCLUDED_PHONES];
       const period = SUBSCRIPTION_PLAN.PERIOD_DAYS;
+      const monthPaise = SUBSCRIPTION_PLAN.PRICE_PAISE;
+      const plans = JSON.stringify(SUBSCRIPTION_PLANS.map((pl) => ({ amount: pl.pricePaise, days: pl.days })));
       // ponytail: per-week correlated subqueries, fine for a few hundred weeks of small
       // tables; pre-aggregate per day if payments/contacts reach ~1M rows.
       return prisma.$queryRaw`
@@ -103,8 +106,11 @@ function createAdminStatsRepository({ prisma }) {
         ),
         pay AS (
           -- capture time (see growthDaily), aliased so the week maths below reads it
-          SELECT u.id AS user_id, pm.updated_at AS created_at, pm.amount
+          -- days = the window this payment bought (plan price → plan days, else whole months)
+          SELECT u.id AS user_id, pm.updated_at AS created_at, pm.amount,
+            COALESCE(pl.days, GREATEST(1, round(pm.amount / ${monthPaise}::numeric)) * ${period}::int)::int AS days
           FROM payments pm JOIN u ON u.id = COALESCE(pm.on_behalf_of_user_id, pm.user_id)
+          LEFT JOIN jsonb_to_recordset(${plans}::jsonb) AS pl(amount int, days int) ON pl.amount = pm.amount
           WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED}
         ),
         firstpay AS (SELECT user_id, min(created_at) AS at FROM pay GROUP BY 1),
@@ -122,17 +128,20 @@ function createAdminStatsRepository({ prisma }) {
           (SELECT COALESCE(sum(p.amount), 0) FROM pay p WHERE p.created_at AT TIME ZONE ${tz} >= w.wk AND p.created_at AT TIME ZONE ${tz} < w.asof)::int AS "revenuePaise",
           (SELECT count(DISTINCT p.user_id) FROM pay p
             WHERE p.created_at AT TIME ZONE ${tz} < w.asof
-              AND p.created_at AT TIME ZONE ${tz} >= w.asof - make_interval(days => ${period}::int))::int AS "activePaid",
+              AND p.created_at AT TIME ZONE ${tz} >= w.asof - make_interval(days => p.days))::int AS "activePaid",
+          (SELECT COALESCE(round(sum(p.amount * ${period}::numeric / p.days)), 0) FROM pay p
+            WHERE p.created_at AT TIME ZONE ${tz} < w.asof
+              AND p.created_at AT TIME ZONE ${tz} >= w.asof - make_interval(days => p.days))::int AS "mrrPaise",
           (SELECT count(*) FROM pay p
-            WHERE (p.created_at + make_interval(days => ${period}::int)) AT TIME ZONE ${tz} >= w.wk
-              AND (p.created_at + make_interval(days => ${period}::int)) AT TIME ZONE ${tz} < w.wk + interval '7 days'
-              AND p.created_at + make_interval(days => ${period + RENEWAL_GRACE_DAYS}::int) <= now())::int AS "renewalsDue",
+            WHERE (p.created_at + make_interval(days => p.days)) AT TIME ZONE ${tz} >= w.wk
+              AND (p.created_at + make_interval(days => p.days)) AT TIME ZONE ${tz} < w.wk + interval '7 days'
+              AND p.created_at + make_interval(days => p.days + ${RENEWAL_GRACE_DAYS}::int) <= now())::int AS "renewalsDue",
           (SELECT count(*) FROM pay p
-            WHERE (p.created_at + make_interval(days => ${period}::int)) AT TIME ZONE ${tz} >= w.wk
-              AND (p.created_at + make_interval(days => ${period}::int)) AT TIME ZONE ${tz} < w.wk + interval '7 days'
-              AND p.created_at + make_interval(days => ${period + RENEWAL_GRACE_DAYS}::int) <= now()
+            WHERE (p.created_at + make_interval(days => p.days)) AT TIME ZONE ${tz} >= w.wk
+              AND (p.created_at + make_interval(days => p.days)) AT TIME ZONE ${tz} < w.wk + interval '7 days'
+              AND p.created_at + make_interval(days => p.days + ${RENEWAL_GRACE_DAYS}::int) <= now()
               AND EXISTS (SELECT 1 FROM pay n WHERE n.user_id = p.user_id AND n.created_at > p.created_at
-                AND n.created_at <= p.created_at + make_interval(days => ${period + RENEWAL_GRACE_DAYS}::int)))::int AS "renewed",
+                AND n.created_at <= p.created_at + make_interval(days => p.days + ${RENEWAL_GRACE_DAYS}::int)))::int AS "renewed",
           (SELECT count(*) FROM ride_contacts c JOIN u ON u.id = c.user_id
             WHERE c.contacted_at AT TIME ZONE ${tz} >= w.wk AND c.contacted_at AT TIME ZONE ${tz} < w.asof)::int AS "contacts",
           (SELECT count(DISTINCT a.uid) FROM (

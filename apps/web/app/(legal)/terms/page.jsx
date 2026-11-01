@@ -9,7 +9,7 @@ export default function TermsAndConditions() {
     <article className="prose prose-gray max-w-none">
       <h1>Terms &amp; Conditions</h1>
       <p className="text-sm text-gray-500">
-        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: September 23, 2026
+        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: November 1, 2026
       </p>
 
       <h2>1. Acceptance of Terms</h2>
@@ -90,14 +90,16 @@ export default function TermsAndConditions() {
 
       <h3>5.2 Paid Membership</h3>
       <p>
-        Revealing a poster&apos;s contact number requires a paid membership at{' '}
-        <strong>₹149 per 30 days</strong> on a rolling basis.
+        Revealing a poster&apos;s contact number requires a paid, prepaid membership. Plans:{' '}
+        <strong>₹149 for 30 days</strong>, <strong>₹399 for 90 days</strong>,{' '}
+        <strong>₹749 for 180 days</strong> or <strong>₹1,199 for 365 days</strong>. Each is a
+        one-time payment; nothing renews automatically.
       </p>
 
       <h3>5.3 Renewal and Stacking</h3>
       <p>
         If you renew before your current subscription expires, the remaining days are added to your
-        new 30-day period. Early renewal stacks — it does not reset your expiry date.
+        new plan period. Early renewal stacks — it does not reset your expiry date.
       </p>
 
       <h3>5.4 Billing</h3>

@@ -96,15 +96,17 @@ function createCashfreeClient({ appId, secretKey, env, returnUrl }) {
  * order is instantly "paid" so the demo upgrade→credit flow runs without a gateway.
  */
 function createStubCashfreeClient() {
+  const amounts = new Map(); // orderId → rupees, so a stub "payment" matches the plan price
   return {
-    async createOrder({ orderId }) {
+    async createOrder({ orderId, amountRupees }) {
+      amounts.set(orderId, amountRupees);
       return { id: orderId, paymentSessionId: `session_stub_${orderId}` };
     },
     async getActiveSession(orderId) {
       return `session_stub_${orderId}`;
     },
     async getPaymentState(orderId) {
-      return { state: 'paid', paymentId: `stub_pay_${orderId}`, amountRupees: SUBSCRIPTION_PLAN.PRICE_PAISE / 100 };
+      return { state: 'paid', paymentId: `stub_pay_${orderId}`, amountRupees: amounts.get(orderId) ?? SUBSCRIPTION_PLAN.PRICE_PAISE / 100 };
     },
   };
 }

@@ -1,6 +1,6 @@
 {
   "title": "Membership",
-  "price": "₹149 / month",
+  "price": "From ₹100 / month",
   "none": {
     "badge": "Not subscribed",
     "note": "Subscribe to contact drivers."
@@ -16,7 +16,8 @@
   "cta": {
     "renew": "Renew membership",
     "subscribe": "Subscribe now",
-    "processing": "Opening checkout…"
+    "processing": "Opening checkout…",
+    "withPrice": "{label} · {price}"
   },
   "success": {
     "title": "You're all set!",
@@ -36,19 +37,26 @@
   },
   "securedBy": "Secured by Cashfree · UPI · Cards",
   "plan": {
-    "title": "Monthly Plan",
-    "popular": "Popular",
-    "perMonth": "/month",
-    "tagline": "Full access to every feature",
+    "title": "Membership plan",
     "feat1": "Unlimited driver contacts",
     "feat2": "Post unlimited duties",
-    "feat3": "Renews every 30 days · cancel anytime"
+    "feat3": "One-time payment · no auto-renew · time adds on top",
+    "months": "{count, plural, one {# month} other {# months}}",
+    "perMonthPrice": "{price}/month",
+    "save": "Save {amount}",
+    "off": "{pct}% OFF",
+    "bestNote": "Just {price}/month",
+    "choose": "Choose your plan",
+    "tag": {
+      "popular": "Most popular",
+      "best": "Best value"
+    }
   },
   "refer": {
     "title": "Refer & Earn",
     "hero": {
       "title": "Refer {count} drivers, get 1 month free",
-      "sub": "Counts when your friend buys membership (₹149). No limit — more friends, more free months."
+      "sub": "Counts when your friend buys any membership plan. No limit — more friends, more free months."
     },
     "progress": "{done} of {total} toward your next free month",
     "earned": "{count, plural, one {# free month earned} other {# free months earned}}",

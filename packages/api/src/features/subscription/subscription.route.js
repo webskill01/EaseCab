@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const { verifyPaymentSchema, paymentsListQuerySchema } = require('@easecab/shared');
+const { checkoutSchema, verifyPaymentSchema, paymentsListQuerySchema } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
@@ -17,9 +17,9 @@ const { sendSuccess } = require('../../http/respond');
 function createSubscriptionRouter({ service, requireAuth }) {
   const router = express.Router();
 
-  // Create / reuse the ₹149 Cashfree order; returns the payment_session_id for checkout.
-  router.post('/checkout', requireAuth, async (req, res) => {
-    const data = await service.createCheckout(req.user.id);
+  // Create / reuse the Cashfree order for the chosen plan; returns the payment_session_id.
+  router.post('/checkout', requireAuth, validate(checkoutSchema), async (req, res) => {
+    const data = await service.createCheckout(req.user.id, req.valid.body.plan);
     sendSuccess(res, { data });
   });
 

@@ -27,7 +27,8 @@ describe('useCheckout', () => {
     verifyPayment.mockResolvedValue({ credited: true })
 
     const { result } = renderHook(() => useCheckout(), { wrapper })
-    await act(async () => { await result.current.start() })
+    await act(async () => { await result.current.start('m3') })
+    expect(createCheckout).toHaveBeenCalledWith('m3')
 
     expect(openCheckout).toHaveBeenCalledWith(expect.objectContaining({ order: ORDER }))
     expect(verifyPayment).toHaveBeenCalledWith({ orderId: 'sub_1' })

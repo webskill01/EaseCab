@@ -26,7 +26,7 @@ test('growth maps rows, converts paise to rupees and sums totals', async () => {
 
 const raw = (o = {}) => ({
   week: new Date('2026-10-12T00:00:00Z'), signups: 100, totalSignups: 200, newPayers: 10, totalPayers: 30,
-  payments: 12, revenuePaise: 178800, activePaid: 25, renewalsDue: 20, renewed: 15, contacts: 60,
+  payments: 12, revenuePaise: 178800, activePaid: 25, mrrPaise: 372500, renewalsDue: 20, renewed: 15, contacts: 60,
   activeDrivers: 40, botRides: 90, botContactedFast: 50, postedRides: 10, postedContactedFast: 5, ...o,
 });
 
@@ -56,10 +56,10 @@ test('trackRecord returns null ratios when there is nothing to divide', async ()
 
 test('trackRecord counts active paid from payments only, never the live member count', async () => {
   const svc = createAdminStatsService({
-    repo: { async trackRecordWeekly() { return [raw({ activePaid: 30 }), raw({ activePaid: 20 })]; }, async activeMembers() { return 32; } },
+    repo: { async trackRecordWeekly() { return [raw({ activePaid: 30, mrrPaise: 447000 }), raw({ activePaid: 20 })]; }, async activeMembers() { return 32; } },
   });
   const [now, prev] = (await svc.trackRecord()).weeks;
   assert.strictEqual(now.activePaid, 30);
-  assert.strictEqual(now.mrr, 30 * 149);
+  assert.strictEqual(now.mrr, 4470); // the repo's per-plan monthly share, not activePaid × ₹149
   assert.strictEqual(prev.activePaid, 20);
 });

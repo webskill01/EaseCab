@@ -277,3 +277,47 @@ test('listPayments returns a nextCursor when the page is full (limit+1 fetched)'
   assert.strictEqual(out.payments.length, 2);
   assert.ok(typeof out.nextCursor === 'string' && out.nextCursor.length > 0);
 });
+
+test('checkout charges the chosen plan price from the server table', async () => {
+  let sent = null;
+  let stored = null;
+  const repo = baseRepo({ async createOrderRecord(a) { stored = a; } });
+  const cashfree = { async createOrder(a) { sent = a; return { id: a.orderId, paymentSessionId: 's' }; } };
+  const svc = createSubscriptionService({ repo, cashfree, config: CONFIG });
+  const out = await svc.createCheckout('u1', 'm12');
+  assert.strictEqual(sent.amountRupees, 1199);
+  assert.strictEqual(stored.amount, 119900);
+  assert.strictEqual(out.amount, 119900);
+});
+
+test('checkout does NOT reuse a still-payable open order for a different plan', async () => {
+  const repo = baseRepo({ async findOpenOrder() { return { razorpayOrderId: 'sub_m1', amount: 14900 }; } });
+  const cashfree = {
+    async getActiveSession(id) { return `sess_${id}`; },
+    async getPaymentState() { throw new Error('a live order must not be settled'); },
+    async createOrder(a) { return { id: a.orderId, paymentSessionId: 'sess_new' }; },
+  };
+  const svc = createSubscriptionService({ repo, cashfree, config: CONFIG });
+  const out = await svc.createCheckout('u1', 'm6');
+  assert.notStrictEqual(out.orderId, 'sub_m1');
+  assert.strictEqual(out.amount, 74900);
+});
+
+test('checkout with an unknown plan id → VALIDATION_ERROR (no order)', async () => {
+  const cashfree = { async createOrder() { throw new Error('should not be called'); } };
+  const svc = createSubscriptionService({ repo: baseRepo(), cashfree, config: CONFIG });
+  await assert.rejects(svc.createCheckout('u1', 'm2'), (e) => e.code === 'VALIDATION_ERROR');
+});
+
+test('a paid 6-month order extends membership by 180 days', async () => {
+  let credited = null;
+  const repo = baseRepo({
+    async findOrderRecord() { return { userId: 'u1', amount: 74900 }; },
+    async recordCaptureAndExtend(a) { credited = a; return { duplicate: false }; },
+  });
+  const svc = createSubscriptionService({ repo, cashfree: paid('9', 749), config: CONFIG });
+  const before = Date.now();
+  assert.deepStrictEqual(await svc.verifyPayment({ userId: 'u1', orderId: 'sub_1' }), { credited: true });
+  const days = (credited.newExpiresAt.getTime() - before) / DAY;
+  assert.ok(days > 179.99 && days < 180.01, `got ${days} days`);
+});

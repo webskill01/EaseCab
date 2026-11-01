@@ -3,14 +3,16 @@
 const {
   AppError,
   ERROR_CODES,
-  SUBSCRIPTION_PLAN,
   CASHFREE,
+  PLAN_ID,
   CHECKOUT_RATE_LIMIT,
   VERIFY_RATE_LIMIT,
   WEBHOOK_RATE_LIMIT,
   PAYMENT_RECONCILE,
   isSubscriptionActive,
   computeRenewal,
+  planById,
+  periodDaysForAmount,
 } = require('@easecab/shared');
 const crypto = require('node:crypto');
 const { verifyWebhookSignature } = require('../../lib/cashfreeSignature');
@@ -44,7 +46,8 @@ function createSubscriptionService({ repo, cashfree, config, onPaid = async () =
     if (!acquired) return { credited: false, reason: 'duplicate' };
 
     const sub = await repo.findSubscriptionForCredit(order.userId);
-    const { newExpiresAt, paidStartedAt } = computeRenewal(sub);
+    // The amount identifies the plan (prices are unique), so the window matches what was paid.
+    const { newExpiresAt, paidStartedAt } = computeRenewal(sub, new Date(), periodDaysForAmount(order.amount));
     const { duplicate } = await repo.recordCaptureAndExtend({
       userId: order.userId,
       razorpayOrderId: orderId,
@@ -81,22 +84,33 @@ function createSubscriptionService({ repo, cashfree, config, onPaid = async () =
   }
 
   return {
-    /** Idempotent checkout — reuse the user's still-payable order, else create one (anti double-charge). */
-    async createCheckout(userId) {
+    /**
+     * Idempotent checkout — reuse the user's still-payable order for the same plan, else
+     * create one (anti double-charge). The price always comes from the server's plan table.
+     * @param {string} userId
+     * @param {string} [planId] - PLAN_ID value (route validates it); defaults to monthly
+     */
+    async createCheckout(userId, planId = PLAN_ID.M1) {
       const attempts = await repo.incrCheckoutAttempts(userId, CHECKOUT_RATE_LIMIT.WINDOW_SEC);
       if (attempts > CHECKOUT_RATE_LIMIT.MAX_PER_WINDOW) {
         throw AppError.fromCode(ERROR_CODES.RATE_LIMITED);
       }
-      const amount = SUBSCRIPTION_PLAN.PRICE_PAISE;
+      const plan = planById(planId);
+      if (!plan) throw AppError.fromCode(ERROR_CODES.VALIDATION_ERROR);
+      const amount = plan.pricePaise;
       const open = await repo.findOpenOrder(userId);
       if (open) {
         const session = await cashfree.getActiveSession(open.razorpayOrderId);
-        if (session) return { orderId: open.razorpayOrderId, paymentSessionId: session, amount: open.amount, mode: env };
-        // Paid but not yet credited (user refreshed mid-checkout, webhook still in flight):
-        // credit it now instead of opening a second order the user could pay twice.
-        const settled = await settleFromGateway(open.razorpayOrderId, { userId, amount: open.amount });
-        if (settled.credited || settled.reason === 'duplicate') return { alreadyPaid: true };
-        // Expired unpaid — leave the row `created`; the new order becomes the open one.
+        if (session && open.amount === amount) {
+          return { orderId: open.razorpayOrderId, paymentSessionId: session, amount: open.amount, mode: env };
+        }
+        // No live session = paid-but-not-credited (refresh mid-checkout, webhook in flight)
+        // or expired. Credit a paid one now instead of opening a second order. A still-payable
+        // order for a DIFFERENT plan is left alone; the new order becomes the open one.
+        if (!session) {
+          const settled = await settleFromGateway(open.razorpayOrderId, { userId, amount: open.amount });
+          if (settled.credited || settled.reason === 'duplicate') return { alreadyPaid: true };
+        }
       }
       const payer = await repo.findPayer(userId);
       // Cashfree order_id: [A-Za-z0-9_-], max 45 chars → "sub_" + 32 hex.

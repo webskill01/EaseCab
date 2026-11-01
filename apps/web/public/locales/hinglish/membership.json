@@ -1,6 +1,6 @@
 {
   "title": "Membership",
-  "price": "₹149 / month",
+  "price": "₹100 / month se shuru",
   "none": {
     "badge": "Subscribed nahi",
     "note": "Driver se contact ke liye subscribe karo."
@@ -16,7 +16,8 @@
   "cta": {
     "renew": "Membership renew karo",
     "subscribe": "Abhi subscribe karo",
-    "processing": "Checkout khul raha hai…"
+    "processing": "Checkout khul raha hai…",
+    "withPrice": "{label} · {price}"
   },
   "success": {
     "title": "Sab set hai!",
@@ -36,19 +37,26 @@
   },
   "securedBy": "Cashfree se secure · UPI · Cards",
   "plan": {
-    "title": "Monthly Plan",
-    "popular": "Popular",
-    "perMonth": "/month",
-    "tagline": "Har feature tak puri access",
+    "title": "Membership Plan",
     "feat1": "Unlimited driver contacts",
     "feat2": "Unlimited duties post karein",
-    "feat3": "Har 30 din mein renew · kabhi bhi cancel"
+    "feat3": "Ek baar payment · auto-renew nahi · time upar judta hai",
+    "months": "{count, plural, one {# mahina} other {# mahine}}",
+    "perMonthPrice": "{price}/month",
+    "save": "{amount} ki bachat",
+    "off": "{pct}% OFF",
+    "bestNote": "Sirf {price}/month",
+    "choose": "Apna plan chuno",
+    "tag": {
+      "popular": "Sabse popular",
+      "best": "Best value"
+    }
   },
   "refer": {
     "title": "Refer karo, kamao",
     "hero": {
       "title": "{count} driver refer karo, 1 mahina free pao",
-      "sub": "Tab count hoga jab aapka dost membership (₹149) lega. Koi limit nahi — jitne dost, utne free mahine."
+      "sub": "Tab count hoga jab aapka dost koi bhi membership plan lega. Koi limit nahi — jitne dost, utne free mahine."
     },
     "progress": "Agle free mahine ke liye {done}/{total}",
     "earned": "{count, plural, one {# free mahina mila} other {# free mahine mile}}",

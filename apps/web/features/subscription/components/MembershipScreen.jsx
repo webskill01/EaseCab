@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Crown, Check, Info, Shield } from '@/components/ui/icons'
 import { membershipView, MEMBERSHIP_STATE } from '../lib/membership'
@@ -7,6 +8,8 @@ import { formatPaymentDate } from '../lib/paymentView'
 import { useMembership } from '../hooks/useMembership'
 import { useCheckout } from '../hooks/useCheckout'
 import { PaymentHistory } from './PaymentHistory'
+import { PlanPicker } from './PlanPicker'
+import { PLANS, DEFAULT_PLAN_ID, RENEW_PLAN_ID, rupees } from '../lib/plans'
 
 const CTA_KEY = Object.freeze({ none: 'subscribe', active: 'renew', expired: 'renew' })
 
@@ -34,50 +37,27 @@ function StatusCard({ state, note, t }) {
   )
 }
 
-/** Featured ₹149 "Popular" plan card (membership.jsx plan card). */
-function PlanCard({ t }) {
-  return (
-    <section className="overflow-hidden rounded-2xl border-[1.5px] border-ec-blue shadow-[0_8px_24px_rgba(37,99,235,0.15)]">
-      <div className="bg-ec-blueInk px-[18px] pb-4 pt-[18px] text-white">
-        <div className="flex items-center justify-between">
-          <span className="text-[15px] font-bold">{t('plan.title')}</span>
-          <span className="rounded-md bg-white px-2 py-1 text-[11px] font-extrabold uppercase tracking-wide text-ec-blueInk">{t('plan.popular')}</span>
-        </div>
-        <div className="mt-2.5 flex items-baseline gap-1">
-          <span className="text-[40px] font-extrabold leading-none tracking-tight">₹149</span>
-          <span className="text-[15px] font-semibold text-ec-skyDeep">{t('plan.perMonth')}</span>
-        </div>
-        <p className="mt-1 text-[13px] font-medium text-ec-skyDeep">{t('plan.tagline')}</p>
-      </div>
-      <ul className="bg-white p-4">
-        {['feat1', 'feat2', 'feat3'].map((k) => (
-          <li key={k} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
-            <span className="mt-0.5 inline-flex text-ec-success"><Check size={17} /></span>
-            <span className="text-[13.5px] font-semibold leading-snug text-ec-ink">{t(`plan.${k}`)}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-/** Membership hub (SCREENS §6/§8) — status card + ₹149 plan + Cashfree upgrade/renew + history. */
+/** Membership hub (SCREENS §6/§8) — status card + plan picker + Cashfree upgrade/renew + history. */
 export function MembershipScreen() {
   const t = useTranslations('membership')
   const { data: sub, isLoading, isError } = useMembership()
   const checkout = useCheckout()
+  const [picked, setPicked] = useState(null)
 
   if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
   if (isError) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
 
   const v = membershipView(sub)
+  // New users start on the cheapest entry point; returning members on the popular 6-month plan.
+  const planId = picked ?? (v.state === MEMBERSHIP_STATE.NONE ? DEFAULT_PLAN_ID : RENEW_PLAN_ID)
+  const price = rupees(PLANS.find((p) => p.id === planId).price)
   const note =
     v.state === MEMBERSHIP_STATE.ACTIVE
       ? t('active.note', { date: formatPaymentDate(sub?.expiresAt) })
       : t(`${v.state}.note`)
 
   return (
-    // Block + space-y, not flex-col: flex children with overflow-hidden (PlanCard) get
+    // Block + space-y, not flex-col: flex children with overflow-hidden get
     // min-height:0 and shrink, so on short screens the plan card was cut off.
     <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-ec-bg p-4">
       <h1 className="text-[20px] font-extrabold text-ec-ink">{t('title')}</h1>
@@ -91,7 +71,7 @@ export function MembershipScreen() {
       ) : (
         <>
           <StatusCard state={v.state} note={note} t={t} />
-          <PlanCard t={t} />
+          <PlanPicker value={planId} onChange={setPicked} t={t} />
 
           {checkout.errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t('error.checkout')}</p>}
           {checkout.pending && <p className="text-[13px] font-semibold text-ec-ink60">{t('notice.pending')}</p>}
@@ -100,11 +80,11 @@ export function MembershipScreen() {
             <button
               type="button"
               disabled={checkout.checkingOut}
-              onClick={() => checkout.start()}
+              onClick={() => checkout.start(planId)}
               className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue disabled:opacity-60"
             >
               <Crown size={18} />
-              {checkout.checkingOut ? t('cta.processing') : t(`cta.${CTA_KEY[v.state]}`)}
+              {checkout.checkingOut ? t('cta.processing') : t('cta.withPrice', { label: t(`cta.${CTA_KEY[v.state]}`), price })}
             </button>
             <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-ec-ink40">
               <Shield size={13} />{t('securedBy')}
