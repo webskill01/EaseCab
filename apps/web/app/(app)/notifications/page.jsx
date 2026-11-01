@@ -9,11 +9,13 @@ import { NotificationSettings } from '@/features/notifications/components/Notifi
  * button and the profile → Notifications row (ride-alert prefs + alert cities). */
 export default function NotificationsPage() {
   const router = useRouter()
+  // A freshly reloaded tab has no history to go back to (router.back() did nothing) → feed.
+  const onBack = () => (window.history.length > 1 ? router.back() : router.replace('/feed'))
   const t = useTranslations('settings')
   const tc = useTranslations('common')
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
-      <OverlayHeader title={t('notifications.title')} onBack={() => router.back()} backLabel={tc('actions.back')} />
+      <OverlayHeader title={t('notifications.title')} onBack={onBack} backLabel={tc('actions.back')} />
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
         <NotificationSettings />
       </div>
