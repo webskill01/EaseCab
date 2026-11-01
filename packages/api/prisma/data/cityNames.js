@@ -610,6 +610,28 @@ const CITY_NAMES = Object.freeze({
   Bagdogra: { pa: 'ਬਾਗਡੋਗਰਾ', hi: 'बागडोगरा' },
   Tarapith: { pa: 'ਤਾਰਾਪੀਠ', hi: 'तारापीठ' },
   Gangtok: { pa: 'ਗੰਗਟੋਕ', hi: 'गंगटोक' },
+  // 2026-11-01 queue towns
+  Malaudh: { pa: 'ਮਲੌਦ', hi: 'मलौद' },
+  Sardulgarh: { pa: 'ਸਰਦੂਲਗੜ੍ਹ', hi: 'सरदूलगढ़' },
+  Gidderbaha: { pa: 'ਗਿੱਦੜਬਾਹਾ', hi: 'गिद्दड़बाहा' },
+  Tanakpur: { pa: 'ਟਨਕਪੁਰ', hi: 'टनकपुर' },
+  'Khadur Sahib': { pa: 'ਖਡੂਰ ਸਾਹਿਬ', hi: 'खडूर साहिब' },
+  'Badhni Kalan': { pa: 'ਬੱਧਨੀ ਕਲਾਂ', hi: 'बधनी कलां' },
+  'Sri Hargobindpur': { pa: 'ਸ੍ਰੀ ਹਰਗੋਬਿੰਦਪੁਰ', hi: 'श्री हरगोबिंदपुर' },
+  'Jandiala Guru': { pa: 'ਜੰਡਿਆਲਾ ਗੁਰੂ', hi: 'जंडियाला गुरु' },
+  'Nurpur Bedi': { pa: 'ਨੂਰਪੁਰ ਬੇਦੀ', hi: 'नूरपुर बेदी' },
+  Sadhaura: { pa: 'ਸਢੌਰਾ', hi: 'सढौरा' },
+  Morni: { pa: 'ਮੋਰਨੀ', hi: 'मोरनी' },
+  Kaladhungi: { pa: 'ਕਾਲਾਢੂੰਗੀ', hi: 'कालाढूंगी' },
+  Bhawarna: { pa: 'ਭਵਾਰਨਾ', hi: 'भवारना' },
+  Gogamedi: { pa: 'ਗੋਗਾਮੇੜੀ', hi: 'गोगामेड़ी' },
+  Sariska: { pa: 'ਸਰਿਸਕਾ', hi: 'सरिस्का' },
+  Pakhowal: { pa: 'ਪੱਖੋਵਾਲ', hi: 'पखोवाल' },
+  Khalilabad: { pa: 'ਖਲੀਲਾਬਾਦ', hi: 'खलीलाबाद' },
+  Malda: { pa: 'ਮਾਲਦਾ', hi: 'मालदा' },
+  Chakrata: { pa: 'ਚਕਰਾਤਾ', hi: 'चकराता' },
+  'Radha Kund': { pa: 'ਰਾਧਾ ਕੁੰਡ', hi: 'राधा कुंड' },
+  Tosh: { pa: 'ਤੋਸ਼', hi: 'तोश' },
 });
 
 module.exports = { CITY_NAMES };

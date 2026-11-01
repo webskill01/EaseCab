@@ -763,6 +763,28 @@ const CITIES = [
   { canonicalName: 'Bagdogra', state: 'West Bengal', district: 'Darjeeling', type: 'town', lat: 26.7000, lng: 88.3200, aliases: ['bagdogra', 'bagdogra airport'] },
   { canonicalName: 'Tarapith', state: 'West Bengal', district: 'Birbhum', type: 'town', lat: 24.1100, lng: 87.8000, aliases: ['tarapith', 'tara pith', 'tara pith wb'] },
   { canonicalName: 'Gangtok', state: 'Sikkim', district: 'Gangtok', type: 'city', lat: 27.3300, lng: 88.6100, aliases: ['gangtok', 'gangtok wb'] },
+  // 2026-11-01: towns from the unresolved-city queue (manual backfill)
+  { canonicalName: 'Malaudh', state: 'Punjab', district: 'Ludhiana', type: 'town', lat: 30.6300, lng: 75.9400, aliases: ['malaudh', 'maloudh', 'maludh', 'maluad', 'malod'] },
+  { canonicalName: 'Sardulgarh', state: 'Punjab', district: 'Mansa', type: 'town', lat: 29.6970, lng: 75.2390, aliases: ['sardulgarh', 'sardoolghar', 'sardhulghar', 'sardulgarh mansa'] },
+  { canonicalName: 'Gidderbaha', state: 'Punjab', district: 'Sri Muktsar Sahib', type: 'town', lat: 30.2000, lng: 74.6600, aliases: ['gidderbaha', 'giddarbaha', 'gidarbaha'] },
+  { canonicalName: 'Tanakpur', state: 'Uttarakhand', district: 'Champawat', type: 'town', lat: 29.0740, lng: 80.1110, aliases: ['tanakpur', 'tankpur'] },
+  { canonicalName: 'Khadur Sahib', state: 'Punjab', district: 'Tarn Taran', type: 'town', lat: 31.4200, lng: 75.1000, aliases: ['khadur sahib', 'khadursahib', 'khadoor sahib'] },
+  { canonicalName: 'Badhni Kalan', state: 'Punjab', district: 'Moga', type: 'town', lat: 30.6800, lng: 75.2900, aliases: ['badhni kalan', 'badhni'] },
+  { canonicalName: 'Sri Hargobindpur', state: 'Punjab', district: 'Gurdaspur', type: 'town', lat: 31.6800, lng: 75.4800, aliases: ['sri hargobindpur', 'hargobindpur'] },
+  { canonicalName: 'Jandiala Guru', state: 'Punjab', district: 'Amritsar', type: 'town', lat: 31.5600, lng: 75.0300, aliases: ['jandiala guru'] },
+  { canonicalName: 'Nurpur Bedi', state: 'Punjab', district: 'Rupnagar', type: 'town', lat: 31.1700, lng: 76.4800, aliases: ['nurpurbedi', 'noorpurbedi'] },
+  { canonicalName: 'Sadhaura', state: 'Haryana', district: 'Yamunanagar', type: 'town', lat: 30.3800, lng: 77.2200, aliases: ['sadhaura', 'sadhoura', 'sadhora'] },
+  { canonicalName: 'Morni', state: 'Haryana', district: 'Panchkula', type: 'town', lat: 30.7000, lng: 77.0800, aliases: ['morni', 'morni hills', 'morni hill'] },
+  { canonicalName: 'Kaladhungi', state: 'Uttarakhand', district: 'Nainital', type: 'town', lat: 29.2800, lng: 79.3500, aliases: ['kaladhungi'] },
+  { canonicalName: 'Bhawarna', state: 'Himachal Pradesh', district: 'Kangra', type: 'town', lat: 32.0600, lng: 76.4700, aliases: ['bhawarna'] },
+  { canonicalName: 'Gogamedi', state: 'Rajasthan', district: 'Hanumangarh', type: 'town', lat: 29.3100, lng: 74.7900, aliases: ['gogamedi', 'goga medi', 'gogameri'] },
+  { canonicalName: 'Sariska', state: 'Rajasthan', district: 'Alwar', type: 'town', lat: 27.3200, lng: 76.4300, aliases: ['sariska'] },
+  { canonicalName: 'Pakhowal', state: 'Punjab', district: 'Ludhiana', type: 'town', lat: 30.7000, lng: 75.8700, aliases: ['pakhowal'] },
+  { canonicalName: 'Khalilabad', state: 'Uttar Pradesh', district: 'Sant Kabir Nagar', type: 'town', lat: 26.7700, lng: 83.0700, aliases: ['khalilabad'] },
+  { canonicalName: 'Malda', state: 'West Bengal', district: 'Malda', type: 'city', lat: 25.0100, lng: 88.1400, aliases: ['malda'] },
+  { canonicalName: 'Chakrata', state: 'Uttarakhand', district: 'Dehradun', type: 'town', lat: 30.7000, lng: 77.8700, aliases: ['chakrata', 'chakrata uttrakhand'] },
+  { canonicalName: 'Radha Kund', state: 'Uttar Pradesh', district: 'Mathura', type: 'town', lat: 27.5200, lng: 77.4800, aliases: ['radha kund', 'radhakund'] },
+  { canonicalName: 'Tosh', state: 'Himachal Pradesh', district: 'Kullu', type: 'town', lat: 32.0100, lng: 77.4500, aliases: ['tosh', 'tosh village'] },
 ];
 
 module.exports = { CITIES };
