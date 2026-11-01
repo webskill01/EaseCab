@@ -153,8 +153,14 @@ function createAdminStatsRepository({ prisma }) {
         FROM w ORDER BY w.wk DESC`;
     },
 
-    /** Members with time left right now who joined since launch, excluding reviewer phones + free members. */
+    /**
+     * Members with time left right now who joined since launch OR paid since launch
+     * (pre-launch signups who pay are real customers, same as growthDaily's paidAccounts),
+     * excluding reviewer phones + free members.
+     */
     async activeMembers() {
+      const launch = new Date(`${ADMIN_STATISTICS.LAUNCH_DATE}T00:00:00+05:30`);
+      const captured = { status: PAYMENT_STATUS.CAPTURED, updatedAt: { gte: launch } }; // updatedAt = capture time
       return prisma.subscription.count({
         where: {
           status: SUBSCRIPTION_STATUS.ACTIVE,
@@ -162,7 +168,11 @@ function createAdminStatsRepository({ prisma }) {
           user: {
             phone: { notIn: [...ADMIN_STATISTICS.EXCLUDED_PHONES] },
             complimentary: { is: null }, // free (barter) members are not customers
-            createdAt: { gte: new Date(`${ADMIN_STATISTICS.LAUNCH_DATE}T00:00:00+05:30`) }, // pre-launch = test data
+            OR: [
+              { createdAt: { gte: launch } }, // pre-launch signups that never paid = test data
+              { paymentsOnBehalf: { some: captured } },
+              { payments: { some: { ...captured, onBehalfOfUserId: null } } }, // founder paying for others isn't the founder's own
+            ],
           },
         },
       });
