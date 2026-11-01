@@ -131,8 +131,8 @@ function PosterRow({ ride }) {
 }
 
 /**
- * Ride card — CardA "Professional" (design_handoff dirA.jsx). Bot rides grey out +
- * read "Likely booked" past the 5-min fresh window; verified rides get a blue accent
+ * Ride card — CardA "Professional" (design_handoff dirA.jsx). Bot rides read "Likely booked"
+ * (only Call/WhatsApp grey out — the card stays readable) past the 5-min fresh window; verified rides get a blue accent
  * + Verified badge. `now` is injected so the card ages live without re-fetching.
  *
  * @param {object} props
@@ -158,9 +158,9 @@ export function RideCard({ ride, now, onContact, onReport }) {
   return (
     <article
       data-status={display}
-      className={`relative rounded-ec-card border p-3 shadow-ec-card transition-opacity ${
+      className={`relative rounded-ec-card border p-3 shadow-ec-card ${
         verified ? 'border-ec-blue/20 bg-white' : 'border-ec-line bg-white'
-      } ${booked ? 'opacity-[0.66] grayscale-[0.55]' : ''}`}
+      }`}
     >
       {verified && <div className="absolute left-3 right-3 top-0 h-[3px] rounded-b-[3px] bg-ec-blue" />}
 
