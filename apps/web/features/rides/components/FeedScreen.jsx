@@ -124,6 +124,7 @@ export function FeedScreen() {
                 />
               </div>
             ))}
+            {feed.isFetchingMore && <RideCardSkeleton />}
           </>
         )}
       </div>

@@ -51,6 +51,18 @@ describe('useRidesFeed', () => {
     expect(result.current.rides.map((r) => r.id)).toEqual(['live1', 'r1'])
   })
 
+  it('scrolling near the bottom loads the next (older) page via the cursor', async () => {
+    listRides
+      .mockResolvedValueOnce({ rides: [botRow('r1'), botRow('r2')], nextCursor: 'cur1' })
+      .mockResolvedValueOnce({ rides: [botRow('r3')], nextCursor: null })
+    const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityIds: [] }), { wrapper })
+    await waitFor(() => expect(result.current.hasMore).toBe(true))
+    act(() => result.current.onScroll({ target: { scrollTop: 1000, scrollHeight: 1500, clientHeight: 400 } }))
+    await waitFor(() => expect(result.current.rides.map((r) => r.id)).toEqual(['r1', 'r2', 'r3']))
+    expect(listRides).toHaveBeenLastCalledWith({ cityIds: [], cursor: 'cur1' })
+    expect(result.current.hasMore).toBe(false)
+  })
+
   it('queues live rides (not prepended) once scrolled down, surfacing a pending count', async () => {
     listRides.mockResolvedValue({ rides: [botRow('r1')], nextCursor: null })
     const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.RIDES, cityIds: [] }), { wrapper })

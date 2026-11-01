@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { listRides, listVerifiedRides, RIDES_STREAM_URL } from '../services/ridesApi'
 import { toBotVM, toVerifiedVM, matchesCity } from '../lib/normalize'
 import { useRideStream, STREAM_STATUS } from './useRideStream'
@@ -11,6 +11,7 @@ const LIVE_CAP = 14 // max live-prepended rides held at the top
 const PENDING_CAP = 20 // max queued rides while the user is scrolled down
 const AGE_TICK_MS = 1000 // 1s: drives the live m:ss countdown on fresh cards (and the fresh→booked flip)
 const AT_TOP_PX = 24
+const LOAD_MORE_PX = 600 // start fetching the next page this far above the bottom
 
 /**
  * Merge live + base rides, de-duplicated by id (live wins), sorted newest-first by
@@ -51,17 +52,28 @@ export function useRidesFeed({ sub, cityIds }) {
   const cityKey = (cityIds || []).join(',')
   const ids = useMemo(() => (cityKey ? cityKey.split(',') : []), [cityKey])
 
-  const query = useQuery({
+  // Cursor pages: the first page is the newest 20; scrolling near the bottom pulls older
+  // pages until the server runs out (the full 24h feed), instead of stopping at 20.
+  const query = useInfiniteQuery({
     queryKey: ['feed', sub, cityKey || 'all'],
-    queryFn: () => (isVerified ? listVerifiedRides({ cityIds: ids }) : listRides({ cityIds: ids })),
+    queryFn: ({ pageParam }) => {
+      const params = { cityIds: ids, cursor: pageParam || undefined }
+      return isVerified ? listVerifiedRides(params) : listRides(params)
+    },
+    initialPageParam: null,
+    getNextPageParam: (last) => last.nextCursor || undefined,
     staleTime: 0, // SSE-driven (§15)
   })
 
   const base = useMemo(() => {
-    const data = query.data
-    if (!data) return []
-    return isVerified ? data.posts.map(toVerifiedVM) : data.rides.map(toBotVM)
+    const pages = query.data?.pages
+    if (!pages) return []
+    return isVerified ? pages.flatMap((p) => p.posts.map(toVerifiedVM)) : pages.flatMap((p) => p.rides.map(toBotVM))
   }, [query.data, isVerified])
+
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
+  const loadMoreRef = useRef(() => {})
+  loadMoreRef.current = () => { if (hasNextPage && !isFetchingNextPage) fetchNextPage() }
 
   const [extra, setExtra] = useState([]) // auto-prepended (user at top)
   const [pending, setPending] = useState([]) // queued (user scrolled down)
@@ -101,7 +113,9 @@ export function useRidesFeed({ sub, cityIds }) {
   })
 
   const onScroll = useCallback((e) => {
-    const top = (e?.target?.scrollTop ?? 0) < AT_TOP_PX
+    const el = e?.target
+    if (el && el.scrollHeight - el.scrollTop - el.clientHeight < LOAD_MORE_PX) loadMoreRef.current()
+    const top = (el?.scrollTop ?? 0) < AT_TOP_PX
     atTopRef.current = top
     setAtTop(top)
     if (top) {
@@ -139,5 +153,7 @@ export function useRidesFeed({ sub, cityIds }) {
     onScroll,
     flushPending,
     refetch: query.refetch,
+    isFetchingMore: isFetchingNextPage,
+    hasMore: Boolean(hasNextPage),
   }
 }
