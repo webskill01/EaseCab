@@ -20,6 +20,7 @@ const OUTCOMES = [
   ['blocked_number', 'Blocked number'],
   ['error', 'Errors'],
 ]
+const secs = (ms) => (ms < 10_000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms / 1000)}s`)
 const fmt = (t) => new Date(t).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
 function Grid({ title, rows }) {
@@ -84,9 +85,17 @@ export function SessionStats({ s }) {
   const seen = Object.values(o).reduce((a, b) => a + b, 0)
   const live = s.status === 'live'
   return (
-    <div className="grid gap-4 rounded-lg border border-ec-line p-3 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2">
       <RideAnalytics id={s.id} />
       <div className="space-y-3">
+        {s.delay ? (
+          <Grid
+            title={`Speed: WhatsApp group → app (last ${s.delay.samples} rides)`}
+            rows={[['Typical delay', secs(s.delay.median)], ['Slowest 5%', secs(s.delay.p95)], ['Slowest', secs(s.delay.max)]]}
+          />
+        ) : (
+          <p className="text-xs text-ec-ink60">Speed shows after this number saves its first rides.</p>
+        )}
         <Grid title="Messages" rows={[['Processed', seen], ...OUTCOMES.filter(([k]) => o[k]).map(([k, label]) => [label, o[k]])]} />
         <Grid
           title="Connection"
@@ -109,7 +118,7 @@ export function SessionGroups({ id }) {
   if (q.isError) return <p className="text-sm text-red-600">Could not load groups.</p>
   if (!q.data.length) return <p className="text-sm text-ec-ink60">No groups yet. They show up once the number is linked and connected.</p>
   return (
-    <ul className="max-h-80 divide-y divide-ec-line overflow-y-auto rounded-lg border border-ec-line text-sm">
+    <ul className="divide-y divide-ec-line overflow-y-auto rounded-lg border border-ec-line text-sm">
       {q.data.map((g) => (
         <li key={g.jid} className="flex items-center justify-between gap-2 px-3 py-1.5">
           <span className="min-w-0 truncate text-ec-ink">{g.name || <span className="font-mono text-xs text-ec-ink40">{g.jid}</span>}</span>

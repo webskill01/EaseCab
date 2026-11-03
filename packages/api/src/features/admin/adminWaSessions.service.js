@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 const {
   AppError, ERROR_CODES, HTTP_STATUS, SLOT_STATE, BOT_NUMBERS_KEY, BOT_SESSIONS_CHANGED_CHANNEL, BOT_PAIR_CMD_CHANNEL,
   SESSION_STATUS, PAIR_STATUS, WA_SESSIONS, RIDE_STATS_PERIOD_HOURS, botPairKey, botSlotStatsKey, botSlotGroupsKey,
-  botSlotRidesKey, botPairShareKey,
+  botSlotRidesKey, botSlotLagKey, botPairShareKey,
 } = require('@easecab/shared');
 
 const LIVE_BY_STATE = Object.freeze({
@@ -15,6 +15,18 @@ const LIVE_BY_STATE = Object.freeze({
   [SLOT_STATE.UNREGISTERED]: SESSION_STATUS.NOT_PAIRED,
   [SLOT_STATE.PAUSED]: SESSION_STATUS.PAUSED,
 });
+
+/**
+ * Group → app delay over recent saved rides.
+ * @param {string[]} samples - ms values from the bot's lag list
+ * @returns {?{ median: number, p95: number, max: number, samples: number }}
+ */
+function delayStats(samples) {
+  const v = (samples || []).map(Number).filter((n) => n >= 0).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const at = (q) => v[Math.min(v.length - 1, Math.floor(q * v.length))];
+  return { median: at(0.5), p95: at(0.95), max: v[v.length - 1], samples: v.length };
+}
 
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const parse = (s) => {
@@ -119,11 +131,12 @@ function createAdminWaSessionsService({ repo, redis, logger }) {
       const now = Date.now();
       const rows = await repo.list();
       const slots = rows.map((r) => r.slot);
-      const [liveMap, rides24h, groups, stats] = await Promise.all([
+      const [liveMap, rides24h, groups, stats, lags] = await Promise.all([
         redis.hgetall(BOT_NUMBERS_KEY),
         Promise.all(slots.map((s) => sumRides(s, RIDE_STATS_PERIOD_HOURS.day))),
         groupCounts(slots),
         Promise.all(slots.map((s) => redis.hgetall(botSlotStatsKey(s)))),
+        Promise.all(slots.map((s) => redis.lrange(botSlotLagKey(s), 0, -1))),
       ]);
       const sessions = rows.map((row, i) => {
         const live = parse((liveMap || {})[row.slot]);
@@ -136,6 +149,7 @@ function createAdminWaSessionsService({ repo, redis, logger }) {
           botStartedAt: live ? live.bootAt || null : null,
           groups: groups.bySlot[i],
           rides24h: rides24h[i].total,
+          delay: delayStats(lags[i]),
           outcomes: Object.fromEntries(Object.entries(stats[i] || {}).map(([k, v]) => [k, Number(v)])),
         };
       });
@@ -163,7 +177,8 @@ function createAdminWaSessionsService({ repo, redis, logger }) {
       const row = await repo.remove(id);
       if (!row) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       await notify(BOT_SESSIONS_CHANGED_CHANNEL, 'changed');
-      await redis.del(botSlotStatsKey(row.slot), botSlotGroupsKey(row.slot), botPairKey(row.slot), botSlotRidesKey(row.slot, 'all'));
+      await redis.del(botSlotStatsKey(row.slot), botSlotGroupsKey(row.slot), botPairKey(row.slot),
+        botSlotRidesKey(row.slot, 'all'), botSlotLagKey(row.slot));
       await redis.hdel(BOT_NUMBERS_KEY, row.slot);
       return { id };
     },
@@ -244,4 +259,4 @@ function createAdminWaSessionsService({ repo, redis, logger }) {
   };
 }
 
-module.exports = { createAdminWaSessionsService, deriveStatus };
+module.exports = { createAdminWaSessionsService, deriveStatus, delayStats };

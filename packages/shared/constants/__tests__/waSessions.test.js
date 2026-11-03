@@ -3,14 +3,14 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
-  botPairKey, botSlotStatsKey, botSlotGroupsKey, botSlotRidesKey, botPairShareKey, botMsgClaimKey,
+  botPairKey, botSlotStatsKey, botSlotGroupsKey, botSlotRidesKey, botSlotLagKey, botPairShareKey, botMsgClaimKey,
   adminWaSessionAnalyticsQuerySchema,
 } = require('../..');
 
 test('session redis keys are namespaced per slot and never collide', () => {
   const keys = [
     botPairKey('wa-1'), botSlotStatsKey('wa-1'), botSlotGroupsKey('wa-1'),
-    botSlotRidesKey('wa-1', 500), botSlotRidesKey('wa-1', 'all'), botPairShareKey('abc'), botMsgClaimKey('g@g.us', 'm1'),
+    botSlotRidesKey('wa-1', 500), botSlotRidesKey('wa-1', 'all'), botPairShareKey('abc'), botSlotLagKey('wa-1'), botMsgClaimKey('g@g.us', 'm1'),
   ];
   keys.forEach((k) => assert.match(k, /^easecab:bot:/));
   assert.equal(new Set(keys).size, keys.length);

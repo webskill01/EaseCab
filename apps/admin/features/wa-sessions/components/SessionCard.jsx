@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Smartphone, Link2, Trash2, Pencil, Check, X, Share2, Copy, Pause, Play, BarChart3, Users } from 'lucide-react'
 import { PairPanel } from './PairPanel'
 import { SessionStats, SessionGroups } from './SessionStats'
@@ -70,6 +70,31 @@ function ShareBox({ id }) {
   )
 }
 
+/** Popup over the page (closes on backdrop click, X or Escape) so panels don't stretch the list. */
+function Modal({ title, onClose, wide, children }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in sm:items-center sm:p-4" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-label={title}
+        className={cn('flex max-h-[90vh] w-full flex-col rounded-t-2xl bg-white shadow-ec-float animate-in slide-in-from-bottom-8 sm:rounded-2xl', wide ? 'max-w-3xl' : 'max-w-md')}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-ec-line px-5 py-3">
+          <h2 className="truncate font-semibold text-ec-ink">{title}</h2>
+          <button type="button" aria-label="Close" onClick={onClose} className={button({ size: 'sm', variant: 'ghost' })}><X size={16} /></button>
+        </div>
+        <div className="overflow-y-auto p-5">{children}</div>
+      </div>
+    </div>
+  )
+}
+
 /** Inline rename. */
 function NameEdit({ s, update }) {
   const [editing, setEditing] = useState(false)
@@ -100,7 +125,7 @@ export function SessionCard({ s, update, remove }) {
   const seen = Object.values(o).reduce((a, b) => a + b, 0)
   const dupes = (o.duplicate || 0) + (o.claimed_elsewhere || 0)
   const needsPair = ['not_paired', 'logged_out'].includes(s.status)
-  const toggle = (p) => setPanel((cur) => (cur === p ? null : p))
+  const close = () => setPanel(null)
 
   return (
     <li className={cn(card, 'space-y-3', !s.enabled && 'bg-slate-50/80')}>
@@ -122,17 +147,20 @@ export function SessionCard({ s, update, remove }) {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="Rides (all time)" value={s.ridesSaved} />
         <Stat label="Rides (24h)" value={s.rides24h} />
-        <Stat label="Groups" value={s.groups.total} hint={`${s.groups.unique} only this number`} />
+        <Stat label="Groups" value={s.groups.total} hint={`${s.groups.unique} not in any other number`} />
         <Stat label="Messages" value={seen} hint={`${dupes} duplicates skipped`} />
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={() => toggle('pair')} className={button({ size: 'sm', variant: needsPair ? 'primary' : 'outline' })}>
+        <button type="button" onClick={() => setPanel('pair')} className={button({ size: 'sm', variant: needsPair ? 'primary' : 'outline' })}>
           <Link2 size={14} /> {needsPair ? 'Link number' : 'Re-link'}
         </button>
-        <button type="button" onClick={() => toggle('share')} className={button({ size: 'sm' })}><Share2 size={14} /> Share scanner</button>
-        <button type="button" onClick={() => toggle('stats')} className={button({ size: 'sm', variant: panel === 'stats' ? 'primary' : 'outline' })}><BarChart3 size={14} /> Stats</button>
-        <button type="button" onClick={() => toggle('groups')} className={button({ size: 'sm', variant: panel === 'groups' ? 'primary' : 'outline' })}><Users size={14} /> Groups</button>
+        {/* A share link only links a number; a live session would refuse it (409), so hide it then. */}
+        {s.status !== 'live' && (
+          <button type="button" onClick={() => setPanel('share')} className={button({ size: 'sm' })}><Share2 size={14} /> Share scanner</button>
+        )}
+        <button type="button" onClick={() => setPanel('stats')} className={button({ size: 'sm' })}><BarChart3 size={14} /> Stats</button>
+        <button type="button" onClick={() => setPanel('groups')} className={button({ size: 'sm' })}><Users size={14} /> Groups</button>
         <button type="button" disabled={update.isPending} onClick={() => update.mutate({ id: s.id, enabled: !s.enabled })} className={button({ size: 'sm' })}>
           {s.enabled ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Resume</>}
         </button>
@@ -147,14 +175,14 @@ export function SessionCard({ s, update, remove }) {
       </div>
 
       {panel === 'pair' && (
-        <div className="rounded-lg border border-ec-line p-3">
+        <Modal title={`${needsPair ? 'Link a number' : 'Re-link'} · ${s.name}`} onClose={close}>
           {!needsPair && <p className="mb-2 text-xs font-medium text-amber-700">Re-linking replaces the number currently on this session.</p>}
           <PairPanel id={s.id} />
-        </div>
+        </Modal>
       )}
-      {panel === 'share' && <ShareBox id={s.id} />}
-      {panel === 'stats' && <SessionStats s={s} />}
-      {panel === 'groups' && <SessionGroups id={s.id} />}
+      {panel === 'share' && <Modal title={`Share scanner · ${s.name}`} onClose={close}><ShareBox id={s.id} /></Modal>}
+      {panel === 'stats' && <Modal title={`Stats · ${s.name}`} onClose={close} wide><SessionStats s={s} /></Modal>}
+      {panel === 'groups' && <Modal title={`Groups (${s.groups.total}) · ${s.name}`} onClose={close}><SessionGroups id={s.id} /></Modal>}
     </li>
   )
 }

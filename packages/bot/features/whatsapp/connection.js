@@ -58,6 +58,16 @@ function isLostGroupMessage(m) {
     && m.messageStubParameters && m.messageStubParameters[0] === NO_MESSAGE_FOUND_ERROR_TEXT);
 }
 
+/**
+ * When WhatsApp's server stamped the message (seconds; a protobuf Long on some builds).
+ * @param {object} m @returns {number|undefined} epoch ms
+ */
+function sentAtMs(m) {
+  const t = m.messageTimestamp;
+  const sec = t && typeof t === 'object' ? t.toNumber() : Number(t);
+  return sec > 0 ? sec * 1000 : undefined;
+}
+
 let lostGroupMessages = 0; // process lifetime, across reconnects
 
 /** @returns {number} group messages lost since the process started */
@@ -222,7 +232,9 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       if (!text) continue;
       const senderJid = senderOf(m.key, jid);
       try {
-        await onMessage({ text, senderJid, groupId: jid, groupName: groups.nameOf(jid), msgId: m.key.id });
+        await onMessage({
+          text, senderJid, groupId: jid, groupName: groups.nameOf(jid), msgId: m.key.id, sentAt: sentAtMs(m),
+        });
       } catch (err) {
         // onMessage (processMessage) is contracted never to throw; guard anyway
         // so one bad message can never tear down the listener.

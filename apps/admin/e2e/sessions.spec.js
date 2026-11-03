@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 const ADMIN = { id: 'a1', email: 'a@x.com', role: 'super' }
 const now = Date.now()
 const SESSIONS = [
-  { id: '11111111-1111-1111-1111-111111111111', slot: 'slot-1', name: 'Punjab main', enabled: true, phone: '919876543210', ridesSaved: 1840, status: 'live', lastMsgAt: now - 40_000, groups: { total: 212, unique: 140 }, rides24h: 96, reconnects: 2, botStartedAt: now - 3 * 86_400_000, statusSince: now - 5 * 3_600_000, outcomes: { saved: 1840, duplicate: 610, claimed_elsewhere: 220, not_ride: 4300 } },
+  { id: '11111111-1111-1111-1111-111111111111', slot: 'slot-1', name: 'Punjab main', enabled: true, phone: '919876543210', ridesSaved: 1840, status: 'live', lastMsgAt: now - 40_000, groups: { total: 212, unique: 140 }, rides24h: 96, reconnects: 2, delay: { median: 2100, p95: 6400, max: 14000, samples: 180 }, botStartedAt: now - 3 * 86_400_000, statusSince: now - 5 * 3_600_000, outcomes: { saved: 1840, duplicate: 610, claimed_elsewhere: 220, not_ride: 4300 } },
   { id: '22222222-2222-2222-2222-222222222222', slot: 'wa-1a2b3c4d', name: 'Ambala groups', enabled: true, phone: null, ridesSaved: 0, status: 'not_paired', lastMsgAt: null, groups: { total: 0, unique: 0 }, rides24h: 0, outcomes: {} },
   { id: '33333333-3333-3333-3333-333333333333', slot: 'wa-9f8e7d6c', name: 'Backup number', enabled: false, phone: '919812345678', ridesSaved: 312, status: 'paused', lastMsgAt: now - 7_200_000, groups: { total: 160, unique: 12 }, rides24h: 0, outcomes: { saved: 312, duplicate: 900 } },
 ]
@@ -28,7 +28,9 @@ test('sessions tab shows live status + stats and links a number by QR', async ({
 
   await expect(page.getByText('Punjab main')).toBeVisible()
   await expect(page.getByText('Live', { exact: true })).toBeVisible()
-  await expect(page.getByText('140 only this number')).toBeVisible()
+  await expect(page.getByText('140 not in any other number')).toBeVisible()
+  // live session: no share link (it would be refused)
+  await expect(page.getByRole('button', { name: 'Share scanner' })).toHaveCount(2)
   await page.getByRole('button', { name: 'Link number' }).click()
   await page.getByRole('button', { name: 'Start linking' }).click()
   await expect(page.getByAltText('WhatsApp pairing QR')).toBeVisible()
@@ -56,9 +58,15 @@ test('stats panel shows rides by city per period, outcomes, connection; groups p
   await expect(page.getByText('96 rides')).toBeVisible()
   await expect(page.getByText('Unknown city')).toBeVisible()
   await expect(page.getByText('Taken by another number')).toBeVisible()
+  await expect(page.getByText('Typical delay')).toBeVisible()
+  await expect(page.getByText('2.1s')).toBeVisible()
   await page.getByRole('button', { name: '7 days' }).click()
   await expect(page.getByText('640 rides')).toBeVisible()
+  await expect(page.getByRole('dialog', { name: /Stats · Punjab main/ })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.getByRole('button', { name: 'Groups' }).first().click()
+  await expect(page.getByRole('dialog', { name: /Groups/ })).toBeVisible()
   await expect(page.getByText('Ambala Taxi Service')).toBeVisible()
   await expect(page.getByText('ignored')).toBeVisible()
 })

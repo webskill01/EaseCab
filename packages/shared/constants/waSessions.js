@@ -26,6 +26,8 @@ const botSlotGroupsKey = (slot) => redisKey('bot', 'slot_groups', slot);
  * @param {string} slot @param {number|'all'} bucket @returns {string}
  */
 const botSlotRidesKey = (slot, bucket) => redisKey('bot', 'slot_rides', slot, String(bucket));
+/** @param {string} slot @returns {string} list: ms from WhatsApp send to ride saved, newest first */
+const botSlotLagKey = (slot) => redisKey('bot', 'slot_lag', slot);
 /** @param {string} tokenHash - sha256 hex of a share token @returns {string} -> slot */
 const botPairShareKey = (tokenHash) => redisKey('bot', 'pair_share', tokenHash);
 
@@ -65,6 +67,7 @@ const WA_SESSIONS = Object.freeze({
   HOUR_MS: 60 * 60 * 1000,
   RIDE_STATS_TTL_SEC: 31 * 24 * 60 * 60, // hourly buckets outlive the 30-day view
   RIDE_STATS_UNKNOWN_CITY: 'unknown',
+  LAG_SAMPLES: 200, // recent saved rides kept per session for the delay figures
 });
 
 /** Ride-analytics windows (rolling, ending now) in hours; null = all time. */
@@ -77,6 +80,7 @@ module.exports = {
   botSlotStatsKey,
   botSlotGroupsKey,
   botSlotRidesKey,
+  botSlotLagKey,
   botPairShareKey,
   RIDE_STATS_PERIOD_HOURS,
   PAIR_STATUS,

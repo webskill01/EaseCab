@@ -6,7 +6,7 @@ const {
   SESSION_STATUS, SLOT_STATE, WA_SESSIONS, PAIR_STATUS, BOT_NUMBERS_KEY, BOT_PAIR_CMD_CHANNEL,
   BOT_SESSIONS_CHANGED_CHANNEL, botSlotGroupsKey, botSlotStatsKey, botSlotRidesKey,
 } = require('@easecab/shared');
-const { createAdminWaSessionsService, deriveStatus } = require('../adminWaSessions.service');
+const { createAdminWaSessionsService, deriveStatus, delayStats } = require('../adminWaSessions.service');
 
 /** Just enough of ioredis for the service (strings, hashes, sets, pub/sub). */
 function fakeRedis() {
@@ -25,6 +25,7 @@ function fakeRedis() {
     async hdel(k, f) { (hashes.get(k) || new Map()).delete(f); return 1; },
     async scard(k) { return set(k).size; },
     async smembers(k) { return [...set(k)]; },
+    async lrange(k) { return kv.get(k) || []; },
     async sunion(...ks) { return [...new Set(ks.flatMap((k) => [...set(k)]))]; },
     async sdiff(k, ...others) { return [...set(k)].filter((m) => !others.some((o) => set(o).has(m))); },
     async publish(ch, msg) { published.push([ch, msg]); return 1; },
@@ -175,4 +176,10 @@ test('groups lists the number groups with known names first', async () => {
   redis.sets.set(botSlotGroupsKey('wa-1'), new Set(['g2', 'g1']));
   const groups = await svc.groups('i1');
   assert.deepEqual(groups.map((g) => [g.jid, g.name]), [['g1', 'Taxi Ambala'], ['g2', null]]);
+});
+
+test('delayStats: median / p95 / max over recent rides; null when none', () => {
+  assert.equal(delayStats([]), null);
+  const v = Array.from({ length: 100 }, (_, i) => String((i + 1) * 100)); // 100ms..10s
+  assert.deepEqual(delayStats(v), { median: 5100, p95: 9600, max: 10000, samples: 100 });
 });

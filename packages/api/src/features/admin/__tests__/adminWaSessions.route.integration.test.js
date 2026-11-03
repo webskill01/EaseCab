@@ -35,6 +35,7 @@ function fakeRedis() {
     async hdel() { return 0; },
     async scard() { return 0; },
     async smembers() { return ['g1@g.us']; },
+    async lrange() { return ['1500', '2500']; },
     async sunion() { return []; },
     async sdiff() { return []; },
     async publish(ch, msg) { published.push([ch, msg]); return 1; },
@@ -95,6 +96,7 @@ test('GET lists sessions with status + stats', async () => {
   assert.strictEqual(s.name, 'Punjab 1');
   assert.strictEqual(s.status, 'offline'); // paired, but no bot heartbeat in this test
   assert.strictEqual(s.rides24h, 0);
+  assert.deepStrictEqual(s.delay, { median: 2500, p95: 2500, max: 2500, samples: 2 });
 });
 
 test('POST creates (201), validates the name (422)', async () => {

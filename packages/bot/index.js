@@ -11,7 +11,7 @@ const { DisconnectReason } = require('@whiskeysockets/baileys');
 const {
   createCityResolver, createAlerter, createTelegramNotifier, BOT_FILTERS_CHANGED_CHANNEL, BOT_GROUPS_CHANGED_CHANNEL,
   BOT_HEALTH, BOT_LOST_MSGS_KEY, BOT_SESSIONS_CHANGED_CHANNEL, BOT_PAIR_CMD_CHANNEL, botSlotStatsKey, botSlotGroupsKey,
-  botSlotRidesKey, WA_SESSIONS,
+  botSlotRidesKey, botSlotLagKey, WA_SESSIONS,
 } = require('@easecab/shared');
 const { createRideRepository } = require('./features/ingest/rideRepository');
 const { createProcessMessage } = require('./features/ingest/processMessage');
@@ -118,6 +118,10 @@ async function main() {
         const hourKey = botSlotRidesKey(m.botId, Math.floor(Date.now() / WA_SESSIONS.HOUR_MS));
         tx.hincrby(hourKey, city, 1).expire(hourKey, WA_SESSIONS.RIDE_STATS_TTL_SEC)
           .hincrby(botSlotRidesKey(m.botId, 'all'), city, 1);
+        if (m.sentAt) {
+          const lagKey = botSlotLagKey(m.botId); // WhatsApp send → saved + published to the app
+          tx.lpush(lagKey, Math.max(0, Date.now() - m.sentAt)).ltrim(lagKey, 0, WA_SESSIONS.LAG_SAMPLES - 1);
+        }
       }
       tx.exec().catch((err) => logger.warn({ err: err.message }, 'could not count session outcome'));
     }
