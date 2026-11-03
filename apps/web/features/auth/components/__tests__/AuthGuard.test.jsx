@@ -9,7 +9,7 @@ const router = { replace }
 vi.mock('next/navigation', () => ({ useRouter: () => router }))
 vi.mock('../../services/authApi', () => ({ refreshSession: vi.fn() }))
 import { refreshSession } from '../../services/authApi'
-import { AuthGuard, SESSION_REFRESH_INTERVAL_MS } from '../AuthGuard'
+import { AuthGuard, SESSION_REFRESH_INTERVAL_MS, SESSION_RETRY_MS } from '../AuthGuard'
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -26,6 +26,27 @@ describe('AuthGuard', () => {
     renderWithIntl(<AuthGuard><p>secret feed</p></AuthGuard>)
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'))
     expect(screen.queryByText('secret feed')).not.toBeInTheDocument()
+  })
+
+  it('does NOT log out on a network error or 502; retries until the session check passes', async () => {
+    vi.useFakeTimers()
+    try {
+      refreshSession
+        .mockRejectedValueOnce({ code: 'NETWORK_ERROR', status: 0 })
+        .mockRejectedValueOnce({ code: 'INTERNAL_ERROR', status: 502 })
+        .mockResolvedValue({ data: { refreshed: true } })
+      renderWithIntl(<AuthGuard><p>secret feed</p></AuthGuard>)
+      await vi.advanceTimersByTimeAsync(2 * SESSION_RETRY_MS)
+      expect(refreshSession).toHaveBeenCalledTimes(3)
+      await vi.advanceTimersByTimeAsync(0) // flush the authed re-render
+      expect(screen.getByText('secret feed')).toBeInTheDocument()
+      // A background refresh that fails offline must not bounce to /login either.
+      refreshSession.mockRejectedValueOnce({ code: 'NETWORK_ERROR', status: 0 })
+      await vi.advanceTimersByTimeAsync(SESSION_REFRESH_INTERVAL_MS)
+      expect(replace).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('keeps the session alive by refreshing on an interval after auth (covers the SSE stream)', async () => {

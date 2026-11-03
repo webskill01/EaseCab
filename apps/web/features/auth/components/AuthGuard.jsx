@@ -17,10 +17,17 @@ import { getMembership } from '@/features/subscription/services/subscriptionApi'
  */
 export const SESSION_REFRESH_INTERVAL_MS = 12 * 60 * 1000
 
+/** Wait before re-trying a session check that failed for a non-auth reason (network / deploy). */
+export const SESSION_RETRY_MS = 3000
+
+/** Only a 401 means the login is really gone; anything else (offline, 5xx) is retried. */
+const isLoggedOut = (err) => err?.status === 401
+
 /**
  * Client-side route protection. The httpOnly cookies live on the API domain, so
  * the Next server can't read them — instead we probe POST /auth/refresh on mount
- * (which also rotates tokens). 2xx → render; any failure → replace('/login').
+ * (which also rotates tokens). 2xx → render; 401 → replace('/login'); offline or a
+ * server hiccup (5xx during a deploy) → retry, never log the user out.
  *
  * It's a single-page app: this guard mounts once (in the (app) layout) and never
  * remounts on in-app navigation, so the one-shot mount probe is NOT enough to keep
@@ -35,7 +42,8 @@ export function AuthGuard({ children }) {
 
   useEffect(() => {
     let active = true
-    refreshSession()
+    let timer
+    const check = () => refreshSession()
       .then(() => {
         if (!active) return
         // Warm the two queries every soft gate reads (post: profile, contact: membership)
@@ -44,12 +52,15 @@ export function AuthGuard({ children }) {
         qc.prefetchQuery({ queryKey: ['membership'], queryFn: getMembership, staleTime: 300000 })
         setStatus('authed')
       })
-      .catch(() => {
+      .catch((err) => {
         if (!active) return
+        // ponytail: fixed-interval retry; weak signal / deploy restart just keeps "checking".
+        if (!isLoggedOut(err)) { timer = setTimeout(check, SESSION_RETRY_MS); return }
         setStatus('redirecting')
         router.replace('/login')
       })
-    return () => { active = false }
+    check()
+    return () => { active = false; clearTimeout(timer) }
   }, [router, qc])
 
   // Once authed: keep the session warm + wire the hard-failure redirect.
@@ -57,7 +68,9 @@ export function AuthGuard({ children }) {
     if (status !== 'authed') return undefined
     const toLogin = () => router.replace('/login')
     setOnSessionExpired(toLogin)
-    const id = setInterval(() => { refreshSession().catch(toLogin) }, SESSION_REFRESH_INTERVAL_MS)
+    const id = setInterval(() => {
+      refreshSession().catch((err) => isLoggedOut(err) && toLogin())
+    }, SESSION_REFRESH_INTERVAL_MS)
     return () => {
       clearInterval(id)
       setOnSessionExpired(null)

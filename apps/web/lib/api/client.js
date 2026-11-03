@@ -24,8 +24,9 @@ export function setOnSessionExpired(fn) {
 
 /**
  * POST /auth/refresh once, sharing the in-flight promise across concurrent callers.
- * Resolves `true` when the cookies were rotated, `false` otherwise. Never throws.
- * @returns {Promise<boolean>}
+ * Resolves the HTTP status (0 = no network). Only 401 means the session is gone;
+ * a 5xx during a deploy or a dropped connection must NOT log the user out.
+ * @returns {Promise<number>}
  */
 function refreshAccessToken() {
   if (!refreshInFlight) {
@@ -34,8 +35,8 @@ function refreshAccessToken() {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     })
-      .then((r) => r.ok)
-      .catch(() => false)
+      .then((r) => r.status)
+      .catch(() => 0)
       .finally(() => { refreshInFlight = null })
   }
   return refreshInFlight
@@ -68,9 +69,9 @@ export async function apiFetch(path, options = {}, _retried = false) {
   // Skip for /auth/* (refresh/verify/send own their 401s — refreshing there would recurse
   // or paper over a genuinely bad OTP).
   if (res.status === 401 && !_retried && !path.startsWith('/auth/')) {
-    const refreshed = await refreshAccessToken()
-    if (refreshed) return apiFetch(path, options, true)
-    if (onSessionExpired) onSessionExpired()
+    const status = await refreshAccessToken()
+    if (status >= 200 && status < 300) return apiFetch(path, options, true)
+    if (status === 401 && onSessionExpired) onSessionExpired()
   }
 
   let body

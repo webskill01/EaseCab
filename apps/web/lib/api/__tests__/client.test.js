@@ -83,6 +83,19 @@ describe('apiFetch — 401 auto-refresh', () => {
     expect(onExpired).toHaveBeenCalledTimes(1)
   })
 
+  it('a refresh that fails for a non-auth reason (deploy 502 / offline) does NOT log out', async () => {
+    const onExpired = vi.fn()
+    setOnSessionExpired(onExpired)
+    fetch
+      .mockResolvedValueOnce(unauthorized())
+      .mockResolvedValueOnce({ ok: false, status: 502, json: async () => ({}) })
+      .mockResolvedValueOnce(unauthorized())
+      .mockRejectedValueOnce(new TypeError('offline'))
+    await expect(apiFetch('/rides')).rejects.toMatchObject({ status: 401 })
+    await expect(apiFetch('/rides')).rejects.toMatchObject({ status: 401 })
+    expect(onExpired).not.toHaveBeenCalled()
+  })
+
   it('does NOT refresh on a 401 from an /auth/* path (no recursion / no false refresh)', async () => {
     fetch.mockResolvedValue(unauthorized())
     await expect(apiFetch('/auth/verify-otp', { method: 'POST' })).rejects.toMatchObject({ code: 'AUTH_REQUIRED' })
