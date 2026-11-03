@@ -18,6 +18,7 @@ export function toBotVM(r) {
     fromLocalized: { pa: r.pickupCityNamePa ?? null, hi: r.pickupCityNameHi ?? null },
     toLocalized: { pa: r.dropCityNamePa ?? null, hi: r.dropCityNameHi ?? null },
     vehicleType: r.vehicleType ?? null,
+    groupName: r.sourceGroupName ?? null,
     message: stripUrls(r.displayText ?? null),
     cityIds: [r.pickupCityId, r.dropCityId].filter(Boolean),
   }

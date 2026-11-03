@@ -22,6 +22,7 @@ const PUBLIC_RIDE_SELECT = Object.freeze({
   pickupCity: { select: { canonicalName: true, namePa: true, nameHi: true } },
   dropCity: { select: { canonicalName: true, namePa: true, nameHi: true } },
   vehicleType: true,
+  sourceGroupName: true, // "Forwarded group" label on the card (WhatsApp group subject)
   status: true,
   receivedAt: true,
   expiresAt: true,

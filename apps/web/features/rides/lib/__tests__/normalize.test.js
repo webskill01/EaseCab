@@ -29,6 +29,11 @@ describe('matchesCity', () => {
 })
 
 describe('toBotVM', () => {
+  it('carries the source group name (null when absent)', () => {
+    expect(toBotVM({ id: 'r', sourceGroupName: 'Punjab Taxi' }).groupName).toBe('Punjab Taxi')
+    expect(toBotVM({ id: 'r' }).groupName).toBeNull()
+  })
+
   const apiRide = {
     id: 'r1', displayText: 'Amritsar to Delhi ████', status: 'fresh',
     pickupCityId: 'c1', dropCityId: 'c2', pickupCityName: 'Amritsar', dropCityName: 'Delhi',

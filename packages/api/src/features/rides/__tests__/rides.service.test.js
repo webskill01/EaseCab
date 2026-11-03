@@ -37,7 +37,7 @@ test('toPublicRide whitelists public fields and drops phoneNumber/rawText', () =
   assert.deepStrictEqual(Object.keys(pub).sort(), [
     'displayText', 'dropCityId', 'dropCityName', 'dropCityNameHi', 'dropCityNamePa', 'dropRaw',
     'expiresAt', 'id', 'pickupCityId', 'pickupCityName', 'pickupCityNameHi', 'pickupCityNamePa',
-    'pickupRaw', 'receivedAt', 'status', 'vehicleType',
+    'pickupRaw', 'receivedAt', 'sourceGroupName', 'status', 'vehicleType',
   ]);
 });
 
@@ -231,4 +231,10 @@ test('reportRide throws NOT_FOUND for a missing ride and never writes', async ()
     (e) => e.code === ERROR_CODES.NOT_FOUND,
   );
   assert.strictEqual(wrote, false);
+});
+
+test('toPublicRide masks phone-like digit runs in the group name', () => {
+  assert.strictEqual(toPublicRide(ride('r1', { sourceGroupName: 'Punjab Taxi 98765 43210' })).sourceGroupName, 'Punjab Taxi ••••');
+  assert.strictEqual(toPublicRide(ride('r1', { sourceGroupName: 'Ambala Duty 24x7' })).sourceGroupName, 'Ambala Duty 24x7');
+  assert.strictEqual(toPublicRide(ride('r1')).sourceGroupName, null);
 });

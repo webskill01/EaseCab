@@ -3,6 +3,16 @@
 const { AppError, ERROR_CODES, CONTACT_RATE_LIMIT, isSubscriptionActive, CONTACT_SOURCE } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
+// A group subject can carry an admin's phone number ("Taxi Duty 98xxxxxxxx") —
+// mask it so the card label never leaks a contact past the paywall (§3.10).
+const GROUP_NAME_DIGITS = /\d[\d\s-]{5,}\d/g;
+const GROUP_NAME_MASK = '••••';
+
+/** @param {?string} name @returns {?string} */
+function maskGroupName(name) {
+  return name ? name.replace(GROUP_NAME_DIGITS, GROUP_NAME_MASK) : null;
+}
+
 /**
  * Reduce a ride to the client-safe shape. Defence-in-depth: the repository select
  * already excludes phoneNumber/rawText, but this whitelist guarantees the masked
@@ -27,6 +37,7 @@ function toPublicRide(r) {
     dropCityNamePa: r.dropCity?.namePa ?? null,
     dropCityNameHi: r.dropCity?.nameHi ?? null,
     vehicleType: r.vehicleType ?? null,
+    sourceGroupName: maskGroupName(r.sourceGroupName),
     status: r.status,
     receivedAt: r.receivedAt,
     expiresAt: r.expiresAt,

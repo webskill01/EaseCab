@@ -4,7 +4,7 @@ import {
   IconLock, IconBan, IconShieldCheckFilled, IconArrowsLeftRight, IconBrandWhatsapp, IconPhone,
   IconFlag, IconMessage, IconWorld, IconHeadset, IconCrownFilled, IconBoltFilled, IconInfoCircle,
   IconSearch, IconPlus, IconDotsVertical, IconPhoto, IconListDetails, IconCar, IconCarSuv, IconBus,
-  IconAlertTriangle,
+  IconAlertTriangle, IconArrowForwardUp,
 } from '@tabler/icons-react'
 
 /**
@@ -57,6 +57,7 @@ export const Plus = ic(IconPlus, 24)
 export const Dots = ic(IconDotsVertical, 20)
 export const Image = ic(IconPhoto, 22)
 export const List = ic(IconListDetails, 22)
+export const Forward = ic(IconArrowForwardUp, 14)
 export const Car = ic(IconCar, 16)
 export const Van = ic(IconBus, 16) // ponytail: Tabler has no minibus glyph; tempo traveller shares the bus
 export const Bus = ic(IconBus, 16)
