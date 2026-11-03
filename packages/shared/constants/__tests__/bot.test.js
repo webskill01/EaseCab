@@ -25,10 +25,10 @@ test('bot value sets are frozen (CLAUDE.md §5)', () => {
 });
 
 test('SLOT_STATE / ALERT_EVENT / ALERT_SEV carry the expected members', () => {
-  assert.deepEqual(Object.values(SLOT_STATE).sort(), ['active', 'banned', 'degraded', 'unregistered']);
+  assert.deepEqual(Object.values(SLOT_STATE).sort(), ['active', 'banned', 'connecting', 'degraded', 'paused', 'unregistered']);
   assert.deepEqual(
     Object.values(ALERT_EVENT).sort(),
-    ['all_exhausted', 'failover', 'feed_stale', 'number_banned'],
+    ['all_exhausted', 'failover', 'feed_stale', 'number_banned', 'number_down'],
   );
   assert.deepEqual(Object.values(ALERT_SEV).sort(), ['info', 'sev1', 'warn']);
 });

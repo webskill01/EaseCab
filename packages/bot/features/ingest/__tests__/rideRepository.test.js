@@ -21,6 +21,11 @@ function mockPrisma() {
         return a.data;
       },
     },
+    waSession: {
+      updateMany: async (a) => {
+        calls.session = a;
+      },
+    },
     $transaction: async (fn) => {
       calls.tx++;
       return fn(client);
@@ -118,4 +123,55 @@ test('saveRide still returns the ride when publish fails (non-fatal)', async () 
   const ride = await repo.saveRide(baseRide());
   assert.strictEqual(ride.id, 'ride-1');
   assert.strictEqual(warned.length, 1);
+});
+
+test('claimMessage: first SET NX wins, later ones lose', async () => {
+  const keys = new Map();
+  const redis = {
+    set: async (k, v, ex, ttl, nx) => {
+      assert.strictEqual(nx, 'NX');
+      assert.ok(ttl > 0);
+      if (keys.has(k)) return null;
+      keys.set(k, v);
+      return 'OK';
+    },
+  };
+  const repo = createRideRepository({ prisma: mockPrisma().client, redis });
+  assert.strictEqual(await repo.claimMessage('g1@g.us', 'ABC'), true);
+  assert.strictEqual(await repo.claimMessage('g1@g.us', 'ABC'), false);
+  assert.strictEqual(await repo.claimMessage('g2@g.us', 'ABC'), true); // ids are per chat
+});
+
+test('claimMessage fails open when Redis is down, and without an id', async () => {
+  const redis = { set: async () => { throw new Error('down'); } };
+  const repo = createRideRepository({ prisma: mockPrisma().client, redis, logger: { warn() {} } });
+  assert.strictEqual(await repo.claimMessage('g', 'm'), true);
+  assert.strictEqual(await repo.claimMessage('g', undefined), true);
+});
+
+test('saveRide returns null on a fingerprint unique violation and publishes nothing', async () => {
+  const { client } = mockPrisma();
+  client.$transaction = async () => {
+    const e = new Error('Unique constraint failed');
+    e.code = 'P2002';
+    throw e;
+  };
+  const published = [];
+  const repo = createRideRepository({ prisma: client, redis: { publish: async (c) => published.push(c) } });
+  assert.strictEqual(await repo.saveRide(baseRide()), null);
+  assert.strictEqual(published.length, 0);
+});
+
+test('saveRide still throws non-duplicate DB errors', async () => {
+  const { client } = mockPrisma();
+  client.$transaction = async () => { throw new Error('conn reset'); };
+  const repo = createRideRepository({ prisma: client, redis: { publish: async () => {} } });
+  await assert.rejects(() => repo.saveRide(baseRide()), /conn reset/);
+});
+
+test('saveRide bumps the source session lifetime counter inside the tx', async () => {
+  const { client, calls } = mockPrisma();
+  const repo = createRideRepository({ prisma: client, redis: { publish: async () => {} } });
+  await repo.saveRide({ ...baseRide(), botId: 'wa-1' });
+  assert.deepStrictEqual(calls.session, { where: { slot: 'wa-1' }, data: { ridesSaved: { increment: 1 } } });
 });

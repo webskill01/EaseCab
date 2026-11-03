@@ -79,6 +79,9 @@ const { createFinanceSyncRouter } = require('./features/financeSync/financeSync.
 const { createAdminWaGroupsRepository } = require('./features/admin/adminWaGroups.repository');
 const { createAdminWaGroupsService } = require('./features/admin/adminWaGroups.service');
 const { createAdminWaGroupsRouter } = require('./features/admin/adminWaGroups.route');
+const { createAdminWaSessionsRepository } = require('./features/admin/adminWaSessions.repository');
+const { createAdminWaSessionsService } = require('./features/admin/adminWaSessions.service');
+const { createAdminWaSessionsRouter, createWaPairPublicRouter } = require('./features/admin/adminWaSessions.route');
 const { createFleetMirror } = require('./lib/fleetMirror');
 const { createAdminUnresolvedRidesRepository } = require('./features/admin/adminUnresolvedRides.repository');
 const { createAdminUnresolvedRidesService } = require('./features/admin/adminUnresolvedRides.service');
@@ -304,6 +307,13 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
       repo: createAdminWaGroupsRepository({ prisma }), redis, logger,
     });
     v1.use('/admin/wa-groups', createAdminWaGroupsRouter({ service: adminWaGroupsService, requireAdmin }));
+    // WhatsApp sessions (Phase 25): add / name / pause / pair the numbers easecab-bot runs,
+    // plus the public share page someone remote scans the QR from (token-gated).
+    const adminWaSessionsService = createAdminWaSessionsService({
+      repo: createAdminWaSessionsRepository({ prisma }), redis, logger,
+    });
+    v1.use('/admin/wa-sessions', createAdminWaSessionsRouter({ service: adminWaSessionsService, requireAdmin }));
+    v1.use('/wa-pair', createWaPairPublicRouter({ service: adminWaSessionsService, redis }));
 
     // Inbound fleet peer API — mounted only when FLEET_SYNC_TOKEN is set.
     if (config.fleet && config.fleet.syncToken) {

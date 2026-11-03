@@ -7,21 +7,30 @@ const {
   BOT_HEALTH,
   BACKOFF,
   BOT_NUMBERS_KEY,
+  WA_SESSIONS,
 } = require('@easecab/shared');
 const { decideOnClose } = require('./failoverPolicy');
 const { nextDelayMs } = require('./backoff');
 
+/** Supervisor-local lifecycle of one slot (only BANNED/DEGRADED are terminal-ish). */
+const RUN = Object.freeze({
+  CONNECTING: 'connecting', // connecting or waiting out a backoff
+  OPEN: 'open',
+  BANNED: 'banned', // logged out — never retried this run
+  DEGRADED: 'degraded', // backoff exhausted — retried on the next rescan
+});
+
 /**
- * Supervise the WhatsApp number pool (Phase 2.5 6a). Runs ONE slot at a time and
- * applies the failover policy on every disconnect: transient -> reconnect the
- * same slot with exponential backoff; logout -> mark BANNED + rotate; backoff
- * exhausted / connect-timeout -> mark DEGRADED + rotate. When no eligible slot
- * remains it raises a sev-1 ALL_EXHAUSTED alert and stays alive, periodically
- * re-scanning so a backup the operator pairs later auto-recovers the feed — or,
- * failing that, retrying DEGRADED slots (BANNED ones stay out for the run).
+ * Supervise the WhatsApp number pool (multi-session, 2026-11-03). EVERY paired slot
+ * runs at the same time, each with its own failover policy: transient -> reconnect
+ * that slot with exponential backoff; logout -> BANNED (out for the run); backoff
+ * exhausted / connect-timeout -> DEGRADED (retried each rescan). One dying number
+ * never touches the others. ALL_EXHAUSTED (sev-1) fires only when no slot is
+ * connecting or open; the rescan also starts slots the operator pairs later.
  *
- * Pure decisions live in failoverPolicy/backoff/slotRegistry (unit-tested); this
- * is socket-wiring glue — excluded from coverage, verified in the integration run.
+ * Duplicate rides from numbers sharing a group are the ingest layer's job (message-id
+ * claim + fingerprint + unique constraint), not this module's. Each message is tagged
+ * with its slot as `botId`.
  *
  * @param {object} deps
  * @param {string[]} deps.slots - all configured slot labels (for UNREGISTERED marking)
@@ -33,236 +42,249 @@ const { nextDelayMs } = require('./backoff');
  * @param {{sessionDirFor:Function,eligibleSlots:Function}} deps.registry
  * @param {Function} deps.connectionFactory - createConnection
  * @param {number} deps.loggedOutCode - DisconnectReason.loggedOut
- * @returns {{ start: () => void, stop: () => void }}
+ * @param {Set<string>} [deps.busy] - slots a pairing run owns right now (never supervised meanwhile)
+ * @param {(slot: string, phone: string) => void} [deps.onPhone] - linked number seen on open
+ * @param {(slot: string, jids: string[]) => void} [deps.onGroups] - groups seen on connect
+ * @returns {{ start: Function, stop: Function, rescan: Function, release: Function }}
  */
 function createNumberPool({
-  slots,
-  groups,
-  onMessage,
-  logger,
-  redis,
-  alerter,
-  registry,
-  connectionFactory,
-  loggedOutCode,
+  groups, onMessage, logger, redis, alerter, registry, connectionFactory, loggedOutCode,
+  busy = new Set(), onPhone = () => {}, onGroups = () => {},
 }) {
-  const banned = new Set(); // slots logged out this run — never reselected
-  const degraded = new Set(); // slots that hit max backoff — retried only when nothing else is left
-  let currentSlot = null;
-  let currentSock = null;
-  let attempt = 0; // consecutive transient retries on currentSlot
-  let token = 0; // identifies the active connection attempt (dedupes stale callbacks)
-  let connectTimer = null;
-  let backoffTimer = null;
+  const sups = new Map(); // slot -> supervisor
+  const meta = new Map(); // slot -> { state, lastCode, since }
+  const opens = new Map(); // slot -> successful connects since boot (reconnects = opens - 1)
+  const bootAt = Date.now();
+  let stopped = false;
+  let dark = false; // ALL_EXHAUSTED currently raised
   let rescanTimer = null;
   let watchdogTimer = null;
-  let stopped = false;
-  let open = false; // true between onOpen and the next close — the watchdog only acts when open
-  let lastActivityAt = 0; // epoch ms of the last inbound group message (stall watchdog, #16)
+  let liveTimer = null;
 
-  /**
-   * Stamp inbound activity, then delegate to the real ingest orchestrator. The
-   * watchdog uses `lastActivityAt` to detect a silently-wedged OPEN socket.
-   */
-  async function trackedOnMessage(m) {
-    lastActivityAt = Date.now();
-    return onMessage(m);
-  }
-
-  /**
-   * Mirror a slot's state into the easecab:bot:numbers hash (best-effort).
-   * @param {string} slot
-   * @param {string} state - a SLOT_STATE value
-   * @param {number} [code] - last disconnect code
-   */
-  async function setSlotState(slot, state, code) {
+  /** Write a slot's live record (the admin Sessions tab reads `at` to tell the bot is alive). */
+  async function writeLive(slot) {
+    const rec = meta.get(slot) || { state: SLOT_STATE.UNREGISTERED, lastCode: null, since: Date.now() };
+    const sup = sups.get(slot);
     try {
-      await redis.hset(
-        BOT_NUMBERS_KEY,
-        slot,
-        JSON.stringify({ state, lastCode: code === undefined ? null : code, since: Date.now() }),
-      );
+      await redis.hset(BOT_NUMBERS_KEY, slot, JSON.stringify({
+        ...rec, lastMsgAt: sup ? sup.lastMsgAt() : null, at: Date.now(),
+        reconnects: Math.max(0, (opens.get(slot) || 0) - 1), bootAt,
+      }));
     } catch (err) {
       logger.warn({ err: err.message, slot }, 'numberPool: failed to persist slot state');
     }
   }
 
-  /** First eligible (paired) slot not banned/degraded this run, or null. */
-  function pickAvailable() {
-    return registry.eligibleSlots().find((s) => !banned.has(s) && !degraded.has(s)) || null;
+  /** Mirror a slot's state into the easecab:bot:numbers hash (best-effort). */
+  function setSlotState(slot, state, code) {
+    meta.set(slot, { state, lastCode: code === undefined ? null : code, since: Date.now() });
+    return writeLive(slot);
   }
 
-  /** Open a connection for a slot; wire lifecycle callbacks + connect timeout. */
-  async function connectSlot(slot) {
-    if (stopped) return;
-    currentSlot = slot;
-    open = false;
-    const myToken = (token += 1);
-    try {
-      currentSock = await connectionFactory({
-        sessionPath: registry.sessionDirFor(slot),
-        groups,
-        onMessage: trackedOnMessage,
-        logger,
-        onOpen: () => {
-          if (stopped || myToken !== token) return;
-          clearTimeout(connectTimer);
-          attempt = 0;
-          open = true;
-          lastActivityAt = Date.now(); // reset the stall window on a fresh open
-          logger.info({ slot }, 'numberPool: slot active');
-          setSlotState(slot, SLOT_STATE.ACTIVE);
-          // Covers a recovery by process restart too (the rescan path clears it itself).
-          alerter.clear(ALERT_EVENT.ALL_EXHAUSTED);
-        },
-        onClose: (code) => {
-          if (stopped || myToken !== token) return;
-          open = false;
-          clearTimeout(connectTimer);
-          handleClose(code);
-        },
-      });
-    } catch (err) {
-      logger.error({ err: err.message, slot }, 'numberPool: failed to open connection');
-      if (!stopped && myToken === token) handleClose(undefined);
-      return;
-    }
-    connectTimer = setTimeout(() => {
-      if (stopped || myToken !== token) return;
-      logger.warn({ slot }, 'numberPool: connect timeout — no open');
-      token += 1; // invalidate this attempt's onOpen/onClose
-      try {
-        if (currentSock) currentSock.end(undefined);
-      } catch {
-        // already closed
-      }
-      handleClose(undefined);
-    }, BOT_HEALTH.CONNECT_TIMEOUT_MS);
-  }
-
-  /** Apply the failover policy for a closed/failed connection. */
-  function handleClose(code) {
-    if (stopped) return;
-    attempt += 1;
-    const decision = decideOnClose({
-      code,
-      attempt,
-      maxAttempts: BACKOFF.MAX_ATTEMPTS,
-      loggedOutCode,
-    });
-
-    if (decision.action === 'reconnect') {
-      const delay = nextDelayMs(attempt);
-      logger.warn({ slot: currentSlot, attempt, delay }, 'numberPool: reconnecting same slot after backoff');
-      backoffTimer = setTimeout(() => connectSlot(currentSlot), delay);
-      return;
-    }
-
-    const slot = currentSlot;
-    if (decision.ban) {
-      banned.add(slot);
-      setSlotState(slot, SLOT_STATE.BANNED, code);
-      alerter.raise(ALERT_EVENT.NUMBER_BANNED, ALERT_SEV.WARN, { slot });
-    } else if (decision.degrade) {
-      degraded.add(slot);
-      setSlotState(slot, SLOT_STATE.DEGRADED, code);
-    }
-    attempt = 0;
-    rotate();
-  }
-
-  /** Move to the next available slot, or raise ALL_EXHAUSTED. */
-  function rotate() {
-    if (stopped) return;
-    const next = pickAvailable();
-    if (!next) {
-      onExhausted();
-      return;
-    }
-    logger.warn({ to: next }, 'numberPool: failing over to next slot');
-    alerter.raise(ALERT_EVENT.FAILOVER, ALERT_SEV.WARN, { to: next });
-    connectSlot(next);
-  }
-
-  /** No eligible slot left — feed is dark. Stay alive and re-scan for a paired backup. */
-  function onExhausted() {
-    currentSlot = null;
-    currentSock = null;
-    logger.error('numberPool: all numbers exhausted — feed is dark');
+  /** Raise ALL_EXHAUSTED once no slot is connecting or open. */
+  function checkDark() {
+    const alive = [...sups.values()].some((s) => s.run() === RUN.OPEN || s.run() === RUN.CONNECTING);
+    if (alive || dark || stopped) return;
+    dark = true;
+    logger.error('numberPool: all numbers down — feed is dark');
     alerter.raise(ALERT_EVENT.ALL_EXHAUSTED, ALERT_SEV.SEV1);
-    if (rescanTimer) return;
-    rescanTimer = setInterval(() => {
-      if (stopped) return;
-      let next = pickAvailable();
-      if (!next && degraded.size) {
-        // Degraded = a timeout streak (e.g. a VPS network blip), not a ban. With no
-        // fresh slot left, give degraded ones another round instead of staying dark.
-        degraded.clear();
-        next = pickAvailable();
-      }
-      if (next) {
-        clearInterval(rescanTimer);
-        rescanTimer = null;
-        logger.info({ slot: next }, 'numberPool: a slot became available — recovering');
-        alerter.clear(ALERT_EVENT.ALL_EXHAUSTED);
-        connectSlot(next);
-      }
-    }, BOT_HEALTH.RESCAN_MS);
   }
 
   /**
-   * Stall watchdog (#16): when the slot is OPEN but no inbound message has arrived
-   * for STALL_WATCHDOG_MS, the socket has likely silently wedged (Baileys emits no
-   * 'close'). Force-end it — that fires 'close' → onClose → handleClose → a transient
-   * reconnect of the same slot. Bump lastActivityAt first so we don't re-fire before
-   * the close lands. A forced reconnect during a genuinely quiet stretch is harmless.
+   * Alert field per slot: the alerter only notifies when a field is NEW, so a shared
+   * NUMBER_BANNED field would silence every ban after the first.
+   * @param {string} event @param {string} slot @returns {string}
    */
-  function checkStall() {
-    if (stopped || !open || !currentSock) return;
-    if (Date.now() - lastActivityAt < BOT_HEALTH.STALL_WATCHDOG_MS) return;
-    logger.warn(
-      { slot: currentSlot, idleMs: Date.now() - lastActivityAt },
-      'numberPool: inbound silence on an open socket — forcing reconnect (stall watchdog)',
-    );
-    open = false;
-    lastActivityAt = Date.now();
-    try {
-      if (currentSock) currentSock.end(undefined);
-    } catch {
-      // already torn down — the close path will still run
-    }
+  const slotAlert = (event, slot) => `${event}:${slot}`;
+
+  function onSlotOpen(slot) {
+    dark = false;
+    alerter.clear(slotAlert(ALERT_EVENT.NUMBER_DOWN, slot));
+    alerter.clear(slotAlert(ALERT_EVENT.NUMBER_BANNED, slot)); // re-paired after a logout
+    // Covers a recovery by process restart too.
+    alerter.clear(ALERT_EVENT.ALL_EXHAUSTED);
   }
 
-  /** Begin supervising: mark unregistered slots, connect the first available. */
+  /**
+   * One slot's connect / backoff / stall loop. `token` identifies the live attempt so
+   * callbacks from a superseded socket are ignored.
+   * @param {string} slot
+   */
+  function createSupervisor(slot) {
+    let sock = null;
+    let run = RUN.CONNECTING;
+    let attempt = 0; // consecutive transient retries
+    let token = 0;
+    let connectTimer = null;
+    let backoffTimer = null;
+    let lastActivityAt = 0; // epoch ms of the last inbound group message (stall watchdog, #16)
+    let lastMsgAt = null; // last real message (stats; the watchdog resets lastActivityAt)
+
+    const tagged = async (m) => {
+      lastActivityAt = Date.now();
+      lastMsgAt = lastActivityAt;
+      return onMessage({ ...m, botId: slot });
+    };
+
+    function endSock() {
+      try {
+        if (sock) sock.end(undefined);
+      } catch {
+        // already closed
+      }
+    }
+
+    async function connect() {
+      if (stopped) return;
+      run = RUN.CONNECTING;
+      setSlotState(slot, SLOT_STATE.CONNECTING);
+      const myToken = (token += 1);
+      try {
+        sock = await connectionFactory({
+          sessionPath: registry.sessionDirFor(slot),
+          groups,
+          onMessage: tagged,
+          onGroups: (jids) => onGroups(slot, jids),
+          logger: logger.child ? logger.child({ slot }) : logger,
+          onOpen: () => {
+            if (stopped || myToken !== token) return;
+            clearTimeout(connectTimer);
+            attempt = 0;
+            run = RUN.OPEN;
+            lastActivityAt = Date.now(); // reset the stall window on a fresh open
+            logger.info({ slot }, 'numberPool: slot active');
+            opens.set(slot, (opens.get(slot) || 0) + 1);
+            setSlotState(slot, SLOT_STATE.ACTIVE);
+            onSlotOpen(slot);
+            const jid = sock && sock.user && sock.user.id; // "<number>:<device>@s.whatsapp.net"
+            if (jid) onPhone(slot, jid.split(/[:@]/)[0]);
+          },
+          onClose: (code) => {
+            if (stopped || myToken !== token) return;
+            clearTimeout(connectTimer);
+            handleClose(code);
+          },
+        });
+      } catch (err) {
+        logger.error({ err: err.message, slot }, 'numberPool: failed to open connection');
+        if (!stopped && myToken === token) handleClose(undefined);
+        return;
+      }
+      connectTimer = setTimeout(() => {
+        if (stopped || myToken !== token) return;
+        logger.warn({ slot }, 'numberPool: connect timeout — no open');
+        token += 1; // invalidate this attempt's onOpen/onClose
+        endSock();
+        handleClose(undefined);
+      }, BOT_HEALTH.CONNECT_TIMEOUT_MS);
+    }
+
+    function handleClose(code) {
+      if (stopped) return;
+      attempt += 1;
+      const decision = decideOnClose({ code, attempt, maxAttempts: BACKOFF.MAX_ATTEMPTS, loggedOutCode });
+      if (decision.action === 'reconnect') {
+        run = RUN.CONNECTING;
+        setSlotState(slot, SLOT_STATE.CONNECTING, code);
+        const delay = nextDelayMs(attempt);
+        logger.warn({ slot, attempt, delay }, 'numberPool: reconnecting slot after backoff');
+        backoffTimer = setTimeout(connect, delay);
+        return;
+      }
+      attempt = 0;
+      if (decision.ban) {
+        run = RUN.BANNED;
+        setSlotState(slot, SLOT_STATE.BANNED, code);
+        alerter.raise(slotAlert(ALERT_EVENT.NUMBER_BANNED, slot), ALERT_SEV.WARN, { slot });
+      } else {
+        run = RUN.DEGRADED;
+        setSlotState(slot, SLOT_STATE.DEGRADED, code);
+        alerter.raise(slotAlert(ALERT_EVENT.NUMBER_DOWN, slot), ALERT_SEV.WARN, { slot });
+      }
+      logger.warn({ slot, run }, 'numberPool: slot down; other slots keep ingesting');
+      checkDark();
+    }
+
+    /** Force-end an OPEN socket that went silent (Baileys can wedge with no 'close'). */
+    function checkStall() {
+      if (stopped || run !== RUN.OPEN || !sock) return;
+      if (Date.now() - lastActivityAt < BOT_HEALTH.STALL_WATCHDOG_MS) return;
+      logger.warn({ slot, idleMs: Date.now() - lastActivityAt }, 'numberPool: inbound silence — forcing reconnect (stall watchdog)');
+      run = RUN.CONNECTING;
+      lastActivityAt = Date.now();
+      endSock(); // fires 'close' → onClose → transient reconnect
+    }
+
+    /** @param {boolean} [logout] - also unlink the device on WhatsApp (session removed) */
+    async function stop(logout = false) {
+      token += 1; // ignore the close this triggers
+      clearTimeout(connectTimer);
+      clearTimeout(backoffTimer);
+      if (logout && sock && run === RUN.OPEN) {
+        await sock.logout().catch((err) => logger.warn({ err: err.message, slot }, 'numberPool: logout failed'));
+      }
+      endSock();
+    }
+
+    return { connect, checkStall, stop, run: () => run, lastMsgAt: () => lastMsgAt };
+  }
+
+  /**
+   * Stop supervising a slot (paused, removed, or about to be re-paired).
+   * @param {string} slot
+   * @param {{ logout?: boolean, state?: string }} [opts]
+   */
+  async function release(slot, { logout = false, state = SLOT_STATE.PAUSED } = {}) {
+    const sup = sups.get(slot);
+    sups.delete(slot);
+    if (sup) await sup.stop(logout);
+    setSlotState(slot, state);
+    logger.info({ slot, state }, 'numberPool: slot released');
+  }
+
+  /** Start supervisors for newly paired slots, retry degraded ones, drop unlisted ones. */
+  function rescan() {
+    if (stopped) return;
+    const listed = new Set(registry.listedSlots());
+    for (const slot of sups.keys()) if (!listed.has(slot)) release(slot);
+    for (const slot of registry.eligibleSlots()) {
+      if (busy.has(slot)) continue; // a pairing run owns this session dir
+      const sup = sups.get(slot);
+      if (!sup) {
+        const fresh = createSupervisor(slot);
+        sups.set(slot, fresh);
+        fresh.connect();
+      } else if (sup.run() === RUN.DEGRADED) {
+        logger.info({ slot }, 'numberPool: retrying degraded slot');
+        sup.connect();
+      }
+    }
+    checkDark();
+  }
+
+  /** Begin supervising: mark unregistered slots, connect every paired one. */
   function start() {
     const eligible = new Set(registry.eligibleSlots());
-    for (const slot of slots) {
+    for (const slot of registry.listedSlots()) {
       if (!eligible.has(slot)) setSlotState(slot, SLOT_STATE.UNREGISTERED);
     }
-    watchdogTimer = setInterval(checkStall, BOT_HEALTH.WATCHDOG_CHECK_MS);
-    const first = pickAvailable();
-    if (!first) {
-      onExhausted();
-      return;
-    }
-    connectSlot(first);
+    // Every listed slot's record is refreshed so the admin panel can tell OFFLINE (bot dead).
+    liveTimer = setInterval(() => registry.listedSlots().forEach(writeLive), WA_SESSIONS.LIVE_TICK_MS);
+    watchdogTimer = setInterval(() => sups.forEach((s) => s.checkStall()), BOT_HEALTH.WATCHDOG_CHECK_MS);
+    rescanTimer = setInterval(rescan, BOT_HEALTH.RESCAN_MS);
+    rescan();
   }
 
-  /** Stop supervising: cancel all timers and end the live socket. */
+  /** Stop supervising: cancel all timers and end every live socket. */
   function stop() {
     stopped = true;
-    clearTimeout(connectTimer);
-    clearTimeout(backoffTimer);
-    if (rescanTimer) clearInterval(rescanTimer);
-    if (watchdogTimer) clearInterval(watchdogTimer);
-    try {
-      if (currentSock) currentSock.end(undefined);
-    } catch {
-      // already closed
-    }
+    clearInterval(rescanTimer);
+    clearInterval(watchdogTimer);
+    clearInterval(liveTimer);
+    sups.forEach((s) => s.stop());
   }
 
-  return { start, stop };
+  return { start, stop, rescan, release };
 }
 
 module.exports = { createNumberPool };

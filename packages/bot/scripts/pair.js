@@ -18,8 +18,30 @@ const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const { env } = require('../config/env.js');
 const { createConnection } = require('../features/whatsapp/connection');
+const { qrSvg } = require('../features/sessions/qrSvg');
 
 const slot = (process.argv[2] || 'slot-1').trim();
+// Optional 2nd arg = phone number (country code, digits only) → print a pairing code
+// instead of a QR, for linking a phone that isn't at the server (remote pairing).
+// In WhatsApp: Linked Devices > Link a device > "Link with phone number instead".
+const phone = (process.argv[3] || '').replace(/\D/g, '');
+let codeRequested = false;
+
+// Optional env PAIR_HTTP_PORT → also serve the live QR on an open web page so someone
+// away from the server can scan it (same idea as the manager bots' QR pages).
+let latestQr = '';
+
+if (process.env.PAIR_HTTP_PORT) {
+  require('node:http')
+    .createServer((req, res) => {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.end(`<!doctype html><meta name=viewport content="width=device-width"><meta http-equiv=refresh content=5>
+<title>EaseCab bot QR</title><body style="font-family:sans-serif;text-align:center;background:#fff">
+<h3>WhatsApp &gt; Linked Devices &gt; Link a device (${slot})</h3><div style="display:inline-block;padding:16px">${latestQr ? qrSvg(latestQr) : ''}</div>
+<p>${latestQr ? 'Page refreshes every 5s — scan the latest QR' : 'Waiting for QR / already paired'}</p>`);
+    })
+    .listen(Number(process.env.PAIR_HTTP_PORT));
+}
 const logger = pino({ level: 'info' });
 
 const sessionPath = path.join(env.WA_SESSION_PATH, slot);
@@ -52,13 +74,25 @@ function waitForCreds(tries = 0) {
 
 async function attempt() {
   attempts += 1;
-  await createConnection({
+  const sock = await createConnection({
     sessionPath,
     // Pairing ingests and records nothing — the running bot discovers groups on connect.
     groups: { shouldIngest: () => false, nameOf: () => undefined, record: async () => {} },
     onMessage: async () => {}, // pairing only — ingest nothing
     logger,
-    onQr: (qr) => {
+    onQr: async (qr) => {
+      latestQr = qr;
+      if (phone) {
+        if (codeRequested) return; // ponytail: one code per run; expired → re-run
+        codeRequested = true;
+        const code = await sock.requestPairingCode(phone);
+        // eslint-disable-next-line no-console -- the code must reach the operator
+        console.log(`
+PAIRING CODE for ${slot}: ${code}
+Enter it on the phone: Linked Devices > Link a device > Link with phone number instead
+`);
+        return;
+      }
       // eslint-disable-next-line no-console -- the QR must reach the operator's terminal
       console.log(`\nScan this QR in WhatsApp > Linked Devices > Link a device (slot: ${slot}):\n`);
       qrcode.generate(qr, { small: true });
@@ -67,6 +101,7 @@ async function attempt() {
       // Baileys writes creds.json asynchronously; exiting on `open` races that
       // write and can truncate creds.json to 0 bytes (slot then reads as unpaired).
       // Wait until creds.json actually finalizes (registered || me.id) before exit.
+      latestQr = '';
       logger.info({ slot }, 'connection open — waiting for creds.json to finalize...');
       waitForCreds();
     },

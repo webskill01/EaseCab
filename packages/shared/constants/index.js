@@ -10,6 +10,7 @@ module.exports = {
   ...require('./vehicles'),
   ...require('./rides'),
   ...require('./bot'),
+  ...require('./waSessions'),
   ...require('./botFilters'),
   ...require('./auth'),
   ...require('./subscription'),

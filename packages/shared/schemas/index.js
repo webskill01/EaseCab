@@ -20,4 +20,5 @@ module.exports = {
   ...require('./blocks.schema'),
   ...require('./memberSync.schema'),
   ...require('./referrals.schema'),
+  ...require('./waSessions.schema'),
 };

@@ -26,6 +26,8 @@ describe('admin middleware route-gate (M2)', () => {
     expect(re.test('/_next/static/chunk.js')).toBe(false)
     expect(re.test('/favicon.ico')).toBe(false)
     expect(re.test('/verifications')).toBe(true)
+    expect(re.test('/pair/AbC_123-xyzAbC_123-xyz')).toBe(false) // public share scanner
+    expect(re.test('/sessions')).toBe(true)
     expect(re.test('/')).toBe(true)
   })
 })

@@ -12,15 +12,18 @@ const { redisKey } = require('./redis');
 /** Lifecycle state of one WhatsApp number slot in the pool. */
 const SLOT_STATE = Object.freeze({
   ACTIVE: 'active', // currently connected and ingesting
+  CONNECTING: 'connecting', // opening a socket or waiting out a reconnect backoff
   BANNED: 'banned', // WhatsApp logged it out (definitive) — rotated away from
   DEGRADED: 'degraded', // exhausted reconnect backoff without a clean logout — rotated away from
   UNREGISTERED: 'unregistered', // listed but its session dir is not paired yet — skipped
+  PAUSED: 'paused', // admin paused / removed it — supervisor stopped
 });
 
 /** Operational events the bot/cron raise to the admin alert surface. */
 const ALERT_EVENT = Object.freeze({
   NUMBER_BANNED: 'number_banned', // a slot was logged out
-  FAILOVER: 'failover', // rotated from one slot to another
+  FAILOVER: 'failover', // legacy (single-session pool): rotated from one slot to another
+  NUMBER_DOWN: 'number_down', // a slot exhausted its reconnect backoff; others keep ingesting
   FEED_STALE: 'feed_stale', // no ride ingested within the stale window (active hours)
   ALL_EXHAUSTED: 'all_exhausted', // no eligible slot left — feed is dark (sev-1)
 });
@@ -69,10 +72,17 @@ const BACKOFF = Object.freeze({
 });
 
 // Redis keys (shared box — always namespaced via redisKey, DECISIONS.md 2026-05-30).
-const BOT_NUMBERS_KEY = redisKey('bot', 'numbers'); // hash: slot -> {state,lastCode,since}
+const BOT_NUMBERS_KEY = redisKey('bot', 'numbers'); // hash: slot -> {state,lastCode,since,lastMsgAt,at}
 const BOT_LAST_INGEST_KEY = redisKey('bot', 'last_ingest_at'); // epoch ms of the last ride write
 const BOT_ALERTS_KEY = redisKey('bot', 'alerts'); // hash: event -> {sev,since,detail?}
 const BOT_LOST_MSGS_KEY = redisKey('bot', 'lost_group_msgs'); // group messages lost since bot start
+
+// Multi-session dedup: every number in a group receives the same WhatsApp message id,
+// so the first session to SET NX this key processes it and the rest skip. Lives as
+// long as a ride fingerprint (12h) — a late offline-delivered copy is still caught.
+const BOT_MSG_CLAIM_TTL_SEC = 12 * 60 * 60;
+/** @param {string} groupId @param {string} msgId @returns {string} */
+const botMsgClaimKey = (groupId, msgId) => redisKey('bot', 'msg', groupId, msgId);
 
 module.exports = {
   SLOT_STATE,
@@ -84,4 +94,6 @@ module.exports = {
   BOT_LAST_INGEST_KEY,
   BOT_ALERTS_KEY,
   BOT_LOST_MSGS_KEY,
+  BOT_MSG_CLAIM_TTL_SEC,
+  botMsgClaimKey,
 };

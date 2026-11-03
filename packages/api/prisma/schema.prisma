@@ -278,6 +278,21 @@ model WaGroup {
   @@map("wa_groups")
 }
 
+// WhatsApp number sessions easecab-bot ingests from (Phase 25, multi-session). Managed
+// from the admin Sessions tab; `slot` is the session dir label on the VPS.
+model WaSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  slot       String    @unique // e.g. slot-1 — opaque label, never a phone number
+  name       String
+  enabled    Boolean   @default(true) // false = paused: bot disconnects, keeps the login
+  phone      String? // linked WhatsApp number, set by the bot after pairing (admin-only)
+  ridesSaved Int       @default(0) @map("rides_saved") // lifetime rides this number saved first
+  pairedAt   DateTime? @map("paired_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("wa_sessions")
+}
+
 // ---------------------------------------------------------------------------
 // POSTED RIDES (app-native, verified)
 // ---------------------------------------------------------------------------

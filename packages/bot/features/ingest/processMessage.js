@@ -20,6 +20,7 @@ const REASON = Object.freeze({
   NO_PHONE: 'no_phone',
   NO_ROUTE: 'no_route',
   DUPLICATE: 'duplicate',
+  CLAIMED_ELSEWHERE: 'claimed_elsewhere', // another number already took this exact message
   SAVED: 'saved',
   ERROR: 'error',
 });
@@ -32,12 +33,12 @@ const REASON = Object.freeze({
  *
  * @param {object} deps
  * @param {{ resolve: (raw: string) => Promise<{status: string, cityId: ?string}> }} deps.resolver
- * @param {{ isDuplicate: (fp: string) => Promise<boolean>, saveRide: (d: object) => Promise<object> }} deps.repository
+ * @param {{ claimMessage: Function, releaseMessage: Function, isDuplicate: (fp: string) => Promise<boolean>, saveRide: (d: object) => Promise<?object> }} deps.repository
  * @param {string[]} deps.cityNames - DB-loaded city vocabulary (canonical + aliases)
  * @param {{ rideKeywords: string[], ignoreKeywords: string[], blockedPhoneNumbers: string[], blockedSenders: string[], knownBrandings?: string[] }} deps.filters
  * @param {{ record: () => Promise<void> }} [deps.heartbeat] - ingestion heartbeat; fired only on a successful save (Phase 2.5 6b)
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
- * @returns {(msg: {text: string, senderJid: string, groupId?: string, groupName?: string, botId?: string}) => Promise<{saved: boolean, reason: string, ride?: object}>}
+ * @returns {(msg: {text: string, senderJid: string, groupId?: string, groupName?: string, msgId?: string, botId?: string}) => Promise<{saved: boolean, reason: string, ride?: object}>}
  */
 function createProcessMessage({ resolver, repository, cityNames, filters, heartbeat, logger }) {
   const log = logger || { info() {}, warn() {}, error() {} };
@@ -66,8 +67,13 @@ function createProcessMessage({ resolver, repository, cityNames, filters, heartb
   }
 
   return async function processMessage(msg) {
+    const { senderJid, groupId, groupName, msgId, botId } = msg;
     try {
-      const { senderJid, groupId, groupName, botId } = msg;
+      // Multi-session: every number in a shared group gets this same message — the
+      // first claim wins, the rest stop here before any parsing or DB work.
+      if (!(await repository.claimMessage(groupId, msgId))) {
+        return { saved: false, reason: REASON.CLAIMED_ELSEWHERE };
+      }
       // Fleet bots post into the source group with a trailing stamp; drop it
       // before anything else so it neither shows in the feed nor splits dedup.
       const text = stripBranding(msg.text, filters.knownBrandings);
@@ -116,6 +122,8 @@ function createProcessMessage({ resolver, repository, cityNames, filters, heartb
         sourceGroupName: groupName,
         botId,
       });
+      // Another number saved the same fingerprint a moment earlier (unique race).
+      if (!ride) return { saved: false, reason: REASON.DUPLICATE };
 
       // Operational heartbeat: stamp the last successful ingest so the cron
       // stale watcher can distinguish a dead feed from a quiet group (6b).
@@ -131,6 +139,8 @@ function createProcessMessage({ resolver, repository, cityNames, filters, heartb
       return { saved: true, reason: REASON.SAVED, ride };
     } catch (err) {
       log.error({ err: err.message }, 'processMessage failed; message dropped');
+      // Let a later copy from another number retry instead of being skipped.
+      await repository.releaseMessage(groupId, msgId);
       return { saved: false, reason: REASON.ERROR };
     }
   };

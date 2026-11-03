@@ -21,7 +21,8 @@ export function middleware(request) {
   return NextResponse.next()
 }
 
-// Skip /login itself plus Next internals and static assets — only guard real pages.
+// Skip /login, the public /pair/<token> scanner page (token-gated by the API), Next
+// internals and static assets — only guard real pages.
 export const config = {
-  matcher: ['/((?!login|_next/static|_next/image|favicon.ico|.*\\.).*)'],
+  matcher: ['/((?!login|pair/|_next/static|_next/image|favicon.ico|.*\\.).*)'],
 }

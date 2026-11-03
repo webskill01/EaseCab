@@ -6,6 +6,7 @@ const {
   makeCacheableSignalKeyStore,
   Browsers,
   fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   NO_MESSAGE_FOUND_ERROR_TEXT,
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
@@ -116,18 +117,22 @@ async function backfillGroupNames(sock, groups, isClosed, logger) {
  * @param {string} deps.sessionPath - this slot's multi-file auth-state dir
  * @param {{ shouldIngest: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, namelessJids: () => string[], record: (groups: object[]) => Promise<void> }} deps.groups
  *   - group store (Phase 18): which groups to ingest + where discovered groups are saved
- * @param {(msg: {text: string, senderJid: string, groupId: string, groupName?: string}) => Promise<unknown>} deps.onMessage
+ * @param {(msg: {text: string, senderJid: string, groupId: string, groupName?: string, msgId?: string}) => Promise<unknown>} deps.onMessage
  * @param {() => void} [deps.onOpen] - called once the connection is open
  * @param {(code: number|undefined) => void} [deps.onClose] - called after cleanup on close, with the disconnect status code
+ * @param {(jids: string[]) => void} [deps.onGroups] - every group this number is in, after each connect (admin stats)
  * @param {(qr: string) => void} [deps.onQr] - called with each QR string while unpaired (pairing only; supervised slots are already paired)
  * @param {{ info: Function, warn: Function, error: Function }} deps.logger
  * @returns {Promise<object>} the live socket (caller may end it on timeout/shutdown)
  */
-async function createConnection({ sessionPath, groups, onMessage, onOpen, onClose, onQr, logger }) {
+async function createConnection({ sessionPath, groups, onMessage, onOpen, onClose, onGroups, onQr, logger }) {
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-  // Pin the current WhatsApp Web build — a stale hardcoded version makes WA reject
-  // the handshake with a 405 ("connection failure"). Required for every connect.
-  const { version } = await fetchLatestBaileysVersion();
+  // Pin the current WhatsApp Web build — a stale version makes WA reject the
+  // handshake (405) and makes the phone say "Couldn't link device" on QR scan.
+  // Baileys' GitHub list lagged live WA Web by ~8.7M builds on 2026-11-01, so ask
+  // web.whatsapp.com first; that lookup sets isLatest=false on failure → fall back.
+  const live = await fetchLatestWaWebVersion();
+  const { version } = live.isLatest ? live : await fetchLatestBaileysVersion();
   let closed = false; // guard so we report close exactly once
 
   const baileysLogger = pino({ level: 'silent' }); // silence Baileys internals; we log our own
@@ -162,7 +167,10 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       // send rate budget and would trip rate-overlimit at ~300 groups). Saved in the
       // background so a slow DB never delays the connection.
       sock.groupFetchAllParticipating()
-        .then((all) => groups.record(Object.values(all || {}).map(toGroupRecord)))
+        .then((all) => {
+          if (onGroups) onGroups(Object.keys(all || {}));
+          return groups.record(Object.values(all || {}).map(toGroupRecord));
+        })
         .then(() => logger.info('wa groups recorded'))
         .then(() => backfillGroupNames(sock, groups, () => closed, logger))
         .catch((err) => logger.warn({ err: err.message }, 'could not fetch joined groups'));
@@ -214,7 +222,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       if (!text) continue;
       const senderJid = senderOf(m.key, jid);
       try {
-        await onMessage({ text, senderJid, groupId: jid, groupName: groups.nameOf(jid) });
+        await onMessage({ text, senderJid, groupId: jid, groupName: groups.nameOf(jid), msgId: m.key.id });
       } catch (err) {
         // onMessage (processMessage) is contracted never to throw; guard anyway
         // so one bad message can never tear down the listener.

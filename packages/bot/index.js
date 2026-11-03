@@ -10,7 +10,8 @@ const pino = require('pino');
 const { DisconnectReason } = require('@whiskeysockets/baileys');
 const {
   createCityResolver, createAlerter, createTelegramNotifier, BOT_FILTERS_CHANGED_CHANNEL, BOT_GROUPS_CHANGED_CHANNEL,
-  BOT_HEALTH, BOT_LOST_MSGS_KEY,
+  BOT_HEALTH, BOT_LOST_MSGS_KEY, BOT_SESSIONS_CHANGED_CHANNEL, BOT_PAIR_CMD_CHANNEL, botSlotStatsKey, botSlotGroupsKey,
+  botSlotRidesKey, WA_SESSIONS,
 } = require('@easecab/shared');
 const { createRideRepository } = require('./features/ingest/rideRepository');
 const { createProcessMessage } = require('./features/ingest/processMessage');
@@ -20,6 +21,8 @@ const { createSlotRegistry } = require('./features/whatsapp/slotRegistry');
 const { createNumberPool } = require('./features/whatsapp/numberPool');
 const { createFilterStore } = require('./features/filters/filterStore');
 const { createGroupStore } = require('./features/groups/groupStore');
+const { createSessionStore } = require('./features/sessions/sessionStore');
+const { createPairingManager, moveAside } = require('./features/sessions/pairingManager');
 
 const CITY_REFRESH_MS = 5 * 60 * 1000; // re-pull the city vocab every 5 min
 
@@ -71,12 +74,9 @@ async function main() {
   await filterStore.start();
   const groupStore = createGroupStore({ prisma, logger });
   await groupStore.start();
-  // The admin API publishes on every change; reload the matching store immediately.
-  const subscriber = redis.duplicate();
-  subscriber.on('message', (channel) => (
-    channel === BOT_GROUPS_CHANGED_CHANNEL ? groupStore.reload() : filterStore.reload()
-  ));
-  await subscriber.subscribe(BOT_FILTERS_CHANGED_CHANNEL, BOT_GROUPS_CHANGED_CHANNEL);
+  // Which numbers run = wa_sessions (Phase 25, admin Sessions tab); WA_NUMBERS only seeds it once.
+  const sessionStore = createSessionStore({ prisma, logger, seedSlots: env.WA_NUMBERS });
+  await sessionStore.start();
 
   // Hold the vocab in a stable array reference and mutate it in place on refresh,
   // so the processMessage closure always sees the latest cities without re-wiring.
@@ -94,12 +94,13 @@ async function main() {
     // filter or group switch lands CITY_REFRESH_MS late.
     await filterStore.reload();
     await groupStore.reload();
+    await onSessionsChanged().catch((err) => logger.warn({ err: err.message }, 'session refresh failed'));
   }, CITY_REFRESH_MS);
 
   const resolver = createCityResolver({ prisma, redis, logger });
   const repository = createRideRepository({ prisma, redis, logger });
   const heartbeat = createHeartbeat({ redis, logger });
-  const processMessage = createProcessMessage({
+  const ingest = createProcessMessage({
     resolver,
     repository,
     cityNames,
@@ -107,6 +108,21 @@ async function main() {
     heartbeat,
     logger,
   });
+  // Per-session outcome counters for the admin Sessions tab (best-effort).
+  const processMessage = async (m) => {
+    const result = await ingest(m);
+    if (m.botId) {
+      const tx = redis.multi().hincrby(botSlotStatsKey(m.botId), result.reason, 1);
+      if (result.saved) {
+        const city = result.ride.pickupCityId || WA_SESSIONS.RIDE_STATS_UNKNOWN_CITY;
+        const hourKey = botSlotRidesKey(m.botId, Math.floor(Date.now() / WA_SESSIONS.HOUR_MS));
+        tx.hincrby(hourKey, city, 1).expire(hourKey, WA_SESSIONS.RIDE_STATS_TTL_SEC)
+          .hincrby(botSlotRidesKey(m.botId, 'all'), city, 1);
+      }
+      tx.exec().catch((err) => logger.warn({ err: err.message }, 'could not count session outcome'));
+    }
+    return result;
+  };
 
   // Number-pool supervisor (Phase 2.5 6a): manages failover/rotation across the
   // configured slots; createConnection is the per-slot live-socket factory.
@@ -114,9 +130,9 @@ async function main() {
     token: env.TELEGRAM_ALERT_BOT_TOKEN, chatId: env.TELEGRAM_ALERT_CHAT_ID, logger,
   });
   const alerter = createAlerter({ redis, logger, notify });
-  const registry = createSlotRegistry({ sessionPath: env.WA_SESSION_PATH, slots: env.WA_NUMBERS });
+  const registry = createSlotRegistry({ sessionPath: env.WA_SESSION_PATH, slots: sessionStore.enabledSlots });
+  const busy = new Set(); // slots a pairing run owns
   const pool = createNumberPool({
-    slots: env.WA_NUMBERS,
     groups: groupStore,
     onMessage: processMessage,
     logger,
@@ -125,8 +141,43 @@ async function main() {
     registry,
     connectionFactory: createConnection,
     loggedOutCode: DisconnectReason.loggedOut,
+    busy,
+    onPhone: (slot, phone) => sessionStore.notePhone(slot, phone),
+    onGroups: (slot, jids) => {
+      const key = botSlotGroupsKey(slot);
+      const tx = redis.multi().del(key);
+      if (jids.length) tx.sadd(key, ...jids);
+      tx.exec().catch((err) => logger.warn({ err: err.message, slot }, 'could not store session groups'));
+    },
   });
   pool.start();
+  const pairing = createPairingManager({
+    redis, logger, registry, pool, busy, sessions: sessionStore, connectionFactory: createConnection,
+  });
+
+  /** Admin added / renamed / paused / removed a session: apply it now. */
+  async function onSessionsChanged() {
+    const { removed } = await sessionStore.reload();
+    for (const slot of removed) {
+      await pool.release(slot, { logout: true });
+      moveAside(registry.sessionDirFor(slot), 'removed');
+    }
+    pool.rescan(); // stops paused slots, starts resumed ones
+  }
+
+  // The admin API publishes on every change; apply it immediately.
+  const subscriber = redis.duplicate();
+  subscriber.on('message', (channel, payload) => {
+    if (channel === BOT_GROUPS_CHANGED_CHANNEL) return groupStore.reload();
+    if (channel === BOT_FILTERS_CHANGED_CHANNEL) return filterStore.reload();
+    const run = channel === BOT_PAIR_CMD_CHANNEL
+      ? Promise.resolve().then(() => pairing.handle(JSON.parse(payload))) // bad JSON → caught below
+      : onSessionsChanged();
+    return run.catch((err) => logger.error({ err: err.message, channel }, 'session command failed'));
+  });
+  await subscriber.subscribe(
+    BOT_FILTERS_CHANGED_CHANNEL, BOT_GROUPS_CHANGED_CHANNEL, BOT_SESSIONS_CHANGED_CHANNEL, BOT_PAIR_CMD_CHANNEL,
+  );
 
   // Diagnostic for the group-only shouldIgnoreJid trade-off (connection.js): how many
   // group messages arrived as "unavailable" placeholders and were never recovered.
@@ -154,7 +205,7 @@ async function main() {
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-  logger.info({ slots: env.WA_NUMBERS.length }, 'easecab-bot listening to all enabled groups (number pool active)');
+  logger.info({ slots: sessionStore.enabledSlots().length }, 'easecab-bot listening to all enabled groups (number pool active)');
 }
 
 main().catch((err) => {

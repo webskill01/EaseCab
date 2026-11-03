@@ -13,6 +13,8 @@ const baseDeps = () => ({
         : { status: 'unresolved', cityId: null },
   },
   repository: {
+    claimMessage: async () => true,
+    releaseMessage: async () => {},
     isDuplicate: async () => false,
     saveRide: async (d) => ({ id: 'ride-1', ...d }),
   },
@@ -159,4 +161,52 @@ test('strips the fleet stamp before saving and fingerprinting', async () => {
   assert.strictEqual(stamped.ride.rawText, 'delhi to chandigarh 9876543210');
   assert.ok(!stamped.ride.displayText.includes('Forwarded'));
   assert.strictEqual(stamped.ride.fingerprint, plain.ride.fingerprint);
+});
+
+test('skips a message another number already claimed', async () => {
+  const deps = baseDeps();
+  let saved = 0;
+  deps.repository.claimMessage = async () => false;
+  deps.repository.saveRide = async () => { saved += 1; return {}; };
+  const r = await createProcessMessage(deps)(msg({ msgId: 'm1' }));
+  assert.strictEqual(r.reason, 'claimed_elsewhere');
+  assert.strictEqual(saved, 0);
+});
+
+test('a lost fingerprint race (saveRide → null) is a duplicate, not an error', async () => {
+  const deps = baseDeps();
+  deps.repository.saveRide = async () => null;
+  const r = await createProcessMessage(deps)(msg({ msgId: 'm1' }));
+  assert.strictEqual(r.saved, false);
+  assert.strictEqual(r.reason, 'duplicate');
+});
+
+test('an error releases the claim so another number can retry the message', async () => {
+  const deps = baseDeps();
+  const released = [];
+  deps.repository.saveRide = async () => { throw new Error('db down'); };
+  deps.repository.releaseMessage = async (g, id) => { released.push([g, id]); };
+  const r = await createProcessMessage(deps)(msg({ msgId: 'm1' }));
+  assert.strictEqual(r.reason, 'error');
+  assert.deepStrictEqual(released, [['g', 'm1']]);
+});
+
+test('two numbers delivering the same message save one ride', async () => {
+  const deps = baseDeps();
+  const claims = new Set();
+  let saved = 0;
+  deps.repository.claimMessage = async (g, id) => {
+    const k = `${g}:${id}`;
+    if (claims.has(k)) return false;
+    claims.add(k);
+    return true;
+  };
+  deps.repository.saveRide = async (d) => { saved += 1; return { id: 'r', ...d }; };
+  const pm = createProcessMessage(deps);
+  const [a, b] = await Promise.all([
+    pm(msg({ msgId: 'm1', botId: 'slot-1' })),
+    pm(msg({ msgId: 'm1', botId: 'slot-2' })),
+  ]);
+  assert.strictEqual(saved, 1);
+  assert.deepStrictEqual([a.reason, b.reason].sort(), ['claimed_elsewhere', 'saved']);
 });

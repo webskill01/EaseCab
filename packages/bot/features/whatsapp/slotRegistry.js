@@ -31,11 +31,14 @@ function defaultIsPaired(dir) {
  *
  * @param {object} deps
  * @param {string} deps.sessionPath - root dir holding one subdir per slot
- * @param {string[]} deps.slots - ordered slot labels (priority order)
+ * @param {string[]|(() => string[])} deps.slots - ordered slot labels, or a getter
+ *   (Phase 25: the enabled wa_sessions, which change at runtime)
  * @param {(dir: string) => boolean} [deps.isPaired] - injectable for tests
- * @returns {{ sessionDirFor: (slot: string) => string, eligibleSlots: () => string[] }}
+ * @returns {{ sessionDirFor: (slot: string) => string, eligibleSlots: () => string[], listedSlots: () => string[] }}
  */
 function createSlotRegistry({ sessionPath, slots, isPaired = defaultIsPaired }) {
+  const listedSlots = typeof slots === 'function' ? slots : () => slots;
+
   /**
    * Absolute session directory for a slot label.
    * @param {string} slot
@@ -52,10 +55,10 @@ function createSlotRegistry({ sessionPath, slots, isPaired = defaultIsPaired }) 
    * @returns {string[]}
    */
   function eligibleSlots() {
-    return slots.filter((slot) => isPaired(sessionDirFor(slot)));
+    return listedSlots().filter((slot) => isPaired(sessionDirFor(slot)));
   }
 
-  return { sessionDirFor, eligibleSlots };
+  return { sessionDirFor, eligibleSlots, listedSlots };
 }
 
 module.exports = { createSlotRegistry, defaultIsPaired };
