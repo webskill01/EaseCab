@@ -112,3 +112,13 @@ test('namelessJids lists enabled groups with no stored name, until one is record
   await store.record([{ jid: 'anon@g.us', name: 'Mohali Taxi', participants: 9 }]);
   assert.deepStrictEqual(store.namelessJids(), []);
 });
+
+test('record strips NUL bytes from group names (Postgres 22021)', async () => {
+  const prisma = fakePrisma();
+  const store = createGroupStore({ prisma, logger });
+  await store.start();
+  await store.record([{ jid: 'n@g.us', name: 'Taxi\u0000 Ambala', participants: 5 }, { jid: 'z@g.us', name: '\u0000', participants: 1 }]);
+  assert.strictEqual(prisma.upserts[0].create.name, 'Taxi Ambala');
+  assert.strictEqual(prisma.upserts[1].create.name, null);
+  assert.strictEqual(store.nameOf('n@g.us'), 'Taxi Ambala');
+});

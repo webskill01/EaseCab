@@ -67,7 +67,9 @@ function createGroupStore({ prisma, logger }) {
      * ponytail: one upsert per group (~300 on connect); batch if groups reach thousands.
      */
     async record(groups) {
-      for (const { jid, name, participants } of groups) {
+      for (const { jid, name: rawName, participants } of groups) {
+        // Postgres text can't hold NUL (22021); some group subjects carry one.
+        const name = rawName ? rawName.replaceAll('\u0000', '') || null : rawName;
         known.add(jid);
         if (name) names.set(jid, name);
         try {

@@ -87,7 +87,7 @@ function createRideRepository({ prisma, redis, logger }) {
           dropRaw: data.dropRaw,
           vehicleType: data.vehicleType,
           sourceGroupId: data.sourceGroupId,
-          sourceGroupName: data.sourceGroupName,
+          sourceGroupName: data.sourceGroupName ? data.sourceGroupName.replaceAll('\u0000', '') : data.sourceGroupName, // NUL breaks Postgres text
           botId: data.botId,
           fingerprint: data.fingerprint,
           status: RIDE_STATUS.FRESH,
