@@ -200,10 +200,11 @@ export function RideCard({ ride, now, onContact, onReport }) {
         <div className="mt-2 border-t border-ec-line pt-2">
           {ride.groupName ? (
             // WhatsApp-style "↪ Forwarded" marker: the source group, above the vehicle.
-            <p className="mb-1.5 flex min-w-0 items-center gap-1 text-[12.5px] font-semibold text-ec-ink60" title={ride.groupName}>
-              <span className="inline-flex shrink-0 text-ec-ink40"><Forward size={15} /></span>
-              <span className="shrink-0">{t('card.forwardedGroup')}</span>
-              <span className="truncate font-extrabold text-ec-ink">{ride.groupName}</span>
+            // Full name, wrapping onto more lines when long (no ellipsis).
+            <p className="mb-1.5 break-words text-[12.5px] font-semibold leading-snug text-ec-ink60">
+              <span className="mr-1 inline-flex align-[-3px] text-ec-ink40"><Forward size={15} /></span>
+              {t('card.forwardedGroup')}{' '}
+              <span className="font-extrabold text-ec-ink">{ride.groupName}</span>
             </p>
           ) : null}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] font-semibold text-ec-ink60">

@@ -9,20 +9,21 @@ import { QueryState } from '@/features/shell/components/QueryState'
 import { button, pill, input } from '@/lib/ui'
 
 /** Add-a-session row: name it, then link it from its card. */
-function AddSession({ create, disabled }) {
+function AddSession({ create, disabled, nextNumber }) {
   const [name, setName] = useState('')
-  const add = () => create.mutate(name.trim(), { onSuccess: () => setName('') })
+  // Name is optional: a blank one becomes "Number N" (rename it later from the card).
+  const add = () => create.mutate(name.trim() || `Number ${nextNumber}`, { onSuccess: () => setName('') })
   return (
     <div className="flex flex-col gap-2 sm:flex-row">
       <input
         value={name}
         maxLength={40}
         onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && name.trim() && add()}
-        placeholder='Name the new session, e.g. "Ambala groups"'
+        onKeyDown={(e) => e.key === 'Enter' && !disabled && add()}
+        placeholder='Name (optional), e.g. "Ambala groups"'
         className={`${input} sm:w-80`}
       />
-      <button type="button" disabled={disabled || !name.trim() || create.isPending} onClick={add} className={button({ variant: 'primary' })}>
+      <button type="button" disabled={disabled || create.isPending} onClick={add} className={button({ variant: 'primary' })}>
         <Plus size={15} /> Add session
       </button>
       {create.isError && <p className="self-center text-xs font-medium text-red-600">{create.error?.message || 'Could not add.'}</p>}
@@ -49,7 +50,7 @@ export default function SessionsPage() {
         }
       />
 
-      <AddSession create={w.create} disabled={w.sessions.length >= w.totals.max && w.totals.max > 0} />
+      <AddSession create={w.create} nextNumber={w.sessions.length + 1} disabled={w.sessions.length >= w.totals.max && w.totals.max > 0} />
 
       <div className="mt-4">
         <QueryState
