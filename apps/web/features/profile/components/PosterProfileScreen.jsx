@@ -10,6 +10,7 @@ import { usePosterProfile } from '../hooks/usePosterProfile'
 import { useProfile } from '../hooks/useProfile'
 import { ReportUserSheet } from './ReportUserSheet'
 import { useLocalCityName } from '@/features/rides/hooks/useLocalNames'
+import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
 
 // `i` drives per-cell borders (right except last column, top from the 2nd row) — a 2-row
 // grid can't use Tailwind `divide-*` cleanly (its sibling selectors break across rows).
@@ -30,6 +31,7 @@ function Stat({ icon, label, value, i }) {
  */
 export function PosterProfileScreen({ userId }) {
   const t = useTranslations('profile')
+  const veh = useVehicleLabel()
   const city = useLocalCityName()
   const router = useRouter()
   const [reportOpen, setReportOpen] = useState(false)
@@ -89,7 +91,7 @@ export function PosterProfileScreen({ userId }) {
         <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
           <Stat i={0} icon={<Steer size={16} />} label={t('stats.experience')} value={p.experience != null ? `${p.experience} ${t('stats.years')}` : '—'} />
           <Stat i={1} icon={<Pin size={15} />} label={t('poster.stats.baseCity')} value={city(p.baseCity) || '—'} />
-          <Stat i={2} icon={<VehicleIcon vehicleKey={vehIconKeyOf(p.vehicleType)} size={16} />} label={t('stats.vehicle')} value={p.vehicleType || '—'} />
+          <Stat i={2} icon={<VehicleIcon vehicleKey={vehIconKeyOf(p.vehicleType)} size={16} />} label={t('stats.vehicle')} value={veh(p.vehicleType) || '—'} />
           {/* Phase 19: KYC stats (and the languages count that padded the row) only exist
               when verification is switched back on — otherwise they'd read "Pending"
               forever and imply a check we no longer run. */}

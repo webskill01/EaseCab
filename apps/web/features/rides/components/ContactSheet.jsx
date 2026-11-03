@@ -10,6 +10,7 @@ import { Crown, Whatsapp, Phone, Swap, Ban, Shield, Warning } from '@/components
 import { contactRide, contactVerifiedRide, logContactRide, logContactVerifiedRide } from '../services/ridesApi'
 import { MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { RIDE_KIND } from '../lib/rideView'
+import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
 
 /** wa.me wants the number without the leading +. */
 function waLink(phone) {
@@ -36,12 +37,13 @@ function contactErrorKey(err) {
  * collapses the line to nothing). */
 function RouteLine({ ride }) {
   const t = useTranslations('rides')
+  const veh = useVehicleLabel()
   return (
     <div className="flex items-center gap-2 rounded-ec-card bg-ec-bg px-3.5 py-3">
       <span className={`text-[15px] font-extrabold ${ride.from ? 'text-ec-ink' : 'text-ec-ink40'}`}>{ride.from || t('card.unknownCity')}</span>
       <span className="inline-flex text-ec-blue"><Swap size={18} /></span>
       <span className={`min-w-0 flex-1 truncate text-[15px] font-extrabold ${ride.to ? 'text-ec-ink' : 'text-ec-ink40'}`}>{ride.to || t('card.unknownCity')}</span>
-      <span className="shrink-0 text-[12.5px] font-bold text-ec-ink60">{ride.vehicleType || t('card.unknownCity')}</span>
+      <span className="shrink-0 text-[12.5px] font-bold text-ec-ink60">{veh(ride.vehicleType) || t('card.unknownCity')}</span>
     </div>
   )
 }

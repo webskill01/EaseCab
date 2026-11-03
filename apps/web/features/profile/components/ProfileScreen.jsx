@@ -17,6 +17,7 @@ import { CompletenessBanner } from './CompletenessBanner'
 import { AppPermsSheet } from './AppPermsSheet'
 import { AccountActionsCard } from './AccountActionsCard'
 import { useLocalCityName } from '@/features/rides/hooks/useLocalNames'
+import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
 
 /** Support deep-link — WhatsApp when configured, else email (mirrors shell SupportButton). */
 function supportHref() {
@@ -57,6 +58,7 @@ function NavRow({ icon, tone = 'blue', label, value, valueTint, onClick, last })
 /** Profile hub (handoff §2/§3) — header, banner, stats, about, two settings groups, support, danger. */
 export function ProfileScreen() {
   const t = useTranslations('profile')
+  const veh = useVehicleLabel()
   const locale = useLocale()
   const router = useRouter()
   const city = useLocalCityName()
@@ -132,7 +134,7 @@ export function ProfileScreen() {
         <div className="grid grid-cols-3 divide-x divide-ec-line overflow-hidden rounded-2xl border border-ec-line bg-white shadow-ec-card">
           <Stat icon={<Bolt size={16} />} label={t('stats.experience')} value={profile.experience != null ? `${profile.experience} ${t('stats.years')}` : '—'} onEdit={goEdit} />
           <Stat icon={<Pin size={15} />} label={t('stats.workingCity')} value={city(profile.workingCity || profile.baseCity) || '—'} onEdit={goEdit} />
-          <Stat icon={<VehicleIcon vehicleKey={vehIconKeyOf(profile.vehicleType)} size={16} />} label={t('stats.vehicle')} value={profile.vehicleType || '—'} onEdit={goEdit} />
+          <Stat icon={<VehicleIcon vehicleKey={vehIconKeyOf(profile.vehicleType)} size={16} />} label={t('stats.vehicle')} value={veh(profile.vehicleType) || '—'} onEdit={goEdit} />
         </div>
         <p className="mt-1.5 text-center text-[11px] font-semibold text-ec-ink40">{t('stats.tapHint')}</p>
       </div>

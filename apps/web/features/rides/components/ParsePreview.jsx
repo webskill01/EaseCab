@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Pin, ChevR } from '@/components/ui/icons'
+import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
 
 const cityLabel = (id, name, raw) => name || raw || null
 
@@ -19,6 +20,7 @@ export function ParsePreview({ draft, onEdit }) {
   const t = useTranslations('post')
   const from = cityLabel(draft.fromCityId, draft.fromCityName, draft.fromCityRaw)
   const to = cityLabel(draft.toCityId, draft.toCityName, draft.toCityRaw)
+  const veh = useVehicleLabel()
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -32,7 +34,7 @@ export function ParsePreview({ draft, onEdit }) {
             <span>{to || '—'}</span>
           </div>
           <dl className="mt-3 flex flex-col gap-1.5 text-[13.5px]">
-            <Row label={t('post.vehicle')} value={draft.vehicleType || '—'} />
+            <Row label={t('post.vehicle')} value={veh(draft.vehicleType) || '—'} />
             <Row label={t('post.contact')} value={draft.phone || '—'} />
             <Row label={`${t('post.date')} / ${t('post.fare')}`} value={t('paste.noDate')} />
           </dl>

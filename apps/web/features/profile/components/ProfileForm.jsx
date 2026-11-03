@@ -10,6 +10,7 @@ import {
   PROFILE_VEHICLES, PROFILE_LANGUAGES, vehIconKeyOf,
   canSaveProfile, toUpdateBody,
 } from '../lib/profileForm'
+import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
 
 const field = 'h-12 w-full rounded-xl border-[1.5px] border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none focus:border-ec-blue'
 
@@ -28,6 +29,7 @@ const field = 'h-12 w-full rounded-xl border-[1.5px] border-ec-line bg-white px-
  */
 export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, header = null, phone = null, lockBaseCity = false, pinnedFooter = false }) {
   const t = useTranslations('profile')
+  const veh = useVehicleLabel()
   const [f, setF] = useState(initial)
   const [langOpen, setLangOpen] = useState(false)
   const set = (patch) => setF((prev) => ({ ...prev, ...patch }))
@@ -102,7 +104,7 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
             return (
               <button key={v} type="button" role="radio" aria-checked={on} onClick={() => set({ vehicle: v })}
                 className={`flex h-10 items-center gap-1.5 rounded-xl px-3 text-[13.5px] font-bold ${on ? 'bg-ec-blue text-white shadow-ec-blue' : 'border-[1.5px] border-ec-line bg-white text-ec-blueInk'}`}>
-                <VehicleIcon vehicleKey={vehIconKeyOf(v)} size={16} />{v}
+                <VehicleIcon vehicleKey={vehIconKeyOf(v)} size={16} />{veh(v)}
               </button>
             )
           })}

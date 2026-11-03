@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Car, List, Shield, Lock, Check } from '@/components/ui/icons'
 import { DocStatusBadge } from './DocStatusBadge'
 import { docState } from '../lib/verifyView'
+import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
 
 /**
  * Read-only vehicle/RC record (mockup vehicle.jsx VehicleDetailScreen) — HONEST THIN
@@ -18,10 +19,11 @@ export function VehicleDetail({ profile }) {
   const t = useTranslations('verification')
   const tc = useTranslations('common')
   const router = useRouter()
+  const veh = useVehicleLabel()
   const v = profile?.verification ?? {}
   const make = [v.carMake, v.carModel].filter(Boolean).join(' ') || '—'
   const reg = v.carRegNo || '—'
-  const type = profile?.vehicleType || '—'
+  const type = veh(profile?.vehicleType) || '—'
 
   const rows = [
     [Car, t('detail.vehicleLabel'), make],
