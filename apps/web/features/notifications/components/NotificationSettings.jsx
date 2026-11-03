@@ -6,7 +6,7 @@ import { BellEdit, Pin, Battery } from '@/components/ui/icons'
 import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
 import { useNearestCity } from '../hooks/useNearestCity'
-import { permissionState } from '../lib/pushFlow'
+import { permissionState, needsHomeScreen } from '../lib/pushFlow'
 import { geoDenied } from '../services/geoClient'
 import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
 import { bubbleSupported, bubbleOn, setBubble } from '@/features/pwa/services/twaBubble'
@@ -89,6 +89,7 @@ export function NotificationSettings() {
           </button>
         )}
       </div>
+      {needsHomeScreen() && <p role="alert" className="mt-2 rounded-xl bg-ec-warnBg px-3.5 py-2.5 text-[12.5px] font-semibold leading-snug text-ec-amberTx">{tn('iosInstallHint')}</p>}
       {nearest.errorKey && !help && <p className="mt-1 text-[12px] font-semibold text-ec-danger">{tn(nearest.errorKey)}</p>}
       <p className="mt-2 flex items-start gap-1.5 text-[12px] font-medium text-ec-ink40"><Pin size={12} /> {t('notifications.filterNote')}</p>
       {help && (

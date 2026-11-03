@@ -7,7 +7,7 @@ import { BellEdit, Pin, Trash } from '@/components/ui/icons'
 import { CityPicker } from '@/features/rides/components/CityPicker'
 import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
-import { permissionState } from '../lib/pushFlow'
+import { permissionState, needsHomeScreen } from '../lib/pushFlow'
 import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
 
 // Design-spec §7.3 "up to 5 city slots". Always ≤ the server cap (25), so valid.
@@ -95,7 +95,10 @@ export function DutyAlertsOverlay({ onClose }) {
           <div className="flex-1 text-[14.5px] font-bold text-ec-ink">{t('dutyAlerts.notifLabel')}</div>
           <Toggle on={notifOn} onChange={toggleNotif} label={t('dutyAlerts.notifLabel')} />
         </div>
-        {blocked && (
+        {blocked && needsHomeScreen() && (
+          <p role="alert" className="mt-2 rounded-xl bg-ec-warnBg px-3.5 py-2.5 text-[12.5px] font-semibold leading-snug text-ec-amberTx">{t('iosInstallHint')}</p>
+        )}
+        {blocked && !needsHomeScreen() && (
           <button type="button" role="alert" onClick={() => setHelp(true)} className="mt-2 w-full rounded-xl bg-ec-warnBg px-3.5 py-2.5 text-left text-[12.5px] font-semibold leading-snug text-ec-amberTx">
             {t('dutyAlerts.blockedHint')}
           </button>

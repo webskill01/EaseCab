@@ -7,7 +7,7 @@ vi.mock('../../hooks/usePushPreferences', () => ({ usePushPreferences: vi.fn() }
 const enable = vi.fn().mockResolvedValue({ permission: 'granted', city: null })
 const disable = vi.fn().mockResolvedValue(undefined)
 vi.mock('../../hooks/useEnableAlerts', () => ({ useEnableAlerts: () => ({ enable, disable, isEnabling: false }) }))
-vi.mock('../../lib/pushFlow', () => ({ permissionState: vi.fn(() => 'default') }))
+vi.mock('../../lib/pushFlow', () => ({ permissionState: vi.fn(() => 'default'), needsHomeScreen: () => false }))
 vi.mock('../../lib/pushStorage', () => ({ getStoredToken: () => null }))
 vi.mock('@/features/rides/components/CityPicker', () => ({
   CityPicker: ({ onPick }) => <button type="button" onClick={() => onPick({ id: 'c2', name: 'Mohali' })}>add-city</button>,

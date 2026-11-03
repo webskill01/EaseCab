@@ -37,5 +37,6 @@
       "notifications": "Notifications",
       "location": "Location"
     }
-  }
+  },
+  "iosInstallHint": "On iPhone, alerts work only in the Home Screen app: open easecab.com in Safari → Share → Add to Home Screen, then open EaseCab from your Home Screen and turn alerts on."
 }

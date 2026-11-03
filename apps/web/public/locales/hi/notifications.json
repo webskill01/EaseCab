@@ -37,5 +37,6 @@
       "notifications": "नोटिफ़िकेशन",
       "location": "लोकेशन"
     }
-  }
+  },
+  "iosInstallHint": "iPhone पर अलर्ट सिर्फ़ होम स्क्रीन ऐप में आते हैं: Safari में easecab.com खोलें → Share → Add to Home Screen, फिर होम स्क्रीन से EaseCab खोलकर अलर्ट चालू करें।"
 }

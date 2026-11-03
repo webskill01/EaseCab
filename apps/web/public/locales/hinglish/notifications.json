@@ -37,5 +37,6 @@
       "notifications": "Notifications",
       "location": "Location"
     }
-  }
+  },
+  "iosInstallHint": "iPhone par alerts sirf Home Screen app me aate hain: Safari me easecab.com kholein → Share → Add to Home Screen, phir Home Screen se EaseCab kholkar alerts on karein."
 }

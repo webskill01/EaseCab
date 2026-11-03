@@ -61,8 +61,12 @@ function createPushSender({ projectId, clientEmail, privateKey }) {
       const staleTokens = [];
       for (let i = 0; i < tokens.length; i += PUSH.TOKENS_PER_MULTICAST) {
         const batch = tokens.slice(i, i + PUSH.TOKENS_PER_MULTICAST);
-        // High priority: a ride alert must wake a dozing Android phone (native app); web ignores it.
-        const res = await messaging.sendEachForMulticast({ tokens: batch, data: stringData, android: { priority: 'high' } });
+        // High priority: a ride alert must wake a dozing phone. `android` covers the native app;
+        // web push (Chrome + iPhone home-screen app) only reads the Urgency header — default
+        // "normal" lets iOS/Android hold the alert while the phone idles.
+        const res = await messaging.sendEachForMulticast({
+          tokens: batch, data: stringData, android: { priority: 'high' }, webpush: { headers: { Urgency: 'high' } },
+        });
         successCount += res.successCount;
         res.responses.forEach((r, idx) => {
           if (!r.success && isStaleTokenError(r.error)) staleTokens.push(batch[idx]);
