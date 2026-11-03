@@ -7,7 +7,7 @@
  * DECISIONS.md); keep this in sync with that decision.
  */
 const RIDE_TIMING = Object.freeze({
-  BOOKED_AFTER_MIN: 5, // fresh -> booked after 5 min (age since Ride.receivedAt)
+  BOOKED_AFTER_MIN: 10, // fresh -> booked after 10 min (was 5 until 2026-11-03) (age since Ride.receivedAt)
   FEED_TTL_MIN: 24 * 60, // ride stays in the feed for 24h -> Ride.expiresAt (was 30 min until 2026-11-01)
   HARD_DELETE_HRS: 25, // ride row hard-deleted after 25h -> Ride.dbDeleteAt; must outlive FEED_TTL_MIN
   FINGERPRINT_TTL_HRS: 12, // dedup fingerprint lives 12h from first sight

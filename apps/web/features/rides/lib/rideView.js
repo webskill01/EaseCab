@@ -11,7 +11,7 @@
  * row to `booked` — it shows "Likely booked". Kept local so the browser bundle
  * doesn't pull the Node-only shared package.
  */
-export const FRESH_WINDOW_MIN = 5
+export const FRESH_WINDOW_MIN = 10
 
 /** Ride source: bot-ingested vs app-posted (verified). */
 export const RIDE_KIND = Object.freeze({ BOT: 'bot', VERIFIED: 'verified' })

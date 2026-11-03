@@ -15,7 +15,7 @@ const { createCityLlm } = require('../features/cityBackfill/cityLlm');
 const { createCityBackfillRepository } = require('../features/cityBackfill/cityBackfill.repository');
 const { createCityBackfillService } = require('../features/cityBackfill/cityBackfill.service');
 
-// Aging cycle cadence. The thresholds are 5min/30min/12h, so a 60s tick keeps
+// Aging cycle cadence. The thresholds are 10min/24h/25h, so a 60s tick keeps
 // transitions within ~60s of their mark — invisible at these scales. The same
 // tick runs the Phase-2.5 bot-feed stale watcher. The live feed feel comes from
 // the bot's SSE publish, not this cron.
