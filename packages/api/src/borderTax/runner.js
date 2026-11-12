@@ -97,8 +97,9 @@ function createRunner({ service, repo, newPage, logger, r2, flows = FLOWS, sleep
     const req = await repo.findById(id);
     const flow = flows[req.stateCd];
     if (!flow) return void (await service.fail(id, F.STATE_UNSUPPORTED));
-    const page = await newPage();
+    let page = null;
     try {
+      page = await newPage(); // inside try: a dead browser fails the filing instead of leaving the driver on a spinner
       await repo.setJob(id, { step: 'filling', started: String(Date.now()) }); // the app's timer starts here, not at queueing
       logger.info({ id, stateCd: req.stateCd }, 'border tax filing started'); // step timings = log time deltas from here
       const io = makeIo(id, conn);
@@ -110,7 +111,7 @@ function createRunner({ service, repo, newPage, logger, r2, flows = FLOWS, sleep
       logger.warn({ id, failureCode, err: err.message }, 'border tax filing stopped');
       await service.fail(id, failureCode);
     } finally {
-      await page.context().close().catch((e) => logger.warn({ id, err: e.message }, 'context close failed'));
+      await page?.context().close().catch((e) => logger.warn({ id, err: e.message }, 'context close failed'));
     }
   }
 

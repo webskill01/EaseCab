@@ -34,9 +34,8 @@ function createBorderTaxRepository({ prisma, redis }) {
     },
 
     /** R2 key of the caller's receipt PDF, or null. @returns {Promise<?string>} */
-    async findReceiptKey(id, userId) {
-      const row = await prisma.borderTaxRequest.findFirst({ where: { id, userId }, select: { receiptKey: true } });
-      return row?.receiptKey ?? null;
+    async findReceipt(id, userId) {
+      return prisma.borderTaxRequest.findFirst({ where: { id, userId }, select: { receiptKey: true, receiptNo: true } });
     },
 
     /** Stored receipts whose tax validity ended before `before`. @returns {Promise<{ id: string, receiptKey: string }[]>} */

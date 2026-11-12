@@ -46,8 +46,10 @@ function createR2Client({ accountId, accessKeyId, secretAccessKey, bucket, publi
       );
       return { url };
     },
-    async presignGet({ key, expiresIn = UPLOAD.GET_EXPIRY_SEC }) {
-      return getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn });
+    // `download` = filename: R2 answers with Content-Disposition: attachment, so phones save the file instead of opening a viewer
+    async presignGet({ key, expiresIn = UPLOAD.GET_EXPIRY_SEC, download }) {
+      const disposition = download ? { ResponseContentDisposition: `attachment; filename="${download}"` } : {};
+      return getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key, ...disposition }), { expiresIn });
     },
     // Server-made files (border-tax receipt PDFs): the worker uploads the bytes itself.
     async putObject({ key, body, contentType }) {

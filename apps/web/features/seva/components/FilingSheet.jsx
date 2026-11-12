@@ -74,7 +74,7 @@ function ResultSheet({ f, onClose, onRetry }) {
       <SheetTitle icon={icon} tone={tone} title={title} sub={sub} />
       <div className="flex flex-col gap-3 pb-2">
         {receiptUrl && (
-          <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className={`${buttonVariants({ size: 'lg' })} w-full gap-2`}>
+          <a href={receiptUrl} download className={`${buttonVariants({ size: 'lg' })} w-full gap-2`}>
             <Receipt size={18} /> {t('bt.qr.download')}
           </a>
         )}

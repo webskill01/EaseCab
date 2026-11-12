@@ -32,8 +32,19 @@ async function main() {
   const redis = new Redis(env.REDIS_URL);
   const repo = createBorderTaxRepository({ prisma, redis });
   const service = createBorderTaxService({ repo, logger });
-  const browser = await chromium.launch({ headless: false });
-  const newPage = async () => (await browser.newContext({ viewport: VIEWPORT })).newPage();
+  // Chromium can die on its own (prod 2026-11-12: gone ~45 min after boot, every filing then crashed).
+  // One shared launch, relaunched on the next job after a disconnect.
+  let launching = null;
+  let stopping = false;
+  const browser = () => {
+    launching ??= chromium.launch({ headless: false }).then((b) => {
+      b.on('disconnected', () => { launching = null; if (!stopping) logger.warn('browser disconnected, relaunching on next filing'); });
+      return b;
+    }, (err) => { launching = null; throw err; });
+    return launching;
+  };
+  await browser(); // fail fast at boot if Chromium can't start
+  const newPage = async () => (await (await browser()).newContext({ viewport: VIEWPORT })).newPage();
   const r2 = r2FromEnv(serverEnv);
   const runner = createRunner({ service, repo, newPage, logger, r2 });
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));
@@ -43,7 +54,6 @@ async function main() {
   logger.info({ recovered: await service.recoverAfterRestart() }, 'border tax worker up');
   if (await ocrReady()) logger.info('captcha OCR ready');
   else logger.warn('captcha OCR unavailable — every captcha goes to the driver (pip3 install -r src/borderTax/ocr/requirements.txt)');
-  let stopping = false;
   const loop = async (n) => {
     const conn = redis.duplicate(); // BRPOP blocks its connection — one per lane
     while (!stopping) {
@@ -59,7 +69,7 @@ async function main() {
     stopping = true;
     clearInterval(sweepTimer);
     stopOcr();
-    await browser.close().catch((err) => logger.warn({ err: err.message }, 'browser close failed'));
+    await (await launching)?.close().catch((err) => logger.warn({ err: err.message }, 'browser close failed'));
     await Promise.race([Promise.allSettled(lanes), new Promise((r) => setTimeout(r, 2000))]);
     await prisma.$disconnect();
     redis.disconnect();

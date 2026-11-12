@@ -125,15 +125,15 @@ test('in-app QR: FILLING → AWAITING_PAYMENT (QR live, not cancellable) → PAI
   const job = {};
   const repo = { ...fakeRepo({ b1: { id: 'b1', userId: 'u1', status: 'filling' } }),
     async setJob(id, f) { Object.assign(job, f); }, async getJob() { return job; }, async getHandoff() { return null; },
-    async findReceiptKey(id, userId) { return userId === 'u1' ? repo.rows[id].receiptKey ?? null : null; } };
-  const svc = createBorderTaxService({ repo, logger, r2: { async presignGet({ key }) { return `signed:${key}`; } } });
+    async findReceipt(id, userId) { return userId === 'u1' ? repo.rows[id] : null; } };
+  const svc = createBorderTaxService({ repo, logger, r2: { async presignGet({ key, download }) { return `signed:${key}:${download}`; } } });
   assert.ok(await svc.awaitPayment('b1', { taxPaise: 10000, from: new Date(), upto: new Date(), qr: 'data:x', upi: 'upi://pay?x', deadline: '1' }));
   assert.strictEqual((await svc.get('u1', 'b1')).live.upi, 'upi://pay?x');
   await assert.rejects(svc.cancel('u1', 'b1'), (e) => e.statusCode === 409);
   await assert.rejects(svc.receipt('u1', 'b1'), (e) => e.code === 'NOT_FOUND');
   assert.ok(await svc.paid('b1', { receiptNo: 'HRR1', receiptKey: 'border-tax/receipts/b1.pdf', paidAt: new Date() }));
   assert.strictEqual((await svc.get('u1', 'b1')).live.qr, null);
-  assert.deepStrictEqual(await svc.receipt('u1', 'b1'), { url: 'signed:border-tax/receipts/b1.pdf' });
+  assert.deepStrictEqual(await svc.receipt('u1', 'b1'), { url: 'signed:border-tax/receipts/b1.pdf:border-tax-HRR1.pdf' });
   await assert.rejects(svc.receipt('u2', 'b1'), (e) => e.code === 'NOT_FOUND');
 });
 

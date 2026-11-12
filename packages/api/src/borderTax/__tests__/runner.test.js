@@ -123,3 +123,9 @@ test('lookup slot busy → waits it out while still QUEUED, then files', async (
   assert.deepStrictEqual(waits, [[90_000, 'queued'], [1, 'queued']]);
   assert.strictEqual(t.rows.b1.status, 'handed_off');
 });
+
+test('browser gone (newPage throws) → FAILED portal_error, not stuck in FILLING', async () => {
+  const t = setup();
+  await createRunner({ ...t, logger, newPage: async () => { throw new Error('browser.newContext: Target page, context or browser has been closed'); }, flows: { HR: async () => assert.fail('flow ran') } }).run('b1', {});
+  assert.deepStrictEqual([t.rows.b1.status, t.rows.b1.failureCode], ['failed', 'portal_error']);
+});

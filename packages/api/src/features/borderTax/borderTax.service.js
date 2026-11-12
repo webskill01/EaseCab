@@ -191,13 +191,15 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     },
 
     /**
-     * Short-lived link to the receipt PDF (private bucket, presigned GET — §3.12).
+     * Short-lived download link to the receipt PDF (private bucket, presigned GET — §3.12).
+     * The link forces a download (saved as border-tax-<receipt no>.pdf), not an in-browser viewer.
      * @throws {AppError} NOT_FOUND unless the caller's filing has a stored receipt
      */
     async receipt(userId, id) {
-      const key = await repo.findReceiptKey(id, userId);
-      if (!key || !r2) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
-      return { url: await r2.presignGet({ key }) };
+      const row = await repo.findReceipt(id, userId);
+      if (!row?.receiptKey || !r2) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      const name = `border-tax-${(row.receiptNo || id).replace(/[^A-Za-z0-9-]/g, '')}.pdf`;
+      return { url: await r2.presignGet({ key: row.receiptKey, download: name }) };
     },
 
     /** Ends an in-flight row with a failure code (FAILED, or EXPIRED for a driver timeout). */

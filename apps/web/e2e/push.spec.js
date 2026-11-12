@@ -40,7 +40,7 @@ async function mockFeed(page) {
   await page.route('**/api/v1/cities/nearest**', (r) => r.fulfill(ok({ city: { id: 'c9', canonicalName: 'Chandigarh', distanceKm: 4 } })))
 }
 
-test('in-feed pre-prompt enables alerts: registers token + saves nearest city', async ({ page }) => {
+test('in-feed pre-prompt enables alerts: registers the token, leaves alert cities alone', async ({ page }) => {
   await installSeams(page)
   await mockFeed(page)
 
@@ -59,7 +59,7 @@ test('in-feed pre-prompt enables alerts: registers token + saves nearest city', 
   await page.getByRole('button', { name: 'Enable alerts' }).click()
 
   await expect.poll(() => registered).toBe(true)
-  await expect.poll(() => savedCities).toEqual(['c9'])
+  expect(savedCities).toBeNull() // alert cities ARE the feed filter: enabling never rewrites them
 
   // Once enabled, the pre-prompt is gone.
   await expect(page.getByText(/instant duty alerts/i)).toHaveCount(0)
