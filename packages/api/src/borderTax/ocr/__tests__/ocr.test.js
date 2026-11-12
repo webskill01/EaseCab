@@ -21,6 +21,8 @@ test('OCR reads real Vahan captchas (incl. the # lookalike), known-length trim',
   // canvas reads (toDataURL): case is fixed from glyph height — the portal compares case-sensitively
   assert.strictEqual(await readCaptcha(fixture('declaration-6yspCT.png'), 6), '6yspCT'); // OCR alone: 6yspcT
   assert.strictEqual(await readCaptcha(fixture('declaration-Ny9Kqv.png'), 6), 'Ny9Kqv'); // OCR alone: Ny9kqv
+  assert.strictEqual(await readCaptcha(fixture('declaration-vknY6B.png'), 6), 'vknY6B'); // live miss 2026-11-12: vknY6b
+  assert.strictEqual(await readCaptcha(fixture('declaration-G3Aubn.png'), 6), 'G3Aubn'); // live miss 2026-11-12: g3aubn
   assert.strictEqual(await readCaptcha('data:image/png;base64,bm90IGFuIGltYWdl'), ''); // garbage → '' → driver
   // known length: same read; a read one char too long drops its least-confident char
   assert.strictEqual(await readCaptcha(fixture('vahan-hash.png'), 6), '5mft#x');

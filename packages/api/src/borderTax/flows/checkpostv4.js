@@ -219,9 +219,13 @@ async function disclaimerStep(page, io) {
  */
 async function fileCheckpost(page, job, io) {
   await openForm(page, job.stateCd);
+  // io.progress(n) = steps done, the app's checklist ticks on these (real progress, not a timer)
   await ownerStep(page, job, io);
+  io.progress?.(1); // vehicle found on Vahan
   await vehicleStep(page, job);
+  io.progress?.(2); // vehicle details + checkpost accepted
   const quote = await taxStep(page, job, io);
+  io.progress?.(3); // tax quoted; now the bank / payment page
   io.log(`quote ₹${quote.taxPaise / 100} ${istInput(quote.from)} → ${istInput(quote.upto)}`);
   // no stop for a driver OK here (dropped 2026-11-06, user: one loading phase) — the app warns before
   // filing that the portal locks the vehicle ~30 min once the bank page opens

@@ -114,13 +114,13 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     async get(userId, id) {
       const filing = await repo.findForUser(id, userId);
       if (!filing) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
-      const { step = null, captcha = '', refresh = '', deadline = '', started = '', qr = '', upi = '' } = await repo.getJob(id);
+      const { step = null, captcha = '', refresh = '', deadline = '', started = '', qr = '', upi = '', progress = '' } = await repo.getJob(id);
       const handoff = filing.status === S.HANDED_OFF ? await repo.getHandoff(id) : null;
       const paying = filing.status === S.AWAITING_PAYMENT;
       // queued behind the lookup gap: when the bot starts (null = any moment / waiting for a lane)
       const slotMs = filing.status === S.QUEUED ? await repo.lookupSlotMs() : 0;
       const unlock = toUnlock(await repo.getUnlock(id));
-      return { ...filing, unlock, live: { step, startsAt: slotMs ? new Date(Date.now() + slotMs) : null, captcha: captcha || null, canRefresh: Boolean(captcha && refresh), deadline: deadline ? new Date(Number(deadline)) : null, started: started ? new Date(Number(started)) : null, handoff, qr: (paying && qr) || null, upi: (paying && upi) || null } };
+      return { ...filing, unlock, live: { step, startsAt: slotMs ? new Date(Date.now() + slotMs) : null, captcha: captcha || null, canRefresh: Boolean(captcha && refresh), deadline: deadline ? new Date(Number(deadline)) : null, started: started ? new Date(Number(started)) : null, progress: Number(progress) || 0, handoff, qr: (paying && qr) || null, upi: (paying && upi) || null } };
     },
 
     /**

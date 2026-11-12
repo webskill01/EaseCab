@@ -49,8 +49,10 @@ def read(png):
     return [['@', p] if c in ROUND and p < AT_BELOW else [c, p] for c, p in chars]
 
 
-FLAT = set('csuvwxz')  # lowercase = uppercase shape, shorter (no ascender)
-DESC = set('py')       # lowercase hangs below the baseline
+FLAT = set('csuvwxzo')  # lowercase = uppercase shape, shorter (no ascender)
+XHIGH = set('aemnr')    # lowercase other shape, but no ascender: reaching the cap line = uppercase
+DESC = set('pyg')       # lowercase hangs below the baseline (not q: a serif Q's tail dips too)
+WIDE_TOP = set('bdh')   # both ascend; B/D/H are wide across the top, b/d/h only a stem
 
 
 def glyphs(ink):
@@ -101,8 +103,11 @@ def fix_case(png, chars):
     out = []
     for (ys, xs), (c, p) in zip(blobs, chars):
         low = c.lower()
-        if low in FLAT:
+        if low in FLAT or low in XHIGH:
             c = c.upper() if ys.min() - cap < tall else low
+        elif low in WIDE_TOP:  # 2026-11-12: vknY6B read vknY6b
+            top = ys <= ys.min() + 0.2 * (ys.max() - ys.min())
+            c = c.upper() if np.ptp(xs[top]) > 0.55 * np.ptp(xs) else low
         elif low == 'k':  # k has an ascender too: K's arm reaches the cap line, k's stops at x-height
             arm = xs >= xs.min() + 0.7 * (xs.max() - xs.min())
             c = 'K' if ys[arm].min() - cap < tall else 'k'

@@ -50,6 +50,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, cl
     };
     return {
       log: (m) => logger.info({ id }, m),
+      progress: (n) => repo.setJob(id, { progress: String(n) }).catch((err) => logger.warn({ id, err: err.message }, 'progress write failed')),
       async captcha({ step, image, canRefresh = false }) {
         await repo.clearAnswers(id);
         await moveOrStop(S.AWAITING_CAPTCHA);
@@ -102,6 +103,9 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, cl
   /** @param {string} id @param {import('ioredis').Redis} conn */
   async function run(id, conn) {
     await waitLookupSlot(); // stays QUEUED while waiting — the driver can still cancel
+    // the app's timer starts here, not at queueing; written BEFORE the status moves so no poll ever
+    // sees `filling` without a start time (the ring jumped to a full 5:00 for a moment)
+    await repo.setJob(id, { step: 'filling', started: String(Date.now()), progress: '0' });
     if (!(await service.move(id, S.FILLING))) return; // cancelled, or a duplicate queue entry
     const req = await repo.findById(id);
     const flow = flows[req.stateCd];
@@ -111,7 +115,6 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, cl
     let paid = false;
     try {
       page = await newPage(); // inside try: a dead browser fails the filing instead of leaving the driver on a spinner
-      await repo.setJob(id, { step: 'filling', started: String(Date.now()) }); // the app's timer starts here, not at queueing
       logger.info({ id, stateCd: req.stateCd }, 'border tax filing started'); // step timings = log time deltas from here
       const io = makeIo(id, conn);
       const result = await flow(page, toJob(req), io);
