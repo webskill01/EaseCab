@@ -207,6 +207,12 @@ const BORDER_TAX = Object.freeze({
   BUSY_RETRY_SEC: 60, // all worker lanes busy: the app's "try again in" countdown (a lane frees at an unknown time)
   RECEIPT_PREFIX: 'border-tax/receipts/', // R2 key prefix for receipt PDFs (private; presigned GET only)
   JOB_TTL_SEC: 3600, // live job hash (step, captcha image) lifetime in Redis
+  // pending-lock clearing (checkpost Check Pending Transaction): the portal frees an unpaid attempt 30 min after it
+  UNLOCK_AFTER_SEC: 31 * 60, // our own unpaid bank-step filing → clear its lock this long after
+  UNLOCK_POLL_SEC: 60, // worker checks for due unlocks this often
+  UNLOCK_TRIES: 3, // portal/captcha errors before giving up (operator alerted)
+  UNLOCK_RETRY_SEC: 300,
+  UNLOCK_TTL_SEC: 86_400, // unlock status kept for the app this long
   CREATE_RATE_LIMIT: Object.freeze({ MAX_PER_WINDOW: 5, WINDOW_SEC: 3600 }),
   LIST: Object.freeze({ DEFAULT_LIMIT: 20, MAX_LIMIT: 50 }),
   // Indian registration (PB01C9079, HP12AB1234) or Bharat series (22BH1234AA), spaces stripped.
@@ -219,7 +225,18 @@ const BORDER_TAX_KEYS = Object.freeze({
   job: (id) => redisKey('bordertax', 'job', id), // hash: step, captcha (data URL), deadline
   answer: (id) => redisKey('bordertax', 'answer', id), // list: driver's captcha answers
   handoff: (id) => redisKey('bordertax', 'handoff', id), // string: JSON bank form for the driver — never logged
+  UNLOCKS: redisKey('bordertax', 'unlocks'), // zset: filing id → due time (ms) of its pending-lock clear
+  unlock: (id) => redisKey('bordertax', 'unlock', id), // hash: status (BORDER_TAX_UNLOCK), at, receiptNo, tries
   LOOKUP_SLOT: redisKey('bordertax', 'lookupslot'), // string with PX TTL: held = a Vahan lookup started < LOOKUP_GAP_SEC ago
+});
+
+/** Pending-lock clear status (Redis, shown in the app). */
+const BORDER_TAX_UNLOCK = Object.freeze({
+  QUEUED: 'queued', // will run as soon as the portal is free
+  WAITING: 'waiting', // portal frees the attempt at `at`; runs then
+  CLEARED: 'cleared', // no pending attempt left in this state — the driver can file again
+  PAID: 'paid', // the pending attempt was actually paid: its receipt (receiptNo) is valid
+  FAILED: 'failed', // gave up after UNLOCK_TRIES (operator alerted)
 });
 
 /** failure_code values. */
@@ -273,5 +290,6 @@ module.exports = {
   BORDER_TAX,
   BORDER_TAX_KEYS,
   BORDER_TAX_FAILURE,
+  BORDER_TAX_UNLOCK,
   borderTaxWindow,
 };

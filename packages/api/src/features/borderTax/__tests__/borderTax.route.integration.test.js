@@ -44,6 +44,7 @@ function makeApp() {
   const redis = {
     async eval() { return 1; }, async get(k) { return strings[k] ?? null; }, async set(k, v) { strings[k] = v; return 'OK'; }, async del() { return 1; }, async pttl() { return -2; },
     async lpush(k, v) { (lists[k] ||= []).push(v); }, async hgetall(k) { return hashes[k] || {}; }, multi,
+    async zadd(k, score, m) { strings[`${k}:${m}`] = score; },
   };
   const app = buildApp({
     prisma, redis, logger: pino({ level: 'silent' }), config: CONFIG,
@@ -151,4 +152,19 @@ test('POST /border-tax → 429 portal busy with meta.retryAfter while the lookup
   const res = await request(t.app).post('/api/v1/border-tax').set('Cookie', cookieFor('u1')).send(body());
   assert.equal(res.status, 429);
   assert.deepEqual([res.body.error.code, res.body.meta.retryAfter, Object.values(t.lists).flat().length], ['RATE_LIMITED', 120, 0]);
+});
+
+test('POST /:id/unlock → 409 unless vehicle_pending; 200 queues the clear and GET shows it', async () => {
+  const t = makeApp();
+  await request(t.app).post('/api/v1/border-tax').set('Cookie', cookieFor('u1')).send(body());
+  const unlock = () => request(t.app).post(`/api/v1/border-tax/${ID}/unlock`).set('Cookie', cookieFor('u1'));
+  assert.equal((await unlock()).status, 409);
+  Object.assign(t.rows[0], { status: 'failed', failureCode: 'vehicle_pending' });
+  const res = await unlock();
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.unlock.status, 'queued');
+  assert.ok(t.strings[`${K.UNLOCKS}:${ID}`]);
+  const get = await request(t.app).get(`/api/v1/border-tax/${ID}`).set('Cookie', cookieFor('u1'));
+  assert.equal(get.body.data.filing.unlock.status, 'queued');
+  assert.equal((await request(t.app).post(`/api/v1/border-tax/${ID}/unlock`).set('Cookie', cookieFor('u2'))).status, 404);
 });

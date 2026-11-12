@@ -191,6 +191,27 @@ function createBorderTaxRepository({ prisma, redis }) {
       return Math.max(await redis.pttl(K.LOOKUP_SLOT), 0);
     },
 
+    /** Pending-lock clear for a filing's vehicle+state, due at `atMs` (re-adding moves it). */
+    async scheduleUnlock(id, atMs) {
+      await redis.zadd(K.UNLOCKS, atMs, id);
+    },
+
+    /** Claims the earliest due unlock. @returns {Promise<string|null>} filing id */
+    async popDueUnlock(nowMs) {
+      const [id] = await redis.zrangebyscore(K.UNLOCKS, '-inf', nowMs, 'LIMIT', 0, 1);
+      return id && (await redis.zrem(K.UNLOCKS, id)) ? id : null; // zrem = the claim (one worker, but cheap)
+    },
+
+    /** Merge unlock status fields (BORDER_TAX_UNLOCK status, at, receiptNo, tries) for the app. */
+    async setUnlock(id, fields) {
+      await redis.multi().hset(K.unlock(id), fields).expire(K.unlock(id), BORDER_TAX.UNLOCK_TTL_SEC).exec();
+    },
+
+    /** @returns {Promise<Record<string, string>>} {} if none */
+    async getUnlock(id) {
+      return redis.hgetall(K.unlock(id));
+    },
+
     /** Fixed-window create counter per user. @returns {Promise<number>} */
     async incrCreateAttempts(userId, windowSec) {
       return fixedWindowIncr(redis, redisKey('bordertax', userId), windowSec);

@@ -2,6 +2,7 @@
 
 const {
   AppError, ERROR_CODES, BORDER_TAX, BORDER_TAX_STATUS: S, BORDER_TAX_STATES, BORDER_TAX_LIVE_STATES, BORDER_TAX_FAILURE: F,
+  BORDER_TAX_UNLOCK: U,
   borderTaxWindow, isSubscriptionActive, TAX_MODE,
 } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
@@ -11,6 +12,11 @@ const IN_FLIGHT = Object.freeze([S.QUEUED, S.FILLING, S.AWAITING_CAPTCHA]);
 const TIMEOUTS = Object.freeze([F.CAPTCHA_TIMEOUT, F.PAYMENT_TIMEOUT]);
 // In-app QR (HR): the bot's browser holds the driver's payment — not cancellable, but it can fail or expire.
 const RUNNING = Object.freeze([...IN_FLIGHT, S.AWAITING_PAYMENT]);
+// An unpaid attempt on the portal can still turn out paid (driver paid as the bot lost the page): the unlock finds its receipt.
+const LATE_PAID_FROM = Object.freeze([S.FAILED, S.EXPIRED]);
+
+/** Redis unlock hash → what the app shows (null = no unlock for this filing). */
+const toUnlock = (u) => (u.status ? { status: u.status, at: u.at ? new Date(Number(u.at)) : null, receiptNo: u.receiptNo || null } : null);
 
 /**
  * Allowed status changes, keyed by TARGET → statuses it may come from. Anything not listed
@@ -113,7 +119,8 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
       const paying = filing.status === S.AWAITING_PAYMENT;
       // queued behind the lookup gap: when the bot starts (null = any moment / waiting for a lane)
       const slotMs = filing.status === S.QUEUED ? await repo.lookupSlotMs() : 0;
-      return { ...filing, live: { step, startsAt: slotMs ? new Date(Date.now() + slotMs) : null, captcha: captcha || null, canRefresh: Boolean(captcha && refresh), deadline: deadline ? new Date(Number(deadline)) : null, started: started ? new Date(Number(started)) : null, handoff, qr: (paying && qr) || null, upi: (paying && upi) || null } };
+      const unlock = toUnlock(await repo.getUnlock(id));
+      return { ...filing, unlock, live: { step, startsAt: slotMs ? new Date(Date.now() + slotMs) : null, captcha: captcha || null, canRefresh: Boolean(captcha && refresh), deadline: deadline ? new Date(Number(deadline)) : null, started: started ? new Date(Number(started)) : null, handoff, qr: (paying && qr) || null, upi: (paying && upi) || null } };
     },
 
     /**
@@ -202,6 +209,51 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
       return { url: await r2.presignGet({ key: row.receiptKey, download: name }) };
     },
 
+    /**
+     * Driver's "Clear lock" on a vehicle_pending failure: the worker clears the vehicle's pending
+     * attempts in that state (once the portal allows — 30 min after each attempt). Idempotent while one runs.
+     * @throws {AppError} NOT_FOUND, SUBSCRIPTION_EXPIRED, 409 unless the filing failed vehicle_pending
+     */
+    async requestUnlock(userId, id) {
+      const filing = await repo.findForUser(id, userId);
+      if (!filing) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      if (filing.failureCode !== F.VEHICLE_PENDING) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'Nothing to clear for this filing', 409);
+      if (!isSubscriptionActive(await repo.findSubscriptionByUserId(userId))) throw AppError.fromCode(ERROR_CODES.SUBSCRIPTION_EXPIRED);
+      const cur = await repo.getUnlock(id);
+      if ([U.QUEUED, U.WAITING].includes(cur.status)) return toUnlock(cur);
+      await this.scheduleUnlock(id, Date.now());
+      return toUnlock(await repo.getUnlock(id));
+    },
+
+    /** Queue a pending-lock clear for this filing's vehicle+state at `atMs` (default: when the portal frees our own attempt). */
+    async scheduleUnlock(id, atMs = Date.now() + BORDER_TAX.UNLOCK_AFTER_SEC * 1000, tries = 0) {
+      await repo.setUnlock(id, { status: atMs > Date.now() ? U.WAITING : U.QUEUED, at: String(atMs), tries: String(tries), receiptNo: '' });
+      await repo.scheduleUnlock(id, atMs);
+    },
+
+    /** Worker finished a clear: unexpected answer → FAILED; a too-young attempt → again at retryAt; else cleared (or paid, with its receipt). */
+    async unlockDone(id, { retryAt = null, receiptNo = null, failed = false }) {
+      if (failed) return repo.setUnlock(id, { status: U.FAILED, at: String(Date.now()) });
+      if (retryAt) return this.scheduleUnlock(id, retryAt.getTime());
+      return repo.setUnlock(id, { status: receiptNo ? U.PAID : U.CLEARED, at: String(Date.now()), receiptNo: receiptNo || '' });
+    },
+
+    /** Clear run errored. @returns {Promise<boolean>} false = gave up after UNLOCK_TRIES (FAILED) */
+    async unlockFailed(id) {
+      const tries = Number((await repo.getUnlock(id)).tries || 0) + 1;
+      if (tries >= BORDER_TAX.UNLOCK_TRIES) {
+        await repo.setUnlock(id, { status: U.FAILED, tries: String(tries) });
+        return false;
+      }
+      await this.scheduleUnlock(id, Date.now() + BORDER_TAX.UNLOCK_RETRY_SEC * 1000, tries);
+      return true;
+    },
+
+    /** This filing's own unpaid-looking attempt was paid after all (found by the unlock): PAID with its receipt. */
+    async latePaid(id, { receiptNo, receiptKey }) {
+      return repo.transition(id, LATE_PAID_FROM, S.PAID, { receiptNo, receiptKey, paidAt: new Date(), failureCode: null });
+    },
+
     /** Ends an in-flight row with a failure code (FAILED, or EXPIRED for a driver timeout). */
     async fail(id, failureCode) {
       return move(id, TIMEOUTS.includes(failureCode) ? S.EXPIRED : S.FAILED, { failureCode });
@@ -216,7 +268,10 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
       for (const { id, status } of rows) {
         if (status === S.QUEUED) await repo.enqueue(id);
         // the PayU session died with the browser: the driver may or may not have paid → support checks
-        else if (status === S.AWAITING_PAYMENT) await move(id, S.FAILED, { failureCode: F.PAYMENT_UNKNOWN });
+        else if (status === S.AWAITING_PAYMENT) {
+          await move(id, S.FAILED, { failureCode: F.PAYMENT_UNKNOWN });
+          await this.scheduleUnlock(id); // frees the vehicle — or, if the driver did pay, finds the receipt
+        }
         else await move(id, S.FAILED, { failureCode: F.WORKER_RESTART });
       }
       return rows.length;

@@ -11,9 +11,14 @@ const MEMBER = { status: 'active', expiresAt: new Date(Date.now() + 86_400_000) 
 function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0 } = {}) {
   const queue = [];
   const handoffs = {};
+  const unlocks = {};
+  const due = {};
   let attempts = 0;
   return {
-    rows, queue, handoffs,
+    rows, queue, handoffs, unlocks, due,
+    async setUnlock(id, f) { unlocks[id] = { ...unlocks[id], ...f }; },
+    async getUnlock(id) { return unlocks[id] || {}; },
+    async scheduleUnlock(id, at) { due[id] = at; },
     async transition(id, from, to, fields) {
       const r = rows[id];
       if (!r || !from.includes(r.status)) return false;
@@ -184,4 +189,70 @@ test('late receipt: PAID with step receipt → attachReceipt adds it; nothing fo
   assert.deepStrictEqual([repo.rows.b1.status, repo.rows.b1.receiptNo, repo.rows.b1.receiptKey, job.step], ['paid', 'HRR9', 'k', 'paid']);
   assert.strictEqual(await svc.attachReceipt('b2', { receiptNo: undefined, receiptKey: null }), false);
   assert.strictEqual(repo.rows.b2.status, 'paid');
+});
+
+test('requestUnlock: only for a vehicle_pending failure of the caller; queued now, idempotent while pending', async () => {
+  const repo = fakeRepo({
+    b1: { id: 'b1', userId: 'u1', status: 'failed', failureCode: 'vehicle_pending' },
+    b2: { id: 'b2', userId: 'u1', status: 'failed', failureCode: 'pucc_expired' },
+  });
+  const svc = createBorderTaxService({ repo, logger });
+  await assert.rejects(svc.requestUnlock('u2', 'b1'), { code: 'NOT_FOUND' });
+  await assert.rejects(svc.requestUnlock('u1', 'b2'), { statusCode: 409 });
+  const u = await svc.requestUnlock('u1', 'b1');
+  assert.strictEqual(u.status, 'queued');
+  assert.ok(repo.due.b1 <= Date.now());
+  repo.due.b1 = 'untouched';
+  assert.strictEqual((await svc.requestUnlock('u1', 'b1')).status, 'queued');
+  assert.strictEqual(repo.due.b1, 'untouched');
+});
+
+test('requestUnlock: members only', async () => {
+  const repo = fakeRepo({ b1: { id: 'b1', userId: 'u1', status: 'failed', failureCode: 'vehicle_pending' } }, { sub: null });
+  await assert.rejects(createBorderTaxService({ repo, logger }).requestUnlock('u1', 'b1'), { code: 'SUBSCRIPTION_EXPIRED' });
+});
+
+test('scheduleUnlock default = 31 min out (portal frees the attempt after 30) → waiting', async () => {
+  const repo = fakeRepo();
+  await createBorderTaxService({ repo, logger }).scheduleUnlock('b1');
+  const mins = (repo.due.b1 - Date.now()) / 60_000;
+  assert.ok(mins > 30.9 && mins <= 31, mins);
+  assert.strictEqual(repo.unlocks.b1.status, 'waiting');
+});
+
+test('unlockDone: retryAt → waiting again; receipt → paid; unknown → failed; else cleared', async () => {
+  const repo = fakeRepo();
+  const svc = createBorderTaxService({ repo, logger });
+  const at = new Date(Date.now() + 600_000);
+  await svc.unlockDone('b1', { retryAt: at });
+  assert.deepStrictEqual([repo.unlocks.b1.status, repo.due.b1], ['waiting', at.getTime()]);
+  await svc.unlockDone('b1', {});
+  assert.strictEqual(repo.unlocks.b1.status, 'cleared');
+  await svc.unlockDone('b2', { receiptNo: 'HRR1' });
+  assert.deepStrictEqual([repo.unlocks.b2.status, repo.unlocks.b2.receiptNo], ['paid', 'HRR1']);
+  await svc.unlockDone('b3', { failed: true });
+  assert.strictEqual(repo.unlocks.b3.status, 'failed');
+});
+
+test('unlockFailed retries UNLOCK_TRIES times, then gives up', async () => {
+  const repo = fakeRepo();
+  const svc = createBorderTaxService({ repo, logger });
+  assert.strictEqual(await svc.unlockFailed('b1'), true);
+  assert.strictEqual(await svc.unlockFailed('b1'), true);
+  assert.strictEqual(await svc.unlockFailed('b1'), false);
+  assert.strictEqual(repo.unlocks.b1.status, 'failed');
+});
+
+test('latePaid: a failed/expired filing becomes PAID with its receipt; a paid one is left alone', async () => {
+  const repo = fakeRepo({ b1: { id: 'b1', status: 'expired', failureCode: 'payment_timeout' }, b2: { id: 'b2', status: 'paid', receiptNo: 'X' } });
+  const svc = createBorderTaxService({ repo, logger });
+  assert.strictEqual(await svc.latePaid('b1', { receiptNo: 'HRR9', receiptKey: 'k' }), true);
+  assert.deepStrictEqual([repo.rows.b1.status, repo.rows.b1.receiptNo, repo.rows.b1.failureCode], ['paid', 'HRR9', null]);
+  assert.strictEqual(await svc.latePaid('b2', { receiptNo: 'HRR9', receiptKey: 'k' }), false);
+});
+
+test('restart: a lost payment page (payment_unknown) schedules an unlock — it frees the vehicle or finds the receipt', async () => {
+  const repo = fakeRepo({ b1: { id: 'b1', status: 'awaiting_payment' } });
+  await createBorderTaxService({ repo, logger }).recoverAfterRestart();
+  assert.deepStrictEqual([repo.rows.b1.failureCode, repo.unlocks.b1.status], ['payment_unknown', 'waiting']);
 });

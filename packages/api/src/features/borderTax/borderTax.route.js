@@ -17,6 +17,7 @@ const { sendSuccess } = require('../../http/respond');
  *   POST /api/v1/border-tax/:id/captcha  — driver's captcha answer
  *   POST /api/v1/border-tax/:id/captcha/refresh — driver wants a new captcha image
  *   POST /api/v1/border-tax/:id/cancel   — cancel while filling
+ *   POST /api/v1/border-tax/:id/unlock   — clear the vehicle's pending-payment lock (vehicle_pending failures)
  *   GET  /api/v1/border-tax/:id/receipt  — { url } presigned link to the receipt PDF (in-app QR filings)
  *
  * @param {object} deps
@@ -59,6 +60,10 @@ function createBorderTaxRouter({ service, requireAuth }) {
 
   router.get('/:id/receipt', idParam, async (req, res) => {
     sendSuccess(res, { data: await service.receipt(req.user.id, req.valid.params.id) });
+  });
+
+  router.post('/:id/unlock', idParam, async (req, res) => {
+    sendSuccess(res, { data: { unlock: await service.requestUnlock(req.user.id, req.valid.params.id) } });
   });
 
   router.post('/:id/cancel', idParam, async (req, res) => {

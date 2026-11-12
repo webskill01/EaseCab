@@ -9,7 +9,7 @@ const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
 const { chromium } = require('playwright');
-const { BORDER_TAX } = require('@easecab/shared');
+const { BORDER_TAX, createTelegramNotifier } = require('@easecab/shared');
 const { createBorderTaxRepository } = require('../features/borderTax/borderTax.repository');
 const { createBorderTaxService } = require('../features/borderTax/borderTax.service');
 const { createRunner } = require('./runner');
@@ -32,13 +32,15 @@ async function main() {
   const redis = new Redis(env.REDIS_URL);
   const repo = createBorderTaxRepository({ prisma, redis });
   const service = createBorderTaxService({ repo, logger });
+  const notify = createTelegramNotifier({ token: env.TELEGRAM_ALERT_BOT_TOKEN, chatId: env.TELEGRAM_ALERT_CHAT_ID, logger });
+  const alert = (text) => void notify?.(`EaseCab border tax: ${text}`); // unset env = logs only
   // Chromium can die on its own (prod 2026-11-12: gone ~45 min after boot, every filing then crashed).
   // One shared launch, relaunched on the next job after a disconnect.
   let launching = null;
   let stopping = false;
   const browser = () => {
     launching ??= chromium.launch({ headless: false }).then((b) => {
-      b.on('disconnected', () => { launching = null; if (!stopping) logger.warn('browser disconnected, relaunching on next filing'); });
+      b.on('disconnected', () => { launching = null; if (stopping) return; logger.warn('browser disconnected, relaunching on next filing'); alert('Chromium died, relaunching on next filing'); });
       return b;
     }, (err) => { launching = null; throw err; });
     return launching;
@@ -46,7 +48,7 @@ async function main() {
   await browser(); // fail fast at boot if Chromium can't start
   const newPage = async () => (await (await browser()).newContext({ viewport: VIEWPORT })).newPage();
   const r2 = r2FromEnv(serverEnv);
-  const runner = createRunner({ service, repo, newPage, logger, r2 });
+  const runner = createRunner({ service, repo, newPage, logger, r2, alert });
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));
   sweep();
   const sweepTimer = setInterval(sweep, RECEIPT_SWEEP_MS);
@@ -58,11 +60,19 @@ async function main() {
     const conn = redis.duplicate(); // BRPOP blocks its connection — one per lane
     while (!stopping) {
       const id = await repo.popQueue(conn, QUEUE_POLL_SEC);
-      if (id) await runner.run(id, conn).catch((err) => logger.error({ id, lane: n, err: err.message }, 'runner crashed'));
+      if (id) await runner.run(id, conn).catch((err) => { logger.error({ id, lane: n, err: err.message }, 'runner crashed'); alert(`runner crashed on ${id.slice(0, 8)}: ${err.message.slice(0, 200)}`); });
     }
     conn.disconnect();
   };
   const lanes = Array.from({ length: BORDER_TAX.WORKER_CONCURRENCY }, (_, n) => loop(n));
+  // pending-lock clears, one at a time beside the lanes (they share the lookup gap)
+  const unlocks = (async () => {
+    while (!stopping) {
+      const id = await repo.popDueUnlock(Date.now()).catch((err) => logger.error({ err: err.message }, 'unlock poll failed'));
+      if (id) await runner.unlock(id).catch((err) => { logger.error({ id, err: err.message }, 'unlock crashed'); alert(`unlock crashed on ${id.slice(0, 8)}: ${err.message.slice(0, 200)}`); });
+      else await new Promise((r) => setTimeout(r, BORDER_TAX.UNLOCK_POLL_SEC * 1000));
+    }
+  })();
 
   const shutdown = async (signal) => {
     logger.info({ signal }, 'border tax worker stopping'); // in-flight jobs are swept on next boot
@@ -70,7 +80,7 @@ async function main() {
     clearInterval(sweepTimer);
     stopOcr();
     await (await launching)?.close().catch((err) => logger.warn({ err: err.message }, 'browser close failed'));
-    await Promise.race([Promise.allSettled(lanes), new Promise((r) => setTimeout(r, 2000))]);
+    await Promise.race([Promise.allSettled([...lanes, unlocks]), new Promise((r) => setTimeout(r, 2000))]);
     await prisma.$disconnect();
     redis.disconnect();
     process.exit(0);
