@@ -11,6 +11,7 @@ const {
 } = require('@easecab/shared');
 const { decideOnClose } = require('./failoverPolicy');
 const { nextDelayMs } = require('./backoff');
+const { createSilenceWatch } = require('./slotSilence');
 
 /** Supervisor-local lifecycle of one slot (only BANNED/DEGRADED are terminal-ish). */
 const RUN = Object.freeze({
@@ -60,6 +61,7 @@ function createNumberPool({
   let rescanTimer = null;
   let watchdogTimer = null;
   let liveTimer = null;
+  const silence = createSilenceWatch(alerter);
 
   /** Write a slot's live record (the admin Sessions tab reads `at` to tell the bot is alive). */
   async function writeLive(slot) {
@@ -119,6 +121,7 @@ function createNumberPool({
     let backoffTimer = null;
     let lastActivityAt = 0; // epoch ms of the last inbound group message (stall watchdog, #16)
     let lastMsgAt = null; // last real message (stats; the watchdog resets lastActivityAt)
+    const startedAt = Date.now(); // silence baseline before the first message
 
     const tagged = async (m) => {
       lastActivityAt = Date.now();
@@ -226,7 +229,8 @@ function createNumberPool({
       endSock();
     }
 
-    return { connect, checkStall, stop, run: () => run, lastMsgAt: () => lastMsgAt };
+    const live = () => run === RUN.OPEN || run === RUN.CONNECTING;
+    return { connect, checkStall, stop, run: () => run, lastMsgAt: () => lastMsgAt, silence: () => ({ live: live(), lastMsgAt, startedAt }) };
   }
 
   /**
@@ -238,6 +242,7 @@ function createNumberPool({
     const sup = sups.get(slot);
     sups.delete(slot);
     if (sup) await sup.stop(logout);
+    silence.forget(slot);
     setSlotState(slot, state);
     logger.info({ slot, state }, 'numberPool: slot released');
   }
@@ -270,7 +275,10 @@ function createNumberPool({
     }
     // Every listed slot's record is refreshed so the admin panel can tell OFFLINE (bot dead).
     liveTimer = setInterval(() => registry.listedSlots().forEach(writeLive), WA_SESSIONS.LIVE_TICK_MS);
-    watchdogTimer = setInterval(() => sups.forEach((s) => s.checkStall()), BOT_HEALTH.WATCHDOG_CHECK_MS);
+    watchdogTimer = setInterval(() => sups.forEach((s, slot) => {
+      s.checkStall();
+      silence.check(slot, s.silence());
+    }), BOT_HEALTH.WATCHDOG_CHECK_MS);
     rescanTimer = setInterval(rescan, BOT_HEALTH.RESCAN_MS);
     rescan();
   }

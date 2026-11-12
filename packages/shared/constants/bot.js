@@ -26,6 +26,10 @@ const ALERT_EVENT = Object.freeze({
   NUMBER_DOWN: 'number_down', // a slot exhausted its reconnect backoff; others keep ingesting
   FEED_STALE: 'feed_stale', // no ride ingested within the stale window (active hours)
   ALL_EXHAUSTED: 'all_exhausted', // no eligible slot left — feed is dark (sev-1)
+  // One number got no group message for SLOT_SILENT_AFTER_MS (active hours) while
+  // "connected" — the ghost-device case FEED_STALE misses when another number carries
+  // the feed (2026-11-04/07/09). Field is per slot: `slot_silent:<slot>`.
+  SLOT_SILENT: 'slot_silent',
 });
 
 /** Alert severities. SEV1 = page-worthy (feed fully dark). */
@@ -53,6 +57,7 @@ const BOT_HEALTH = Object.freeze({
   // open. A forced reconnect during a genuinely quiet stretch is harmless (read-only).
   STALL_WATCHDOG_MS: 12 * 60 * 1000,
   WATCHDOG_CHECK_MS: 60 * 1000, // how often the watchdog evaluates inbound silence
+  SLOT_SILENT_AFTER_MS: 30 * 60 * 1000, // per-number SLOT_SILENT alert after this much silence (active hours)
   LOST_MSG_LOG_MS: 10 * 60 * 1000, // how often the lost-group-message diagnostic is logged + stored
   // Nameless-group lookups (timings from the multibot, proven in production): wait
   // out Baileys' own init queries after connect (firing early timed them out at 408),

@@ -12,6 +12,7 @@ const {
 const pino = require('pino');
 const { BOT_HEALTH } = require('@easecab/shared');
 const { toGroupRecord } = require('../groups/groupStore');
+const { createTrafficDiag } = require('./trafficDiag');
 
 /**
  * Pull plain text out of a Baileys message node. Handles the two text-bearing
@@ -165,6 +166,11 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
 
   sock.ev.on('creds.update', saveCreds);
 
+  const diag = createTrafficDiag();
+  if (sock.ws && sock.ws.on) sock.ws.on('CB:message', diag.stanza); // raw frames, before decrypt
+  const logTraffic = () => logger.info(diag.flush(), 'wa traffic');
+  const diagTimer = setInterval(logTraffic, BOT_HEALTH.LOST_MSG_LOG_MS);
+
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
     // While unpaired Baileys emits a fresh QR string here (printQRInTerminal is
@@ -187,6 +193,8 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
     } else if (connection === 'close') {
       if (closed) return; // ignore duplicate close events
       closed = true;
+      clearInterval(diagTimer);
+      logTraffic();
       const code =
         lastDisconnect &&
         lastDisconnect.error &&
@@ -223,6 +231,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
   });
 
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    diag.upsert(messages, type);
     for (const m of messages) if (isLostGroupMessage(m)) lostGroupMessages += 1;
     if (type !== 'notify') return; // ignore history/append syncs
     for (const m of messages) {
@@ -231,6 +240,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       const text = extractText(m.message);
       if (!text) continue;
       const senderJid = senderOf(m.key, jid);
+      diag.pass();
       try {
         await onMessage({
           text, senderJid, groupId: jid, groupName: groups.nameOf(jid), msgId: m.key.id, sentAt: sentAtMs(m),
