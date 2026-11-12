@@ -1,5 +1,6 @@
 'use strict';
 
+const CIPHERTEXT_STUB = 1; // WAMessageStubType.CIPHERTEXT — the message failed to decrypt
 const fresh = () => ({ stanzas: 0, groupStanzas: 0, upserts: 0, notify: 0, noBody: 0, passed: 0, failures: {} });
 
 /**
@@ -27,7 +28,11 @@ function createTrafficDiag() {
       for (const m of messages) {
         if (m.message) continue;
         c.noBody += 1;
-        const why = String((m.messageStubParameters && m.messageStubParameters[0]) || m.messageStubType || 'none').slice(0, 40);
+        // Only a CIPHERTEXT stub's parameter is an error text; other stubs carry group
+        // names/participants (can hold phone numbers), so those log their type only.
+        const why = m.messageStubType === CIPHERTEXT_STUB
+          ? String((m.messageStubParameters && m.messageStubParameters[0]) || 'ciphertext').slice(0, 40)
+          : `stub_${m.messageStubType || 'none'}`;
         c.failures[why] = (c.failures[why] || 0) + 1;
       }
     },
