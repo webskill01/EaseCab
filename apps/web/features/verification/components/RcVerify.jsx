@@ -10,6 +10,7 @@ import { DocStatusBadge } from './DocStatusBadge'
 import { InfoNote } from './InfoNote'
 import { KycUploader } from './KycUploader'
 import { useDriverVerify } from '../hooks/useDriverVerify'
+import { SavedVehicleOptions, SAVED_RC_LIST } from '@/features/profile/components/SavedVehicleOptions'
 import { docState } from '../lib/verifyView'
 
 const field = 'h-12 w-full rounded-xl border-[1.5px] border-ec-line bg-white px-3 text-[15px] font-bold text-ec-ink outline-none focus:border-ec-blue'
@@ -36,7 +37,8 @@ export function RcVerify({ status }) {
         </div>
 
         <label className="flex flex-col gap-1.5"><span className="text-[12.5px] font-bold text-ec-ink60">{t('driver.rcNumber')}</span>
-          <input className={field} maxLength={12} aria-label={t('driver.rcNumber')} value={rc} onChange={(e) => setRc(e.target.value.toUpperCase().replace(/\s/g, ''))} /></label>
+          <input className={field} maxLength={12} autoComplete="off" list={SAVED_RC_LIST} aria-label={t('driver.rcNumber')} value={rc} onChange={(e) => setRc(e.target.value.toUpperCase().replace(/\s/g, ''))} /></label>
+        <SavedVehicleOptions />
 
         {dv.rcResult && (
           <div className="rounded-xl border border-ec-line bg-white p-3 text-[12.5px] font-bold text-ec-successTx">

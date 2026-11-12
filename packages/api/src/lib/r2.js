@@ -1,7 +1,10 @@
 'use strict';
 
-const { S3Client, HeadObjectCommand, GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, HeadObjectCommand, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const fs = require('fs/promises');
+const os = require('os');
+const path = require('path');
 const { UPLOAD } = require('@easecab/shared');
 
 /**
@@ -46,6 +49,13 @@ function createR2Client({ accountId, accessKeyId, secretAccessKey, bucket, publi
     async presignGet({ key, expiresIn = UPLOAD.GET_EXPIRY_SEC }) {
       return getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn });
     },
+    // Server-made files (border-tax receipt PDFs): the worker uploads the bytes itself.
+    async putObject({ key, body, contentType }) {
+      await client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }));
+    },
+    async deleteObject({ key }) { // R2: a missing key is not an error
+      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+    },
     async headObject({ key }) {
       try {
         const r = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
@@ -77,6 +87,15 @@ function createStubR2Client({ bucket = 'easecab-stub', publicBaseUrl = 'https://
     async presignGet({ key }) {
       return `${publicBaseUrl}/${key}?sig=stub`;
     },
+    // ponytail: no bucket — server-made files land in the OS temp dir so a local run can be checked by hand
+    async putObject({ key, body }) {
+      const file = path.join(os.tmpdir(), 'easecab-r2-stub', key);
+      await fs.mkdir(path.dirname(file), { recursive: true });
+      await fs.writeFile(file, body);
+    },
+    async deleteObject({ key }) {
+      await fs.rm(path.join(os.tmpdir(), 'easecab-r2-stub', key), { force: true });
+    },
     async headObject() {
       return { exists: true, size: 1024, contentType: 'image/jpeg' };
     },
@@ -86,4 +105,11 @@ function createStubR2Client({ bucket = 'easecab-stub', publicBaseUrl = 'https://
   };
 }
 
-module.exports = { createR2Client, createStubR2Client };
+/** R2 for server-made files (receipt PDFs) from validated env — the stub when R2_STUB, like server.js. */
+function r2FromEnv(e) {
+  const { R2_STUB, R2_BUCKET: bucket, R2_PUBLIC_BASE_URL: publicBaseUrl } = e;
+  if (R2_STUB) return createStubR2Client({ bucket, publicBaseUrl });
+  return createR2Client({ accountId: e.R2_ACCOUNT_ID, accessKeyId: e.R2_ACCESS_KEY_ID, secretAccessKey: e.R2_SECRET_ACCESS_KEY, bucket, publicBaseUrl });
+}
+
+module.exports = { createR2Client, createStubR2Client, r2FromEnv };

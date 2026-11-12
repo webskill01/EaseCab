@@ -7,11 +7,13 @@ export class ApiError extends Error {
    * @param {string} code - envelope error code (e.g. AUTH_REQUIRED) or NETWORK_ERROR
    * @param {string} message - human-readable message (generic for users)
    * @param {number} status - HTTP status, or 0 for transport failures
+   * @param {object} [meta] - envelope meta (e.g. { retryAfter } on a busy 429)
    */
-  constructor(code, message, status) {
+  constructor(code, message, status, meta) {
     super(message)
     this.name = 'ApiError'
     this.code = code
     this.status = status
+    this.meta = meta
   }
 }

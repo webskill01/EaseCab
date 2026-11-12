@@ -8,7 +8,7 @@ import { env } from '@/config/env'
  * Build the support deep-link: prefer WhatsApp (the product's primary channel,
  * chrome.jsx), fall back to email. Returned target is opened in a new tab.
  */
-function supportHref() {
+export function supportHref() {
   if (env.NEXT_PUBLIC_SUPPORT_WHATSAPP) {
     return `https://wa.me/${env.NEXT_PUBLIC_SUPPORT_WHATSAPP}`
   }

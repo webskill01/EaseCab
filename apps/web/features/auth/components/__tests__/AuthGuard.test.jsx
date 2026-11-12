@@ -8,6 +8,10 @@ const replace = vi.fn()
 const router = { replace }
 vi.mock('next/navigation', () => ({ useRouter: () => router }))
 vi.mock('../../services/authApi', () => ({ refreshSession: vi.fn() }))
+// The guard warms these two on auth; unmocked they hit the real API client, whose failure path
+// can fire the session-expired redirect this test asserts never happens.
+vi.mock('@/features/profile/services/profileApi', () => ({ getProfile: vi.fn(async () => ({})) }))
+vi.mock('@/features/subscription/services/subscriptionApi', () => ({ getMembership: vi.fn(async () => ({})) }))
 import { refreshSession } from '../../services/authApi'
 import { AuthGuard, SESSION_REFRESH_INTERVAL_MS, SESSION_RETRY_MS } from '../AuthGuard'
 

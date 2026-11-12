@@ -45,6 +45,9 @@ const { createChatRouter } = require('./features/chat/chat.route');
 const { createBlocksRepository } = require('./features/blocks/blocks.repository');
 const { createBlocksService } = require('./features/blocks/blocks.service');
 const { createBlocksRouter } = require('./features/blocks/blocks.route');
+const { createBorderTaxRepository } = require('./features/borderTax/borderTax.repository');
+const { createBorderTaxService } = require('./features/borderTax/borderTax.service');
+const { createBorderTaxRouter } = require('./features/borderTax/borderTax.route');
 const { createPushRepository } = require('./features/push/push.repository');
 const { createPushService } = require('./features/push/push.service');
 const { createRenewalReminderService } = require('./features/push/renewalReminder.service');
@@ -414,6 +417,9 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
   // the chat service (open/send check isBlockedBetween).
   const blocksService = createBlocksService({ repo: createBlocksRepository({ prisma }) });
   v1.use('/blocks', createBlocksRouter({ service: blocksService, requireAuth }));
+
+  const borderTaxService = createBorderTaxService({ repo: createBorderTaxRepository({ prisma, redis }), logger, r2: uploads });
+  v1.use('/border-tax', createBorderTaxRouter({ service: borderTaxService, requireAuth }));
 
   // Push (Step 15) — authed FCM token registration + per-source notification
   // preferences. The live city-targeted fan-out runs via a dedicated subscriber,

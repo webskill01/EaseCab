@@ -15,6 +15,7 @@
   },
   "nav": {
     "rides": "Rides",
+    "borderTax": "Border Tax",
     "post": "Post duty",
     "mine": "My Rides",
     "profile": "Profile"

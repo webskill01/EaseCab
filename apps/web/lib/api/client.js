@@ -84,7 +84,7 @@ export async function apiFetch(path, options = {}, _retried = false) {
   if (!res.ok || !body?.success) {
     const code = body?.error?.code ?? 'INTERNAL_ERROR'
     const message = body?.error?.message ?? 'Request failed'
-    throw new ApiError(code, message, res.status)
+    throw new ApiError(code, message, res.status, body?.meta)
   }
 
   return { data: body.data, meta: body.meta, status: res.status }

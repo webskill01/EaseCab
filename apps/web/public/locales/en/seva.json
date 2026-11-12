@@ -1,0 +1,155 @@
+{
+  "title": "Driver Seva",
+  "sub": "Govt work done for you — free for members",
+  "back": "Back",
+  "sections": {
+    "services": "Services"
+  },
+  "tiles": {
+    "borderTax": "Border Tax",
+    "free": "Free",
+    "comingSoon": "Coming soon"
+  },
+  "bt": {
+    "title": "Border Tax",
+    "formTitle": "Pay Border Tax",
+    "vehicle": "RC number",
+    "seats": "Seats",
+    "state": "State",
+    "statePh": "Select state",
+    "border": "Border (optional)",
+    "borderAny": "Any / not sure",
+    "start": "Date for apply",
+    "days": "Number of days",
+    "dayCount": "{n, plural, one {# Day} other {# Days}}",
+    "distance": "Distance in Haryana (km)",
+    "mode": "Tax period",
+    "modes": {"1": "Days", "4": "Monthly", "5": "Quarterly", "6": "Half yearly", "7": "Yearly"},
+    "periodEnd": "{mode} — valid till the period ends (date set by the govt portal)",
+    "validity": "Validity",
+    "validUpto": "Valid upto {date}, {time}",
+    "validUptoLabel": "Valid upto",
+    "declare": "I confirm these vehicle details are correct and accept the govt portal's declaration.",
+    "freeNote": "Free for members — you pay only the govt tax, on the official payment page.",
+    "submit": "Pay Now",
+    "submitting": "Starting…",
+    "history": "History",
+    "historyEmpty": "Your border tax filings will show here.",
+    "viewStatus": "View status",
+    "status": {
+      "queued": {
+        "t": "In queue",
+        "s": "Waiting for the govt portal"
+      },
+      "filling": {
+        "t": "Filling",
+        "s": "Filling the govt portal for you"
+      },
+      "awaiting_captcha": {
+        "t": "Code needed",
+        "s": "Type the code shown to continue"
+      },
+      "handed_off": {
+        "t": "Payment page opened",
+        "s": "Paid? Get your receipt from the official site"
+      },
+      "failed": {
+        "t": "Failed",
+        "s": "Couldn't finish this filing"
+      },
+      "expired": {
+        "t": "Timed out",
+        "s": "No reply in time"
+      },
+      "cancelled": {
+        "t": "Cancelled",
+        "s": "Your request has been cancelled"
+      },
+      "awaiting_payment": {
+        "t": "Waiting for payment",
+        "s": "Pay with any UPI app"
+      },
+      "paid": {
+        "t": "Paid",
+        "s": "Border tax paid"
+      }
+    },
+    "fail": {
+      "captcha_timeout": "You didn't type the code in time. Please file again.",
+      "captcha_wrong": "The code was wrong too many times. Please file again.",
+      "portal_error": "The govt portal had a problem. Try again in a few minutes.",
+      "worker_restart": "The govt portal had a problem. Try again in a few minutes.",
+      "state_unsupported": "This state isn't supported yet.",
+      "vehicle_pending": "This vehicle has an unfinished payment on the govt portal. Wait about 30 minutes, then file again.",
+      "already_paid": "Tax is already paid for this time.",
+      "road_tax_expired": "Your vehicle's road tax has expired. Renew it first.",
+      "no_tax_mode": "The portal has no tax option for this vehicle at this border.",
+      "no_handoff": "The portal didn't open the bank page. Please try again.",
+      "pucc_expired": "Your vehicle's pollution certificate (PUC) has expired. Renew it, then file again.",
+      "fitness_expired": "Your vehicle's fitness certificate has expired. Renew it, then file again.",
+      "no_qr": "The govt payment page didn't show a UPI QR. Please try again.",
+      "payment_failed": "The payment didn't go through. If money was debited, contact support.",
+      "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",
+      "payment_unknown": "We lost the payment page. If you paid, contact support — don't pay again."
+    },
+    "live": {
+      "captchaTitle": "Type the code",
+      "captchaSub": "Our reader couldn't read this one. Type exactly what you see, including # or @.",
+      "captchaAlt": "Captcha code",
+      "captchaPh": "Code",
+      "captchaSubmit": "Submit code",
+      "closedTitle": "Payment link ended",
+      "closedSub": "The payment link lasts about 5 minutes. If you didn't pay, the portal holds this vehicle for about 30 minutes — file again after that.",
+      "cancel": "Cancel filing",
+      "retry": "Try again",
+      "support": "Contact support",
+      "captchaRefresh": "New code"
+    },
+    "gate": {
+      "title": "Seva is for members",
+      "sub": "Border tax filing is free with EaseCab membership (₹149/month).",
+      "subscribe": "Become a member",
+      "notNow": "Not now"
+    },
+    "errors": {
+      "vehicleBusy": "This vehicle already has a filing in progress — see History.",
+      "rateLimited": "Too many filings. Try again in an hour.",
+      "generic": "Couldn't start. Please try again.",
+      "busy": "Govt site is busy. Try again in {time}"
+    },
+    "prep": {
+      "title": "Preparing your border tax payment",
+      "verify": "Verifying vehicle details",
+      "docs": "Checking documents",
+      "fetch": "Fetching payment details",
+      "redirect": "Redirecting to payment",
+      "validity": "Validity: {from} – {to}",
+      "keepOpenT": "Keep this page open",
+      "keepOpenS": "Don't close or leave this screen. Your payment details will appear here automatically.",
+      "queued": "Starting soon — the govt site allows one lookup every 2 minutes",
+      "startsIn": "Starting in {time} — the govt site allows one lookup every 2 minutes"
+    },
+    "pay": {
+      "title": "Payment Details",
+      "tax": "Border Tax",
+      "payable": "Amount Payable",
+      "cta": "Pay Border Tax {amount}",
+      "note": "Opens the official govt payment page in a new tab. The link works for about 5 minutes. If a govt treasury page opens first, tap Continue there. EaseCab charges nothing."
+    },
+    "latestFee": "Latest fee at this border: {amount} for {n, plural, one {# day} other {# days}} ({date})",
+    "qr": {
+      "title": "Pay Border Tax",
+      "upiCta": "Pay {amount} with UPI app",
+      "alt": "UPI payment QR",
+      "scan": "Or scan this QR from another phone with any UPI app.",
+      "timer": "QR valid for {time}",
+      "wait": "Keep this screen open after paying — we'll fetch your govt receipt here.",
+      "receiptNo": "Receipt No. {no}",
+      "noReceipt": "Paid, but the govt receipt didn't load. Contact support and we'll get it for you.",
+      "saveHint": "Save it to your phone now — we delete it from EaseCab on {date}, {time}.",
+      "receiptGone": "Receipt deleted from EaseCab 24 hours after the tax validity ended. Use the copy saved on your phone.",
+      "download": "Download receipt",
+      "gettingReceipt": "Paid. Getting your receipt from the govt site…"
+    }
+  }
+}

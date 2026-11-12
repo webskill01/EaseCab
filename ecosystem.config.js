@@ -72,5 +72,22 @@ module.exports = {
       autorestart: true,
       env: { NODE_ENV: 'production' },
     },
+    {
+      // Phase 26 — border tax filing worker (Playwright). The state portals refuse headless
+      // browsers, so Chromium runs headed inside a virtual display: needs `apt install xvfb`
+      // + `npx playwright install --with-deps chromium` on the VPS before first start.
+      name: 'easecab-bordertax',
+      script: 'xvfb-run',
+      args: '-a node --env-file-if-exists=.env src/borderTax/worker.js',
+      interpreter: 'none',
+      cwd: 'packages/api',
+      exec_mode: 'fork',
+      instances: 1,
+      max_memory_restart: '700M', // 3 browser contexts (~150MB each) + Chromium
+      autorestart: true,
+      restart_delay: 5000,
+      kill_timeout: 5000, // worker closes the browser on SIGTERM; in-flight jobs swept on boot
+      env: { NODE_ENV: 'production' },
+    },
   ],
 };

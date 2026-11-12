@@ -4,7 +4,9 @@ import {
   IconLock, IconBan, IconShieldCheckFilled, IconArrowsLeftRight, IconBrandWhatsapp, IconPhone,
   IconFlag, IconMessage, IconWorld, IconHeadset, IconCrownFilled, IconBoltFilled, IconInfoCircle,
   IconSearch, IconPlus, IconDotsVertical, IconPhoto, IconListDetails, IconCar, IconCarSuv, IconBus,
-  IconAlertTriangle, IconArrowForwardUp,
+  IconAlertTriangle, IconArrowForwardUp, IconLayoutGrid, IconRoad, IconReceipt, IconShieldCheck,
+  IconReceiptTax, IconMinus, IconExternalLink, IconLoader2, IconCircleX, IconCalendarCheck,
+  IconBuildingBank, IconCalendarEvent, IconRosetteDiscountCheckFilled, IconArrowRight,
 } from '@tabler/icons-react'
 
 /**
@@ -62,6 +64,20 @@ export const Car = ic(IconCar, 16)
 export const Van = ic(IconBus, 16) // ponytail: Tabler has no minibus glyph; tempo traveller shares the bus
 export const Bus = ic(IconBus, 16)
 export const Suv = ic(IconCarSuv, 16)
+export const Grid = ic(IconLayoutGrid, 22)
+export const Road = ic(IconRoad, 26)
+export const Receipt = ic(IconReceipt, 26)
+export const ShieldOk = ic(IconShieldCheck, 26)
+export const ReceiptTax = ic(IconReceiptTax, 26)
+export const Minus = ic(IconMinus, 18)
+export const External = ic(IconExternalLink, 18)
+export const Spinner = ic(IconLoader2, 18)
+export const CircleX = ic(IconCircleX, 20)
+export const CalendarCheck = ic(IconCalendarCheck, 26)
+export const Bank = ic(IconBuildingBank, 22)
+export const Calendar = ic(IconCalendarEvent, 18)
+export const Verified = ic(IconRosetteDiscountCheckFilled, 22)
+export const ArrowR = ic(IconArrowRight, 18)
 
 /**
  * Vehicle glyph by icon key (the `rideView.vehIconKey` output). Falls back to a

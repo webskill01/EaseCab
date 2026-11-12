@@ -21,4 +21,5 @@ module.exports = {
   ...require('./memberSync.schema'),
   ...require('./referrals.schema'),
   ...require('./waSessions.schema'),
+  ...require('./borderTax.schema'),
 };

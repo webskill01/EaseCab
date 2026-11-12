@@ -93,3 +93,11 @@ dump.rdb
 # Design prototype (reference only — runnable mockup, not app source)
 /EaseCab/
 .claude/skills/
+
+# Python bytecode (border-tax OCR)
+__pycache__/
+
+# Local-only reference material / vendor docs / scratch notes
+cabswale_refrence/
+Surepass-*.pdf
+packages/bot/scripts/repair-commands.txt

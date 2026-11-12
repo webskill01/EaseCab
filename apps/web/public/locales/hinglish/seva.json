@@ -1,0 +1,155 @@
+{
+  "title": "Driver Seva",
+  "sub": "Sarkari kaam hum karein — members ke liye free",
+  "back": "Wapas",
+  "sections": {
+    "services": "Services"
+  },
+  "tiles": {
+    "borderTax": "Border Tax",
+    "free": "Free",
+    "comingSoon": "Jaldi aa raha"
+  },
+  "bt": {
+    "title": "Border Tax",
+    "formTitle": "Border Tax bharein",
+    "vehicle": "RC number",
+    "seats": "Seats",
+    "state": "State",
+    "statePh": "State chunein",
+    "border": "Border (optional)",
+    "borderAny": "Koi bhi / pata nahi",
+    "start": "Shuru hone ki date",
+    "days": "Kitne din",
+    "dayCount": "{n, plural, one {# Din} other {# Din}}",
+    "distance": "Haryana mein doori (km)",
+    "mode": "Tax period",
+    "modes": {"1": "Din", "4": "Monthly", "5": "Quarterly", "6": "Half yearly", "7": "Yearly"},
+    "periodEnd": "{mode} — period khatam hone tak valid (date govt portal set karta hai)",
+    "validity": "Validity",
+    "validUpto": "{date}, {time} tak valid",
+    "validUptoLabel": "Tak valid",
+    "declare": "Main confirm karta hoon ki gaadi ki details sahi hain aur sarkari portal ka declaration maanta hoon.",
+    "freeNote": "Members ke liye free — aap sirf sarkari tax bharte hain, official payment page par.",
+    "submit": "Pay Now",
+    "submitting": "Shuru ho raha hai…",
+    "history": "History",
+    "historyEmpty": "Aapki border tax filings yahan dikhengi.",
+    "viewStatus": "Status dekhein",
+    "status": {
+      "queued": {
+        "t": "Queue mein",
+        "s": "Sarkari portal ka intezaar"
+      },
+      "filling": {
+        "t": "Bhara ja raha hai",
+        "s": "Aapke liye sarkari portal bhara ja raha hai"
+      },
+      "awaiting_captcha": {
+        "t": "Code chahiye",
+        "s": "Aage badhne ke liye dikhaya code likhein"
+      },
+      "handed_off": {
+        "t": "Payment page khula",
+        "s": "Payment ho gaya? Official site se receipt lein"
+      },
+      "failed": {
+        "t": "Fail",
+        "s": "Yeh filing poori nahi ho saki"
+      },
+      "expired": {
+        "t": "Time khatam",
+        "s": "Time par jawab nahi mila"
+      },
+      "cancelled": {
+        "t": "Cancel",
+        "s": "Aapki request cancel ho gayi hai"
+      },
+      "awaiting_payment": {
+        "t": "Payment baaki",
+        "s": "Kisi bhi UPI app se pay karein"
+      },
+      "paid": {
+        "t": "Paid",
+        "s": "Border tax bhar diya gaya"
+      }
+    },
+    "fail": {
+      "captcha_timeout": "Aapne time par code nahi likha. Dobara file karein.",
+      "captcha_wrong": "Code kai baar galat raha. Dobara file karein.",
+      "portal_error": "Sarkari portal mein dikkat hai. Kuch minute baad try karein.",
+      "worker_restart": "Sarkari portal mein dikkat hai. Kuch minute baad try karein.",
+      "state_unsupported": "Yeh state abhi available nahi hai.",
+      "vehicle_pending": "Is gaadi ka ek payment govt portal pe adhoora hai. Lagbhag 30 minute rukein, phir dobara bharein.",
+      "already_paid": "Is time ke liye tax pehle se bhara hai.",
+      "road_tax_expired": "Aapki gaadi ka road tax khatam ho gaya hai. Pehle renew karein.",
+      "no_tax_mode": "Is border par is gaadi ke liye portal mein tax option nahi hai.",
+      "no_handoff": "Portal ne bank page nahi khola. Dobara try karein.",
+      "pucc_expired": "Aapki gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
+      "fitness_expired": "Aapki gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
+      "no_qr": "Govt payment page pe UPI QR nahi dikha. Dobara try karein.",
+      "payment_failed": "Payment nahi hua. Agar paise kate hain to support se baat karein.",
+      "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
+      "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein."
+    },
+    "live": {
+      "captchaTitle": "Code likhein",
+      "captchaSub": "Hamara reader yeh code nahi padh saka. Jaisa dikhe waisa hi likhein, # ya @ bhi.",
+      "captchaAlt": "Captcha code",
+      "captchaPh": "Code",
+      "captchaSubmit": "Code bhejein",
+      "closedTitle": "Payment link khatam",
+      "closedSub": "Payment link lagbhag 5 minute chalta hai. Agar payment nahi kiya, to portal gaadi ko lagbhag 30 minute rok kar rakhta hai — uske baad dobara file karein.",
+      "cancel": "Filing cancel karein",
+      "retry": "Dobara try karein",
+      "support": "Support se baat karein",
+      "captchaRefresh": "Naya code"
+    },
+    "gate": {
+      "title": "Seva members ke liye hai",
+      "sub": "EaseCab membership (₹149/mahina) ke saath border tax filing free hai.",
+      "subscribe": "Member banein",
+      "notNow": "Abhi nahi"
+    },
+    "errors": {
+      "vehicleBusy": "Is gaadi ki ek filing pehle se chal rahi hai — History dekhein.",
+      "rateLimited": "Bahut zyada filings. Ek ghante baad try karein.",
+      "generic": "Shuru nahi ho saka. Dobara try karein.",
+      "busy": "Govt site busy hai. {time} mein dobara try karein"
+    },
+    "prep": {
+      "title": "Aapka border tax payment taiyaar ho raha hai",
+      "verify": "Gaadi ki details check ho rahi hain",
+      "docs": "Documents check ho rahe hain",
+      "fetch": "Payment details li ja rahi hain",
+      "redirect": "Payment par bheja ja raha hai",
+      "validity": "Validity: {from} – {to}",
+      "keepOpenT": "Ye page khula rakhein",
+      "keepOpenS": "Ye screen band na karein. Payment details yahin apne aap aa jayengi.",
+      "queued": "Thodi der mein shuru hoga — govt site har 2 minute mein ek check allow karti hai",
+      "startsIn": "{time} mein shuru — govt site har 2 minute mein ek lookup allow karti hai"
+    },
+    "pay": {
+      "title": "Payment Details",
+      "tax": "Border Tax",
+      "payable": "Kul Rashi",
+      "cta": "Border Tax Bharein {amount}",
+      "note": "Official sarkari payment page naye tab mein khulega. Link lagbhag 5 minute chalta hai. Agar pehle sarkari treasury page khule, toh wahan Continue dabayein. EaseCab kuch charge nahi karta."
+    },
+    "latestFee": "Is border ki latest fee: {amount}, {n} din ({date})",
+    "qr": {
+      "title": "Border Tax bharein",
+      "upiCta": "UPI app se {amount} pay karein",
+      "alt": "UPI payment QR",
+      "scan": "Ya kisi doosre phone ke UPI app se yeh QR scan karein.",
+      "timer": "QR {time} tak valid",
+      "wait": "Pay karne ke baad yeh screen khuli rakhein — aapki govt receipt yahin aayegi.",
+      "receiptNo": "Receipt No. {no}",
+      "noReceipt": "Payment ho gaya, par govt receipt nahi aayi. Support se baat karein, hum nikaal denge.",
+      "saveHint": "Abhi apne phone mein save kar lo — hum ise {date}, {time} ko EaseCab se hata denge.",
+      "receiptGone": "Tax validity khatam hone ke 24 ghante baad receipt EaseCab se hata di gayi. Phone mein save ki hui copy use karo.",
+      "download": "Receipt download karein",
+      "gettingReceipt": "Payment ho gaya. Govt site se aapki receipt la rahe hain…"
+    }
+  }
+}

@@ -68,7 +68,7 @@ function createErrorHandler({ logger }) {
     res.status(status).json({
       success: false,
       error: { code, message },
-      meta: { requestId: req.id },
+      meta: { requestId: req.id, ...err?.meta }, // AppError meta, e.g. { retryAfter } on a busy 429
     });
   };
 }

@@ -27,4 +27,5 @@ module.exports = {
   ...require('./users'),
   ...require('./memberSync'),
   ...require('./referrals'),
+  ...require('./borderTax'),
 };

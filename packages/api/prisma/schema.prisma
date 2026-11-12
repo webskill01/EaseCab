@@ -395,6 +395,7 @@ model User {
   blocksReceived          UserBlock[]              @relation("BlocksReceived")
   referredBy              User?                    @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals               User[]                   @relation("Referrals")
+  borderTaxRequests       BorderTaxRequest[]
   complimentary           ComplimentaryMember?
   notifyGeoCity           City?                    @relation("UserGeoAlertCity", fields: [notifyGeoCityId], references: [id], onDelete: SetNull)
 
@@ -732,4 +733,37 @@ model ComplimentaryMember {
 
   @@index([grantedById])
   @@map("complimentary_members")
+}
+
+// ---------------------------------------------------------------------------
+// BORDER TAX (Phase 26) — one row per filing; money record, so users can't cascade it away
+// ---------------------------------------------------------------------------
+
+model BorderTaxRequest {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  vehicleNo   String    @map("vehicle_no")
+  stateCd     String    @map("state_cd") // BORDER_TAX_STATES key, e.g. HP
+  checkpost   String?
+  seats       String // BORDER_TAX_SEATS, e.g. 4+1
+  permitType  String    @map("permit_type") // PERMIT_TYPE portal code
+  taxMode     String    @default("1") @map("tax_mode") // TAX_MODE portal code; non-DAYS → portal sets tax_upto
+  taxFrom     DateTime  @map("tax_from") @db.Timestamptz(6)
+  taxUpto     DateTime  @map("tax_upto") @db.Timestamptz(6)
+  distanceKm  Int?      @map("distance_km") // HR portal requires it
+  status      String // BORDER_TAX_STATUS
+  taxPaise    Int?      @map("tax_paise") // portal quote, set at hand-off (driver pays the govt directly)
+  failureCode String?   @map("failure_code")
+  receiptNo   String?   @map("receipt_no") // govt receipt (HRR…) captured after an in-app payment
+  receiptKey  String?   @map("receipt_key") // R2 key of the receipt PDF (private; served presigned)
+  paidAt      DateTime? @map("paid_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // no money here — goes with the user (unlike payments)
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+  @@map("border_tax_requests")
 }
