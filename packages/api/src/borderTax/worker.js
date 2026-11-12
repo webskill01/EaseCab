@@ -34,12 +34,14 @@ async function main() {
   const service = createBorderTaxService({ repo, logger });
   const notify = createTelegramNotifier({ token: env.TELEGRAM_ALERT_BOT_TOKEN, chatId: env.TELEGRAM_ALERT_CHAT_ID, logger });
   const alert = (text) => void notify?.(`EaseCab border tax: ${text}`); // unset env = logs only
-  // Chromium can die on its own (prod 2026-11-12: gone ~45 min after boot, every filing then crashed).
-  // One shared launch, relaunched on the next job after a disconnect.
+  // Chromium died whenever the last root SSH session logged out (prod 2026-11-12): via the D-Bus session
+  // bus pm2 inherited it registered a systemd scope under user@0, which systemd stops (and kills) at logout.
+  // A dead bus address keeps it out of that scope. Still relaunched on the next job after any disconnect.
+  const CHROMIUM_ENV = { ...process.env, DBUS_SESSION_BUS_ADDRESS: 'unix:path=/dev/null' };
   let launching = null;
   let stopping = false;
   const browser = () => {
-    launching ??= chromium.launch({ headless: false }).then((b) => {
+    launching ??= chromium.launch({ headless: false, env: CHROMIUM_ENV }).then((b) => {
       b.on('disconnected', () => { launching = null; if (stopping) return; logger.warn('browser disconnected, relaunching on next filing'); alert('Chromium died, relaunching on next filing'); });
       return b;
     }, (err) => { launching = null; throw err; });
