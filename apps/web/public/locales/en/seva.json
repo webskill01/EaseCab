@@ -12,7 +12,7 @@
   "bt": {
     "title": "Border Tax",
     "formTitle": "Pay Border Tax",
-    "vehicle": "RC number",
+    "vehicle": "Vehicle number",
     "seats": "Seats",
     "state": "State",
     "statePh": "Select state",
@@ -146,7 +146,7 @@
       "title": "Pay Border Tax",
       "upiCta": "Pay {amount} with UPI app",
       "alt": "UPI payment QR",
-      "scan": "Or scan this QR from another phone with any UPI app.",
+      "scan": "Scan with any UPI app from another phone, or tap above to pay from this phone.",
       "timer": "QR valid for {time}",
       "wait": "Keep this screen open after paying — we'll fetch your govt receipt here.",
       "receiptNo": "Receipt No. {no}",
@@ -154,7 +154,8 @@
       "saveHint": "Save it to your phone now — we delete it from EaseCab on {date}, {time}.",
       "receiptGone": "Receipt deleted from EaseCab 24 hours after the tax validity ended. Use the copy saved on your phone.",
       "download": "Download receipt",
-      "gettingReceipt": "Paid. Getting your receipt from the govt site…"
+      "gettingReceipt": "Paid. Getting your receipt from the govt site…",
+      "expired": "QR time is over. Checking if a payment came through…"
     },
     "historyMore": "Show older filings",
     "unlock": {

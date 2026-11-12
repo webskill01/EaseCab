@@ -129,10 +129,11 @@ describe('resume + preparing progress', () => {
   it('ticks evenly (25s each) from the worker pick-up, not from queueing; hand-off ticks the last', () => {
     const sec = (s) => new Date(NOW.getTime() - s * 1000).toISOString()
     const f = (o) => ({ status: 'filling', createdAt: at(5), live: { step: 'filling', started: sec(0) }, ...o })
-    expect(prepStep(f({ status: 'queued', live: { started: null } }), NOW)).toBe(0) // waited 5 min in the queue: still 0
-    expect(prepStep(f({ live: { step: 'vahan', started: sec(40) } }), NOW)).toBe(0)
-    expect([0, 24, 25, 50, 75, 300].map((s) => prepStep(f({ live: { step: 'filling', started: sec(s) } }), NOW))).toEqual([0, 0, 1, 2, 3, 3])
-    expect(prepStep(f({ status: 'handed_off' }), NOW)).toBe(4)
+    expect(prepStep(f({ status: 'queued', live: { started: null, progress: 2 } }))).toBe(0) // not picked up yet
+    expect(prepStep(f({ live: { step: 'filling', started: sec(300) } }))).toBe(0) // time alone never ticks a step
+    expect([0, 1, 2, 3, 4].map((progress) => prepStep(f({ live: { step: 'filling', started: sec(5), progress } })))).toEqual([0, 1, 2, 3, 3])
+    expect(prepStep(f({ status: 'handed_off' }))).toBe(4)
+    expect(prepStep(f({ status: 'awaiting_payment' }))).toBe(4)
   })
   it('ring: none while queued, BT_PREP_SEC from pick-up, the captcha deadline while one waits', () => {
     const started = '2026-11-05T10:00:00.000Z'

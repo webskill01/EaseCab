@@ -49,7 +49,7 @@ async function mockSeva(page, { member = true, failed = false, running = false, 
 }
 
 async function fillForm(page) {
-  await page.getByLabel(/rc number/i).fill('pb01 c9079')
+  await page.getByLabel(/vehicle number/i).fill('pb01 c9079')
   await page.getByRole('combobox', { name: /^state/i }).selectOption('HR')
   await page.getByRole('combobox', { name: /^border/i }).selectOption('PANCHKULA')
   await page.getByLabel(/distance/i).fill('50')
@@ -109,7 +109,7 @@ test('just-failed filing reopens on arrival with the reason → Try again refill
   await shot(page, '7-failed')
   await page.getByRole('button', { name: /try again/i }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0)
-  await expect(page.getByLabel(/rc number/i)).toHaveValue('PB01C9079')
+  await expect(page.getByLabel(/vehicle number/i)).toHaveValue('PB01C9079')
   await expect(page.getByRole('combobox', { name: /^state/i })).toHaveValue('HR')
   await expect(page.getByRole('combobox', { name: /^border/i })).toHaveValue('PANCHKULA')
 })
@@ -127,7 +127,7 @@ test('saved RC numbers are offered as the RC box suggestions (no chips)', async 
   await mockSeva(page, { failed: true })
   await page.goto('/seva/border-tax')
   await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).last().click()
-  const box = page.getByLabel(/rc number/i)
+  const box = page.getByLabel(/vehicle number/i)
   const list = await box.getAttribute('list')
   expect(list).toBeTruthy()
   await expect(page.locator(`datalist#${list} option`)).toHaveAttribute('value', 'PB01C9079')
@@ -173,4 +173,26 @@ test('history shows 20 at a time; Show older filings loads the next page', async
   await page.getByRole('button', { name: /show older filings/i }).click()
   await expect(page.getByRole('button', { name: /view status/i })).toHaveCount(21)
   await expect(page.getByRole('button', { name: /show older filings/i })).toHaveCount(0)
+})
+
+test('in-app QR: amount → QR → pay button; once the QR time is over it is hidden while the bot checks', async ({ page }) => {
+  await mockSeva(page, { running: true })
+  const QR = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs='
+  let deadline = new Date(Date.now() + 240_000)
+  const paying = () => ({ ...filingState(1), stateCd: 'HP', status: 'awaiting_payment', taxPaise: 23000, live: { step: 'pay', qr: QR, upi: 'upi://pay?pa=x@payu&am=230.00', deadline } })
+  await page.route('**/api/v1/border-tax?**', (r) => r.fulfill(ok({ filings: [paying()] }, { nextCursor: null })))
+  await page.route('**/api/v1/border-tax/f1', (r) => r.fulfill(ok({ filing: paying() })))
+  await page.goto('/seva/border-tax')
+  const sheet = page.getByRole('dialog')
+  await expect(sheet.getByText('₹230', { exact: true })).toBeVisible()
+  const qr = sheet.getByRole('img', { name: /upi payment qr/i })
+  const pay = sheet.getByRole('link', { name: /pay ₹230 with upi app/i })
+  await expect(qr).toBeVisible()
+  expect((await qr.boundingBox()).y).toBeLessThan((await pay.boundingBox()).y) // QR above the button
+  await shot(page, '10-qr')
+  deadline = new Date(Date.now() - 1000)
+  await expect(sheet.getByText(/QR time is over/i)).toBeVisible({ timeout: 8000 })
+  await expect(qr).toHaveCount(0)
+  await expect(pay).toHaveCount(0)
+  await shot(page, '11-qr-expired')
 })

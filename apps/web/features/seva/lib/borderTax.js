@@ -87,18 +87,14 @@ export const rateFor = (rates, { stateCd, checkpost, seats }) =>
   rates?.find((r) => r.stateCd === stateCd && (r.checkpost ?? '') === checkpost && r.seats === seats) ?? null
 
 /** Each checklist step's share of a run: HP/HR take ~45–90s from worker pick-up to PayU (2026-11-07). */
-const PREP_TICK_MS = 25_000
-
 /**
- * Preparing checklist position 0–4 (4 = all ticked). The portal sends no progress events, so the
- * steps tick at an even pace from the worker's pick-up (`live.started`); queued / Vahan code → 0;
- * only the hand-off ticks the last.
+ * Preparing checklist position 0–4 (4 = all ticked), from the worker's real progress (`live.progress`
+ * = portal steps done: Vahan lookup, vehicle details, tax quote); the payment page ticks the last.
  */
-// ponytail: time-based ticks — add worker step events to the job hash if drivers find them off
-export function prepStep(f, now = Date.now()) {
-  if (f.status === BT_STATUS.HANDED_OFF) return 4
-  if (!f.live?.started || f.live.step === 'vahan') return 0
-  return Math.min(3, Math.floor((now - new Date(f.live.started).getTime()) / PREP_TICK_MS))
+export function prepStep(f) {
+  if (f.status === BT_STATUS.HANDED_OFF || f.status === BT_STATUS.AWAITING_PAYMENT) return 4
+  if (!f.live?.started) return 0
+  return Math.min(3, Number(f.live.progress) || 0)
 }
 
 /** Ring deadline: the captcha's while one waits, else BT_PREP_SEC from pick-up; null while queued. */

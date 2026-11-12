@@ -12,7 +12,7 @@
   "bt": {
     "title": "Border Tax",
     "formTitle": "Border Tax bharein",
-    "vehicle": "RC number",
+    "vehicle": "Gaadi number",
     "seats": "Seats",
     "state": "State",
     "statePh": "State chunein",
@@ -146,7 +146,7 @@
       "title": "Border Tax bharein",
       "upiCta": "UPI app se {amount} pay karein",
       "alt": "UPI payment QR",
-      "scan": "Ya kisi doosre phone ke UPI app se yeh QR scan karein.",
+      "scan": "Doosre phone se kisi bhi UPI app se scan karo, ya isi phone se pay karne ke liye upar tap karo.",
       "timer": "QR {time} tak valid",
       "wait": "Pay karne ke baad yeh screen khuli rakhein — aapki govt receipt yahin aayegi.",
       "receiptNo": "Receipt No. {no}",
@@ -154,7 +154,8 @@
       "saveHint": "Abhi apne phone mein save kar lo — hum ise {date}, {time} ko EaseCab se hata denge.",
       "receiptGone": "Tax validity khatam hone ke 24 ghante baad receipt EaseCab se hata di gayi. Phone mein save ki hui copy use karo.",
       "download": "Receipt download karein",
-      "gettingReceipt": "Payment ho gaya. Govt site se aapki receipt la rahe hain…"
+      "gettingReceipt": "Payment ho gaya. Govt site se aapki receipt la rahe hain…",
+      "expired": "QR ka time khatam. Check kar rahe hain ki payment aaya ya nahi…"
     },
     "historyMore": "Purani filings dekho",
     "unlock": {
