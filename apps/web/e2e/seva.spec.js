@@ -73,8 +73,8 @@ test('border tax tab: one preparing screen (captcha inline) → Payment Details 
   await expect(page.getByText('Type the code', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: /new code/i }).click()
   await expect.poll(() => refreshes.length).toBe(1)
-  await page.getByPlaceholder('Code').fill('x7 k#2@')
-  await expect(page.getByPlaceholder('Code')).toHaveValue('x7k#2@') // symbols kept, spaces dropped
+  await page.getByLabel('Code', { exact: true }).fill('x7 k#2@')
+  await expect(page.getByLabel('Code', { exact: true })).toHaveValue('x7k#2@') // symbols kept, spaces dropped
   await shot(page, '3-captcha')
   await page.getByRole('button', { name: /submit code/i }).click()
 

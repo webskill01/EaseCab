@@ -24,7 +24,7 @@ export function CaptchaStep({ image, onSubmit, pending, canRefresh, onRefresh })
       <input
         className="h-12 w-full rounded-xl border border-ec-line px-3 text-center text-[18px] font-extrabold tracking-[0.15em] text-ec-ink outline-none focus:border-ec-blue"
         value={answer} maxLength={10} autoFocus autoComplete="off" autoCapitalize="off" spellCheck={false}
-        placeholder={t('bt.live.captchaPh')} onChange={(e) => setAnswer(e.target.value.replace(/\s/g, ''))}
+        aria-label={t('bt.live.captchaPh')} onChange={(e) => setAnswer(e.target.value.replace(/\s/g, ''))}
       />
       <Button type="button" size="lg" className="w-full" disabled={!ok || pending} onClick={() => onSubmit(answer)}>
         {t('bt.live.captchaSubmit')}

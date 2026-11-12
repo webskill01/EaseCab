@@ -43,7 +43,6 @@ export function PasteForm({ onEdit }) {
             onChange={(e) => setText(e.target.value)}
             rows={6}
             aria-label={t('paste.boxLabel')}
-            placeholder={t('paste.placeholder')}
             className="w-full rounded-ec-card border border-ec-line bg-white p-4 text-[14px] font-semibold text-ec-ink outline-none"
           />
         </div>

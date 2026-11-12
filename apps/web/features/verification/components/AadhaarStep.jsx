@@ -24,7 +24,7 @@ export function AadhaarStep({ onSubmit, loading, errorKey }) {
       <label className="flex flex-col gap-1.5">
         <span className="text-[13px] font-bold text-ec-ink60">{t('l1.aadhaarLabel')}</span>
         <input inputMode="numeric" value={groupAadhaar(num)} onChange={(e) => setNum(e.target.value.replace(/\D/g, '').slice(0, 12))}
-          placeholder="1234 5678 9012" aria-label={t('l1.aadhaarLabel')} className="h-12 rounded-xl border-[1.5px] border-ec-line bg-white px-3 text-[16px] font-bold tracking-[0.2em] text-ec-ink outline-none focus:border-ec-blue placeholder:tracking-[0.2em] placeholder:text-ec-ink40" />
+          aria-label={t('l1.aadhaarLabel')} className="h-12 rounded-xl border-[1.5px] border-ec-line bg-white px-3 text-[16px] font-bold tracking-[0.2em] text-ec-ink outline-none focus:border-ec-blue" />
         <span className="text-[12px] font-medium text-ec-ink40">{t('l1.aadhaarHint')}</span>
       </label>
       {errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t(errorKey)}</p>}

@@ -96,7 +96,6 @@ export function ReportSheet({ ride, onClose }) {
           onChange={(e) => setRemarks(e.target.value)}
           rows={3}
           maxLength={500}
-          placeholder={t('report.remarkPlaceholder')}
           aria-label={t('report.remarkPlaceholder')}
           className="w-full resize-none rounded-xl border-[1.5px] border-ec-line p-3 text-[14px] font-medium text-ec-ink outline-none"
         />

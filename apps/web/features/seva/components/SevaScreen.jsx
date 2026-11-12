@@ -2,15 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Road, Grid } from '@/components/ui/icons'
+import { Road } from '@/components/ui/icons'
 
 /**
  * Driver Seva — driver services as square tiles in sections (CabsWale "Suvidha" layout).
- * Only Border Tax is live; the greyed tiles are generic "Coming soon" — never name an unbuilt feature.
  * [sectionKey, [[tileKey, Icon, href | null], ...]]
  */
 const SECTIONS = [
-  ['services', [['borderTax', Road, '/seva/border-tax'], ['comingSoon', Grid, null], ['comingSoon', Grid, null]]],
+  ['services', [['borderTax', Road, '/seva/border-tax']]],
 ]
 
 function Tile({ label, badge, Icon, onClick }) {

@@ -64,7 +64,6 @@ export function PhoneForm({ onSubmit, loading, error }) {
               inputMode="numeric"
               autoComplete="tel-national"
               aria-label={t('phone.label')}
-              placeholder={t('phone.placeholder')}
               value={digits}
               onChange={(e) => setDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
               className="h-full min-w-0 flex-1 bg-transparent px-3.5 text-[17px] font-bold tracking-wide text-ec-ink outline-none"

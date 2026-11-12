@@ -69,9 +69,8 @@ export function CityPicker({ label, value, onPick }) {
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder={t('post.searchCity')}
                 aria-label={t('post.searchCity')}
-                className="min-w-0 flex-1 bg-transparent text-[14px] font-semibold text-ec-ink outline-none placeholder:text-ec-ink40"
+                className="min-w-0 flex-1 bg-transparent text-[14px] font-semibold text-ec-ink outline-none"
               />
             </div>
 

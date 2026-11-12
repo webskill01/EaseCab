@@ -7,8 +7,7 @@
   },
   "tiles": {
     "borderTax": "Border Tax",
-    "free": "Free",
-    "comingSoon": "Coming soon"
+    "free": "Free"
   },
   "bt": {
     "title": "Border Tax",
@@ -24,7 +23,13 @@
     "dayCount": "{n, plural, one {# Day} other {# Days}}",
     "distance": "Distance in Haryana (km)",
     "mode": "Tax period",
-    "modes": {"1": "Days", "4": "Monthly", "5": "Quarterly", "6": "Half yearly", "7": "Yearly"},
+    "modes": {
+      "1": "Days",
+      "4": "Monthly",
+      "5": "Quarterly",
+      "6": "Half yearly",
+      "7": "Yearly"
+    },
     "periodEnd": "{mode} — valid till the period ends (date set by the govt portal)",
     "validity": "Validity",
     "validUpto": "Valid upto {date}, {time}",

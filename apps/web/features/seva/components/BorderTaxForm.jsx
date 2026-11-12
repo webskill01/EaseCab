@@ -86,7 +86,7 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
       <div className="flex flex-col gap-3.5">
         <div className="flex gap-3">
           <Field label={t('bt.vehicle')} className="flex-1">
-            <input className={`${FIELD} uppercase tracking-wide`} value={form.vehicleNo} maxLength={13} autoCapitalize="characters" autoComplete="off" list={SAVED_RC_LIST} placeholder="PB01C9079"
+            <input className={`${FIELD} uppercase tracking-wide`} value={form.vehicleNo} maxLength={13} autoCapitalize="characters" autoComplete="off" list={SAVED_RC_LIST}
               onChange={(e) => onChange({ vehicleNo: e.target.value })} />
           </Field>
           <Field label={t('bt.seats')} className="w-[96px]">
@@ -121,7 +121,7 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
           {daysMode && <DaysStepper days={form.days} label={t('bt.days')} onChange={(days) => onChange({ days })} />}
           {st?.needsDistance && (
             <Field label={t('bt.distance')}>
-              <input type="number" inputMode="numeric" className={FIELD} value={form.distanceKm} placeholder="50"
+              <input type="number" inputMode="numeric" className={FIELD} value={form.distanceKm}
                 onChange={(e) => onChange({ distanceKm: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
             </Field>
           )}

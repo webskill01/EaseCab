@@ -60,9 +60,8 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={t('filter.searchCity')}
             aria-label={t('filter.searchCity')}
-            className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-ec-ink outline-none placeholder:text-ec-ink40"
+            className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-ec-ink outline-none"
           />
         </div>
 
