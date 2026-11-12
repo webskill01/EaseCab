@@ -141,3 +141,36 @@ test('driver comes back while the filing runs → preparing screen again, not a 
   await expect(page.getByText('PB01C9079', { exact: true })).toBeVisible()
   await shot(page, '8-resume')
 })
+
+test('vehicle locked by an unpaid attempt → Clear the vehicle lock → shows when it clears', async ({ page }) => {
+  await mockSeva(page, { failed: true, failureCode: 'vehicle_pending' })
+  let unlock = null
+  const unlocks = []
+  await page.route('**/api/v1/border-tax/f1', (r) => r.fulfill(ok({ filing: { ...filingState(3), unlock } })))
+  await page.route('**/api/v1/border-tax/f1/unlock', (r) => {
+    unlocks.push(1)
+    unlock = { status: 'waiting', at: new Date(Date.now() + 20 * 60_000).toISOString(), receiptNo: null }
+    return r.fulfill(ok({ unlock }))
+  })
+  await page.goto('/seva/border-tax')
+  await expect(page.getByRole('button', { name: /try again/i })).toHaveCount(0) // refiling now would just hit the lock
+  await page.getByRole('button', { name: /clear the vehicle lock/i }).click()
+  await expect(page.getByRole('dialog').getByText(/portal frees this vehicle at/i)).toBeVisible()
+  await expect(page.getByRole('button', { name: /clear the vehicle lock/i })).toHaveCount(0)
+  expect(unlocks).toHaveLength(1)
+  await shot(page, '9-unlock')
+})
+
+test('history shows 20 at a time; Show older filings loads the next page', async ({ page }) => {
+  await mockSeva(page)
+  const row = (i) => ({ ...filingState(3), id: `h${i}`, status: 'cancelled', createdAt: new Date(Date.now() - i * HOUR) })
+  await page.route('**/api/v1/border-tax?**', (r) => {
+    const older = r.request().url().includes('cursor=')
+    return r.fulfill(ok({ filings: older ? [row(21)] : Array.from({ length: 20 }, (_, i) => row(i + 1)) }, { nextCursor: older ? null : 'c1' }))
+  })
+  await page.goto('/seva/border-tax')
+  await expect(page.getByRole('button', { name: /view status/i })).toHaveCount(20)
+  await page.getByRole('button', { name: /show older filings/i }).click()
+  await expect(page.getByRole('button', { name: /view status/i })).toHaveCount(21)
+  await expect(page.getByRole('button', { name: /show older filings/i })).toHaveCount(0)
+})

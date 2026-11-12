@@ -10,10 +10,11 @@ export async function createFiling(body) {
   return data.filing
 }
 
-/** Caller's filings, newest first (first page only). */
-export async function listFilings() {
-  const { data } = await apiFetch('/border-tax?limit=20')
-  return data.filings
+/** One page of the caller's filings, newest first. @returns {Promise<{filings, nextCursor}>} */
+export async function listFilings({ pageParam } = {}) {
+  const cursor = pageParam ? `&cursor=${encodeURIComponent(pageParam)}` : ''
+  const { data, meta } = await apiFetch(`/border-tax?limit=20${cursor}`)
+  return { filings: data.filings, nextCursor: meta?.nextCursor ?? null }
 }
 
 /** One filing + `live` { step, captcha, deadline, handoff }. */
@@ -37,3 +38,4 @@ export async function getReceiptUrl(id) {
 export const sendCaptcha = (id, answer) => apiFetch(`/border-tax/${id}/captcha`, json({ answer }))
 export const refreshCaptcha = (id) => apiFetch(`/border-tax/${id}/captcha/refresh`, json())
 export const cancelFiling = (id) => apiFetch(`/border-tax/${id}/cancel`, json())
+export const unlockFiling = (id) => apiFetch(`/border-tax/${id}/unlock`, json())

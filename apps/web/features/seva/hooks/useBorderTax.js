@@ -1,13 +1,21 @@
-import { useSyncExternalStore } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFiling, listFilings, listRates, getFiling, getReceiptUrl, sendCaptcha, refreshCaptcha, cancelFiling } from '../services/borderTaxApi'
-import { isFinal, gettingReceipt, BT_POLL_MS } from '../lib/borderTax'
+import { useMemo, useSyncExternalStore } from 'react'
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { createFiling, listFilings, listRates, getFiling, getReceiptUrl, sendCaptcha, refreshCaptcha, cancelFiling, unlockFiling } from '../services/borderTaxApi'
+import { isFinal, gettingReceipt, unlocking, BT_POLL_MS } from '../lib/borderTax'
 
 const LIST_KEY = ['bordertax']
 
-/** The caller's filing history. */
+/** The caller's filing history, 20 per page; `data` = all loaded pages flattened. */
 export function useFilings() {
-  return useQuery({ queryKey: LIST_KEY, queryFn: listFilings, staleTime: 30000 })
+  const q = useInfiniteQuery({
+    queryKey: [...LIST_KEY, 'list'],
+    queryFn: listFilings,
+    initialPageParam: null,
+    getNextPageParam: (last) => last.nextCursor || undefined,
+    staleTime: 30000,
+  })
+  const data = useMemo(() => q.data?.pages.flatMap((p) => p.filings), [q.data])
+  return { ...q, data }
 }
 
 /** Latest real fee per border (from drivers' filings) — refreshed after each new filing. */
@@ -15,14 +23,14 @@ export function useRates() {
   return useQuery({ queryKey: [...LIST_KEY, 'rates'], queryFn: listRates, staleTime: 300000 })
 }
 
-/** One filing, polled every 2s until it reaches a final status. */
+/** One filing, polled every 2s until it reaches a final status (and any lock clear has finished). */
 export function useFiling(id) {
   return useQuery({
     queryKey: [...LIST_KEY, id],
     queryFn: () => getFiling(id),
     enabled: Boolean(id),
     staleTime: 0,
-    refetchInterval: (q) => (q.state.data && isFinal(q.state.data.status) && !gettingReceipt(q.state.data) ? false : BT_POLL_MS),
+    refetchInterval: (q) => (q.state.data && isFinal(q.state.data.status) && !gettingReceipt(q.state.data) && !unlocking(q.state.data) ? false : BT_POLL_MS),
   })
 }
 
@@ -31,7 +39,7 @@ export function useReceiptUrl(id, enabled) {
   return useQuery({ queryKey: [...LIST_KEY, id, 'receipt'], queryFn: () => getReceiptUrl(id), enabled: Boolean(id && enabled), staleTime: 120000, retry: false })
 }
 
-/** create / captcha / cancel — each refreshes the history + the open filing. */
+/** create / captcha / cancel / unlock — each refreshes the history + the open filing. */
 export function useBorderTaxActions() {
   const qc = useQueryClient()
   const refresh = () => qc.invalidateQueries({ queryKey: LIST_KEY })
@@ -40,6 +48,7 @@ export function useBorderTaxActions() {
     captcha: useMutation({ mutationFn: ({ id, answer }) => sendCaptcha(id, answer), onSuccess: refresh }),
     refresh: useMutation({ mutationFn: (id) => refreshCaptcha(id), onSuccess: refresh }),
     cancel: useMutation({ mutationFn: (id) => cancelFiling(id), onSuccess: refresh }),
+    unlock: useMutation({ mutationFn: (id) => unlockFiling(id), onSuccess: refresh }),
   }
 }
 

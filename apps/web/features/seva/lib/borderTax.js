@@ -46,6 +46,13 @@ const RECEIPT_LOOKUP_MS = 10 * 60_000 // worker's late lookup (3 tries, 1 min ap
 export const gettingReceipt = (f, now = Date.now()) =>
   f?.status === BT_STATUS.PAID && f.live?.step === 'receipt' && now - new Date(f.paidAt).getTime() < RECEIPT_LOOKUP_MS
 
+/** Pending-lock clear status (mirrors BORDER_TAX_UNLOCK). */
+export const BT_UNLOCK = Object.freeze({ QUEUED: 'queued', WAITING: 'waiting', CLEARED: 'cleared', PAID: 'paid', FAILED: 'failed' })
+/** A lock clear is still to run — keep polling the filing. */
+export const unlocking = (f) => [BT_UNLOCK.QUEUED, BT_UNLOCK.WAITING].includes(f?.unlock?.status)
+/** Driver may tap "Clear lock": the filing hit the portal's pending lock and no clear is running / done. */
+export const canUnlock = (f) => f?.failureCode === BT_FAIL_VEHICLE_PENDING && ![BT_UNLOCK.QUEUED, BT_UNLOCK.WAITING, BT_UNLOCK.CLEARED, BT_UNLOCK.PAID].includes(f.unlock?.status)
+
 export const daysOf = (f) => Math.round((new Date(f.taxUpto) - new Date(f.taxFrom) + 60_000) / DAY_MS)
 
 /** Ring on the preparing screen counts down from this (a filing takes ~1–3 min, longer in a queue). */

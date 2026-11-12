@@ -155,6 +155,17 @@
       "receiptGone": "Tax validity khatam hone ke 24 ghante baad receipt EaseCab se hata di gayi. Phone mein save ki hui copy use karo.",
       "download": "Receipt download karein",
       "gettingReceipt": "Payment ho gaya. Govt site se aapki receipt la rahe hain…"
+    },
+    "historyMore": "Purani filings dekho",
+    "unlock": {
+      "button": "Gaadi ka lock hatao",
+      "sending": "Bhej rahe hain…",
+      "error": "Start nahi hua. Ek minute baad try karo.",
+      "queued": "Govt portal pe lock hata rahe hain…",
+      "waiting": "Portal ye gaadi {time} pe chhodega. Tab hum lock hata denge.",
+      "cleared": "Lock hat gaya. Ab dobara file kar sakte ho.",
+      "paid": "Pichla payment ho chuka tha. Receipt no. {no}",
+      "failed": "Lock nahi hat paya. Support se baat karo."
     }
   }
 }

@@ -28,7 +28,7 @@ function StatusPill({ status, failureCode }) {
 }
 
 /** History cards (CabsWale): RC • state, ₹, date, status pill, View status. */
-export function FilingHistory({ filings, isLoading, onOpen }) {
+export function FilingHistory({ filings, isLoading, onOpen, hasMore, loadingMore, onMore }) {
   const t = useTranslations('seva')
   return (
     <section className="mt-5">
@@ -50,6 +50,11 @@ export function FilingHistory({ filings, isLoading, onOpen }) {
           </article>
         ))}
       </div>
+      {hasMore && (
+        <Button type="button" variant="ghost" className="mt-3 w-full" disabled={loadingMore} onClick={onMore}>
+          {loadingMore ? <Spinner size={18} /> : t('bt.historyMore')}
+        </Button>
+      )}
     </section>
   )
 }

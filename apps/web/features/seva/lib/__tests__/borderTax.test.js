@@ -4,6 +4,7 @@ import {
   formFrom, resumable, BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING, prepStep, prepDeadline, markPayOpened, BT_CAPTCHA_SEC, BT_PREP_SEC,
   BT_STATES, BT_STATUS, BT_FINAL, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_VEHICLE_RE,
   defaultStart, validUpto, BT_RECEIPT_KEEP_SEC, receiptGone, isFilable, isStarted, toCreateBody, emptyForm, createErrorKey, submitHandoff, toLocalInput, gettingReceipt,
+  canUnlock, unlocking,
 } from '../borderTax'
 import { BT_LIVE_STATES } from '../states'
 
@@ -147,5 +148,20 @@ describe('gettingReceipt', () => {
   it('true only while paid + receipt step, capped at 10 min', () => {
     expect([gettingReceipt(paid, at(2)), gettingReceipt(paid, at(11)), gettingReceipt({ ...paid, live: { step: 'paid' } }, at(2)), gettingReceipt({ ...paid, status: 'failed' }, at(2))])
       .toEqual([true, false, false, false])
+  })
+})
+
+describe('pending-lock clear', () => {
+  const vp = { failureCode: 'vehicle_pending' }
+  it('offers Clear lock only for vehicle_pending with no clear running or done', () => {
+    expect(canUnlock(vp)).toBe(true)
+    expect(canUnlock({ ...vp, unlock: { status: 'failed' } })).toBe(true)
+    for (const status of ['queued', 'waiting', 'cleared', 'paid']) expect(canUnlock({ ...vp, unlock: { status } })).toBe(false)
+    expect(canUnlock({ failureCode: 'payment_timeout' })).toBe(false)
+  })
+  it('keeps polling while a clear is queued or waiting', () => {
+    expect(unlocking({ unlock: { status: 'waiting' } })).toBe(true)
+    expect(unlocking({ unlock: { status: 'cleared' } })).toBe(false)
+    expect(unlocking({ unlock: null })).toBe(false)
   })
 })

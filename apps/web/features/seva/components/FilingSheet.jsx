@@ -6,8 +6,8 @@ import { supportHref } from '@/features/shell/components/SupportButton'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Bank, External, CircleX, Ban, Car, Headset, Receipt } from '@/components/ui/icons'
-import { useFiling, useReceiptUrl } from '../hooks/useBorderTax'
-import { BT_STATUS as S, BT_STATES, markPayOpened, BT_FAIL_NO_RETRY, isFinal, daysOf, isDaysMode, fmtWhen, rupees, submitHandoff, gettingReceipt, receiptGoneAt, receiptGone } from '../lib/borderTax'
+import { useFiling, useReceiptUrl, useBorderTaxActions } from '../hooks/useBorderTax'
+import { BT_STATUS as S, BT_STATES, markPayOpened, BT_FAIL_NO_RETRY, isFinal, daysOf, isDaysMode, fmtWhen, rupees, submitHandoff, gettingReceipt, receiptGoneAt, receiptGone, canUnlock, BT_UNLOCK } from '../lib/borderTax'
 import { PreparingScreen } from './PreparingScreen'
 import { PayQrSheet } from './PayQrSheet'
 
@@ -56,6 +56,26 @@ function head(f, t) {
   return [<CircleX key="i" size={22} />, 'danger', t(`bt.status.${f.status}.t`), t(`bt.fail.${f.failureCode || 'portal_error'}`)]
 }
 
+/** Pending-lock clear: status line + "Clear lock" (vehicle_pending only). */
+function UnlockBox({ f }) {
+  const t = useTranslations('seva')
+  const { unlock } = useBorderTaxActions()
+  const u = f.unlock
+  if (!u && !canUnlock(f)) return null
+  const at = fmtWhen(u?.at)
+  return (
+    <>
+      {u && <p className="rounded-xl bg-ec-bg px-3 py-2 text-center text-[13px] font-semibold text-ec-ink60" role="status">{t(`bt.unlock.${u.status}`, { time: at.time, no: u.receiptNo || '' })}</p>}
+      {canUnlock(f) && (
+        <Button type="button" size="lg" variant="outline" className="w-full" disabled={unlock.isPending} onClick={() => unlock.mutate(f.id)}>
+          {unlock.isPending ? t('bt.unlock.sending') : t('bt.unlock.button')}
+        </Button>
+      )}
+      {unlock.isError && <p className="text-center text-[12.5px] font-semibold text-ec-danger">{t('bt.unlock.error')}</p>}
+    </>
+  )
+}
+
 /** Finished filing: payment link ended / failed / timed out / cancelled — what now. */
 function ResultSheet({ f, onClose, onRetry }) {
   const t = useTranslations('seva')
@@ -80,9 +100,10 @@ function ResultSheet({ f, onClose, onRetry }) {
         )}
         {receiptUrl && <p className="text-center text-[12.5px] font-semibold text-ec-ink60">{t('bt.qr.saveHint', { date: goneWhen.date, time: goneWhen.time })}</p>}
         {gone && <p className="rounded-xl bg-ec-bg px-3 py-2 text-center text-[13px] font-semibold text-ec-ink60">{t('bt.qr.receiptGone')}</p>}
+        {(failed || f.status === S.HANDED_OFF) && <UnlockBox f={f} />}
         {(failed || (paid && !fetching && !gone && (!f.receiptNo || receipt.isError))) && (
           <>
-            {failed && !BT_FAIL_NO_RETRY.includes(f.failureCode) && (
+            {failed && !BT_FAIL_NO_RETRY.includes(f.failureCode) && (!f.unlock || f.unlock.status === BT_UNLOCK.CLEARED) && (
               <Button type="button" size="lg" className="w-full" onClick={() => onRetry(f)}>{t('bt.live.retry')}</Button>
             )}
             <a href={supportHref()} target="_blank" rel="noopener noreferrer" className={`${buttonVariants({ variant: 'outline', size: 'lg' })} w-full gap-2`}>

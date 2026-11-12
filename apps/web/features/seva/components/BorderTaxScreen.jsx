@@ -78,7 +78,8 @@ export function BorderTaxScreen() {
       <h1 className="px-4 pb-1 pt-3 text-[19px] font-extrabold tracking-tight text-ec-ink">{t('bt.title')}</h1>
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-1">
         <BorderTaxForm form={form} onChange={(p) => setForm((f) => ({ ...f, ...p }))} onSubmit={submit} submitting={create.isPending} error={error} busyUntil={busyUntil} />
-        <FilingHistory filings={filings.data ?? []} isLoading={filings.isLoading} onOpen={setOpenId} />
+        <FilingHistory filings={filings.data ?? []} isLoading={filings.isLoading} onOpen={setOpenId}
+          hasMore={filings.hasNextPage} loadingMore={filings.isFetchingNextPage} onMore={() => filings.fetchNextPage()} />
       </div>
       {openId && <FilingSheet id={openId} seed={seed} onClose={() => setOpenId(null)} onRetry={retry} />}
       {gate && <GateSheet onClose={() => setGate(false)} onSubscribe={() => router.push('/membership')} />}

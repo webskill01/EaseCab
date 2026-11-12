@@ -155,6 +155,17 @@
       "receiptGone": "Receipt deleted from EaseCab 24 hours after the tax validity ended. Use the copy saved on your phone.",
       "download": "Download receipt",
       "gettingReceipt": "Paid. Getting your receipt from the govt site…"
+    },
+    "historyMore": "Show older filings",
+    "unlock": {
+      "button": "Clear the vehicle lock",
+      "sending": "Asking…",
+      "error": "Couldn't start. Try again in a minute.",
+      "queued": "Clearing the lock on the govt portal now…",
+      "waiting": "The portal frees this vehicle at {time}. We will clear it then.",
+      "cleared": "Lock cleared. You can file again now.",
+      "paid": "The earlier payment went through. Receipt no. {no}",
+      "failed": "We couldn't clear the lock. Please contact support."
     }
   }
 }
