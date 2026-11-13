@@ -40,9 +40,13 @@ const filled = (s) => typeof s === 'string' && s.trim().length > 0
  * (Batch D #19 — the DP is NOT a save gate; it's only the L1/posting gate). Mirrors
  * the required fields of the shared profileUpdateSchema.
  */
+/** Required fields still empty (keys = profile fields.*); [] when savable. */
+export function profileIssues(f) {
+  return ['name', 'bio', 'baseCity', 'vehicle'].filter((k) => !filled(f?.[k]))
+}
+
 export function canSaveProfile(f) {
-  if (!f) return false
-  return [f.name, f.bio, f.baseCity, f.vehicle].every(filled)
+  return Boolean(f) && profileIssues(f).length === 0
 }
 
 /** L1 completeness (mirrors shared isProfileComplete; adds the DP). Indicator only — never blocks save. */

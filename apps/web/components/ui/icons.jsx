@@ -6,7 +6,7 @@ import {
   IconSearch, IconPlus, IconDotsVertical, IconPhoto, IconListDetails, IconCar, IconCarSuv, IconBus,
   IconAlertTriangle, IconArrowForwardUp, IconLayoutGrid, IconRoad, IconReceipt, IconShieldCheck,
   IconReceiptTax, IconMinus, IconExternalLink, IconLoader2, IconCircleX, IconCalendarCheck,
-  IconBuildingBank, IconCalendarEvent, IconRosetteDiscountCheckFilled, IconArrowRight,
+  IconBuildingBank, IconCalendarEvent, IconRosetteDiscountCheckFilled, IconArrowRight, IconChevronDown,
 } from '@tabler/icons-react'
 
 /**
@@ -27,6 +27,7 @@ function ic(Glyph, defaultSize) {
 export const Steer = ic(IconSteeringWheel, 22)
 export const ChevR = ic(IconChevronRight, 18)
 export const ChevL = ic(IconChevronLeft, 22)
+export const ChevD = ic(IconChevronDown, 18)
 export const LogOut = ic(IconLogout, 18)
 export const X = ic(IconX, 16)
 export const Check = ic(IconCheck, 14)

@@ -19,5 +19,8 @@
     "post": "Post duty",
     "mine": "My Rides",
     "profile": "Profile"
+  },
+  "form": {
+    "fixTitle": "Aage badhne ke liye ye poora karein"
   }
 }

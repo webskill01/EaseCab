@@ -17,9 +17,12 @@ describe('ProfileForm', () => {
     renderWithIntl(<ProfileForm initial={noDp} onSubmit={vi.fn()} submitting={false} />)
     expect(screen.getByRole('button', { name: /save profile/i })).toBeEnabled()
   })
-  it('blocks submit when the core fields are incomplete (onboarding)', () => {
-    renderWithIntl(<ProfileForm initial={profileToForm(null)} onSubmit={vi.fn()} submitting={false} />)
-    expect(screen.getByRole('button', { name: /save profile/i })).toBeDisabled()
+  it('a tap with missing core fields lists them instead of saving (onboarding)', () => {
+    const onSubmit = vi.fn()
+    renderWithIntl(<ProfileForm initial={profileToForm(null)} onSubmit={onSubmit} submitting={false} />)
+    fireEvent.click(screen.getByRole('button', { name: /save profile/i }))
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toHaveTextContent(/full name/i)
   })
   it('emits the update body on submit', () => {
     const onSubmit = vi.fn()

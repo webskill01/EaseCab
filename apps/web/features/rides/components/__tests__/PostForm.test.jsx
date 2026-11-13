@@ -16,9 +16,13 @@ const FULL = {
 }
 
 describe('PostForm', () => {
-  it('disables Post on an empty form', () => {
-    renderWithIntl(<PostForm form={emptyForm()} onChange={() => {}} onSubmit={() => {}} submitting={false} />)
-    expect(screen.getByRole('button', { name: /post ride/i })).toBeDisabled()
+  it('a tap on an empty form lists what is missing instead of posting', () => {
+    const onSubmit = vi.fn()
+    renderWithIntl(<PostForm form={emptyForm()} onChange={() => {}} onSubmit={onSubmit} submitting={false} />)
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /post ride/i }))
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').querySelectorAll('li').length).toBeGreaterThan(0)
   })
 
   it('a gated (ineligible) user can tap Post on an empty form so the gate opens', () => {

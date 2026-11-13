@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Swap } from '@/components/ui/icons'
 import { CityPicker } from './CityPicker'
 import { VehicleChips } from './VehicleChips'
-import { isPostable, isFutureDateTime, todayStr } from '../lib/postForm'
+import { FormIssues } from '@/components/ui/FormIssues'
+import { postIssues, isFutureDateTime, todayStr } from '../lib/postForm'
 
 const SECTION = 'rounded-ec-card border border-ec-line bg-white p-3.5'
 const FIELD = 'h-12 w-full rounded-xl border border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none'
@@ -13,7 +15,7 @@ const LABEL = 'mb-1.5 block text-[12.5px] font-bold uppercase tracking-wide text
 /**
  * Structured Post-a-Ride form (SCREENS §5). Controlled — the parent owns `form`
  * (so the paste tab's "Edit fields" can prefill it) and merges partials via
- * `onChange`. The sticky Post button enables only when the form is postable.
+ * `onChange`. A tap on the sticky Post button with gaps lists what is missing.
  *
  * @param {object} props
  * @param {object} props.form - postForm state
@@ -25,7 +27,10 @@ const LABEL = 'mb-1.5 block text-[12.5px] font-bold uppercase tracking-wide text
 export function PostForm({ form, onChange, onSubmit, submitting, gated = false }) {
   const t = useTranslations('post')
   // Gated users get a tappable button even on an empty form — the tap explains the gate.
-  const postable = gated || isPostable(form)
+  const [tried, setTried] = useState(false)
+  const issues = tried && !gated ? postIssues(form) : []
+  // Button stays tappable: an incomplete form lists what's missing instead of greying out.
+  const post = () => { if (!gated && postIssues(form).length) setTried(true); else onSubmit() }
   const pastSlot = Boolean(form.date && form.time && !isFutureDateTime(form.date, form.time))
   const onPhone = (e) => onChange({ phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
 
@@ -108,12 +113,13 @@ export function PostForm({ form, onChange, onSubmit, submitting, gated = false }
           (P13-1 root-cause fix). A sticky last-child had no room to pin against and
           rode along with the content; a real flex footer always stays at the bottom. */}
       <div className="shrink-0 border-t border-ec-line bg-white px-4 py-3">
+        {issues.length > 0 && <div className="mb-3"><FormIssues items={issues.map((k) => t(`post.issues.${k}`))} /></div>}
         <button
           type="button"
-          disabled={!postable || submitting}
-          onClick={onSubmit}
+          disabled={submitting}
+          onClick={post}
           className={`h-[54px] w-full rounded-xl text-[15.5px] font-extrabold text-white ${
-            postable && !submitting ? 'bg-ec-blue shadow-ec-blue' : 'bg-ec-disabled shadow-none'
+            !submitting ? 'bg-ec-blue shadow-ec-blue' : 'bg-ec-disabled shadow-none'
           }`}
         >
           {submitting ? '…' : t('post.submit')}

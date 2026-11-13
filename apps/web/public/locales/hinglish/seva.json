@@ -167,6 +167,17 @@
       "cleared": "Lock hat gaya. Ab dobara file kar sakte ho.",
       "paid": "Pichla payment ho chuka tha. Receipt no. {no}",
       "failed": "Lock nahi hat paya. Support se baat karo."
+    },
+    "issues": {
+      "vehicle": "Sahi gaadi number daalein, jaise PB10AB1234",
+      "seats": "Seats chunein",
+      "state": "State chunein",
+      "border": "Border chunein",
+      "mode": "Tax period chunein",
+      "start": "Aaj se 7 din ke andar ki date chunein",
+      "days": "Kitne din, chunein",
+      "distance": "Distance (km) daalein",
+      "declare": "Confirm wale box pe tick karein"
     }
   }
 }

@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { VehicleIcon, Bolt, Lock, Pin, Plus, Check } from '@/components/ui/icons'
 import { CityPicker } from '@/features/rides/components/CityPicker'
 import { DpUploader } from './DpUploader'
+import { FormIssues } from '@/components/ui/FormIssues'
 import {
   PROFILE_VEHICLES, PROFILE_LANGUAGES, vehIconKeyOf,
-  canSaveProfile, toUpdateBody,
+  profileIssues, toUpdateBody,
 } from '../lib/profileForm'
 import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
 
@@ -35,7 +36,8 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
   const set = (patch) => setF((prev) => ({ ...prev, ...patch }))
   const toggleLang = (l) =>
     set({ languages: f.languages.includes(l) ? f.languages.filter((x) => x !== l) : [...f.languages, l] })
-  const canSave = canSaveProfile(f)
+  const [tried, setTried] = useState(false)
+  const issues = tried ? profileIssues(f) : []
 
   const body = (
     <>
@@ -161,17 +163,23 @@ export function ProfileForm({ initial, onSubmit, submitting, errorKey = null, he
         </div>
       )}
 
+      <FormIssues items={issues.map((k) => t(`fields.${k}`))} />
       {errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t(errorKey)}</p>}
     </>
   )
 
   const submitBtn = (
-    <Button type="submit" size="lg" disabled={!canSave || submitting} className="w-full">
+    <Button type="submit" size="lg" disabled={submitting} className="w-full">
       {submitting ? t('saving') : t('save')}
     </Button>
   )
 
-  const onSubmit_ = (e) => { e.preventDefault(); if (canSave && !submitting) onSubmit(toUpdateBody(f)) }
+  const onSubmit_ = (e) => {
+    e.preventDefault()
+    if (submitting) return
+    if (profileIssues(f).length) setTried(true)
+    else onSubmit(toUpdateBody(f))
+  }
 
   // Hub edit overlay: scrollable body + sticky Save footer (mockup §4.A).
   if (pinnedFooter) {

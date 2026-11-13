@@ -17,7 +17,16 @@
     "swap": "Pickup aur drop badlein",
     "submit": "Duty post karein",
     "pastDateError": "Date aur time future mein hona chahiye",
-    "autofilledNote": "Aapke account se autofill hua — doosra number chahiye to badal lein."
+    "autofilledNote": "Aapke account se autofill hua — doosra number chahiye to badal lein.",
+    "issues": {
+      "from": "Pickup city chunein",
+      "to": "Drop city chunein",
+      "vehicle": "Gaadi type chunein",
+      "date": "Date chunein",
+      "time": "Time chunein",
+      "past": "Date aur time future mein hona chahiye",
+      "phone": "10 digit phone number daalein"
+    }
   },
   "paste": {
     "boxLabel": "Ride message paste karein",

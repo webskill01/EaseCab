@@ -81,11 +81,16 @@ export function isFutureDateTime(date, time, now = Date.now()) {
  * Sticky-button rule (SCREENS §5): from + to + vehicle + date + time + valid phone,
  * with the date/time in the future (#8).
  */
-export function isPostable(f, now = Date.now()) {
-  return Boolean(
-    f.from && f.to && f.vehicle && f.date && f.time && isTenDigit(f.phone) && isFutureDateTime(f.date, f.time, now),
-  )
+export function postIssues(f, now = Date.now()) {
+  const bad = {
+    from: !f.from, to: !f.to, vehicle: !f.vehicle, date: !f.date, time: !f.time,
+    past: Boolean(f.date && f.time) && !isFutureDateTime(f.date, f.time, now),
+    phone: !isTenDigit(f.phone),
+  }
+  return Object.keys(bad).filter((k) => bad[k]) // keys = post post.issues.*
 }
+
+export const isPostable = (f, now = Date.now()) => postIssues(f, now).length === 0
 
 /**
  * Map form state → postedRideCreateSchema body. cityId wins; else cityRaw. Empty

@@ -164,18 +164,27 @@ export function isStarted(f) {
   return Boolean(BT_STATES[f.stateCd]) && BT_VEHICLE_RE.test(normVehicle(f.vehicleNo))
 }
 
-export function isFilable(f, now = new Date()) {
+/** What still blocks Pay Now, in form order (keys = seva bt.issues.*); [] when filable. */
+export function btIssues(f, now = new Date()) {
   const st = BT_STATES[f.stateCd]
   const start = new Date(f.startAt).getTime()
   const ahead = start - now.getTime()
   const km = Number(f.distanceKm)
-  return Boolean(
-    st && f.declare && BT_VEHICLE_RE.test(normVehicle(f.vehicleNo)) && BT_SEATS.includes(f.seats) && st.checkposts.includes(f.checkpost)
-    && Number.isFinite(start) && ahead >= -60_000 && ahead <= BT_MAX_AHEAD_DAYS * DAY_MS
-    && st.taxModes.includes(f.taxMode) && (!isDaysMode(f) || (f.days >= 1 && f.days <= BT_MAX_DAYS))
-    && (!st.needsDistance || (Number.isInteger(km) && km >= 1 && km <= BT_MAX_DISTANCE_KM)),
-  )
+  const bad = {
+    vehicle: !BT_VEHICLE_RE.test(normVehicle(f.vehicleNo)),
+    seats: !BT_SEATS.includes(f.seats),
+    state: !st,
+    border: !st?.checkposts.includes(f.checkpost),
+    mode: Boolean(st) && !st.taxModes.includes(f.taxMode),
+    start: !Number.isFinite(start) || ahead < -60_000 || ahead > BT_MAX_AHEAD_DAYS * DAY_MS,
+    days: isDaysMode(f) && !(f.days >= 1 && f.days <= BT_MAX_DAYS),
+    distance: Boolean(st?.needsDistance) && !(Number.isInteger(km) && km >= 1 && km <= BT_MAX_DISTANCE_KM),
+    declare: !f.declare,
+  }
+  return Object.keys(bad).filter((k) => bad[k])
 }
+
+export const isFilable = (f, now = new Date()) => btIssues(f, now).length === 0
 
 /** Form → POST /border-tax body. Optional fields left undefined drop out of the JSON. */
 export function toCreateBody(f) {

@@ -17,7 +17,16 @@
     "swap": "Swap pickup and drop",
     "submit": "Post Ride",
     "pastDateError": "Date and time must be in the future",
-    "autofilledNote": "Autofilled from your account — edit if you want a different number."
+    "autofilledNote": "Autofilled from your account — edit if you want a different number.",
+    "issues": {
+      "from": "Choose the pickup city",
+      "to": "Choose the drop city",
+      "vehicle": "Choose a vehicle type",
+      "date": "Pick a date",
+      "time": "Pick a time",
+      "past": "Date and time must be in the future",
+      "phone": "Enter a 10-digit phone number"
+    }
   },
   "paste": {
     "boxLabel": "Paste the ride message",

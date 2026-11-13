@@ -1,17 +1,31 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { Plus, Minus, Verified } from '@/components/ui/icons'
+import { Plus, Minus, Verified, ChevD } from '@/components/ui/icons'
+import { FormIssues } from '@/components/ui/FormIssues'
 import { SavedVehicleOptions, SAVED_RC_LIST } from '@/features/profile/components/SavedVehicleOptions'
 import { BT_LIVE_STATES } from '../lib/states'
-import { BT_STATES, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_DAYS_MODE, isDaysMode, isFilable, isStarted, validUpto, fmtWhen, titleCase, toLocalInput, rateFor, rupees, fmtClock } from '../lib/borderTax'
+import { BT_STATES, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_DAYS_MODE, isDaysMode, btIssues, isStarted, validUpto, fmtWhen, titleCase, toLocalInput, rateFor, rupees, fmtClock } from '../lib/borderTax'
 import { useRates, useSecondsLeft } from '../hooks/useBorderTax'
 
 const CARD = 'rounded-ec-card border border-ec-line bg-white p-4 shadow-ec-card'
 const FIELD = 'h-12 w-full rounded-xl border border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none focus:border-ec-blue'
 const LABEL = 'mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-ec-ink40'
 const DAY_MS = 86_400_000
+
+const BAD = '!border-ec-danger ring-1 ring-ec-danger'
+
+/** Native select (keeps the phone's own picker) with our chevron instead of the browser arrow. */
+function Select({ bad, className = '', children, ...props }) {
+  return (
+    <div className="relative">
+      <select {...props} className={`${FIELD} appearance-none truncate pr-9 disabled:bg-ec-bg disabled:text-ec-ink40 ${bad ? BAD : ''} ${className}`}>{children}</select>
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ec-ink40"><ChevD size={18} /></span>
+    </div>
+  )
+}
 
 function Field({ label, children, className = '' }) {
   return (
@@ -80,48 +94,53 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
   const daysMode = isDaysMode(form)
   const now = new Date()
   const more = isStarted(form) // the rest of the form opens once cab + state are in (keeps the first screen short)
+  // Pay Now stays tappable: a tap on an incomplete form lists what's missing and marks the fields.
+  const [tried, setTried] = useState(false)
+  const issues = tried ? btIssues(form, now) : []
+  const bad = (k) => issues.includes(k)
+  const pay = () => { if (btIssues(form, now).length) setTried(true); else onSubmit() }
   return (
     <section className={CARD}>
       <h2 className="mb-3.5 text-[17px] font-extrabold tracking-tight text-ec-ink">{t('bt.formTitle')}</h2>
       <div className="flex flex-col gap-3.5">
         <div className="flex gap-3">
           <Field label={t('bt.vehicle')} className="flex-1">
-            <input className={`${FIELD} uppercase tracking-wide`} value={form.vehicleNo} maxLength={13} autoCapitalize="characters" autoComplete="off" list={SAVED_RC_LIST}
+            <input className={`${FIELD} uppercase tracking-wide ${bad('vehicle') ? BAD : ''}`} value={form.vehicleNo} maxLength={13} autoCapitalize="characters" autoComplete="off" list={SAVED_RC_LIST}
               onChange={(e) => onChange({ vehicleNo: e.target.value })} />
           </Field>
           <Field label={t('bt.seats')} className="w-[96px]">
-            <select className={FIELD} value={form.seats} onChange={(e) => onChange({ seats: e.target.value })}>
+            <Select bad={bad('seats')} value={form.seats} onChange={(e) => onChange({ seats: e.target.value })}>
               {BT_SEATS.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            </Select>
           </Field>
         </div>
         <SavedVehicleOptions />
         <div className="flex gap-3">
           <Field label={t('bt.state')} className="flex-1">
-            <select className={FIELD} value={form.stateCd} onChange={(e) => onChange({ stateCd: e.target.value, checkpost: '', taxMode: BT_DAYS_MODE })}>
+            <Select bad={bad('state')} value={form.stateCd} onChange={(e) => onChange({ stateCd: e.target.value, checkpost: '', taxMode: BT_DAYS_MODE })}>
               <option value="" disabled>{t('bt.statePh')}</option>
               {Object.entries(BT_STATES).filter(([code]) => BT_LIVE_STATES.includes(code)).map(([code, s]) => <option key={code} value={code}>{s.name}</option>)}
-            </select>
+            </Select>
           </Field>
           <Field label={t('bt.border')} className="flex-1">
-            <select className={FIELD} value={form.checkpost} disabled={!st} onChange={(e) => onChange({ checkpost: e.target.value })}>
+            <Select bad={bad('border')} value={form.checkpost} disabled={!st} onChange={(e) => onChange({ checkpost: e.target.value })}>
               <option value="" disabled>{t('bt.borderPh')}</option>
               {st?.checkposts.map((c) => <option key={c} value={c}>{titleCase(c)}</option>)}
-            </select>
+            </Select>
           </Field>
         </div>
         {more && (<>
           {daysMode && <LatestFee form={form} />}
           {st?.taxModes.length > 1 && <ModePicker modes={st.taxModes} value={form.taxMode} onChange={(taxMode) => onChange({ taxMode })} />}
           <Field label={t('bt.start')}>
-            <input type="datetime-local" className={FIELD} value={form.startAt}
+            <input type="datetime-local" className={`${FIELD} ${bad('start') ? BAD : ''}`} value={form.startAt}
               min={toLocalInput(now)} max={toLocalInput(new Date(now.getTime() + BT_MAX_AHEAD_DAYS * DAY_MS))}
               onChange={(e) => onChange({ startAt: e.target.value })} />
           </Field>
           {daysMode && <DaysStepper days={form.days} label={t('bt.days')} onChange={(days) => onChange({ days })} />}
           {st?.needsDistance && (
             <Field label={t('bt.distance')}>
-              <input type="number" inputMode="numeric" className={FIELD} value={form.distanceKm}
+              <input type="number" inputMode="numeric" className={`${FIELD} ${bad('distance') ? BAD : ''}`} value={form.distanceKm}
                 onChange={(e) => onChange({ distanceKm: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
             </Field>
           )}
@@ -134,14 +153,15 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
               </p>
             </div>
           </div>
-          <label className="flex items-start gap-2.5">
+          <label className={`flex items-start gap-2.5 rounded-lg ${bad('declare') ? 'bg-ec-dangerBg p-2 ring-1 ring-ec-danger' : ''}`}>
             <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-ec-blue" checked={form.declare} onChange={(e) => onChange({ declare: e.target.checked })} />
             <span className="text-[12.5px] font-medium leading-snug text-ec-ink60">{t('bt.declare')}</span>
           </label>
+          <FormIssues items={issues.map((k) => t(`bt.issues.${k}`))} />
           {errorText && <p className="rounded-xl bg-ec-dangerBg px-3 py-2 text-[13px] font-semibold text-ec-danger" role="status">{errorText}</p>}
           <div className="flex items-center gap-3">
             <p className="flex-1 text-[12px] font-semibold leading-snug text-ec-successTx">{t('bt.freeNote')}</p>
-            <Button type="button" size="lg" className="min-w-[150px]" disabled={submitting || Boolean(busyLeft) || !isFilable(form, now)} onClick={onSubmit}>
+            <Button type="button" size="lg" className="min-w-[150px]" disabled={submitting || Boolean(busyLeft)} onClick={pay}>
               {submitting ? t('bt.submitting') : t('bt.submit')}
             </Button>
           </div>

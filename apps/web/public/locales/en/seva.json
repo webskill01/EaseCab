@@ -167,6 +167,17 @@
       "cleared": "Lock cleared. You can file again now.",
       "paid": "The earlier payment went through. Receipt no. {no}",
       "failed": "We couldn't clear the lock. Please contact support."
+    },
+    "issues": {
+      "vehicle": "Enter a valid vehicle number, e.g. PB10AB1234",
+      "seats": "Select seats",
+      "state": "Select a state",
+      "border": "Select a border",
+      "mode": "Select a tax period",
+      "start": "Pick a date from now up to 7 days ahead",
+      "days": "Choose the number of days",
+      "distance": "Enter the distance in km",
+      "declare": "Tick the confirmation box"
     }
   }
 }
