@@ -90,7 +90,8 @@ async function ownerStep(page, job, io) {
 async function pickCheckpost(page, job) {
   const codes = BORDER_TAX_STATES[job.stateCd].portal?.[job.checkpost];
   if (!codes) {
-    await page.selectOption('#floatingDistrict', { label: job.checkpost });
+    // checkpost is optional in the form (null) — then take the portal's first district
+    await page.selectOption('#floatingDistrict', job.checkpost ? { label: job.checkpost } : { index: 1 });
     await page.waitForFunction(() => document.querySelector('#floatingCheckpost')?.options.length > 1);
     await page.selectOption('#floatingCheckpost', { index: 1 });
     return;
