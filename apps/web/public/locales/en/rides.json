@@ -1,4 +1,15 @@
 {
+  "promo": {
+    "new": "New",
+    "later": "Later",
+    "borderTax": {
+      "title": "Border Tax in the app",
+      "sub": "Pay HR, HP & UP border tax in minutes",
+      "cta": "Try",
+      "popTitle": "New: pay border tax in the app",
+      "popSub": "Haryana, Himachal and UP border tax: fill the form, pay by UPI, get the receipt in the app. No extra charge for members."
+    }
+  },
   "tabs": {
     "rides": "Live Rides",
     "verified": "Driver Duties"
@@ -36,6 +47,7 @@
     "report": "Report"
   },
   "filter": {
+    "alert": {"blocked": "Alerts off", "sound": "Sound off", "battery": "Fix battery"},
     "notifications": "Notifications",
     "allCities": "All cities",
     "filterByCity": "Filter by city",

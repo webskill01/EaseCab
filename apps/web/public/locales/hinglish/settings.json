@@ -24,7 +24,9 @@
     "bubble": "Display over other apps button",
     "bubbleHint": "Dusre apps ke upar gol EaseCab button. Tap karke yahan wapas aao.",
     "battery": "Battery: Unrestricted karo",
-    "batteryHint": "Iske bina app band hone par phone duty alerts rok sakta hai. Tap karo → Battery → Unrestricted."
+    "batteryHint": "Iske bina app band hone par phone duty alerts rok sakta hai. Tap karo → Battery → Unrestricted.",
+    "sound": "Ride alert ki awaaz band hai",
+    "soundHint": "Tap karein → Ride alerts ki awaaz wapas on karein, warna rides bina awaaz ke aayengi."
   },
   "language": {
     "title": "Language"

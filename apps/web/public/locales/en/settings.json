@@ -24,7 +24,9 @@
     "bubble": "Display over other apps button",
     "bubbleHint": "A round EaseCab button over other apps. Tap it to come back here.",
     "battery": "Battery: set to Unrestricted",
-    "batteryHint": "Without this, the phone may stop duty alerts when EaseCab is closed. Tap → Battery → Unrestricted."
+    "batteryHint": "Without this, the phone may stop duty alerts when EaseCab is closed. Tap → Battery → Unrestricted.",
+    "sound": "Ride alert sound is off",
+    "soundHint": "Tap → turn Sound back on for Ride alerts, or rides will arrive silently."
   },
   "language": {
     "title": "Language"

@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 import { env } from '@/config/env'
-import { BellEdit } from '@/components/ui/icons'
 import { useRidesFeed, FEED_SUB } from '../hooks/useRidesFeed'
 import { useCityFilter } from '../hooks/useCityFilter'
 import { getMembership } from '@/features/subscription/services/subscriptionApi'
@@ -14,6 +12,10 @@ import { membershipView } from '@/features/subscription/lib/membership'
 import { SubTabs } from './SubTabs'
 import { CityFilter } from './CityFilter'
 import { FeedBanner } from './FeedBanner'
+import { NotificationsButton } from './NotificationsButton'
+import { PromoBanner } from './PromoBanner'
+import { PromoSheet } from './PromoSheet'
+import { activePromo, shouldPopup, readPromoState, markPromo, istDay } from '../lib/promos'
 import { RideCard } from './RideCard'
 import { RideCardSkeleton, CatchingUp, EmptyFeed } from './FeedStates'
 import { NewRidesPill } from './NewRidesPill'
@@ -37,7 +39,6 @@ const DUTIES_COUNT_POLL_MS = 30000
  */
 export function FeedScreen() {
   const router = useRouter()
-  const t = useTranslations('rides')
   const [sub, setSub] = useState(FEED_SUB.RIDES)
   const [contactRideVM, setContactRideVM] = useState(null)
   const [reportRideVM, setReportRideVM] = useState(null)
@@ -75,17 +76,24 @@ export function FeedScreen() {
   const dismissPre = () => { dismissPrePrompt(); setPrePromptOpen(false) }
   const enableAlerts = async () => { await alerts.enable(); setPrePromptOpen(false) }
 
+  // New-feature promo: banner for the promo's window + a random once-a-day popup.
+  // Picked after mount (Date + localStorage) so server and client markup match.
+  const [promo, setPromo] = useState(null)
+  const [promoPopup, setPromoPopup] = useState(false)
+  useEffect(() => {
+    const now = new Date()
+    const p = activePromo(now)
+    setPromo(p)
+    if (shouldPopup(p, readPromoState(), now)) { markPromo('shownDay', p.id, istDay(now)); setPromoPopup(true) }
+  }, [])
+  const openPromo = () => { markPromo('opened', promo.id, true); setPromoPopup(false); router.push(promo.href) }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
+      {promo && <PromoBanner promo={promo} onOpen={openPromo} />}
       {/* Location buttons row (SCREENS §2): Duty Alerts overlay + the city-filter lock. */}
       <div className="flex gap-3 bg-ec-bg px-4 pb-1 pt-2.5">
-        <button
-          type="button"
-          onClick={() => router.push('/notifications')}
-          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-bold text-ec-blueInk shadow-ec-card"
-        >
-          <span className="inline-flex text-ec-blue"><BellEdit size={18} /></span>{t('filter.notifications')}
-        </button>
+        <NotificationsButton onClick={() => router.push('/notifications')} />
         <div className="flex-1">
           <CityFilter selected={selectedCities} onToggle={toggleCity} onClear={clearCities} />
         </div>
@@ -139,6 +147,8 @@ export function FeedScreen() {
           onVerify={() => { setContactRideVM(null); router.push(env.NEXT_PUBLIC_VERIFICATION_ENABLED ? '/verify?intent=l1' : '/profile/edit') }}
         />
       )}
+
+      {promoPopup && promo && <PromoSheet promo={promo} onOpen={openPromo} onClose={() => setPromoPopup(false)} />}
 
       {reportRideVM && (
         <ReportSheet ride={reportRideVM} onClose={() => setReportRideVM(null)} />

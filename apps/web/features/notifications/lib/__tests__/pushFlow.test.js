@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { permissionState, shouldShowPrePrompt, PRE_PROMPT_RIDES, needsHomeScreen } from '../pushFlow'
+import { permissionState, shouldShowPrePrompt, PRE_PROMPT_RIDES, needsHomeScreen, alertProblem, ALERT_PROBLEM } from '../pushFlow'
 
 afterEach(() => { delete global.Notification })
 
@@ -37,5 +37,24 @@ describe('needsHomeScreen (iOS web push needs the Home Screen app)', () => {
     expect(needsHomeScreen()).toBe(false)
     setUa('Mozilla/5.0 (Linux; Android 14) Chrome/130 Mobile', undefined)
     expect(needsHomeScreen()).toBe(false)
+  })
+})
+
+describe('alertProblem', () => {
+  const setNative = (s) => localStorage.setItem('ec_native', JSON.stringify({ battery: true, ring: true, at: Date.now(), contacts: [], ...s }))
+  const setPerm = (p) => vi.stubGlobal('Notification', { permission: p })
+  afterEach(() => { localStorage.clear(); vi.unstubAllGlobals() })
+
+  it('blocked beats everything; undecided is not a problem', () => {
+    setNative({ ring: false, battery: false })
+    setPerm('denied'); expect(alertProblem()).toBe(ALERT_PROBLEM.BLOCKED)
+    setPerm('default'); expect(alertProblem()).toBeNull()
+  })
+  it('granted: muted channel, then battery, else fine', () => {
+    setPerm('granted')
+    setNative({ ring: false, battery: false }); expect(alertProblem()).toBe(ALERT_PROBLEM.SOUND)
+    setNative({ battery: false }); expect(alertProblem()).toBe(ALERT_PROBLEM.BATTERY)
+    setNative({}); expect(alertProblem()).toBeNull()
+    localStorage.clear(); expect(alertProblem()).toBeNull() // browser, not the app
   })
 })

@@ -1,4 +1,6 @@
-/** Pure notification-permission decisions (Step 23). No I/O. */
+/** Notification-permission decisions (Step 23). alertProblem() also reads the app flags in nativePush. */
+import { alertSoundOff, batteryRestricted } from '../services/nativePush'
+
 export const PRE_PROMPT_RIDES = 3
 
 /** @returns {'granted'|'denied'|'default'|'unsupported'} */
@@ -26,4 +28,20 @@ export function needsHomeScreen() {
  */
 export function shouldShowPrePrompt({ viewedCount, dismissed, permission, threshold = PRE_PROMPT_RIDES }) {
   return permission === 'default' && !dismissed && viewedCount >= threshold
+}
+
+export const ALERT_PROBLEM = Object.freeze({ BLOCKED: 'blocked', SOUND: 'sound', BATTERY: 'battery' })
+
+/**
+ * Why ride alerts won't reach / ring this driver, worst first, or null. Feeds the
+ * warning chip on the feed's Notifications button. Undecided permission is not a
+ * problem (the pre-prompt asks); sound/battery only matter once alerts are allowed.
+ */
+export function alertProblem() {
+  const perm = permissionState()
+  if (perm === 'denied') return ALERT_PROBLEM.BLOCKED
+  if (perm !== 'granted') return null
+  if (alertSoundOff()) return ALERT_PROBLEM.SOUND
+  if (batteryRestricted()) return ALERT_PROBLEM.BATTERY
+  return null
 }

@@ -1,5 +1,5 @@
 // Native push (Play app v11+, apps/twa PushService). The launcher opens the site with a
-// URL fragment — #nperm=1|0&nbat=1|0&ntok=<fcm token>&npc=<rideId,...> — that never
+// URL fragment — #nperm=1|0&nbat=1|0&nring=1|0&ntok=<fcm token>&npc=<rideId,...> — that never
 // reaches the server and survives redirects. Kept in localStorage (shared by every tab of
 // the app's Chrome), NOT per tab: a tab opened without the fragment would otherwise
 // register a browser token and delete the app's, flip-flopping alerts between the two.
@@ -19,7 +19,7 @@ export function captureNativeLaunch() {
     if (!p.has('nperm')) return
     const prev = state()
     localStorage.setItem(KEY, JSON.stringify({
-      battery: p.get('nbat') === '1', at: Date.now(),
+      battery: p.get('nbat') === '1', ring: p.get('nring') !== '0', at: Date.now(), // pre-v13 apps send no nring
       token: p.get('ntok') || prev?.token || null,
       contacts: [...(prev?.contacts || []), ...(p.get('npc') || '').split(',').filter(Boolean)],
     }))
@@ -37,6 +37,8 @@ function state() {
 export function isNative() { return !!state() }
 /** True when Android may kill alerts in the background (battery not "Unrestricted"). */
 export function batteryRestricted() { return isNative() && !state().battery }
+/** True when the driver muted the app's Ride alerts channel (sound or importance off). */
+export function alertSoundOff() { return isNative() && state().ring === false }
 export function pushPlatform() { return isNative() ? 'android' : 'web' }
 
 /** Android's notification prompt (via Chrome), then the app's FCM token. */
@@ -47,6 +49,9 @@ export async function nativePermissionAndToken() {
 
 /** App info screen: Battery → Unrestricted, or Permissions after a hard "Don't allow". */
 export function openAppSettings() { openApp('settings') }
+
+/** The Ride alerts channel's own settings screen (v13+ apps). */
+export function openSoundSettings() { openApp('sound') }
 
 /** Ride ids the user called/WhatsApp'd straight from a notification; read once. */
 export function takePendingContacts() {

@@ -1,4 +1,15 @@
 {
+  "promo": {
+    "new": "Naya",
+    "later": "Baad mein",
+    "borderTax": {
+      "title": "Border Tax ab app mein",
+      "sub": "HR, HP aur UP ka border tax minutes mein bharein",
+      "cta": "Dekhein",
+      "popTitle": "Naya: app se border tax bharein",
+      "popSub": "Haryana, Himachal aur UP ka border tax: form bharein, UPI se pay karein, receipt app mein paayein. Members ke liye koi extra charge nahi."
+    }
+  },
   "tabs": {
     "rides": "Live Rides",
     "verified": "Driver Duties"
@@ -36,6 +47,7 @@
     "report": "Report"
   },
   "filter": {
+    "alert": {"blocked": "Alerts band", "sound": "Awaaz band", "battery": "Battery theek karein"},
     "notifications": "Alerts",
     "allCities": "Saare shehar",
     "filterByCity": "Shehar filter",
