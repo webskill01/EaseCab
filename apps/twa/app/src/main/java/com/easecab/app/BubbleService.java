@@ -64,8 +64,12 @@ public class BubbleService extends Service {
     static void startIfAllowed(Context c) {
         if (!isOn(c) || !canDraw(c)) return;
         Intent i = new Intent(c, BubbleService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) c.startForegroundService(i);
-        else c.startService(i);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) c.startForegroundService(i);
+            else c.startService(i);
+        } catch (IllegalStateException e) { // Android 12+: refused from the background; next app open retries
+            android.util.Log.w("EaseCab", "bubble start refused", e);
+        }
     }
 
     /** EaseCab tab shown/hidden. Called from a binder thread. */
@@ -78,7 +82,10 @@ public class BubbleService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startAsForeground();
+        if (!startAsForeground()) { // sticky restart in the background: Android 12+ refuses (Play crash, v11)
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         if (intent != null && ACTION_STOP.equals(intent.getAction())) {
             setOn(this, false);
             return START_NOT_STICKY;
@@ -110,7 +117,8 @@ public class BubbleService extends Service {
         if (bubble != null) bubble.setVisibility(appVisible ? View.GONE : View.VISIBLE);
     }
 
-    private void startAsForeground() {
+    /** False when Android refuses foreground start (ForegroundServiceStartNotAllowedException). */
+    private boolean startAsForeground() {
         NotificationManager nm = getSystemService(NotificationManager.class);
         Notification.Builder b;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -130,10 +138,16 @@ public class BubbleService extends Service {
                 .addAction(new Notification.Action.Builder(null, getString(R.string.bubbleTurnOff), stop).build())
                 .setOngoing(true)
                 .build();
-        if (Build.VERSION.SDK_INT >= 34) {
-            startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
-        } else {
-            startForeground(NOTIFICATION_ID, n);
+        try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            } else {
+                startForeground(NOTIFICATION_ID, n);
+            }
+            return true;
+        } catch (IllegalStateException e) {
+            android.util.Log.w("EaseCab", "bubble foreground refused", e);
+            return false;
         }
     }
 
