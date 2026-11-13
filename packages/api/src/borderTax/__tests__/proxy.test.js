@@ -11,7 +11,7 @@ test('HR filing → its own sticky session on the proxy; Vahan + PayU bypassed',
     server: 'http://v2.example.test:5000',
     username: 'r_abc-country-in-sid-7210aa0f1253',
     password: 'p@ss',
-    bypass: '.parivahan.gov.in, .payu.in',
+    bypass: '*parivahan.gov.in, *payu.in',
   });
 });
 
