@@ -59,3 +59,45 @@ test('treasury pass-through: fills himkosh (e-banking, PAYU, OCR code, declarati
   t.after(() => odd.browser.close());
   assert.strictEqual(await passTreasury(odd.context, TREASURY.HP, odd.captured, io), null);
 });
+
+test('treasury captcha OCR miss → the driver types it in the app (no hand-off); a timeout clears the lock', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  t.after(stopOcr);
+  if (!(await ocrReady())) return t.skip('ddddocr not installed');
+  const blank = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+  const html = HIMKOSH().replace(CAPTCHA, blank); // OCR reads nothing off this
+
+  const asked = [];
+  const ok = await setup(chromium, html);
+  t.after(() => ok.browser.close());
+  const io = { log: () => {}, captcha: async (a) => { asked.push(a.step); return '4bpd6c'; } };
+  assert.match(await passTreasury(ok.context, TREASURY.HP, ok.captured, io), /code=4bpd6c/);
+  assert.deepStrictEqual(asked, ['treasury']);
+
+  const late = await setup(chromium, html);
+  t.after(() => late.browser.close());
+  const timeout = { log: () => {}, captcha: async () => { throw Object.assign(new Error('t'), { failureCode: 'captcha_timeout' }); } };
+  await assert.rejects(passTreasury(late.context, TREASURY.HP, late.captured, timeout), (e) => e.failureCode === 'captcha_timeout' && e.atBank === true);
+});
+
+test('treasury page never loaded → the captured challan request is posted again, then filled', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  t.after(stopOcr);
+  if (!(await ocrReady())) return t.skip('ddddocr not installed');
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const context = await browser.newContext();
+  let found;
+  const captured = new Promise((r) => { found = r; });
+  await context.route(`${BANK}*`, (route) => { found(route.request().postData()); return route.abort(); });
+  await context.route(`https://${HOST}/**`, (route) => route.fulfill({ contentType: 'text/html', body: HIMKOSH() }));
+  await context.route('https://vahan.example.test/**', (route) => route.fulfill({ contentType: 'text/html', body: '<p>eTransPgi</p>' }));
+  const page = await context.newPage(); // stuck on Vahan, as on the 2026-11-12 HR filings
+  page.on('dialog', (d) => d.accept());
+  await page.goto('https://vahan.example.test/eTransPgi');
+  const again = { method: 'POST', action: `https://${HOST}/echallan`, fields: [['grn', '1']] };
+  const bank = await passTreasury(context, { ...TREASURY.HP, findMs: 1500 }, captured, { log: () => {} }, again);
+  assert.match(bank, /code=4bpd6c/);
+});

@@ -22,9 +22,10 @@ const TREASURY = Object.freeze({
   // UP: Vahan → SBIePay Lite directly; sbi = its own QR + result flow (sbiQr.js, 2026-11-12)
   UP: Object.freeze({ qr: /(^|\.)sbi\.bank\.in$/, sbi: true }),
 });
-const TRIES = 2; // OCR reads; a miss on both → hand over the treasury page
+const TRIES = 3; // fill + submit rounds (a wrong code brings a new captcha); then the filing fails no_qr
 const VERDICT_MS = 20_000; // treasury submit → bank page
-const FIND_MS = 30_000;
+// HR eGRAS never loaded within 30s on 2 live filings (2026-11-12): the bot's tab stayed on Vahan
+const FIND_MS = 60_000;
 
 /** Tags the controls this page needs; returns which were found (names only — never values: PII). */
 async function tagControls(page, { mode, bank }) {
@@ -79,16 +80,18 @@ async function attempt(page, cfg, captured, io) {
   // ponytail: ticks every visible checkbox — these pages only have the declaration
   // 2s cap: an untickable box sat out Playwright's 30s default on every HP filing (2026-11-12 timeline)
   for (let i = 0; i < found.boxes; i += 1) await page.check(`[data-ec=box${i}]`, { timeout: 2000 }).catch(() => {});
-  const read = found.cap ? await answerCaptcha(page, io) : '';
-  if (found.cap && !read) return null;
+  let read = found.cap ? await answerCaptcha(page, io) : '';
+  // OCR miss → the driver types it in the app (as on Vahan). Giving up here used to hand the driver
+  // the treasury page to pay outside the app → pending portal attempt / amount mismatch (2026-11-13).
+  if (found.cap && !read) read = await io.captcha({ step: 'treasury', image: await captchaImage(page, '[data-ec=cap]') });
   if (read) await page.fill('[data-ec=cap]', read);
   await page.click('[data-ec=go]');
   return Promise.race([captured, page.waitForTimeout(VERDICT_MS).then(() => null)]);
 }
 
 /** The context page that reached the treasury host (same tab or a popup). */
-async function treasuryPage(context, host) {
-  for (let waited = 0; waited < FIND_MS; waited += 500) {
+async function treasuryPage(context, host, findMs = FIND_MS) {
+  for (let waited = 0; waited < findMs; waited += 500) {
     const p = context.pages().find((x) => { try { return new URL(x.url()).hostname === host; } catch { return false; } });
     if (p) { await p.waitForLoadState('domcontentloaded'); return p; }
     await new Promise((r) => setTimeout(r, 500));
@@ -96,15 +99,31 @@ async function treasuryPage(context, host) {
   return null;
 }
 
+/** Submits the captured treasury request ({ method, action, fields }) again as a form in the first tab. */
+async function repost(context, req, io) {
+  io.log?.('treasury pass-through: page never loaded — posting the challan request again');
+  const page = context.pages()[0];
+  await page?.evaluate(({ method, action, fields }) => {
+    const form = Object.assign(document.createElement('form'), { method, action });
+    for (const [name, value] of fields) form.appendChild(Object.assign(document.createElement('input'), { type: 'hidden', name, value }));
+    document.body.appendChild(form);
+    form.submit();
+  }, req).catch((e) => io.log?.(`treasury re-post failed: ${e.message.split('\n')[0]}`));
+}
+
 /**
- * Fills the treasury page and waits for the bank. Never throws.
+ * Fills the treasury page and waits for the bank. Throws only a driver outcome (captcha timeout / stopped).
  * @param {import('playwright').BrowserContext} context
  * @param {{ host: string, mode: RegExp, bank: RegExp }} cfg
  * @param {Promise<?object>} captured resolves with the bank hand-off once a page leaves the treasury
- * @returns {Promise<?object>} bank hand-off, or null → caller hands over the treasury page
+ * @returns {Promise<?object>} bank page, or null → the filing fails no_qr (never handed to the driver)
  */
-async function passTreasury(context, cfg, captured, io) {
-  const page = await treasuryPage(context, cfg.host);
+async function passTreasury(context, cfg, captured, io, again = null) {
+  let page = await treasuryPage(context, cfg.host, cfg.findMs);
+  if (!page && again) { // first load died/hung: post the same challan request again from Vahan's tab
+    await repost(context, again, io);
+    page = await treasuryPage(context, cfg.host, cfg.findMs);
+  }
   if (!page) {
     io.log?.(`treasury pass-through: no ${cfg.host} tab — tabs: ${context.pages().map((p) => { try { const u = new URL(p.url()); return `${u.hostname}${u.pathname}`; } catch { return p.url().slice(0, 30); } }).join(' | ')}`);
     return null;
@@ -114,6 +133,7 @@ async function passTreasury(context, cfg, captured, io) {
       const bank = await attempt(page, cfg, captured, io);
       if (bank) return bank;
     } catch (e) {
+      if (e.failureCode) throw Object.assign(e, { atBank: true }); // captcha timeout / stopped: past eTransPgi → clear the lock
       io.log?.(`treasury pass-through: ${e.message.split('\n')[0]} — form: ${await describe(page)}`);
       return null;
     }
