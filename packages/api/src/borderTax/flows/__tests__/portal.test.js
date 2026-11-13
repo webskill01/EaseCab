@@ -35,7 +35,8 @@ test('declaration captcha: typed exactly as the page drew it — no OCR, no driv
   let chromium;
   try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
   const { solveCaptcha, canvasCodeHook } = require('../portal');
-  const browser = await chromium.launch();
+  const browser = await chromium.launch().catch(() => null); // CI has the package but no browser binary
+  if (!browser) return t.skip('chromium not installed');
   t.after(() => browser.close());
   const context = await browser.newContext();
   await context.addInitScript(canvasCodeHook);
