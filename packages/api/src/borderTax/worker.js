@@ -17,6 +17,7 @@ const { sweepReceipts } = require('./receiptSweep');
 const { r2FromEnv } = require('../lib/r2.js');
 const { ocrReady, stopOcr } = require('./ocr');
 const { proxyFor } = require('./proxy');
+const { canvasCodeHook } = require('./flows/portal');
 
 const QUEUE_POLL_SEC = 30; // BRPOP timeout — lets the loop notice shutdown
 const RECEIPT_SWEEP_MS = 3_600_000; // hourly: receipts go 24h after validity, an hour late is fine
@@ -50,7 +51,11 @@ async function main() {
     return launching;
   };
   await browser(); // fail fast at boot if Chromium can't start
-  const newPage = async (job) => (await (await browser()).newContext({ viewport: VIEWPORT, proxy: proxyFor(env.BORDER_TAX_PROXY_URL, job) })).newPage();
+  const newPage = async (job) => {
+    const context = await (await browser()).newContext({ viewport: VIEWPORT, proxy: proxyFor(env.BORDER_TAX_PROXY_URL, job) });
+    await context.addInitScript(canvasCodeHook); // declaration captcha typed exactly as drawn (portal.js)
+    return context.newPage();
+  };
   const r2 = r2FromEnv(serverEnv);
   const runner = createRunner({ service, repo, newPage, logger, r2, alert });
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));

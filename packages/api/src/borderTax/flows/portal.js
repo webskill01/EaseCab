@@ -17,6 +17,21 @@ const CAPTCHA_REFRESH_SEL = '.captcha-refresh, .cap + button';
 const CAPTCHA_SEL = 'canvas, img';
 const REFRESH_POLLS = 10; // × CAPTCHA_SETTLE_MS waiting for the new image
 
+/**
+ * Context init script. The declaration captcha is drawn in the browser (checkpostv4 main.js:
+ * 6 chars of 1-9 a-z A-Z @ #, minus 0 O o l I, italic Verdana) and checked in the browser too. OCR got its
+ * case wrong (KZYbSG → kzybsg, U65P@z → U65POz): 3 captcha_timeouts on 2026-11-13. Each canvas keeps the
+ * code it was drawn with, so the worker types exactly that; OCR stays the fallback (server images).
+ */
+function canvasCodeHook() {
+  /* global CanvasRenderingContext2D */
+  const fill = CanvasRenderingContext2D.prototype.fillText;
+  CanvasRenderingContext2D.prototype.fillText = function fillText(text, ...rest) {
+    if (typeof text === 'string' && /^[A-Za-z0-9@#]{6}$/.test(text)) this.canvas.setAttribute('data-ec-code', text);
+    return fill.call(this, text, ...rest);
+  };
+}
+
 // Portal refusals about the vehicle's own papers: the driver must fix them, so retrying is pointless.
 // Matched on any generic portal error, whichever step raised it.
 const PAPERS = Object.freeze([ // live HR runs 2026-11-11
@@ -102,6 +117,11 @@ async function refreshCaptcha(page, input, oldImage) {
  */
 async function ocrAnswer(page, io, { step, input, length }, state, firstImage) {
   let image = firstImage;
+  const drawn = await (await near(page, input, CAPTCHA_SEL))?.getAttribute('data-ec-code');
+  if (drawn) {
+    io.log?.(`captcha ${step}: read off the page "${drawn}"`);
+    return { image, answer: drawn };
+  }
   while (state.ocrLeft > 0) {
     state.ocrLeft -= 1;
     const read = await readCaptcha(image, length);
@@ -173,4 +193,4 @@ async function solveCaptcha(page, io, opts) {
   throw portalError(BORDER_TAX_FAILURE.CAPTCHA_WRONG);
 }
 
-module.exports = { portalError, visibleBtn, alertText, dismissAlert, captchaImage, solveCaptcha, VERDICT_MS };
+module.exports = { portalError, visibleBtn, alertText, dismissAlert, captchaImage, solveCaptcha, canvasCodeHook, VERDICT_MS };
