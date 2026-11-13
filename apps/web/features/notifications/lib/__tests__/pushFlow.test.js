@@ -50,10 +50,10 @@ describe('alertProblem', () => {
     setPerm('denied'); expect(alertProblem()).toBe(ALERT_PROBLEM.BLOCKED)
     setPerm('default'); expect(alertProblem()).toBeNull()
   })
-  it('granted: muted channel, then battery, else fine', () => {
+  it('granted: muted channel, else fine', () => {
     setPerm('granted')
     setNative({ ring: false, battery: false }); expect(alertProblem()).toBe(ALERT_PROBLEM.SOUND)
-    setNative({ battery: false }); expect(alertProblem()).toBe(ALERT_PROBLEM.BATTERY)
+    setNative({ battery: false }); expect(alertProblem()).toBeNull() // battery has its own row, no chip
     setNative({}); expect(alertProblem()).toBeNull()
     localStorage.clear(); expect(alertProblem()).toBeNull() // browser, not the app
   })

@@ -9,7 +9,7 @@ import { alertProblem } from '@/features/notifications/lib/pushFlow'
 const onFocus = (cb) => { window.addEventListener('focus', cb); return () => window.removeEventListener('focus', cb) }
 
 /**
- * Feed's Notifications button. When alerts are blocked, muted or battery-limited, a small
+ * Feed's Notifications button. When alerts are blocked or muted, a small
  * warning chip sits on its top edge so the driver sees where to fix it (the screen it opens
  * holds the fix rows).
  * @param {{ onClick: () => void }} props

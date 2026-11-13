@@ -3,7 +3,7 @@
     "new": "New",
     "later": "Later",
     "borderTax": {
-      "title": "Border Tax in the app",
+      "title": "Checkpost Tax in the app",
       "sub": "Pay HR, HP & UP border tax in minutes",
       "cta": "Try",
       "popTitle": "New: pay border tax in the app",
@@ -47,7 +47,7 @@
     "report": "Report"
   },
   "filter": {
-    "alert": {"blocked": "Alerts off", "sound": "Sound off", "battery": "Fix battery"},
+    "alert": {"blocked": "Alerts off", "sound": "Sound off"},
     "notifications": "Notifications",
     "allCities": "All cities",
     "filterByCity": "Filter by city",

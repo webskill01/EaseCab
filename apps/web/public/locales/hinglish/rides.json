@@ -3,7 +3,7 @@
     "new": "Naya",
     "later": "Baad mein",
     "borderTax": {
-      "title": "Border Tax ab app mein",
+      "title": "Checkpost Tax ab app mein",
       "sub": "HR, HP aur UP ka border tax minutes mein bharein",
       "cta": "Dekhein",
       "popTitle": "Naya: app se border tax bharein",
@@ -47,7 +47,7 @@
     "report": "Report"
   },
   "filter": {
-    "alert": {"blocked": "Alerts band", "sound": "Awaaz band", "battery": "Battery theek karein"},
+    "alert": {"blocked": "Alerts band", "sound": "Awaaz band"},
     "notifications": "Alerts",
     "allCities": "Saare shehar",
     "filterByCity": "Shehar filter",
