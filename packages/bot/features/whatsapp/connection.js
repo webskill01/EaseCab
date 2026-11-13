@@ -13,6 +13,7 @@ const pino = require('pino');
 const { BOT_HEALTH } = require('@easecab/shared');
 const { toGroupRecord } = require('../groups/groupStore');
 const { createTrafficDiag } = require('./trafficDiag');
+const { drainOffline } = require('./offlineDrain');
 
 /**
  * Pull plain text out of a Baileys message node. Handles the two text-bearing
@@ -170,6 +171,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
   if (sock.ws && sock.ws.on) sock.ws.on('CB:message', diag.stanza); // raw frames, before decrypt
   const logTraffic = () => logger.info(diag.flush(), 'wa traffic');
   const diagTimer = setInterval(logTraffic, BOT_HEALTH.LOST_MSG_LOG_MS);
+  const stopDrain = sock.ws && sock.ws.on ? drainOffline(sock.ws, (n) => sock.sendNode(n), logger) : () => {};
 
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect } = update;
@@ -194,6 +196,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       if (closed) return; // ignore duplicate close events
       closed = true;
       clearInterval(diagTimer);
+      stopDrain();
       logTraffic();
       const code =
         lastDisconnect &&

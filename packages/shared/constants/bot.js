@@ -58,6 +58,8 @@ const BOT_HEALTH = Object.freeze({
   STALL_WATCHDOG_MS: 12 * 60 * 1000,
   WATCHDOG_CHECK_MS: 60 * 1000, // how often the watchdog evaluates inbound silence
   SLOT_SILENT_AFTER_MS: 30 * 60 * 1000, // per-number SLOT_SILENT alert after this much silence (active hours)
+  OFFLINE_BATCH_MS: 20_000, // reconnect: no offline end marker this long after the preview → ask WA for the next batch
+  OFFLINE_BATCH_MAX: 30, // ... at most this many times (≈ 3,000 queued items)
   LOST_MSG_LOG_MS: 10 * 60 * 1000, // how often the lost-group-message diagnostic is logged + stored
   // Nameless-group lookups (timings from the multibot, proven in production): wait
   // out Baileys' own init queries after connect (firing early timed them out at 408),
