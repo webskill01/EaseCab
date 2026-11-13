@@ -16,7 +16,7 @@
     "seats": "Seats",
     "state": "State",
     "statePh": "Select state",
-    "border": "Border (optional)",
+    "border": "Border",
     "borderPh": "Select border",
     "start": "Date for apply",
     "days": "Number of days",
