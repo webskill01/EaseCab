@@ -13,7 +13,7 @@ const borderTaxCreateSchema = z
       .transform((v) => v.replace(/[\s-]/g, '').toUpperCase())
       .pipe(z.string().regex(BORDER_TAX.VEHICLE_NO_REGEX)),
     stateCd: z.enum(Object.keys(BORDER_TAX_STATES)),
-    checkpost: z.string().trim().toUpperCase().optional(), // optional, like CabsWale's "Border"
+    checkpost: z.string().trim().toUpperCase(), // required since 2026-11-13 (null crashed the HR flow)
     seats: z.enum(BORDER_TAX_SEATS),
     startAt: z.coerce.date(),
     taxMode: z.enum(Object.values(TAX_MODE)).default(TAX_MODE.DAYS), // non-DAYS: the portal sets the end date
@@ -23,7 +23,7 @@ const borderTaxCreateSchema = z
   })
   .strict()
   .superRefine((v, ctx) => {
-    if (v.checkpost && !BORDER_TAX_STATES[v.stateCd].checkposts.includes(v.checkpost)) {
+    if (!BORDER_TAX_STATES[v.stateCd].checkposts.includes(v.checkpost)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['checkpost'], message: 'Unknown checkpost' });
     }
     if (!BORDER_TAX_STATES[v.stateCd].taxModes.includes(v.taxMode)) {

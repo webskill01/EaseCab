@@ -6,7 +6,7 @@ const { borderTaxCreateSchema, borderTaxCaptchaSchema } = require('../borderTax.
 const { borderTaxWindow } = require('../../constants/borderTax');
 
 const inAnHour = () => new Date(Date.now() + 3_600_000).toISOString();
-const base = () => ({ vehicleNo: 'pb 01 c 9079', stateCd: 'HP', seats: '4+1', startAt: inAnHour(), days: 1, declare: true });
+const base = () => ({ vehicleNo: 'pb 01 c 9079', stateCd: 'HP', checkpost: 'PARWANOO', seats: '4+1', startAt: inAnHour(), days: 1, declare: true });
 
 test('create: normalises vehicle number + accepts a valid form', () => {
   const r = borderTaxCreateSchema.parse({ ...base(), checkpost: 'parwanoo' });
@@ -24,6 +24,8 @@ test('create: rejects bad vehicle, unknown state/checkpost, past start, too many
     { extra: 1 },
     { declare: false },
     { stateCd: 'HR', checkpost: 'PANCHKULA' }, // HR without distance
+    { checkpost: undefined }, // border required
+    { checkpost: '' },
   ];
   for (const patch of bad) assert.ok(!borderTaxCreateSchema.safeParse({ ...base(), ...patch }).success, JSON.stringify(patch));
 });
@@ -31,11 +33,11 @@ test('create: rejects bad vehicle, unknown state/checkpost, past start, too many
 test('create: tax period defaults to DAYS; only the periods the state offers', () => {
   assert.strictEqual(borderTaxCreateSchema.parse(base()).taxMode, '1');
   const { days, ...noDays } = base();
-  assert.strictEqual(borderTaxCreateSchema.parse({ ...noDays, stateCd: 'UP', taxMode: '4' }).days, 1); // monthly: no days needed
-  assert.ok(borderTaxCreateSchema.safeParse({ ...base(), stateCd: 'UP', taxMode: '5' }).success); // UP quarterly
-  assert.ok(!borderTaxCreateSchema.safeParse({ ...base(), stateCd: 'UP', taxMode: '7' }).success); // UP has no yearly
+  assert.strictEqual(borderTaxCreateSchema.parse({ ...noDays, stateCd: 'UP', checkpost: 'AGRA', taxMode: '4' }).days, 1); // monthly: no days needed
+  assert.ok(borderTaxCreateSchema.safeParse({ ...base(), stateCd: 'UP', checkpost: 'AGRA', taxMode: '5' }).success); // UP quarterly
+  assert.ok(!borderTaxCreateSchema.safeParse({ ...base(), stateCd: 'UP', checkpost: 'AGRA', taxMode: '7' }).success); // UP has no yearly
   assert.ok(!borderTaxCreateSchema.safeParse({ ...base(), taxMode: '4' }).success); // HP: DAYS only
-  assert.ok(borderTaxCreateSchema.safeParse({ ...base(), stateCd: 'HR', distanceKm: 50, taxMode: '7' }).success);
+  assert.ok(borderTaxCreateSchema.safeParse({ ...base(), stateCd: 'HR', checkpost: 'AMBALA', distanceKm: 50, taxMode: '7' }).success);
 });
 
 test('create: Bharat series number is accepted', () => {
