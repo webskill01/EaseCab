@@ -6,9 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Plus, Minus, Verified, ChevD } from '@/components/ui/icons'
 import { FormIssues } from '@/components/ui/FormIssues'
 import { SavedVehicleOptions, SAVED_RC_LIST } from '@/features/profile/components/SavedVehicleOptions'
-import { BT_LIVE_STATES } from '../lib/states'
 import { BT_STATES, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_DAYS_MODE, isDaysMode, btIssues, isStarted, validUpto, fmtWhen, titleCase, toLocalInput, rateFor, rupees, fmtClock } from '../lib/borderTax'
-import { useRates, useSecondsLeft } from '../hooks/useBorderTax'
+import { useRates, useSecondsLeft, useLiveStates } from '../hooks/useBorderTax'
 
 const CARD = 'rounded-ec-card border border-ec-line bg-white p-4 shadow-ec-card'
 const FIELD = 'h-12 w-full rounded-xl border border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none focus:border-ec-blue'
@@ -90,6 +89,7 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
   const busyLeft = useSecondsLeft(error === 'busy' ? busyUntil : null) // form kept; Submit is the "try again"
   const errorText = error === 'busy' ? (busyLeft ? t('bt.errors.busy', { time: fmtClock(busyLeft) }) : null) : error && t(`bt.errors.${error}`)
   const st = BT_STATES[form.stateCd]
+  const live = useLiveStates()
   const upto = fmtWhen(validUpto(form.startAt, form.days, st?.calendarDays))
   const daysMode = isDaysMode(form)
   const now = new Date()
@@ -119,7 +119,7 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
           <Field label={t('bt.state')} className="flex-1">
             <Select bad={bad('state')} value={form.stateCd} onChange={(e) => onChange({ stateCd: e.target.value, checkpost: '', taxMode: BT_DAYS_MODE })}>
               <option value="" disabled>{t('bt.statePh')}</option>
-              {Object.entries(BT_STATES).filter(([code]) => BT_LIVE_STATES.includes(code)).map(([code, s]) => <option key={code} value={code}>{s.name}</option>)}
+              {Object.entries(BT_STATES).filter(([code]) => live.includes(code)).map(([code, s]) => <option key={code} value={code}>{s.name}</option>)}
             </Select>
           </Field>
           <Field label={t('bt.border')} className="flex-1">

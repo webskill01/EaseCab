@@ -23,6 +23,12 @@ export async function getFiling(id) {
   return data.filing
 }
 
+/** States open for new filings (BT_LIVE_STATES minus any the admin paused). */
+export async function listLiveStates() {
+  const { data } = await apiFetch('/border-tax/states')
+  return data.live
+}
+
 /** Each border's latest real fee: [{ stateCd, checkpost, seats, days, taxPaise, at }]. */
 export async function listRates() {
   const { data } = await apiFetch('/border-tax/rates')

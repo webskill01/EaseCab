@@ -91,6 +91,13 @@ const ADMIN_FOUNDER_PAYMENTS = Object.freeze({
   FILTER: Object.freeze({ ALL: 'all', LINKED: 'linked', UNLINKED: 'unlinked' }),
 });
 
+/** Border tax filings list (Phase 26.8). */
+const ADMIN_BORDER_TAX = Object.freeze({
+  PAGE_SIZE: 30,
+  MAX_PAGE_SIZE: 100,
+  WHO: Object.freeze({ REAL: 'real', TEST: 'test', ALL: 'all' }), // test = ADMIN_STATISTICS.EXCLUDED_PHONES
+});
+
 /** Date order for admin lists that only need newest/oldest. */
 const ADMIN_SORT = Object.freeze({ NEWEST: 'newest', OLDEST: 'oldest' });
 
@@ -101,7 +108,7 @@ const ADMIN_SORT = Object.freeze({ NEWEST: 'newest', OLDEST: 'oldest' });
 const ADMIN_COMPLIMENTARY = Object.freeze({ MAX_MONTHS: 12, NOTE_MAX: 200, LABEL_MAX: 60 });
 
 module.exports = {
-  ADMIN_STATISTICS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY,
+  ADMIN_STATISTICS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY, ADMIN_BORDER_TAX,
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, ADMIN_SORT, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,

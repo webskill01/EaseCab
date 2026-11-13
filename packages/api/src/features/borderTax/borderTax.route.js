@@ -12,6 +12,7 @@ const { sendSuccess } = require('../../http/respond');
  * polls GET /:id for the live step, a captcha (only when OCR missed) and finally the bank hand-off.
  *   POST /api/v1/border-tax              — new filing (queued)
  *   GET  /api/v1/border-tax              — caller's filings, cursor-paginated
+ *   GET  /api/v1/border-tax/states       — { live } states open for new filings (admin can pause one)
  *   GET  /api/v1/border-tax/rates        — latest real fee per (state, border, seats)
  *   GET  /api/v1/border-tax/:id          — one filing + live { step, captcha, deadline, handoff }
  *   POST /api/v1/border-tax/:id/captcha  — driver's captcha answer
@@ -38,6 +39,10 @@ function createBorderTaxRouter({ service, requireAuth }) {
   router.get('/', validate(borderTaxListQuerySchema, 'query'), async (req, res) => {
     const { filings, nextCursor } = await service.list(req.user.id, req.valid.query);
     sendSuccess(res, { data: { filings }, meta: { nextCursor } });
+  });
+
+  router.get('/states', async (req, res) => {
+    sendSuccess(res, { data: { live: await service.liveStates() } });
   });
 
   router.get('/rates', async (req, res) => {

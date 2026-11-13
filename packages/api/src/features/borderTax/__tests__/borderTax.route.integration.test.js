@@ -42,7 +42,7 @@ function makeApp() {
     return m;
   };
   const redis = {
-    async eval() { return 1; }, async get(k) { return strings[k] ?? null; }, async set(k, v) { strings[k] = v; return 'OK'; }, async del() { return 1; }, async pttl() { return -2; },
+    async eval() { return 1; }, async get(k) { return strings[k] ?? null; }, async set(k, v) { strings[k] = v; return 'OK'; }, async del() { return 1; }, async pttl() { return -2; }, async smembers() { return []; },
     async lpush(k, v) { (lists[k] ||= []).push(v); }, async hgetall(k) { return hashes[k] || {}; }, multi,
     async zadd(k, score, m) { strings[`${k}:${m}`] = score; },
   };

@@ -212,6 +212,11 @@ function createBorderTaxRepository({ prisma, redis }) {
       return redis.hgetall(K.unlock(id));
     },
 
+    /** States the admin switched off (BORDER_TAX_KEYS.PAUSED). @returns {Promise<string[]>} */
+    async pausedStates() {
+      return redis.smembers(K.PAUSED);
+    },
+
     /** Fixed-window create counter per user. @returns {Promise<number>} */
     async incrCreateAttempts(userId, windowSec) {
       return fixedWindowIncr(redis, redisKey('bordertax', userId), windowSec);

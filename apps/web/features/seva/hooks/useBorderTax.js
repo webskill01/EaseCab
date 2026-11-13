@@ -1,7 +1,8 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFiling, listFilings, listRates, getFiling, getReceiptUrl, sendCaptcha, refreshCaptcha, cancelFiling, unlockFiling } from '../services/borderTaxApi'
+import { createFiling, listFilings, listRates, listLiveStates, getFiling, getReceiptUrl, sendCaptcha, refreshCaptcha, cancelFiling, unlockFiling } from '../services/borderTaxApi'
 import { isFinal, gettingReceipt, unlocking, BT_POLL_MS } from '../lib/borderTax'
+import { BT_LIVE_STATES } from '../lib/states'
 
 const LIST_KEY = ['bordertax']
 
@@ -21,6 +22,12 @@ export function useFilings() {
 /** Latest real fee per border (from drivers' filings) — refreshed after each new filing. */
 export function useRates() {
   return useQuery({ queryKey: [...LIST_KEY, 'rates'], queryFn: listRates, staleTime: 300000 })
+}
+
+/** States the picker offers; the built-in list until the API answers (the API still refuses a paused one). */
+export function useLiveStates() {
+  const q = useQuery({ queryKey: [...LIST_KEY, 'states'], queryFn: listLiveStates, staleTime: 60000 })
+  return q.data ?? BT_LIVE_STATES
 }
 
 /** One filing, polled every 2s until it reaches a final status (and any lock clear has finished). */

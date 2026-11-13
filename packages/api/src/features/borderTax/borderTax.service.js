@@ -61,9 +61,16 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     return slotMs || queued ? Math.ceil(slotMs / 1000) + queued * BORDER_TAX.LOOKUP_GAP_SEC : 0;
   }
 
+  /** Live states minus the ones the admin switched off. */
+  async function liveStates() {
+    const paused = await repo.pausedStates();
+    return BORDER_TAX_LIVE_STATES.filter((s) => !paused.includes(s));
+  }
+
   return {
     move,
     busyFor,
+    liveStates,
 
     /**
      * New filing from a validated borderTaxCreateSchema body; queued for the worker.
@@ -74,7 +81,7 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
      */
     async create(userId, input) {
       if (!isSubscriptionActive(await repo.findSubscriptionByUserId(userId))) throw AppError.fromCode(ERROR_CODES.SUBSCRIPTION_EXPIRED);
-      if (!BORDER_TAX_LIVE_STATES.includes(input.stateCd)) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'This state is not available yet', 422);
+      if (!(await liveStates()).includes(input.stateCd)) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'This state is not available yet', 422);
       if (await repo.findActiveForVehicle(input.vehicleNo)) {
         throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'A filing for this vehicle is already in progress', 409);
       }

@@ -85,6 +85,9 @@ const { createAdminWaGroupsRouter } = require('./features/admin/adminWaGroups.ro
 const { createAdminWaSessionsRepository } = require('./features/admin/adminWaSessions.repository');
 const { createAdminWaSessionsService } = require('./features/admin/adminWaSessions.service');
 const { createAdminWaSessionsRouter, createWaPairPublicRouter } = require('./features/admin/adminWaSessions.route');
+const { createAdminBorderTaxRepository } = require('./features/admin/adminBorderTax.repository');
+const { createAdminBorderTaxService } = require('./features/admin/adminBorderTax.service');
+const { createAdminBorderTaxRouter } = require('./features/admin/adminBorderTax.route');
 const { createFleetMirror } = require('./lib/fleetMirror');
 const { createAdminUnresolvedRidesRepository } = require('./features/admin/adminUnresolvedRides.repository');
 const { createAdminUnresolvedRidesService } = require('./features/admin/adminUnresolvedRides.service');
@@ -317,6 +320,9 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     });
     v1.use('/admin/wa-sessions', createAdminWaSessionsRouter({ service: adminWaSessionsService, requireAdmin }));
     v1.use('/wa-pair', createWaPairPublicRouter({ service: adminWaSessionsService, redis }));
+    // Border tax (Phase 26.8): filings list + receipts, and the per-state on/off switch.
+    const adminBorderTaxService = createAdminBorderTaxService({ repo: createAdminBorderTaxRepository({ prisma, redis }), r2: uploads, logger });
+    v1.use('/admin/border-tax', createAdminBorderTaxRouter({ service: adminBorderTaxService, requireAdmin }));
 
     // Inbound fleet peer API — mounted only when FLEET_SYNC_TOKEN is set.
     if (config.fleet && config.fleet.syncToken) {

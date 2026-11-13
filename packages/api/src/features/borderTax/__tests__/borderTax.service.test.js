@@ -8,7 +8,7 @@ const logger = { info() {}, warn() {} };
 const MEMBER = { status: 'active', expiresAt: new Date(Date.now() + 86_400_000) };
 
 /** In-memory repo with the real compare-and-set semantics. */
-function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0 } = {}) {
+function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0, paused = [] } = {}) {
   const queue = [];
   const handoffs = {};
   const unlocks = {};
@@ -26,6 +26,7 @@ function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0 } = {}) {
       return true;
     },
     async findSubscriptionByUserId() { return sub; },
+    async pausedStates() { return paused; },
     async countByStatus(st) { return Object.values(rows).filter((r) => st.includes(r.status)).length; },
     async lookupSlotMs() { return slotMs; },
     async incrCreateAttempts() { attempts += 1; return attempts; },
@@ -65,6 +66,14 @@ test('create: members only — no / lapsed subscription is SUBSCRIPTION_EXPIRED,
     await assert.rejects(createBorderTaxService({ repo, logger }).create('u1', input()), (e) => e.code === 'SUBSCRIPTION_EXPIRED');
     assert.strictEqual(repo.queue.length, 0);
   }
+});
+
+test('create: a state the admin paused is refused (422), the rest stay live', async () => {
+  const repo = fakeRepo({}, { paused: ['HR'] });
+  const svc = createBorderTaxService({ repo, logger });
+  await assert.rejects(svc.create('u1', input()), (e) => e.statusCode === 422);
+  assert.strictEqual(repo.queue.length, 0);
+  assert.deepStrictEqual(await svc.liveStates(), ['UP', 'HP']);
 });
 
 test('create: second live filing for the same vehicle is a 409', async () => {

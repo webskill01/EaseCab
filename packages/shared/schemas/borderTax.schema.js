@@ -1,7 +1,8 @@
 'use strict';
 
 const { z } = require('zod');
-const { BORDER_TAX, BORDER_TAX_STATES, BORDER_TAX_SEATS, TAX_MODE } = require('../constants/borderTax');
+const { BORDER_TAX, BORDER_TAX_STATES, BORDER_TAX_SEATS, BORDER_TAX_STATUS, BORDER_TAX_LIVE_STATES, TAX_MODE } = require('../constants/borderTax');
+const { ADMIN_BORDER_TAX } = require('../constants/admin');
 
 const DAY_MS = 86_400_000;
 
@@ -52,4 +53,25 @@ const borderTaxListQuerySchema = z.object({
   cursor: z.string().min(1).optional(),
 });
 
-module.exports = { borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxIdParamSchema, borderTaxListQuerySchema };
+const istDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD');
+
+/** GET /api/v1/admin/border-tax — offset (admin §8). from/to = IST calendar days, inclusive. */
+const adminBorderTaxQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_BORDER_TAX.MAX_PAGE_SIZE).default(ADMIN_BORDER_TAX.PAGE_SIZE),
+  state: z.enum(Object.keys(BORDER_TAX_STATES)).optional(),
+  status: z.enum(Object.values(BORDER_TAX_STATUS)).optional(),
+  from: istDay.optional(),
+  to: istDay.optional(),
+  who: z.enum(Object.values(ADMIN_BORDER_TAX.WHO)).default(ADMIN_BORDER_TAX.WHO.REAL),
+  q: z.string().trim().max(20).transform((v) => v.toUpperCase().replace(/[^A-Z0-9]/g, '')).optional(), // vehicle no. part
+});
+
+/** PATCH /api/v1/admin/border-tax/states/:stateCd — switch a live state off/on for new filings. */
+const adminBorderTaxStateParamSchema = z.object({ stateCd: z.enum(BORDER_TAX_LIVE_STATES) });
+const adminBorderTaxStateSchema = z.object({ paused: z.boolean() });
+
+module.exports = {
+  borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxIdParamSchema, borderTaxListQuerySchema,
+  adminBorderTaxQuerySchema, adminBorderTaxStateParamSchema, adminBorderTaxStateSchema,
+};

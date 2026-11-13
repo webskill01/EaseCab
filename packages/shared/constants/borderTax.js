@@ -231,6 +231,7 @@ const BORDER_TAX_KEYS = Object.freeze({
   handoff: (id) => redisKey('bordertax', 'handoff', id), // string: JSON bank form for the driver — never logged
   UNLOCKS: redisKey('bordertax', 'unlocks'), // zset: filing id → due time (ms) of its pending-lock clear
   unlock: (id) => redisKey('bordertax', 'unlock', id), // hash: status (BORDER_TAX_UNLOCK), at, receiptNo, tries
+  PAUSED: redisKey('bordertax', 'paused'), // set: live states the admin switched off (new filings refused)
   LOOKUP_SLOT: redisKey('bordertax', 'lookupslot'), // string with PX TTL: held = a Vahan lookup started < LOOKUP_GAP_SEC ago
 });
 
