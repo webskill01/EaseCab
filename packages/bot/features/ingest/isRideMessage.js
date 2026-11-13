@@ -59,7 +59,8 @@ function isRideMessage(text, cfg) {
     }
   }
 
-  const hasKeyword = rideKeywords.some((k) => normalized.includes(k.toLowerCase()));
+  // Raw text too: normalizeText now blanks symbols, so a keyword holding one still counts.
+  const hasKeyword = rideKeywords.some((k) => normalized.includes(k.toLowerCase()) || originalLower.includes(k.toLowerCase()));
   const hasRoute = ROUTE_PATTERNS.some((p) => p.test(normalized));
 
   return hasKeyword || hasRoute;

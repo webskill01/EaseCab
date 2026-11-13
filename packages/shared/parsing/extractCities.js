@@ -20,6 +20,8 @@ const { rawPlace, rawRoute } = require('./rawPlace');
  *   7. Context-aware scan   → only cities near route keywords (no company names)
  */
 
+const PICKUP_LOOKBACK_WORDS = 4; // words before a number-broken "X to Y" pickup side
+
 function normalizeText(text) {
   if (!text) return '';
 
@@ -30,18 +32,11 @@ function normalizeText(text) {
     // Brackets are never routing-significant ("Bhuntar (Kullu)") and break the
     // [a-z\s] directional patterns — turn them into separators.
     .replace(/[()[\]{}]/g, ' ')
-    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
-    .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
-    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
-    .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')
-    .replace(/[\u{2600}-\u{26FF}]/gu, '')
-    .replace(/[\u{2700}-\u{27BF}]/gu, '')
-    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
-    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
-    .replace(/[\u{1F100}-\u{1F1DF}]/gu, '') // Enclosed alphanumeric supplement (covers 🆓 U+1F191)
-    .replace(/[\u{1FA00}-\u{1FAFF}]/gu, '') // Symbols & Pictographs Extended-A
-    .replace(/[*`~]/g, ' ') // WhatsApp bold/code/strikethrough markers
-    .replace(/_/g, ' ') // WhatsApp italic markers
+    .replace(/\uFE0F|\uFE0E|\u200D|\u20E3/g, '') // emoji variation / joiner / keycap glue
+    // Emoji, arrows, dashes, #, WhatsApp markers (* _ ~ `) and every other symbol become
+    // a space, never '': "Amritsar➡️Delhi" / "#Amritsar*" must stay separate words.
+    .replace(/[^\p{L}\p{M}\p{N}\s:\-,./+]/gu, ' ')
+    .replace(/(?<!\d)[.,]|[.,](?!\d)/g, ' ') // "Amritsar.Delhi", "Delhi," but keep "5.30", "3,000"
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
@@ -181,7 +176,13 @@ function extractCities(text, cities) {
     const sourceWords = toMatch[1].trim().split(/\s+/);
     const destWords = toMatch[2].trim().split(/\s+/);
 
+    // "Chandigarh 17 sec to Amritsar": a number cut the pickup side short ("sec"),
+    // so look a few words further back for the nearest city before using raw text.
     const pickupCities = scanWords(sourceWords);
+    if (pickupCities.length === 0) {
+      const before = normalized.slice(0, toMatch.index).trim().split(/\s+/).slice(-PICKUP_LOOKBACK_WORDS);
+      pickupCities.push(...scanWords(before).slice(-1));
+    }
     const dropCities = scanWords(destWords);
 
     if (pickupCities.length > 0 || dropCities.length > 0) {

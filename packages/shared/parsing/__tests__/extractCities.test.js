@@ -32,6 +32,7 @@ test('extractCities returns nulls on no route', () => {
 
 test('normalizeText folds markup + lowercases', () => {
   assert.equal(normalizeText('*Delhi*  to   Chandigarh'), 'delhi to chandigarh');
+  assert.equal(normalizeText('Fare 3,000/- at 5.30'), 'fare 3,000/- at 5.30');
 });
 
 // Unknown place text (misspellings, unlisted towns) on a matched route side is kept
@@ -111,4 +112,26 @@ test('extractCities never keeps "stand" as a raw place', () => {
   const r = extractCities('bus stand to kasauli', RAW_VOCAB);
   assert.equal(r.pickup, null);
   assert.equal(r.drop, 'Kasauli');
+});
+
+// 2026-11-13 live misses: formatting / emoji glued to city words, a number inside the
+// pickup side, and a Hinglish "ko to" (= "then") note read as a route.
+test('emoji and markup around city words do not hide them', () => {
+  for (const msg of ['*Amritsar* to *Delhi*', '📍Amritsar ➡️ to Delhi', '#Amritsar → to #Delhi!!', 'Amritsar. to Delhi.', '~Amritsar~, to _Delhi_', 'Amritsar➡️Delhi', 'Amritsar🔁Delhi', 'Amritsar—Delhi', 'Amritsar❗to Delhi']) {
+    const r = extractCities(msg, VOCAB);
+    assert.equal(r.pickup, 'Amritsar', msg);
+    assert.equal(r.drop, 'Delhi', msg);
+  }
+});
+
+test('pickup side broken by a number ("Chandigarh 17 sec to Amritsar") keeps the city', () => {
+  const r = extractCities('Need need need\nErtiga Chandigarh 17 sec to Amritsar drop current\n3000/- Pytm advance', VOCAB);
+  assert.equal(r.pickup, 'Chandigarh');
+  assert.equal(r.drop, 'Amritsar');
+});
+
+test('Hinglish "ko to ... call karna" note is not a route', () => {
+  const r = extractCities('Please is gadi ka pta ha kisi bahi ko to please call kerna 9876543210', VOCAB);
+  assert.equal(r.pickup, null);
+  assert.equal(r.drop, null);
 });
