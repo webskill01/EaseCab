@@ -18,11 +18,18 @@ const ROWS = [
 beforeEach(() => { vi.clearAllMocks(); allCities.mockResolvedValue(ROWS) })
 
 describe('AllLocationsOverlay', () => {
-  it('renders matched quick-pick chips and the A–Z list', async () => {
+  it('no active/recent city: no quick picks, just the A–Z list', async () => {
+    localStorage.clear()
     renderWithIntl(<AllLocationsOverlay selected={[]} onClose={vi.fn()} onToggle={vi.fn()} onClear={vi.fn()} />)
-    // Chandigarh + Mohali are quick-pick chips (uppercased); also appear in the A–Z list.
-    expect(await screen.findAllByText(/chandigarh/i)).not.toHaveLength(0)
+    expect(await screen.findAllByText('Chandigarh')).toHaveLength(1) // list row only, no chip
+    expect(screen.queryByRole('button', { name: /my location/i })).toBeNull()
     expect(screen.getByText('A')).toBeInTheDocument() // Ambala letter tile
+  })
+
+  it('the active city shows as a quick pick', async () => {
+    localStorage.clear()
+    renderWithIntl(<AllLocationsOverlay selected={[{ id: 'm1', name: 'Mohali' }]} onClose={vi.fn()} onToggle={vi.fn()} onClear={vi.fn()} />)
+    expect(await screen.findAllByText('Mohali')).toHaveLength(2) // chip + list row
   })
 
   it('clears the lock via the "Clear filter" button when filtered', async () => {

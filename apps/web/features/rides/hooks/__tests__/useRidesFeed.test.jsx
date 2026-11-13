@@ -76,12 +76,24 @@ describe('useRidesFeed', () => {
     expect(result.current.rides.map((r) => r.id)).toEqual(['live1', 'r1'])
   })
 
-  it('verified tab is query-only (SSE disabled) and unwraps posts', async () => {
+  it('verified tab shows only posts; live bot rides never mix in', async () => {
     listVerifiedRides.mockResolvedValue({ posts: [{ id: 'p1', fromCityName: 'Patiala', toCityName: 'Delhi', fromCityId: 'c1', toCityId: 'c2', vehicleType: 'Innova', notes: 'x', createdAt: new Date().toISOString(), status: 'active' }], nextCursor: null })
     const { result } = renderHook(() => useRidesFeed({ sub: FEED_SUB.VERIFIED, cityIds: [] }), { wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
+    act(() => captured.onRide(botRow('live1')))
+    expect(result.current.rides.map((r) => r.id)).toEqual(['p1'])
     expect(result.current.rides[0]).toMatchObject({ kind: 'verified', id: 'p1', from: 'Patiala' })
-    expect(captured.enabled).toBe(false)
+  })
+
+  it('live rides that arrive on Driver Duties are already there when switching back', async () => {
+    listRides.mockResolvedValue({ rides: [botRow('r1')], nextCursor: null })
+    listVerifiedRides.mockResolvedValue({ posts: [], nextCursor: null })
+    const { result, rerender } = renderHook(({ sub }) => useRidesFeed({ sub, cityIds: [] }), { wrapper, initialProps: { sub: FEED_SUB.RIDES } })
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    rerender({ sub: FEED_SUB.VERIFIED })
+    act(() => captured.onRide(botRow('live1')))
+    rerender({ sub: FEED_SUB.RIDES })
+    expect(result.current.rides.map((r) => r.id)).toEqual(['live1', 'r1']) // first frame, no pop-in
   })
 })
 

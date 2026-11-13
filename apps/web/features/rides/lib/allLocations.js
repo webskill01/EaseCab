@@ -74,8 +74,8 @@ export function groupCitiesByLetter(cities, locale) {
 }
 
 /**
- * Quick-pick chips after "My location": the user's recent filter cities first, then the
- * corridor hubs (LOCATION_CHIPS) fill any empty slots — so a new user still sees hubs.
+ * Quick-pick chips: only the driver's own cities (active filter, then recently used).
+ * A new driver gets none, and the overlay shows just the city list.
  * Each city keeps a pastel colour by slot.
  * @param {string[]} recentIds - most recent first
  * @param {Array} cities - API city rows
@@ -84,11 +84,9 @@ export function groupCitiesByLetter(cities, locale) {
  */
 export function quickPickCities(recentIds, cities, max = 5) {
   const byId = new Map(cities.map((c) => [c.id, c]))
-  const byName = new Map(cities.map((c) => [c.canonicalName.toLowerCase(), c]))
-  const hubs = LOCATION_CHIPS.filter((ch) => !ch.geo)
+  const hubs = LOCATION_CHIPS.filter((ch) => !ch.geo) // colours only; no hub filler
   const picked = []
   const add = (c) => { if (c && picked.length < max && !picked.includes(c)) picked.push(c) }
   recentIds.forEach((id) => add(byId.get(id)))
-  hubs.forEach((ch) => add(byName.get(ch.key.toLowerCase())))
   return picked.map((city, i) => ({ city, bg: hubs[i % hubs.length].bg, fg: hubs[i % hubs.length].fg }))
 }

@@ -13,9 +13,10 @@ describe('nativePush', () => {
 
   it('reads and strips the launch fragment', async () => {
     global.Notification = { requestPermission: async () => 'granted' }
-    history.replaceState(null, '', '/feed?bubble=1#nperm=1&nbat=0&ntok=abc%3A1&npc=r1,r2')
+    history.replaceState({ __NA: true }, '', '/feed?bubble=1#nperm=1&nbat=0&ntok=abc%3A1&npc=r1,r2')
     captureNativeLaunch()
     expect(window.location.hash).toBe('')
+    expect(history.state).toEqual({ __NA: true }) // Next's router entry kept, else Back to it does nothing
     expect(window.location.search).toBe('?bubble=1')
     expect(isNative()).toBe(true)
     expect(pushPlatform()).toBe('android')

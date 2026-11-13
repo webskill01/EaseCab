@@ -41,7 +41,8 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
   const isOn = (id) => selected.some((c) => c.id === id)
   // Stays open for multi-select. Turning a city ON records it as a recent quick pick.
   const toggle = (city) => { if (!isOn(city.id)) pushRecentCity(city.id); onToggle(city) }
-  const [recentIds] = useState(readRecentCities) // read once per open, so chips don't jump while tapping
+  // Active cities, then recent ones; read once per open so chips don't jump while tapping.
+  const [recentIds] = useState(() => [...selected.map((c) => c.id), ...readRecentCities()])
   const quickPicks = useMemo(() => quickPickCities(recentIds, cities), [recentIds, cities])
   const geoChip = LOCATION_CHIPS.find((ch) => ch.geo)
 
@@ -97,7 +98,7 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
           </div>
         )}
 
-        {!searching && (
+        {!searching && quickPicks.length > 0 && (
           <>
             <p className="mb-2.5 mt-4 text-[12.5px] font-bold text-ec-ink60">{t('filter.quickPick')}</p>
             <div className="grid grid-cols-2 gap-2.5">

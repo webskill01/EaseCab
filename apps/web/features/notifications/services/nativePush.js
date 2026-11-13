@@ -23,7 +23,8 @@ export function captureNativeLaunch() {
       token: p.get('ntok') || prev?.token || null,
       contacts: [...(prev?.contacts || []), ...(p.get('npc') || '').split(',').filter(Boolean)],
     }))
-    history.replaceState(null, '', window.location.pathname + window.location.search)
+    // Keep history.state: null wipes Next's router entry and Back to it then does nothing.
+    history.replaceState(history.state, '', window.location.pathname + window.location.search)
   } catch { /* storage blocked — stays on web push */ }
 }
 

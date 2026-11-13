@@ -82,13 +82,18 @@ export function useRidesFeed({ sub, cityIds }) {
   const atTopRef = useRef(true)
   const scrollRef = useRef(null)
 
-  // Reset the live overlays whenever the tab or city lock changes (the query refetches).
+  // City lock change: drop the live overlays (the query refetches for the new cities).
   useEffect(() => {
     setExtra([])
     setPending([])
+  }, [cityKey])
+
+  // Tab switch keeps the live rides: wiping them made Live Rides come back showing the
+  // stale cached list, then "new" rides popped in on the refetch as if just posted.
+  useEffect(() => {
     setAtTop(true)
     atTopRef.current = true
-  }, [sub, cityKey])
+  }, [sub])
 
   // Age tick — cards recompute fresh/booked from receivedAt vs `now`.
   useEffect(() => {
@@ -98,17 +103,19 @@ export function useRidesFeed({ sub, cityIds }) {
 
   // A live bot ride: drop it if it doesn't touch the locked city; otherwise prepend
   // (at top) or queue (scrolled down) so the user's scroll position is never yanked.
+  const isVerifiedRef = useRef(isVerified)
+  isVerifiedRef.current = isVerified
   const handleLiveRide = useCallback((raw) => {
     const vm = toBotVM(raw)
     if (!matchesCity(vm, ids)) return
     setNow(Date.now())
-    if (atTopRef.current) setExtra((e) => [vm, ...e].slice(0, LIVE_CAP))
+    if (atTopRef.current || isVerifiedRef.current) setExtra((e) => [vm, ...e].slice(0, LIVE_CAP))
     else setPending((p) => [vm, ...p].slice(0, PENDING_CAP))
   }, [ids])
 
   const streamStatus = useRideStream({
     url: RIDES_STREAM_URL,
-    enabled: !isVerified, // SSE is the bot feed only
+    enabled: true, // bot feed only, but kept open on Driver Duties so Live Rides stays current
     onRide: handleLiveRide,
   })
 
@@ -137,7 +144,7 @@ export function useRidesFeed({ sub, cityIds }) {
     })
   }, [])
 
-  const rides = useMemo(() => mergeNewestFirst(extra, base), [extra, base])
+  const rides = useMemo(() => (isVerified ? base : mergeNewestFirst(extra, base)), [isVerified, extra, base])
 
   return {
     rides,
