@@ -17,7 +17,7 @@
     "state": "ਰਾਜ",
     "statePh": "ਰਾਜ ਚੁਣੋ",
     "border": "ਬਾਰਡਰ (ਵਿਕਲਪਿਕ)",
-    "borderAny": "ਕੋਈ ਵੀ / ਪਤਾ ਨਹੀਂ",
+    "borderPh": "ਬਾਰਡਰ ਚੁਣੋ",
     "start": "ਸ਼ੁਰੂ ਹੋਣ ਦੀ ਮਿਤੀ",
     "days": "ਦਿਨਾਂ ਦੀ ਗਿਣਤੀ",
     "dayCount": "{n, plural, one {# ਦਿਨ} other {# ਦਿਨ}}",

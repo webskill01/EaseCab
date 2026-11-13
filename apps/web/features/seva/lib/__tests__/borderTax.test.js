@@ -10,7 +10,7 @@ import { BT_LIVE_STATES } from '../states'
 
 const shared = createRequire(import.meta.url)('../../../../../../packages/shared/constants/borderTax.js')
 const NOW = new Date('2026-11-05T10:02:00')
-const form = (o = {}) => ({ ...emptyForm(NOW), vehicleNo: 'pb01 c9079', stateCd: 'HP', declare: true, ...o })
+const form = (o = {}) => ({ ...emptyForm(NOW), vehicleNo: 'pb01 c9079', stateCd: 'HP', checkpost: 'PARWANOO', declare: true, ...o })
 
 describe('mirror of @easecab/shared', () => {
   it('matches states, statuses, seats and limits', () => {
@@ -40,8 +40,9 @@ describe('form', () => {
     expect(isFilable(form(), NOW)).toBe(true)
     expect(isFilable(form({ declare: false }), NOW)).toBe(false)
     expect(isFilable(form({ vehicleNo: 'PB' }), NOW)).toBe(false)
-    expect(isFilable(form({ stateCd: 'HR' }), NOW)).toBe(false)
-    expect(isFilable(form({ stateCd: 'HR', distanceKm: '50' }), NOW)).toBe(true)
+    expect(isFilable(form({ checkpost: '' }), NOW)).toBe(false) // border required
+    expect(isFilable(form({ stateCd: 'HR', checkpost: 'PANCHKULA' }), NOW)).toBe(false)
+    expect(isFilable(form({ stateCd: 'HR', checkpost: 'PANCHKULA', distanceKm: '50' }), NOW)).toBe(true)
     expect(isFilable(form({ startAt: toLocalInput(new Date(NOW.getTime() + 8 * 86_400_000)) }), NOW)).toBe(false)
     expect(isFilable(form({ days: 31 }), NOW)).toBe(false)
   })
@@ -67,7 +68,7 @@ describe('form', () => {
 
   it('tax period: only the periods the state offers; days ignored outside DAYS', () => {
     expect(isFilable(form({ taxMode: '4' }), NOW)).toBe(false) // HP: DAYS only
-    expect(isFilable(form({ stateCd: 'UP', taxMode: '4', days: 99 }), NOW)).toBe(true)
+    expect(isFilable(form({ stateCd: 'UP', checkpost: 'SAHARANPUR', taxMode: '4', days: 99 }), NOW)).toBe(true)
     expect(isFilable(form({ stateCd: 'UP', taxMode: '7' }), NOW)).toBe(false) // UP: no yearly
     const body = JSON.parse(JSON.stringify(toCreateBody(form({ stateCd: 'UP', taxMode: '5' }))))
     expect([body.taxMode, body.days]).toEqual(['5', undefined])
@@ -75,7 +76,7 @@ describe('form', () => {
 
   it('toCreateBody: normalised RC, ISO start, optional fields dropped', () => {
     const body = JSON.parse(JSON.stringify(toCreateBody(form())))
-    expect(body).toEqual({ vehicleNo: 'PB01C9079', stateCd: 'HP', seats: '4+1', startAt: new Date('2026-11-05T10:20').toISOString(), taxMode: '1', days: 1, declare: true })
+    expect(body).toEqual({ vehicleNo: 'PB01C9079', stateCd: 'HP', checkpost: 'PARWANOO', seats: '4+1', startAt: new Date('2026-11-05T10:20').toISOString(), taxMode: '1', days: 1, declare: true })
     expect(toCreateBody(form({ stateCd: 'HR', distanceKm: '50', checkpost: 'AMBALA' }))).toMatchObject({ distanceKm: 50, checkpost: 'AMBALA' })
   })
 

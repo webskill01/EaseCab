@@ -170,7 +170,7 @@ export function isFilable(f, now = new Date()) {
   const ahead = start - now.getTime()
   const km = Number(f.distanceKm)
   return Boolean(
-    st && f.declare && BT_VEHICLE_RE.test(normVehicle(f.vehicleNo)) && BT_SEATS.includes(f.seats)
+    st && f.declare && BT_VEHICLE_RE.test(normVehicle(f.vehicleNo)) && BT_SEATS.includes(f.seats) && st.checkposts.includes(f.checkpost)
     && Number.isFinite(start) && ahead >= -60_000 && ahead <= BT_MAX_AHEAD_DAYS * DAY_MS
     && st.taxModes.includes(f.taxMode) && (!isDaysMode(f) || (f.days >= 1 && f.days <= BT_MAX_DAYS))
     && (!st.needsDistance || (Number.isInteger(km) && km >= 1 && km <= BT_MAX_DISTANCE_KM)),
@@ -183,7 +183,7 @@ export function toCreateBody(f) {
   return {
     vehicleNo: normVehicle(f.vehicleNo),
     stateCd: f.stateCd,
-    checkpost: f.checkpost || undefined,
+    checkpost: f.checkpost,
     seats: f.seats,
     startAt: new Date(f.startAt).toISOString(),
     taxMode: f.taxMode,

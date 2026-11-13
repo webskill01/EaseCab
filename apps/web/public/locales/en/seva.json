@@ -17,7 +17,7 @@
     "state": "State",
     "statePh": "Select state",
     "border": "Border (optional)",
-    "borderAny": "Any / not sure",
+    "borderPh": "Select border",
     "start": "Date for apply",
     "days": "Number of days",
     "dayCount": "{n, plural, one {# Day} other {# Days}}",

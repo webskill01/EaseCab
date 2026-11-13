@@ -17,7 +17,7 @@
     "state": "State",
     "statePh": "State chunein",
     "border": "Border (optional)",
-    "borderAny": "Koi bhi / pata nahi",
+    "borderPh": "Border chunein",
     "start": "Shuru hone ki date",
     "days": "Kitne din",
     "dayCount": "{n, plural, one {# Din} other {# Din}}",

@@ -105,7 +105,7 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
           </Field>
           <Field label={t('bt.border')} className="flex-1">
             <select className={FIELD} value={form.checkpost} disabled={!st} onChange={(e) => onChange({ checkpost: e.target.value })}>
-              <option value="">{t('bt.borderAny')}</option>
+              <option value="" disabled>{t('bt.borderPh')}</option>
               {st?.checkposts.map((c) => <option key={c} value={c}>{titleCase(c)}</option>)}
             </select>
           </Field>
