@@ -36,6 +36,7 @@ function setup({ answers = [], slots = [] } = {}) {
     async setUnlock(id, f) { unlocks[id] = { ...unlocks[id], ...f }; },
     async getUnlock(id) { return unlocks[id] || {}; },
     async scheduleUnlock(id, at) { due[id] = at; },
+    async countByStatus(st) { return Object.values(rows).filter((r) => st.includes(r.status)).length; },
   };
   let closed = 0;
   const newPage = async () => ({ context: () => ({ close: async () => { closed += 1; } }) });
@@ -167,6 +168,20 @@ function unlockSetup(rowFields, verdict) {
   const runner = createRunner({ ...t, logger, r2, alert: (m) => alerts.push(m), clearLocks });
   return { ...t, puts, alerts, unlock: () => runner.unlock('b1') };
 }
+
+test('unlock: a filing is queued or the slot is busy → put off, no portal visit (filings go first)', async () => {
+  const u = unlockSetup({}, { rows: [], retryAt: null });
+  u.rows.q1 = { id: 'q1', status: 'queued' };
+  await u.unlock();
+  assert.ok(u.due.b1 > Date.now(), 'rescheduled');
+  assert.strictEqual(u.closed(), 0);
+  delete u.rows.q1;
+  delete u.due.b1;
+  u.repo.takeLookupSlot = async () => 5000;
+  await u.unlock();
+  assert.ok(u.due.b1 > Date.now());
+  assert.deepStrictEqual([u.closed(), u.unlocks.b1], [0, undefined]);
+});
 
 test('unlock: rows cleared → cleared, context closed', async () => {
   const u = unlockSetup({}, { rows: [{ paymentId: 'HRP1', amount: '100', result: 'cleared' }], retryAt: null });

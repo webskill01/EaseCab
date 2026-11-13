@@ -143,7 +143,11 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, cl
   async function unlock(id) {
     const req = await repo.findById(id);
     if (!req) return;
-    await waitLookupSlot();
+    // filings go first: a clear never waits for (or takes) the slot while a filing is queued — it used to
+    // restart a waiting driver's 2-min countdown (2026-11-13). ponytail: retried every UNLOCK_DEFER_SEC
+    if ((await repo.countByStatus([S.QUEUED])) || (await repo.takeLookupSlot(BORDER_TAX.LOOKUP_GAP_SEC)) > 0) {
+      return void (await repo.scheduleUnlock(id, Date.now() + BORDER_TAX.UNLOCK_DEFER_SEC * 1000));
+    }
     let page = null;
     try {
       page = await newPage();
