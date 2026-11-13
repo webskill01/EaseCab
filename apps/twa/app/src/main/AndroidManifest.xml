@@ -193,6 +193,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="easecab" android:host="settings"/>
+                <data android:scheme="easecab" android:host="sound"/>
             </intent-filter>
         </activity>
         <activity android:name=".ContactActivity"

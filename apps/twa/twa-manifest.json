@@ -21,8 +21,8 @@
     "path": "../../EaseCab - Google Play package v8/signing.keystore",
     "alias": "my-key-alias"
   },
-  "appVersionName": "1.0.0.9",
-  "appVersionCode": 10,
+  "appVersionName": "1.0.0.12",
+  "appVersionCode": 13,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://easecab.com/manifest.webmanifest",

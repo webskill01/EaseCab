@@ -1,5 +1,7 @@
 package com.easecab.app;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -8,6 +10,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
+import android.service.notification.StatusBarNotification;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -17,6 +20,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -34,6 +38,7 @@ public class PushService extends FirebaseMessagingService {
     private static final String KEY_TOKEN = "token";
     private static final String KEY_PENDING = "pending_contacts";
     private static final String TYPE_RIDE = "new_ride"; // = PUSH.TYPE (packages/shared)
+    private static final int MAX_SHOWN = 40; // under Android's hard 50-per-app cap
 
     static SharedPreferences prefs(Context c) {
         return c.getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -62,12 +67,13 @@ public class PushService extends FirebaseMessagingService {
         }
     }
 
-    /** Launch URL + #nperm&nbat&ntok&npc for the web app (features/notifications/services/nativePush.js). */
+    /** Launch URL + #nperm&nbat&nring&ntok&npc for the web app (features/notifications/services/nativePush.js). */
     static Uri launchUri(Context c, Uri base) {
         SharedPreferences p = prefs(c);
         StringBuilder f = new StringBuilder()
                 .append("nperm=").append(NotificationManagerCompat.from(c).areNotificationsEnabled() ? 1 : 0)
-                .append("&nbat=").append(batteryUnrestricted(c) ? 1 : 0);
+                .append("&nbat=").append(batteryUnrestricted(c) ? 1 : 0)
+                .append("&nring=").append(ringing(c) ? 1 : 0);
         String token = p.getString(KEY_TOKEN, null);
         if (token != null) f.append("&ntok=").append(Uri.encode(token));
         String pending = p.getString(KEY_PENDING, "");
@@ -76,6 +82,14 @@ public class PushService extends FirebaseMessagingService {
             p.edit().remove(KEY_PENDING).apply(); // ponytail: handed over once; lost if that page load fails
         }
         return base.buildUpon().encodedFragment(f.toString()).build();
+    }
+
+    /** False when the driver muted the Ride alerts channel (importance or sound set to none). */
+    static boolean ringing(Context c) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true;
+        NotificationChannel ch = c.getSystemService(NotificationManager.class)
+                .getNotificationChannel(DelegationService.CHANNEL_ID);
+        return ch == null || (ch.getImportance() >= NotificationManager.IMPORTANCE_DEFAULT && ch.getSound() != null);
     }
 
     static boolean batteryUnrestricted(Context c) {
@@ -118,6 +132,7 @@ public class PushService extends FirebaseMessagingService {
         if (group != null) b.setGroup(group);
 
         NotificationManagerCompat nm = NotificationManagerCompat.from(this);
+        trimOldest((NotificationManager) getSystemService(NOTIFICATION_SERVICE));
         try {
             nm.notify(id, b.build());
             if (group != null) {
@@ -131,6 +146,25 @@ public class PushService extends FirebaseMessagingService {
             }
         } catch (SecurityException e) { // POST_NOTIFICATIONS revoked between the check and here
             android.util.Log.w("EaseCab", "notify denied", e);
+        }
+    }
+
+    /**
+     * Android silently drops every new notification once an app has 50 showing
+     * (NotificationManagerService MAX_PACKAGE_NOTIFICATIONS) — one per ride hit that.
+     * Cancel the oldest rides so the newest always lands. ponytail: a city summary whose
+     * rides were all trimmed stays until swiped; bounded by the driver's city count.
+     */
+    private static void trimOldest(NotificationManager nm) {
+        StatusBarNotification[] all = nm.getActiveNotifications();
+        int extra = all.length - MAX_SHOWN + 2; // room for this ride + its city summary
+        if (extra <= 0) return;
+        Arrays.sort(all, (a, b) -> Long.compare(a.getPostTime(), b.getPostTime()));
+        for (StatusBarNotification s : all) {
+            if (extra <= 0) break;
+            if ((s.getNotification().flags & Notification.FLAG_GROUP_SUMMARY) != 0) continue;
+            nm.cancel(s.getTag(), s.getId());
+            extra--;
         }
     }
 

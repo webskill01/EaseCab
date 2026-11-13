@@ -63,8 +63,8 @@ android {
         applicationId "com.easecab.app"
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 12
-        versionName "1.0.0.11"
+        versionCode 13
+        versionName "1.0.0.12"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
