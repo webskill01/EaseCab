@@ -92,7 +92,7 @@
       "no_handoff": "Portal ne bank page nahi khola. Dobara try karein.",
       "pucc_expired": "Aapki gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
       "fitness_expired": "Aapki gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
-      "no_qr": "Govt payment page pe UPI QR nahi dikha. Dobara try karein.",
+      "no_qr": "Govt payment page pe UPI QR nahi aaya, isliye humne payment se pehle hi rok diya — koi paisa nahi kata. Hum portal ka hold hata rahe hain; phir dobara try karein.",
       "payment_failed": "Payment nahi hua. Agar paise kate hain to support se baat karein.",
       "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
       "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein."

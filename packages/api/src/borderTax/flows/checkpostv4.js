@@ -233,8 +233,9 @@ async function fileCheckpost(page, job, io) {
   await disclaimerStep(page, io);
   const handoff = await bankHandoff(page, job.stateCd, io);
   if (handoff.live) return { ...quote, payPage: handoff.live, ref: handoff.ref, pay: handoff.pay }; // runner shows the QR
-  io.log(`bank hand-off ready (${new URL(handoff.action).hostname})`); // host only — fields are the driver's payment
-  return { ...quote, handoff };
+  // No bank-page hand-off any more (2026-11-13): the driver paying outside the app left a pending
+  // portal transaction (amount mismatch / vehicle locked). No QR → fail; the runner clears the lock.
+  throw portalError(BORDER_TAX_FAILURE.NO_QR, `no in-app QR page (bank ${new URL(handoff.action).hostname})`);
 }
 
 module.exports = { fileCheckpost, istInput, portalWindow, fromPortal };

@@ -58,11 +58,12 @@ test('toJob carries state + permit so one checkpostv4 flow serves HR and HP', ()
   assert.deepStrictEqual([j.stateCd, j.permitType, j.days, j.distanceKm], ['HP', '35', 1, null]);
 });
 
-test('happy path: captcha relayed, quote + bank form stored → HANDED_OFF, browser closed', async () => {
+test('a bank-page hand-off (no in-app QR) is never given to the driver → FAILED no_qr, lock cleared', async () => {
   const t = setup({ answers: ['x7k2'] });
   await createRunner({ ...t, logger, flows: { HR: flowWithCaptcha } }).run('b1', {});
-  assert.deepStrictEqual([t.rows.b1.status, t.rows.b1.taxPaise], ['handed_off', 10000]);
-  assert.deepStrictEqual(t.handoffs.b1, HANDOFF);
+  assert.deepStrictEqual([t.rows.b1.status, t.rows.b1.failureCode], ['failed', 'no_qr']);
+  assert.deepStrictEqual(t.handoffs, {});
+  assert.ok(t.unlocks.b1, 'pending portal attempt scheduled for unlock');
   assert.ok(t.jobs.some((j) => j.captcha && j.status === 'awaiting_captcha'), 'captcha shown while AWAITING_CAPTCHA');
   assert.strictEqual(t.closed(), 1);
 });
@@ -127,7 +128,7 @@ test('lookup slot busy → waits it out while still QUEUED, then files', async (
   const sleep = async (ms) => { waits.push([ms, t.rows.b1.status]); };
   await createRunner({ ...t, logger, sleep, flows: { HR: flowWithCaptcha } }).run('b1', {});
   assert.deepStrictEqual(waits, [[90_000, 'queued'], [1, 'queued']]);
-  assert.strictEqual(t.rows.b1.status, 'handed_off');
+  assert.strictEqual(t.rows.b1.status, 'failed'); // flowWithCaptcha returns no QR page
 });
 
 test('browser gone (newPage throws) → FAILED portal_error, not stuck in FILLING', async () => {

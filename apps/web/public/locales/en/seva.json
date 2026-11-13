@@ -92,7 +92,7 @@
       "no_handoff": "The portal didn't open the bank page. Please try again.",
       "pucc_expired": "Your vehicle's pollution certificate (PUC) has expired. Renew it, then file again.",
       "fitness_expired": "Your vehicle's fitness certificate has expired. Renew it, then file again.",
-      "no_qr": "The govt payment page didn't show a UPI QR. Please try again.",
+      "no_qr": "The govt payment page didn't show the UPI QR, so we stopped before any payment — no money was taken. We're clearing the portal hold; then please try again.",
       "payment_failed": "The payment didn't go through. If money was debited, contact support.",
       "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",
       "payment_unknown": "We lost the payment page. If you paid, contact support — don't pay again."

@@ -33,7 +33,7 @@ function toJob(req) {
  * @param {object} deps
  * @param {ReturnType<typeof import('../features/borderTax/borderTax.service').createBorderTaxService>} deps.service
  * @param {ReturnType<typeof import('../features/borderTax/borderTax.repository').createBorderTaxRepository>} deps.repo
- * @param {() => Promise<import('playwright').Page>} deps.newPage - fresh context per job
+ * @param {(job?: { stateCd: string, sid: string }) => Promise<import('playwright').Page>} deps.newPage - fresh context per job (job → proxy for PROXY_STATES)
  * @param {import('pino').Logger} deps.logger
  * @param {{ putObject: Function }} deps.r2 - receipt PDFs
  * @param {(text: string) => void} [deps.alert] - operator alert (Telegram), best-effort
@@ -102,31 +102,33 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, cl
 
   /** @param {string} id @param {import('ioredis').Redis} conn */
   async function run(id, conn) {
+    const req = await repo.findById(id);
+    if (!req) return;
     await waitLookupSlot(); // stays QUEUED while waiting — the driver can still cancel
     // the app's timer starts here, not at queueing; written BEFORE the status moves so no poll ever
     // sees `filling` without a start time (the ring jumped to a full 5:00 for a moment)
     await repo.setJob(id, { step: 'filling', started: String(Date.now()), progress: '0' });
     if (!(await service.move(id, S.FILLING))) return; // cancelled, or a duplicate queue entry
-    const req = await repo.findById(id);
     const flow = flows[req.stateCd];
     if (!flow) return void (await service.fail(id, F.STATE_UNSUPPORTED));
     let page = null;
     let atBank = false; // an unpaid attempt left on the portal locks the vehicle in this state → clear it later
     let paid = false;
     try {
-      page = await newPage(); // inside try: a dead browser fails the filing instead of leaving the driver on a spinner
+      page = await newPage({ stateCd: req.stateCd, sid: id }); // inside try: a dead browser fails the filing instead of leaving the driver on a spinner
       logger.info({ id, stateCd: req.stateCd }, 'border tax filing started'); // step timings = log time deltas from here
       const io = makeIo(id, conn);
       const result = await flow(page, toJob(req), io);
-      atBank = Boolean(result.payPage);
-      if (atBank) paid = await collect(id, req, result, io);
-      else await service.handOff(id, result);
+      // in-app QR only: a bank-page hand-off let drivers pay outside the app → pending/mismatch locks
+      if (!result.payPage) throw portalError(F.NO_QR, 'no in-app QR page (bank hand-off is off)');
+      atBank = true;
+      paid = await collect(id, req, result, io);
     } catch (err) {
       const failureCode = err.failureCode || F.PORTAL_ERROR;
       logger.warn({ id, failureCode, err: err.message }, 'border tax filing stopped');
       if (ALERT_ON.has(failureCode) && err.message !== STOPPED) alert(`${req.stateCd} filing ${id.slice(0, 8)} failed: ${failureCode} (${err.message.slice(0, 200)})`);
       await service.fail(id, failureCode);
-      atBank ||= BANK_STEP.has(failureCode);
+      atBank ||= BANK_STEP.has(failureCode) || Boolean(err.atBank);
     } finally {
       if (atBank && !paid) await service.scheduleUnlock(id).catch((e) => logger.warn({ id, err: e.message }, 'unlock schedule failed'));
       await page?.context().close().catch((e) => logger.warn({ id, err: e.message }, 'context close failed'));
