@@ -195,6 +195,9 @@ const BORDER_TAX = Object.freeze({
   OCR_TIMEOUT_MS: 10_000,
   MAX_DISTANCE_KM: 2000,
   WORKER_CONCURRENCY: 3, // browser contexts at once (8GB VPS; ~150MB each)
+  PROXY_STATES: Object.freeze(['HR']), // eGRAS blocks datacenter IPs → these filings go via BORDER_TAX_PROXY_URL
+  // only the treasury needs it: Vahan + PayU go direct (saves proxy data; both work from the VPS)
+  PROXY_BYPASS: '.parivahan.gov.in, .payu.in', // only eGRAS via proxy (data); Vahan keeps the server IP + lookup slot
   LOOKUP_GAP_SEC: 120, // min gap between filings' Vahan lookups: 7 in ~70s locked us out, 9 at 2-min gaps did not (2026-11-05)
   RATES_WINDOW_DAYS: 60, // real portal quotes this recent are shown as each border's latest fee
   PAY_WAIT_SEC: 300, // in-app QR: the app's pay timer = PayU's QR life (5 min, seen live 2026-11-11)

@@ -30,6 +30,10 @@ const envSchema = z.object({
   // OPTIONAL: unset → alerts stay Redis + logs only. Backend-only secret.
   TELEGRAM_ALERT_BOT_TOKEN: z.string().min(1).optional(),
   TELEGRAM_ALERT_CHAT_ID: z.string().min(1).optional(),
+  // Border tax: Indian residential proxy for the treasury sites that refuse datacenter IPs (HR eGRAS,
+  // 2026-11-13). http://USER:PASS@HOST:PORT, USER without a session tag (the worker adds one per filing).
+  // OPTIONAL: unset → those states go direct (and fail no_qr). Backend-only secret.
+  BORDER_TAX_PROXY_URL: z.string().url().optional(),
 });
 
 /**
