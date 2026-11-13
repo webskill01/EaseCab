@@ -13,6 +13,13 @@ const ROUTE_PATTERNS = [
   /drop/i,
 ];
 
+// "Don't forward" in any spelling: the poster wants the duty kept inside their group.
+// Built in (not only an ignore_keyword row) because the variants are endless:
+// don’t / dont / do not / no / not for + forward / fwd / frwd / farward / forwarding,
+// and Hinglish "forward mat / na / nahi karo".
+const DO_NOT_FORWARD =
+  /\b(?:don'?t|dont|do\s*not|no|not(?:\s+for)?)\s+(?:to\s+)?(?:forward(?:ing|ed)?|fwd|frwd|farward|forword|froward)\b|\b(?:forward|fwd|frwd)\s+(?:mat|na|nahi|nhi|nahin)\b/i;
+
 /**
  * Ride-message gate — ports multibot `isTaxiRequest`. Rejects if any ignore
  * keyword is present (Unicode-aware word boundary for non-ASCII ignore words);
@@ -27,14 +34,18 @@ function isRideMessage(text, cfg) {
   const ignoreKeywords = (cfg && cfg.ignoreKeywords) || [];
 
   const normalized = normalizeText(text);
-  const originalLower = text.toLowerCase();
+  // NFKD folds fancy fonts ("𝘿𝙊𝙉'𝙏 𝙁𝙊𝙍𝙒𝘼𝙍𝘿") to plain letters, same as normalizeText.
+  const originalLower = text.normalize('NFKD').toLowerCase();
 
   // Strip WhatsApp formatting (* ` ~ _) → space (not empty) to preserve word
   // boundaries. _ is a regex word char, so _free_ would bypass \b without this.
   const cleanedText = originalLower.replace(/[*`~]/g, ' ').replace(/_/g, ' ');
 
+  // Curly apostrophes + markers/extra spaces folded so "*Don’t*  forward" still matches.
+  if (DO_NOT_FORWARD.test(cleanedText.replace(/[‘’`´]/g, "'").replace(/\s+/g, ' '))) return false;
+
   for (const ignoreWord of ignoreKeywords) {
-    const ignoreWordLower = ignoreWord.toLowerCase();
+    const ignoreWordLower = ignoreWord.normalize('NFKD').toLowerCase();
 
     if (ignoreWordLower.includes(' ')) {
       if (cleanedText.includes(ignoreWordLower)) {

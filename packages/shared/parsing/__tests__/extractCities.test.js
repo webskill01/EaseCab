@@ -135,3 +135,10 @@ test('Hinglish "ko to ... call karna" note is not a route', () => {
   assert.equal(r.pickup, null);
   assert.equal(r.drop, null);
 });
+
+test('"DROP : Mohali" followed by "TIME :2:30" still reads the drop (live 2026-11-13)', () => {
+  const msg = '📍 *PICKUP* *:-Sujanpur Tira(Sandhol)*\n📍 *DROP* *: Mohali*\n⏰ *TIME* *:2:30*\n*RATE* 💰….*3100*';
+  const r = extractCities(msg, [...VOCAB, 'Sujanpur Tira']);
+  assert.equal(r.pickup, 'Sujanpur Tira');
+  assert.equal(r.drop, 'Mohali');
+});

@@ -197,11 +197,21 @@ function extractCities(text, cities) {
   // Pattern 5: "pickup: X" and/or "drop: Y"
   // Separator tolerates ":" and "-" (the ":-" stylistic colon is everywhere in
   // these messages: "PICK UP :-", "DROP :-").
-  const pickupPattern = /\bpickup\s*[:-]*\s*([a-z\s]+?)(?:\s*drop|\s*to|\s*-|\s*phone|\s*\d|$)/i;
-  const dropExplicitPattern = /\bdrop\s*[:-]*\s*([a-z\s]+?)(?:\s*pickup|\s*from|\s*phone|\s*\d|$)/i;
+  const pickupPattern = /\bpick\s?up\s*[:-]*\s*([a-z\s]+?)(?:\s*drop|\s*to|\s*phone|\s*[^a-z\s]|$)/i;
+  const dropExplicitPattern = /\bdrop\s*[:-]*\s*([a-z\s]+?)(?:\s*pickup|\s*from|\s*phone|\s*[^a-z\s]|$)/i;
 
-  const pickupMatch = normalized.match(pickupPattern);
-  const dropExplicitMatch = normalized.match(dropExplicitPattern);
+  // "booking drop cab type : ... drop :- dehli": the first "drop" is the trip type, so
+  // take the first label whose value holds a city, else the first label at all.
+  const labelMatch = (re) => {
+    let first = null;
+    for (const m of normalized.matchAll(new RegExp(re.source, 'gi'))) {
+      if (scanWords(m[1].trim().split(/\s+/).slice(0, 3)).length > 0) return m;
+      first = first || m;
+    }
+    return first;
+  };
+  const pickupMatch = labelMatch(pickupPattern);
+  const dropExplicitMatch = labelMatch(dropExplicitPattern);
 
   if (pickupMatch || dropExplicitMatch) {
     const pickupWords = pickupMatch ? pickupMatch[1].trim().split(/\s+/).slice(0, 3) : [];
