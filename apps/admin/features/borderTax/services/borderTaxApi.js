@@ -21,7 +21,8 @@ export async function setStatePaused({ stateCd, paused }) {
 }
 
 /** GET /admin/border-tax/:id/receipt → short-lived PDF link. */
-export async function fetchReceiptUrl(id) {
-  const { data } = await apiFetch(`/admin/border-tax/${id}/receipt`)
+/** @param {string} id @param {boolean} [view] - true: opens in the browser instead of downloading */
+export async function fetchReceiptUrl(id, view = false) {
+  const { data } = await apiFetch(`/admin/border-tax/${id}/receipt${view ? '?view=1' : ''}`)
   return data.url
 }

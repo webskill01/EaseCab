@@ -41,7 +41,7 @@ function toJob(req) {
  * @param {Record<string, Function>} [deps.flows]
  * @param {(ms: number) => Promise<void>} [deps.sleep]
  */
-function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, clearLocks = clearPending, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, onLatePaid = async () => {}, clearLocks = clearPending, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
   const until = (sec) => String(Date.now() + sec * 1000);
 
   function makeIo(id, conn) {
@@ -158,7 +158,10 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, cl
       if (unknown) alert(`${req.stateCd} unlock ${id.slice(0, 8)}: unexpected portal answer (${unknown.note})`);
       if (paidRow) {
         const own = req.status !== S.PAID && req.taxPaise && Math.round(Number(paidRow.amount) * 100) === req.taxPaise;
-        if (own && (await service.latePaid(id, { receiptNo: paidRow.receiptNo, receiptKey: await storeReceipt(id, paidRow.pdf) }))) log('late payment found → paid');
+        if (own && (await service.latePaid(id, { receiptNo: paidRow.receiptNo, receiptKey: await storeReceipt(id, paidRow.pdf) }))) {
+          log('late payment found → paid');
+          await onLatePaid(req).catch((err) => logger.warn({ id, err: err.message }, 'late-paid push failed')); // the app banner still shows it
+        }
         alert(`${req.stateCd} unlock ${id.slice(0, 8)}: pending attempt was PAID (${paidRow.receiptNo}${own ? ', this filing' : ''})`);
       }
       // bank PENDING: treasury never answered Vahan → ask again later; UNLOCK_TRIES of these → FAILED + alert

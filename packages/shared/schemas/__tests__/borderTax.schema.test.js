@@ -26,6 +26,7 @@ test('create: rejects bad vehicle, unknown state/checkpost, past start, too many
     { stateCd: 'HR', checkpost: 'PANCHKULA' }, // HR without distance
     { checkpost: undefined }, // border required
     { checkpost: '' },
+    { vehicleNo: 'HP12A3456' }, // home-state vehicle: the portal refuses it
   ];
   for (const patch of bad) assert.ok(!borderTaxCreateSchema.safeParse({ ...base(), ...patch }).success, JSON.stringify(patch));
 });

@@ -9,7 +9,7 @@ const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
 const { chromium } = require('playwright');
-const { BORDER_TAX, BORDER_TAX_KEYS, createTelegramNotifier } = require('@easecab/shared');
+const { BORDER_TAX, BORDER_TAX_KEYS, BORDER_TAX_STATES, BORDER_TAX_PAID_PUSH: PAID_PUSH, createTelegramNotifier } = require('@easecab/shared');
 const { createBorderTaxRepository } = require('../features/borderTax/borderTax.repository');
 const { createBorderTaxService } = require('../features/borderTax/borderTax.service');
 const { createRunner } = require('./runner');
@@ -19,6 +19,8 @@ const { ocrReady, stopOcr } = require('./ocr');
 const { proxyFor } = require('./proxy');
 const { canvasCodeHook } = require('./flows/portal');
 const { createTreasuryWatch } = require('./treasuryWatch');
+const { createPushRepository } = require('../features/push/push.repository');
+const { createPushSender } = require('../lib/fcm');
 
 const QUEUE_POLL_SEC = 30; // BRPOP timeout — lets the loop notice shutdown
 const RECEIPT_SWEEP_MS = 3_600_000; // hourly: receipts go 24h after validity, an hour late is fine
@@ -53,12 +55,23 @@ async function main() {
   };
   await browser(); // fail fast at boot if Chromium can't start
   const newPage = async (job) => {
-    const context = await (await browser()).newContext({ viewport: VIEWPORT, proxy: proxyFor(env.BORDER_TAX_PROXY_URL, job) });
+    // IST clock: the VPS runs Europe/Berlin, and the portal read our IST tax_from as browser-local → receipts 4h30 late (2026-11-14)
+    const context = await (await browser()).newContext({ viewport: VIEWPORT, timezoneId: 'Asia/Kolkata', proxy: proxyFor(env.BORDER_TAX_PROXY_URL, job) });
     await context.addInitScript(canvasCodeHook); // declaration captcha typed exactly as drawn (portal.js)
     return context.newPage();
   };
   const r2 = r2FromEnv(serverEnv);
-  const runner = createRunner({ service, repo, newPage, logger, r2, alert });
+  const pushRepo = createPushRepository({ prisma, redis });
+  const pushSender = createPushSender({ projectId: serverEnv.FIREBASE_PROJECT_ID, clientEmail: serverEnv.FIREBASE_CLIENT_EMAIL, privateKey: serverEnv.FIREBASE_PRIVATE_KEY });
+  // payment found after the QR timed out: tell the driver (the feed banner covers a missed push)
+  const onLatePaid = async (req) => {
+    const tokens = await pushRepo.findUserTokens(req.userId);
+    if (!tokens.length) return;
+    const body = PAID_PUSH.BODY.replace('{vehicle}', req.vehicleNo).replace('{state}', BORDER_TAX_STATES[req.stateCd]?.name || req.stateCd);
+    const { staleTokens } = await pushSender.sendToTokens({ tokens, data: { type: PAID_PUSH.TYPE, source: PAID_PUSH.SOURCE, title: PAID_PUSH.TITLE, body, url: `${PAID_PUSH.CLICK_PATH}?open=${req.id}`, action: PAID_PUSH.ACTION } });
+    await pushRepo.pruneTokens(staleTokens);
+  };
+  const runner = createRunner({ service, repo, newPage, logger, r2, alert, onLatePaid });
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));
   sweep();
   const sweepTimer = setInterval(sweep, RECEIPT_SWEEP_MS);

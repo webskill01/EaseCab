@@ -48,11 +48,11 @@ function createAdminBorderTaxService({ repo, r2 = null, logger }) {
      * Short-lived download link to a filing's receipt PDF (presigned, §3.12).
      * @throws {AppError} NOT_FOUND when the filing has no stored receipt
      */
-    async receipt(id) {
+    async receipt(id, { view = false } = {}) {
       const row = await repo.findReceipt(id);
       if (!row?.receiptKey || !r2) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       const name = `border-tax-${(row.receiptNo || id).replace(/[^A-Za-z0-9-]/g, '')}.pdf`;
-      return { url: await r2.presignGet({ key: row.receiptKey, download: name }) };
+      return { url: await r2.presignGet({ key: row.receiptKey, download: view ? undefined : name }) }; // stored as application/pdf → a browser shows it
     },
   };
 }

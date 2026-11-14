@@ -160,7 +160,8 @@ async function askDriver(page, io, { step, input }, state, first) {
  * either `done` or a mismatch alert. The portal swaps the image after a mismatch.
  * @param {import('playwright').Page} page
  * @param {{ captcha: (a: { step: string, image: string }) => Promise<string> }} io
- * @param {{ step: string, input: string, submit: () => Promise<void>, done: () => Promise<unknown>, reopen?: () => Promise<void>, length?: number }} opts
+ * @param {{ step: string, input: string, submit: () => Promise<void>, done: () => Promise<unknown>, reopen?: () => Promise<void>, length?: number, refuse?: (alert: string) => void }} opts
+ *   refuse: throws for a portal refusal that no captcha retry can fix (the retry then hits a disabled button)
  *   length: known captcha length — an OCR read of any other length is not submitted (saves a try)
  */
 async function solveCaptcha(page, io, opts) {
@@ -186,6 +187,7 @@ async function solveCaptcha(page, io, opts) {
     if (verdict === null) throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, (await alertText(page)) || `no verdict after captcha ${step}`);
     const alert = await alertText(page);
     if (LOCKOUT.test(alert)) throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, `portal lockout: ${alert.slice(0, 120)}`);
+    opts.refuse?.(alert);
     io.log?.(`captcha ${step} rejected: ${alert.slice(0, 120)}`);
     if (auto) keepMiss(image, `rejected-${auto}`);
     await dismissAlert(page);

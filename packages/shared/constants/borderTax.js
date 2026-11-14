@@ -255,10 +255,11 @@ const BORDER_TAX_FAILURE = Object.freeze({
   WORKER_RESTART: 'worker_restart',
   STATE_UNSUPPORTED: 'state_unsupported',
   VEHICLE_PENDING: 'vehicle_pending', // portal: an earlier unpaid attempt locks the registration
-  ALREADY_PAID: 'already_paid', // portal: tax already paid for every tried window
+  ALREADY_PAID: 'already_paid', // portal: tax already paid for the requested window — driver picks new dates
   PUCC_EXPIRED: 'pucc_expired', // portal: the vehicle's pollution certificate (PUC) has lapsed — driver renews first
   FITNESS_EXPIRED: 'fitness_expired', // portal: the vehicle's fitness certificate has lapsed — driver renews first
   ROAD_TAX_EXPIRED: 'road_tax_expired', // portal: the vehicle's home road tax has lapsed — driver renews first
+  SAME_STATE: 'same_state', // portal: a vehicle registered in the filing state owes no border tax there
   NO_TAX_MODE: 'no_tax_mode', // portal offers no tax mode for this vehicle at this checkpost
   BANK_DOWN: 'bank_down', // state treasury site unreachable — stopped before Vahan's Pay Online, so no lock
   NO_HANDOFF: 'no_handoff', // eTransPgi Submit never left Vahan for a bank page

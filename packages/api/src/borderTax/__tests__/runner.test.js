@@ -165,8 +165,9 @@ function unlockSetup(rowFields, verdict) {
   const alerts = [];
   const r2 = { async putObject(o) { puts.push(o.key); } };
   const clearLocks = async () => { if (verdict instanceof Error) throw verdict; return verdict; };
-  const runner = createRunner({ ...t, logger, r2, alert: (m) => alerts.push(m), clearLocks });
-  return { ...t, puts, alerts, unlock: () => runner.unlock('b1') };
+  const pushed = [];
+  const runner = createRunner({ ...t, logger, r2, alert: (m) => alerts.push(m), clearLocks, onLatePaid: async (req) => { pushed.push(req.id); } });
+  return { ...t, puts, alerts, pushed, unlock: () => runner.unlock('b1') };
 }
 
 test('unlock: a filing is queued or the slot is busy → put off, no portal visit (filings go first)', async () => {
@@ -201,12 +202,13 @@ test('unlock: our own attempt was paid after all → filing PAID with the receip
   await u.unlock();
   assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.unlocks.b1.status, u.puts.length], ['paid', 'HRR7', 'paid', 1]);
   assert.match(u.alerts.join(), /PAID \(HRR7, this filing\)/);
+  assert.deepStrictEqual(u.pushed, ['b1'], 'driver pushed');
 });
 
 test('unlock: a paid attempt of a different amount is not this filing (vehicle_pending case) — receipt shown only', async () => {
   const u = unlockSetup({ status: 'failed', failureCode: 'vehicle_pending', taxPaise: null }, { rows: [{ paymentId: 'HRP1', amount: '230', result: 'paid', receiptNo: 'HRR8', pdf: null }], retryAt: null });
   await u.unlock();
-  assert.deepStrictEqual([u.rows.b1.status, u.unlocks.b1.receiptNo, u.puts.length], ['failed', 'HRR8', 0]);
+  assert.deepStrictEqual([u.rows.b1.status, u.unlocks.b1.receiptNo, u.puts.length, u.pushed], ['failed', 'HRR8', 0, []]);
 });
 
 test('unlock: unexpected portal answer → failed (never re-tapped) + alert', async () => {

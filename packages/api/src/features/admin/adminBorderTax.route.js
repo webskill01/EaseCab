@@ -2,7 +2,7 @@
 
 const express = require('express');
 const {
-  adminBorderTaxQuerySchema, adminBorderTaxStateParamSchema, adminBorderTaxStateSchema, borderTaxIdParamSchema,
+  adminBorderTaxQuerySchema, adminBorderTaxStateParamSchema, adminBorderTaxStateSchema, borderTaxIdParamSchema, borderTaxReceiptQuerySchema,
 } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
@@ -12,7 +12,7 @@ const { sendSuccess } = require('../../http/respond');
  *   GET   /                    — filings (offset) + byStatus totals
  *   GET   /states              — live states with their on/off switch
  *   PATCH /states/:stateCd     — { paused } switch a state off/on for new filings
- *   GET   /:id/receipt         — { url } presigned receipt PDF
+ *   GET   /:id/receipt[?view=1] — { url } presigned receipt PDF (download, or open in the browser)
  *
  * @param {object} deps
  * @param {ReturnType<import('./adminBorderTax.service').createAdminBorderTaxService>} deps.service
@@ -36,8 +36,8 @@ function createAdminBorderTaxRouter({ service, requireAdmin }) {
     sendSuccess(res, { data: await service.setPaused(req.valid.params.stateCd, req.valid.body.paused) });
   });
 
-  router.get('/:id/receipt', validate(borderTaxIdParamSchema, 'params'), async (req, res) => {
-    sendSuccess(res, { data: await service.receipt(req.valid.params.id) });
+  router.get('/:id/receipt', validate(borderTaxIdParamSchema, 'params'), validate(borderTaxReceiptQuerySchema, 'query'), async (req, res) => {
+    sendSuccess(res, { data: await service.receipt(req.valid.params.id, { view: Boolean(req.valid.query.view) }) });
   });
 
   return router;

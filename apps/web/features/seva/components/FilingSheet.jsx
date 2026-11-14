@@ -1,13 +1,14 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { supportHref } from '@/features/shell/components/SupportButton'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Bank, External, CircleX, Ban, Car, Headset, Receipt } from '@/components/ui/icons'
+import { Bank, External, CircleX, Ban, Car, Headset, Receipt, CalendarCheck } from '@/components/ui/icons'
 import { useFiling, useReceiptUrl, useBorderTaxActions } from '../hooks/useBorderTax'
-import { BT_STATUS as S, BT_STATES, markPayOpened, BT_FAIL_NO_RETRY, isFinal, daysOf, isDaysMode, fmtWhen, rupees, submitHandoff, gettingReceipt, receiptGoneAt, receiptGone, canUnlock, BT_UNLOCK } from '../lib/borderTax'
+import { BT_STATUS as S, BT_STATES, markPayOpened, BT_FAIL_NO_RETRY, BT_FAIL_ALREADY_PAID, markLateSeen, isFinal, daysOf, isDaysMode, fmtWhen, rupees, submitHandoff, gettingReceipt, receiptGoneAt, receiptGone, canUnlock, BT_UNLOCK } from '../lib/borderTax'
 import { PreparingScreen } from './PreparingScreen'
 import { PayQrSheet } from './PayQrSheet'
 
@@ -53,6 +54,10 @@ function head(f, t) {
   if (f.status === S.HANDED_OFF) return [<Bank key="i" size={22} />, 'sky', t('bt.live.closedTitle'), t('bt.live.closedSub')]
   if (f.status === S.PAID) return [<Receipt key="i" size={22} />, 'success', t('bt.status.paid.t'), f.receiptNo ? t('bt.qr.receiptNo', { no: f.receiptNo }) : gettingReceipt(f) ? t('bt.qr.gettingReceipt') : t('bt.qr.noReceipt')]
   if (f.status === S.CANCELLED) return [<Ban key="i" size={22} />, 'sky', t('bt.status.cancelled.t'), t('bt.status.cancelled.s')]
+  if (f.failureCode === BT_FAIL_ALREADY_PAID) {
+    const [a, b] = [fmtWhen(f.taxFrom), fmtWhen(f.taxUpto)]
+    return [<CalendarCheck key="i" size={22} />, 'sky', t('bt.fail.alreadyPaidT'), t('bt.fail.alreadyPaidS', { from: `${a.date}, ${a.time}`, to: `${b.date}, ${b.time}` })]
+  }
   return [<CircleX key="i" size={22} />, 'danger', t(`bt.status.${f.status}.t`), t(`bt.fail.${f.failureCode || 'portal_error'}`)]
 }
 
@@ -83,12 +88,14 @@ function ResultSheet({ f, onClose, onRetry }) {
   const [icon, tone, title, sub] = head(f, t)
   const failed = f.status === S.FAILED || f.status === S.EXPIRED
   const paid = f.status === S.PAID
+  const alreadyPaid = f.failureCode === BT_FAIL_ALREADY_PAID // driver picks new dates (bot no longer shifts them)
   const fetching = gettingReceipt(f)
   const goneAt = receiptGoneAt(f)
   const gone = receiptGone(f) // PDF deleted by the worker sweep
   const receipt = useReceiptUrl(f.id, paid && Boolean(f.receiptNo) && !fetching && !gone) // not mid-lookup: a 404 then would stick
   const receiptUrl = receipt.data
   const goneWhen = fmtWhen(goneAt)
+  useEffect(() => { if (paid) markLateSeen(f.id) }, [paid, f.id]) // seen here → no feed popup for it
   return (
     <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={title}>
       <SheetTitle icon={icon} tone={tone} title={title} sub={sub} />
@@ -104,7 +111,7 @@ function ResultSheet({ f, onClose, onRetry }) {
         {(failed || (paid && !fetching && !gone && (!f.receiptNo || receipt.isError))) && (
           <>
             {failed && !BT_FAIL_NO_RETRY.includes(f.failureCode) && (!f.unlock || f.unlock.status === BT_UNLOCK.CLEARED) && (
-              <Button type="button" size="lg" className="w-full" onClick={() => onRetry(f)}>{t('bt.live.retry')}</Button>
+              <Button type="button" size="lg" className="w-full" onClick={() => onRetry(f)}>{t(alreadyPaid ? 'bt.live.changeDate' : 'bt.live.retry')}</Button>
             )}
             <a href={supportHref()} target="_blank" rel="noopener noreferrer" className={`${buttonVariants({ variant: 'outline', size: 'lg' })} w-full gap-2`}>
               <Headset size={18} /> {t('bt.live.support')}

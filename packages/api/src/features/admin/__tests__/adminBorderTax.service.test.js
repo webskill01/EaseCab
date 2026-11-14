@@ -38,6 +38,7 @@ test('receipt: presigned link, NOT_FOUND without a stored PDF', async () => {
   const r2 = { async presignGet({ key, download }) { return `https://r2/${key}?d=${download}`; } };
   const svc = createAdminBorderTaxService({ repo: fakeRepo(), r2, logger });
   assert.strictEqual((await svc.receipt('f1')).url, 'https://r2/bt/f1.pdf?d=border-tax-HRR1.pdf');
+  assert.strictEqual((await svc.receipt('f1', { view: true })).url, 'https://r2/bt/f1.pdf?d=undefined'); // no attachment header
   await assert.rejects(svc.receipt('f2'), (e) => e.code === 'NOT_FOUND');
 });
 

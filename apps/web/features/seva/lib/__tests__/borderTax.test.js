@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createRequire } from 'node:module'
 import {
-  formFrom, resumable, BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING, prepStep, prepDeadline, markPayOpened, BT_CAPTCHA_SEC, BT_PREP_SEC,
+  formFrom, resumable, lateUnseen, BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING, prepStep, prepDeadline, markPayOpened, BT_CAPTCHA_SEC, BT_PREP_SEC,
   BT_STATES, BT_STATUS, BT_FINAL, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_VEHICLE_RE,
   defaultStart, validUpto, BT_RECEIPT_KEEP_SEC, receiptGone, isFilable, isStarted, toCreateBody, emptyForm, createErrorKey, submitHandoff, toLocalInput, gettingReceipt,
   canUnlock, unlocking,
@@ -45,6 +45,7 @@ describe('form', () => {
     expect(isFilable(form({ stateCd: 'HR', checkpost: 'PANCHKULA', distanceKm: '50' }), NOW)).toBe(true)
     expect(isFilable(form({ startAt: toLocalInput(new Date(NOW.getTime() + 8 * 86_400_000)) }), NOW)).toBe(false)
     expect(isFilable(form({ days: 31 }), NOW)).toBe(false)
+    expect(isFilable(form({ vehicleNo: 'hp12 a3456' }), NOW)).toBe(false) // home-state vehicle: portal refuses it
   })
 
   it('isStarted: rest of the form opens on a valid RC + state', () => {
@@ -165,5 +166,16 @@ describe('pending-lock clear', () => {
     expect(unlocking({ unlock: { status: 'waiting' } })).toBe(true)
     expect(unlocking({ unlock: { status: 'cleared' } })).toBe(false)
     expect(unlocking({ unlock: null })).toBe(false)
+  })
+})
+
+describe('lateUnseen', () => {
+  const now = Date.parse('2026-11-14T18:00:00Z')
+  const f = (paidMin, id = 'a') => ({ id, status: 'paid', createdAt: '2026-11-14T16:00:00Z', paidAt: new Date(Date.parse('2026-11-14T16:00:00Z') + paidMin * 60_000).toISOString() })
+  it('only a payment found well after the QR, recent and unseen', () => {
+    expect(lateUnseen([f(8)], now, [])).toBe(null) // paid on the QR screen
+    expect(lateUnseen([f(49)], now, [])?.id).toBe('a') // found by the unlock
+    expect(lateUnseen([f(49)], now, ['a'])).toBe(null) // seen
+    expect(lateUnseen([f(49)], now + 4 * 86_400_000, [])).toBe(null) // old
   })
 })

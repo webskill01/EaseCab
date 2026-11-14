@@ -86,8 +86,9 @@
       "worker_restart": "The govt portal had a problem. Try again in a few minutes.",
       "state_unsupported": "This state isn't supported yet.",
       "vehicle_pending": "This vehicle has an unfinished payment on the govt portal. Wait about 30 minutes, then file again.",
-      "already_paid": "Tax is already paid for this time.",
+      "already_paid": "Tax is already paid for these dates. Pick another start date.",
       "road_tax_expired": "Your vehicle's road tax has expired. Renew it first.",
+      "same_state": "This vehicle is registered in this state, so no border tax is needed here. Nothing was charged.",
       "no_tax_mode": "The portal has no tax option for this vehicle at this border.",
       "bank_down": "The state govt payment site is down right now. Nothing was charged and your vehicle isn't blocked. Please try again later.",
       "no_handoff": "The portal didn't open the bank page. Please try again.",
@@ -96,7 +97,9 @@
       "no_qr": "The govt payment page didn't show the UPI QR, so we stopped before any payment — no money was taken. We're clearing the portal hold; then please try again.",
       "payment_failed": "The payment didn't go through. If money was debited, contact support.",
       "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",
-      "payment_unknown": "We lost the payment page. If you paid, contact support — don't pay again."
+      "payment_unknown": "We lost the payment page. If you paid, contact support — don't pay again.",
+      "alreadyPaidT": "Tax already paid",
+      "alreadyPaidS": "Border tax is already paid for {from} – {to}. Pick a start date after that and file again."
     },
     "live": {
       "captchaTitle": "Type the code",
@@ -109,7 +112,8 @@
       "cancel": "Cancel filing",
       "retry": "Try again",
       "support": "Contact support",
-      "captchaRefresh": "New code"
+      "captchaRefresh": "New code",
+      "changeDate": "Change date"
     },
     "gate": {
       "title": "Seva is for members",
@@ -145,9 +149,9 @@
     "latestFee": "Latest fee at this border: {amount} for {n, plural, one {# day} other {# days}} ({date})",
     "qr": {
       "title": "Pay Border Tax",
-      "upiCta": "Pay {amount} with UPI app",
+      "upiCta": "Pay {amount}",
       "alt": "UPI payment QR",
-      "scan": "Scan with any UPI app from another phone, or tap above to pay from this phone.",
+      "scan": "Pay directly through UPI — scan from another phone, or tap Pay on this phone.",
       "timer": "QR valid for {time}",
       "wait": "Keep this screen open after paying — we'll fetch your govt receipt here.",
       "receiptNo": "Receipt No. {no}",
@@ -156,7 +160,12 @@
       "receiptGone": "Receipt deleted from EaseCab 24 hours after the tax validity ended. Use the copy saved on your phone.",
       "download": "Download receipt",
       "gettingReceipt": "Paid. Getting your receipt from the govt site…",
-      "expired": "QR time is over. Checking if a payment came through…"
+      "expired": "QR time is over. Checking if a payment came through…",
+      "scanCaps": "Scan & pay with any UPI app",
+      "complete": "Complete your payment",
+      "windowEnds": "Payment window ends in",
+      "beforeT": "Pay before the timer ends",
+      "beforeS": "If you don't pay in time, this QR expires and the govt site holds this vehicle for about 30 minutes before you can file again."
     },
     "historyMore": "Show older filings",
     "unlock": {
@@ -171,6 +180,7 @@
     },
     "issues": {
       "vehicle": "Enter a valid vehicle number, e.g. PB10AB1234",
+      "sameState": "This vehicle is registered in this state — border tax is only for vehicles from other states.",
       "seats": "Select seats",
       "state": "Select a state",
       "border": "Select a border",
@@ -179,6 +189,22 @@
       "days": "Choose the number of days",
       "distance": "Enter the distance in km",
       "declare": "Tick the confirmation box"
+    },
+    "confirm": {
+      "title": "Confirm your tax validity",
+      "sub": "For the start date you picked, the tax stays valid only until the date below. You can change the start date or continue.",
+      "start": "Starting date",
+      "upto": "Valid upto",
+      "plan": "Selected plan",
+      "amount": "Amount payable",
+      "amountLater": "Shown on the govt page",
+      "change": "Change date",
+      "continue": "Continue"
+    },
+    "late": {
+      "title": "Border tax paid ✅",
+      "sub": "We found your payment for {vehicle} ({state}). Your receipt is ready.",
+      "cta": "View receipt"
     }
   }
 }

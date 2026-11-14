@@ -86,8 +86,9 @@
       "worker_restart": "Sarkari portal mein dikkat hai. Kuch minute baad try karein.",
       "state_unsupported": "Yeh state abhi available nahi hai.",
       "vehicle_pending": "Is gaadi ka ek payment govt portal pe adhoora hai. Lagbhag 30 minute rukein, phir dobara bharein.",
-      "already_paid": "Is time ke liye tax pehle se bhara hai.",
+      "already_paid": "In dates ka tax pehle se bhara hai. Doosri start date chunein.",
       "road_tax_expired": "Aapki gaadi ka road tax khatam ho gaya hai. Pehle renew karein.",
+      "same_state": "Yeh gaadi isi state mein registered hai, isliye yahan border tax nahi lagta. Koi paisa nahi kata.",
       "no_tax_mode": "Is border par is gaadi ke liye portal mein tax option nahi hai.",
       "bank_down": "State govt ki payment site abhi down hai. Koi paisa nahi kata aur aapki gaadi block nahi hui. Thodi der baad dobara try karein.",
       "no_handoff": "Portal ne bank page nahi khola. Dobara try karein.",
@@ -96,7 +97,9 @@
       "no_qr": "Govt payment page pe UPI QR nahi aaya, isliye humne payment se pehle hi rok diya — koi paisa nahi kata. Hum portal ka hold hata rahe hain; phir dobara try karein.",
       "payment_failed": "Payment nahi hua. Agar paise kate hain to support se baat karein.",
       "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
-      "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein."
+      "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
+      "alreadyPaidT": "Tax pehle se bhara hai",
+      "alreadyPaidS": "{from} – {to} ka border tax pehle se bhara hua hai. Iske baad ki start date chunein aur dobara file karein."
     },
     "live": {
       "captchaTitle": "Code likhein",
@@ -109,7 +112,8 @@
       "cancel": "Filing cancel karein",
       "retry": "Dobara try karein",
       "support": "Support se baat karein",
-      "captchaRefresh": "Naya code"
+      "captchaRefresh": "Naya code",
+      "changeDate": "Date badlein"
     },
     "gate": {
       "title": "Seva members ke liye hai",
@@ -145,9 +149,9 @@
     "latestFee": "Is border ki latest fee: {amount}, {n} din ({date})",
     "qr": {
       "title": "Border Tax bharein",
-      "upiCta": "UPI app se {amount} pay karein",
+      "upiCta": "Pay {amount}",
       "alt": "UPI payment QR",
-      "scan": "Doosre phone se kisi bhi UPI app se scan karo, ya isi phone se pay karne ke liye upar tap karo.",
+      "scan": "Seedha UPI se pay karein — doosre phone se scan karein, ya isi phone par Pay dabayein.",
       "timer": "QR {time} tak valid",
       "wait": "Pay karne ke baad yeh screen khuli rakhein — aapki govt receipt yahin aayegi.",
       "receiptNo": "Receipt No. {no}",
@@ -156,7 +160,12 @@
       "receiptGone": "Tax validity khatam hone ke 24 ghante baad receipt EaseCab se hata di gayi. Phone mein save ki hui copy use karo.",
       "download": "Receipt download karein",
       "gettingReceipt": "Payment ho gaya. Govt site se aapki receipt la rahe hain…",
-      "expired": "QR ka time khatam. Check kar rahe hain ki payment aaya ya nahi…"
+      "expired": "QR ka time khatam. Check kar rahe hain ki payment aaya ya nahi…",
+      "scanCaps": "Kisi bhi UPI app se scan karke pay karein",
+      "complete": "Apni payment poori karein",
+      "windowEnds": "Payment ka samay khatam hoga",
+      "beforeT": "Timer khatam hone se pehle pay karein",
+      "beforeS": "Time par pay nahi kiya to yeh QR band ho jayega aur govt site is gaadi ko lagbhag 30 minute rok degi, uske baad hi dobara file kar payenge."
     },
     "historyMore": "Purani filings dekho",
     "unlock": {
@@ -171,6 +180,7 @@
     },
     "issues": {
       "vehicle": "Sahi gaadi number daalein, jaise PB10AB1234",
+      "sameState": "Yeh gaadi isi state mein registered hai — border tax sirf doosre state ki gaadiyon ke liye hai.",
       "seats": "Seats chunein",
       "state": "State chunein",
       "border": "Border chunein",
@@ -179,6 +189,22 @@
       "days": "Kitne din, chunein",
       "distance": "Distance (km) daalein",
       "declare": "Confirm wale box pe tick karein"
+    },
+    "confirm": {
+      "title": "Tax validity confirm karein",
+      "sub": "Aapki chuni start date ke hisaab se tax neeche wali date tak hi valid rahega. Date badal sakte hain ya aage badhein.",
+      "start": "Shuru hone ki date",
+      "upto": "Valid kab tak",
+      "plan": "Chuna gaya plan",
+      "amount": "Dene wali rakam",
+      "amountLater": "Govt page par dikhegi",
+      "change": "Date badlein",
+      "continue": "Aage badhein"
+    },
+    "late": {
+      "title": "Border tax bhar gaya ✅",
+      "sub": "{vehicle} ({state}) ki aapki payment mil gayi. Receipt tayyar hai.",
+      "cta": "Receipt dekhein"
     }
   }
 }

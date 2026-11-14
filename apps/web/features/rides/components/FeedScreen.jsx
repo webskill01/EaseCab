@@ -12,6 +12,7 @@ import { membershipView } from '@/features/subscription/lib/membership'
 import { SubTabs } from './SubTabs'
 import { CityFilter } from './CityFilter'
 import { FeedBanner } from './FeedBanner'
+import { LatePaidPopup } from '@/features/seva/components/LatePaidPopup'
 import { NotificationsButton } from './NotificationsButton'
 import { PromoBanner } from './PromoBanner'
 import { PromoSheet } from './PromoSheet'
@@ -100,6 +101,7 @@ export function FeedScreen() {
       </div>
       <SubTabs sub={sub} onChange={setSub} dutiesCount={dutiesCountQuery.data ?? 0} />
       <FeedBanner membership={membership} onUpgrade={goMembership} />
+      <LatePaidPopup />
 
       <div
         ref={feed.scrollRef}

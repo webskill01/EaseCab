@@ -65,4 +65,14 @@ const RENEWAL_REMINDER = Object.freeze({
   BODY: 'Aapki membership {date} ko khatam ho rahi hai. Renew karo aur rides contact karte raho.',
 });
 
-module.exports = { PUSH, PUSH_SOURCE, RENEWAL_REMINDER };
+/** Border tax: an unlock found the driver's payment after the QR timed out → filing is PAID. */
+const BORDER_TAX_PAID_PUSH = Object.freeze({
+  TYPE: 'border_tax_paid',
+  SOURCE: 'border_tax',
+  CLICK_PATH: '/seva/border-tax',
+  ACTION: 'Receipt',
+  TITLE: '✅ Border tax ki payment mil gayi',
+  BODY: '{vehicle} ka {state} border tax bhar gaya hai. Receipt download kar lo.',
+});
+
+module.exports = { PUSH, PUSH_SOURCE, RENEWAL_REMINDER, BORDER_TAX_PAID_PUSH };

@@ -25,8 +25,9 @@ export const BT_MAX_DISTANCE_KM = 2000
 export const BT_VEHICLE_RE = /^(?:[A-Z]{2}\d{1,2}[A-Z]{0,3}\d{1,4}|\d{2}BH\d{4}[A-Z]{1,2})$/
 export const BT_POLL_MS = 2000
 export const BT_FAIL_VEHICLE_PENDING = 'vehicle_pending' // mirrors BORDER_TAX_FAILURE.VEHICLE_PENDING
+export const BT_FAIL_ALREADY_PAID = 'already_paid' // mirrors BORDER_TAX_FAILURE.ALREADY_PAID
 /** Failures about the vehicle's own papers: the driver renews first, so no Try again (mirror BORDER_TAX_FAILURE). */
-export const BT_FAIL_FIX_FIRST = Object.freeze(['pucc_expired', 'fitness_expired', 'road_tax_expired'])
+export const BT_FAIL_FIX_FIRST = Object.freeze(['pucc_expired', 'fitness_expired', 'road_tax_expired', 'same_state'])
 /** No Try again either: the driver may already have paid — support checks first (mirror PAYMENT_UNKNOWN). */
 export const BT_FAIL_NO_RETRY = Object.freeze([...BT_FAIL_FIX_FIRST, 'payment_unknown'])
 
@@ -80,6 +81,20 @@ export function resumable(filings, now = Date.now(), opened = readOpened()) {
   const f = filings?.[0]
   if (!f || opened.includes(f.id)) return null
   return !isFinal(f.status) || now - new Date(f.createdAt).getTime() < RESUME_MS ? f : null
+}
+
+const LATE_KEY = 'ec-bt-late-seen'
+const LATE_AFTER_MS = 20 * 60_000 // QR flow ends well inside this: paid later = found by the unlock after the QR timed out
+const LATE_SHOW_MS = 3 * 86_400_000
+const readLateSeen = () => { try { return JSON.parse(localStorage.getItem(LATE_KEY)) || [] } catch { return [] } }
+/** Driver saw this late-found payment (popup or its result sheet) → the feed popup stops. */
+export function markLateSeen(id) {
+  try { localStorage.setItem(LATE_KEY, JSON.stringify([id, ...readLateSeen().filter((x) => x !== id)].slice(0, 20))) } catch { /* private mode: popup may show again */ }
+}
+/** A payment found after the QR timed out, recent and not yet seen on this phone — for the feed popup. */
+export function lateUnseen(filings, now = Date.now(), seen = readLateSeen()) {
+  return filings?.find((f) => f.status === BT_STATUS.PAID && f.paidAt && !seen.includes(f.id)
+    && new Date(f.paidAt) - new Date(f.createdAt) > LATE_AFTER_MS && now - new Date(f.paidAt).getTime() < LATE_SHOW_MS) ?? null
 }
 
 /** The latest real fee for this form's state + border + seats, if any driver paid one recently. */
@@ -172,6 +187,7 @@ export function btIssues(f, now = new Date()) {
   const km = Number(f.distanceKm)
   const bad = {
     vehicle: !BT_VEHICLE_RE.test(normVehicle(f.vehicleNo)),
+    sameState: Boolean(st) && normVehicle(f.vehicleNo).startsWith(f.stateCd), // portal refuses home-state vehicles
     seats: !BT_SEATS.includes(f.seats),
     state: !st,
     border: !st?.checkposts.includes(f.checkpost),

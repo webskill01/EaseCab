@@ -14,6 +14,7 @@ import { emptyForm, formFrom, toCreateBody, createErrorKey, resumable } from '..
 import { BorderTaxForm } from './BorderTaxForm'
 import { FilingHistory } from './FilingHistory'
 import { FilingSheet } from './FilingSheet'
+import { ConfirmValiditySheet } from './ConfirmValiditySheet'
 
 /** Members-only soft gate: everyone sees the form, the gate fires on submit (§1 soft gate). */
 function GateSheet({ onClose, onSubscribe }) {
@@ -41,6 +42,7 @@ export function BorderTaxScreen() {
   const [picked, setOpenId] = useState(undefined) // undefined = driver hasn't chosen yet
   const [seed, setSeed] = useState(null)
   const [gate, setGate] = useState(false)
+  const [confirm, setConfirm] = useState(false) // validity check before the filing starts
   const [error, setError] = useState(null)
   const [busyUntil, setBusyUntil] = useState(null) // govt portal busy: when to try again
   const prefilled = useRef(false)
@@ -49,6 +51,12 @@ export function BorderTaxScreen() {
   // On arrival a running / just-finished filing reopens by itself (driver came back from the payment
   // tab or pressed back) until the driver opens or closes something.
   const openId = picked === undefined ? (resumable(filings.data)?.id ?? null) : picked
+
+  // ?open=<id> (late-payment push / feed popup) opens that filing's receipt
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('open')
+    if (id) setOpenId(id)
+  }, [])
 
   // Prefill RC + seats from the latest filing — most drivers file for the same cab.
   useEffect(() => {
@@ -60,8 +68,9 @@ export function BorderTaxScreen() {
 
   const retry = (f) => { setOpenId(null); setError(null); setForm(formFrom(f)); scroller.current?.scrollTo({ top: 0, behavior: 'smooth' }) }
   const notMember = membership.data && membershipView(membership.data).state !== MEMBERSHIP_STATE.ACTIVE
-  const submit = () => {
-    if (notMember) return setGate(true)
+  const submit = () => (notMember ? setGate(true) : setConfirm(true))
+  const start = () => {
+    setConfirm(false)
     setError(null)
     return create.mutate(toCreateBody(form), {
       onSuccess: (f) => { setSeed(f); setOpenId(f.id) },
@@ -82,6 +91,7 @@ export function BorderTaxScreen() {
           hasMore={filings.hasNextPage} loadingMore={filings.isFetchingNextPage} onMore={() => filings.fetchNextPage()} />
       </div>
       {openId && <FilingSheet id={openId} seed={seed} onClose={() => setOpenId(null)} onRetry={retry} />}
+      {confirm && <ConfirmValiditySheet form={form} onChange={() => { setConfirm(false); scroller.current?.scrollTo({ top: 0, behavior: 'smooth' }) }} onContinue={start} />}
       {gate && <GateSheet onClose={() => setGate(false)} onSubscribe={() => router.push('/membership')} />}
     </div>
   )

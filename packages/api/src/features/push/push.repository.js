@@ -163,6 +163,12 @@ function createPushRepository({ prisma, redis }) {
       return (await redis.set(key, '1', 'EX', RENEWAL_REMINDER.DEDUPE_TTL_SEC, 'NX')) === 'OK';
     },
 
+    /** Every device token of one user (border-tax late-payment push). */
+    async findUserTokens(userId) {
+      const rows = await prisma.pushSubscription.findMany({ where: { userId }, select: { deviceToken: true } });
+      return rows.map((r) => r.deviceToken);
+    },
+
     /** Prune tokens FCM reported as permanently invalid. Returns the deleted count. */
     async pruneTokens(tokens) {
       if (!tokens.length) return 0;

@@ -24,6 +24,10 @@ const borderTaxCreateSchema = z
   })
   .strict()
   .superRefine((v, ctx) => {
+    // the portal refuses home-state vehicles ("Payment of same state vehicle is not allowed", HR 2026-11-14)
+    if (v.vehicleNo.startsWith(v.stateCd)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['vehicleNo'], message: 'Vehicle is registered in this state' });
+    }
     if (!BORDER_TAX_STATES[v.stateCd].checkposts.includes(v.checkpost)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['checkpost'], message: 'Unknown checkpost' });
     }
@@ -46,6 +50,8 @@ const borderTaxCaptchaSchema = z
   .strict();
 
 const borderTaxIdParamSchema = z.object({ id: z.string().uuid() });
+/** Admin receipt link: ?view=1 opens the PDF in the browser instead of downloading it. */
+const borderTaxReceiptQuerySchema = z.object({ view: z.literal('1').optional() });
 
 /** GET /api/v1/border-tax query — cursor keyset pagination (same shape as the feeds). */
 const borderTaxListQuerySchema = z.object({
@@ -72,6 +78,6 @@ const adminBorderTaxStateParamSchema = z.object({ stateCd: z.enum(BORDER_TAX_LIV
 const adminBorderTaxStateSchema = z.object({ paused: z.boolean() });
 
 module.exports = {
-  borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxIdParamSchema, borderTaxListQuerySchema,
+  borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxIdParamSchema, borderTaxReceiptQuerySchema, borderTaxListQuerySchema,
   adminBorderTaxQuerySchema, adminBorderTaxStateParamSchema, adminBorderTaxStateSchema,
 };

@@ -1,6 +1,6 @@
 'use client'
 
-import { Landmark, FileDown } from 'lucide-react'
+import { Landmark, FileDown, Eye } from 'lucide-react'
 import { useFilings } from '@/features/borderTax/hooks/useBorderTax'
 import { fetchReceiptUrl } from '@/features/borderTax/services/borderTaxApi'
 import { StateSwitches } from '@/features/borderTax/components/StateSwitches'
@@ -40,9 +40,9 @@ function Totals({ byStatus }) {
   )
 }
 
-async function openReceipt(id) {
+async function openReceipt(id, view) {
   const tab = window.open('', '_blank') // opened on the tap so pop-up blockers allow it
-  try { tab.location = await fetchReceiptUrl(id) } catch { tab?.close() }
+  try { tab.location = await fetchReceiptUrl(id, view) } catch { tab?.close() }
 }
 
 function Row({ f }) {
@@ -62,7 +62,10 @@ function Row({ f }) {
         {f.failureCode && <span className={pill({ tone: 'red' })}>{f.failureCode}</span>}
         {f.unlock && <span className={pill({ tone: f.unlock.status === 'failed' ? 'red' : 'slate' })}>{UNLOCK[f.unlock.status] || f.unlock.status}</span>}
         {f.hasReceipt && (
-          <button type="button" onClick={() => openReceipt(f.id)} className={button({ size: 'sm' })}><FileDown size={14} /> Receipt</button>
+          <>
+            <button type="button" onClick={() => openReceipt(f.id, true)} className={button({ size: 'sm', variant: 'primary' })}><Eye size={14} /> View</button>
+            <button type="button" onClick={() => openReceipt(f.id)} className={button({ size: 'sm' })}><FileDown size={14} /> Receipt</button>
+          </>
         )}
       </div>
     </li>

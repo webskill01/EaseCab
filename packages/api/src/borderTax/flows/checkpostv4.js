@@ -16,16 +16,16 @@
  * district → checkpost codes (RJ/UK).
  */
 const { borderTaxWindow, BORDER_TAX_FAILURE, BORDER_TAX_STATES, TAX_MODE } = require('@easecab/shared');
-const { portalError, visibleBtn, alertText, dismissAlert, solveCaptcha, VERDICT_MS } = require('./portal');
+const { portalError, visibleBtn, alertText, solveCaptcha, VERDICT_MS } = require('./portal');
 const { bankHandoff } = require('./bank');
 const { TREASURY, treasuryUp } = require('./treasury');
 
 const ENTRY_URL = 'https://parivahan.gov.in/en/node/579';
 const SERVICE_TAX = '/public/payment/taxCollectionOnline';
-const MAX_DAY_SHIFTS = 3; // "already paid" → try the next full day, a few times
 const ALREADY_PAID = /already paid/i;
 const PENDING = /pending for verification/i; // an earlier unpaid attempt locks the vehicle
 const ROAD_TAX_EXPIRED = /road tax validity is expired/i; // UK, PB01C7365 (2026-11-04)
+const SAME_STATE = /same state vehicle/i; // HR, after Get Details (2026-11-14)
 const OPEN_TRIES = 3;
 const VAHAN_CAPTCHA_LEN = 6; // portal: "Captcha must be six characters"
 const CALC_MS = 30_000;
@@ -71,6 +71,7 @@ async function ownerStep(page, job, io) {
   await solveCaptcha(page, io, {
     reopen: getDetails,
     step: 'vahan',
+    refuse: (alert) => { if (SAME_STATE.test(alert)) throw portalError(BORDER_TAX_FAILURE.SAME_STATE, alert); },
     input: '#inputVahanCap',
     length: VAHAN_CAPTCHA_LEN,
     submit: () => page.locator('.modal.show button:visible', { hasText: 'OK' }).first().click(),
@@ -153,15 +154,14 @@ async function setWindow(page, job, start, dateOnly) {
     return { from, upto };
   }
   const from = portalWindow(start, 1, dateOnly).from;
-  await page.fill('#uptpDate', '').catch(() => {}); // a day-shift retry: wait for the new end, not the old one
-  await setDateTime(page, '#floatingTaxfrom', fmt(from));
+    await setDateTime(page, '#floatingTaxfrom', fmt(from));
   const ok = await page.waitForFunction(() => document.querySelector('#uptpDate')?.value, null, { timeout: MODES_MS }).then(() => true, () => false);
   if (!ok) throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, `portal set no end date for tax mode ${job.taxMode}`);
   return { from, upto: fromPortal(await page.inputValue('#uptpDate')) };
 }
 
-/** Calculates tax; on "already paid" shifts the window one full day forward. */
-async function taxStep(page, job, io) {
+/** Calculates tax. "Already paid" stops the filing — the driver picks new dates (no silent shift). */
+async function taxStep(page, job) {
   const mode = job.taxMode || TAX_MODE.DAYS;
   // some vehicles get no tax mode at all (RJ, PB01G9377) — fail clearly instead of hanging
   const hasModes = await page.waitForFunction((m) => [...(document.querySelector('#floatingtaxmode')?.options || [])]
@@ -170,23 +170,15 @@ async function taxStep(page, job, io) {
     (os) => os.map((o) => `${o.value}=${o.textContent.trim()}`).join(',')).catch(() => 'no select')}]`);
   await page.selectOption('#floatingtaxmode', mode);
   const dateOnly = (await page.getAttribute('#floatingTaxfrom', 'type')) === 'date';
-  let start = new Date(job.startAt);
-  for (let shift = 0; shift <= MAX_DAY_SHIFTS; shift += 1) {
-    const { from, upto } = await setWindow(page, job, start, dateOnly);
-    await visibleBtn(page, 'Calculate').click();
-    // HP can take well over 4s: wait for a tax row or a portal alert
-    await page.waitForFunction(() => [...document.querySelectorAll('table tr')].filter((r) => r.offsetParent).length > 1
-      || document.querySelector('.modal.show, .swal2-popup'), null, { timeout: CALC_MS }).catch(() => {});
-    const alert = await alertText(page);
-    if (!ALREADY_PAID.test(alert)) {
-      if (alert) throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, alert);
-      return { from, upto, taxPaise: await readTaxPaise(page) };
-    }
-    io.log(`already paid for ${istInput(from)} — moving to the next day`);
-    await dismissAlert(page);
-    start = new Date(start.getTime() + 86_400_000);
-  }
-  throw portalError(BORDER_TAX_FAILURE.ALREADY_PAID);
+  const { from, upto } = await setWindow(page, job, new Date(job.startAt), dateOnly);
+  await visibleBtn(page, 'Calculate').click();
+  // HP can take well over 4s: wait for a tax row or a portal alert
+  await page.waitForFunction(() => [...document.querySelectorAll('table tr')].filter((r) => r.offsetParent).length > 1
+    || document.querySelector('.modal.show, .swal2-popup'), null, { timeout: CALC_MS }).catch(() => {});
+  const alert = await alertText(page);
+  if (ALREADY_PAID.test(alert)) throw portalError(BORDER_TAX_FAILURE.ALREADY_PAID, alert);
+  if (alert) throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, alert);
+  return { from, upto, taxPaise: await readTaxPaise(page) };
 }
 
 async function disclaimerStep(page, io) {
@@ -231,7 +223,7 @@ async function fileCheckpost(page, job, io) {
   io.progress?.(1); // vehicle found on Vahan
   await vehicleStep(page, job);
   io.progress?.(2); // vehicle details + checkpost accepted
-  const quote = await taxStep(page, job, io);
+  const quote = await taxStep(page, job);
   io.progress?.(3); // tax quoted; now the bank / payment page
   io.log(`quote ₹${quote.taxPaise / 100} ${istInput(quote.from)} → ${istInput(quote.upto)}`);
   // no stop for a driver OK here (dropped 2026-11-06, user: one loading phase) — the app warns before
