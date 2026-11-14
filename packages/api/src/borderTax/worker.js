@@ -9,7 +9,7 @@ const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
 const { chromium } = require('playwright');
-const { BORDER_TAX, createTelegramNotifier } = require('@easecab/shared');
+const { BORDER_TAX, BORDER_TAX_KEYS, createTelegramNotifier } = require('@easecab/shared');
 const { createBorderTaxRepository } = require('../features/borderTax/borderTax.repository');
 const { createBorderTaxService } = require('../features/borderTax/borderTax.service');
 const { createRunner } = require('./runner');
@@ -62,7 +62,11 @@ async function main() {
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));
   sweep();
   const sweepTimer = setInterval(sweep, RECEIPT_SWEEP_MS);
-  const watch = createTreasuryWatch({ alert });
+  const watch = createTreasuryWatch({
+    alert,
+    load: async () => Object.fromEntries(Object.entries(await redis.hgetall(BORDER_TAX_KEYS.TREASURY_UP)).map(([st, v]) => [st, v === '1'])),
+    save: (st, up) => redis.hset(BORDER_TAX_KEYS.TREASURY_UP, st, up ? '1' : '0'),
+  });
   const watchTick = () => watch().catch((err) => logger.warn({ err: err.message }, 'treasury watch failed'));
   watchTick();
   const watchTimer = setInterval(watchTick, BORDER_TAX.TREASURY_WATCH_SEC * 1000);
