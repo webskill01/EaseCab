@@ -9,7 +9,7 @@ const { lookupReceipt } = require('./flows/receiptLookup');
 const { clearPending } = require('./flows/clearPending');
 
 // All use the shared checkpostv4 portal; a state without a flow fails fast.
-const FLOWS = Object.freeze({ HR: fileCheckpost, HP: fileCheckpost, UP: fileCheckpost, RJ: fileCheckpost, UK: fileCheckpost });
+const FLOWS = Object.freeze({ HR: fileCheckpost, HP: fileCheckpost, UP: fileCheckpost, RJ: fileCheckpost, UK: fileCheckpost, PB: fileCheckpost });
 const DAY_MS = 86_400_000;
 const STOPPED = 'filing no longer active'; // driver cancelled / filing expired — not our fault, no alert
 // Our side broke (vs a driver/vehicle outcome like captcha timeout or expired PUC) → Telegram.

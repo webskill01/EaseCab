@@ -11,7 +11,7 @@ import { ListFilters } from '@/features/shell/components/ListFilters'
 import { button, pill } from '@/lib/ui'
 
 const opts = (pairs) => pairs.map(([id, label]) => ({ id, label }))
-const STATES = opts([['', 'All'], ['HR', 'Haryana'], ['HP', 'Himachal'], ['UP', 'Uttar Pradesh'], ['RJ', 'Rajasthan'], ['UK', 'Uttarakhand']])
+const STATES = opts([['', 'All'], ['HR', 'Haryana'], ['HP', 'Himachal'], ['UP', 'Uttar Pradesh'], ['RJ', 'Rajasthan'], ['UK', 'Uttarakhand'], ['PB', 'Punjab']])
 const STATUS = {
   queued: ['Queued', 'amber'], filling: ['Filling', 'amber'], awaiting_captcha: ['Captcha', 'amber'],
   awaiting_payment: ['QR shown', 'violet'], handed_off: ['Handed off', 'blue'], paid: ['Paid', 'green'],

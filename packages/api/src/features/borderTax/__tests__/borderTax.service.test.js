@@ -73,7 +73,7 @@ test('create: a state the admin paused is refused (422), the rest stay live', as
   const svc = createBorderTaxService({ repo, logger });
   await assert.rejects(svc.create('u1', input()), (e) => e.statusCode === 422);
   assert.strictEqual(repo.queue.length, 0);
-  assert.deepStrictEqual(await svc.liveStates(), ['UP', 'HP']);
+  assert.deepStrictEqual(await svc.liveStates(), ['UP', 'HP', 'PB']);
 });
 
 test('create: second live filing for the same vehicle is a 409', async () => {

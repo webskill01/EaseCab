@@ -13,6 +13,7 @@ const { tagQr, decodeQr, describe, receiptOn, receiptPdf } = require('./payuQr')
  */
 const QR_WAIT_MS = 25_000;
 const FAILED = /fail|declin|reject|expir|cancel/i;
+const SBI_HOST = /(^|\.)(sbi\.bank\.in|onlinesbi\.sbi)$/; // UP: merchant.sbi.bank.in, PB: merchant.onlinesbi.sbi
 
 /** "This Transaction request will expire after 02:51 minutes" → seconds, or null. */
 async function secondsLeft(page) {
@@ -44,7 +45,7 @@ async function openSbiQr(page, io) {
 
 /** SBI's own status line under "Transaction Status" while the QR page is up ('' once it left SBI). */
 async function sbiStatus(page) {
-  if (!/sbi\.bank\.in$/.test(new URL(page.url()).hostname)) return '';
+  if (!SBI_HOST.test(new URL(page.url()).hostname)) return '';
   return page.evaluate(() => document.body.innerText.match(/Transaction Status\s*\n?\s*([^\n]+)/i)?.[1] || '').catch(() => '');
 }
 
@@ -64,7 +65,7 @@ async function awaitSbiPaid(page, io, secLeft) {
     }
     const status = await sbiStatus(page);
     if (FAILED.test(status)) throw portalError(F.PAYMENT_FAILED, `SBI status ${status.slice(0, 60)}`);
-    if (!left && !page.url().includes('sbi.bank.in')) {
+    if (!left && !SBI_HOST.test(new URL(page.url()).hostname)) {
       left = Date.now();
       const u = new URL(page.url());
       io.log(`left SBI → ${u.hostname}${u.pathname}`); // maps the result path on the first real payment

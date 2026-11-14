@@ -14,7 +14,7 @@ const HOME = 'https://services.parivahan.gov.in/checkpostv4/#/';
 const CAPTCHA_TRIES = 4;
 const LIST_WAIT_MS = 6000;
 const MAX_ROWS = 5; // GRN match opens rows one by one, newest first; a vehicle has few same-day payments
-const STATE_NAME = Object.freeze({ HR: /haryana/i, HP: /himachal/i, UP: /uttar pradesh/i }); // HP/UP: same page, list not seen yet
+const STATE_NAME = Object.freeze({ HR: /haryana/i, HP: /himachal/i, UP: /uttar pradesh/i, PB: /punjab/i }); // HP/UP: same page, list not seen yet
 
 /** Search form → result rows, OCR captcha retried. @returns {Promise<?import('playwright').Page>} */
 async function listPage(context, stateCd, vehicleNo) {

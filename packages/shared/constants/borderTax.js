@@ -180,6 +180,29 @@ const BORDER_TAX_STATES = Object.freeze({
       'RUDRAPUR': ['4', '9'],
     },
   }),
+  // mapped live 2026-11-15 (HR55AV8334): ₹240/day at Shambu; IFMS → SBI BANK → SBIePay QR. Portal also
+  // offers QUARTERLY — left off until one is filed live.
+  PB: withPortal({
+    code: 'PB',
+    name: 'Punjab',
+    permitType: PERMIT_TYPE.NOT_APPLICABLE,
+    serviceType: SERVICE_TYPE.NOT_APPLICABLE,
+    needsDistance: false,
+    taxModes: Object.freeze([TAX_MODE.DAYS]),
+    portal: {
+      'SHAMBU': ['3', '4'],
+      'RAJPURA': ['5', '6'],
+      'GUMJAL': ['5', '7'],
+      'KHARAR': ['1', '1'],
+      'JHARMARI': ['1', '2'],
+      'GHANOULI': ['2', '3'],
+      'MOONAK': ['4', '5'],
+      'DOOMWALI': ['6', '8'],
+      'KILLIAN WALI': ['7', '9'],
+      'MAMOON': ['8', '11'],
+      'MADHO PUR': ['8', '10'],
+    },
+  }),
 });
 
 const BORDER_TAX = Object.freeze({
@@ -284,9 +307,9 @@ function borderTaxWindow(startAt, days) {
 }
 
 // States a driver may file for now: the ones whose payment page offers a UPI QR (2026-11-11).
-// HR = in-app QR (proven live); UP (SBIePay) + HP (HimKosh → PayU) still hand the bank page to the driver.
+// All in-app QR: HR (eGRAS → PayU), HP (HimKosh → PayU), UP (SBIePay), PB (IFMS → SBIePay, 2026-11-15).
 // RJ (IFMS → NEFT) and UK (SBIePay, no QR) stay off.
-const BORDER_TAX_LIVE_STATES = Object.freeze(['HR', 'UP', 'HP']);
+const BORDER_TAX_LIVE_STATES = Object.freeze(['HR', 'UP', 'HP', 'PB']);
 
 module.exports = {
   BORDER_TAX_LIVE_STATES,

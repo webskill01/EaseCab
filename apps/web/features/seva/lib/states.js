@@ -32,7 +32,11 @@ export const BT_STATES = Object.freeze({
     'KASHIPUR', 'BAJPUR', 'JASPUR', 'PULBHATTA', 'DAURAHA', 'MANJHOLA', 'NADEHI', 'SITARGANJ',
     'MELAGHAT', 'BANBASA', 'RUDRAPUR',
   ] },
+  PB: { name: 'Punjab', needsDistance: false, taxModes: ['1'], checkposts: [
+    'SHAMBU', 'RAJPURA', 'GUMJAL', 'KHARAR', 'JHARMARI', 'GHANOULI', 'MOONAK', 'DOOMWALI',
+    'KILLIAN WALI', 'MAMOON', 'MADHO PUR',
+  ] },
 })
 
 /** Mirror of @easecab/shared BORDER_TAX_LIVE_STATES — only these show in the picker (states with UPI QR payment). */
-export const BT_LIVE_STATES = Object.freeze(['HR', 'UP', 'HP'])
+export const BT_LIVE_STATES = Object.freeze(['HR', 'UP', 'HP', 'PB'])
