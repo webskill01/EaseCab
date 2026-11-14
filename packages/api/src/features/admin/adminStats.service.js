@@ -1,6 +1,6 @@
 'use strict';
 
-const { ADMIN_STATISTICS, SUBSCRIPTION_PLAN } = require('@easecab/shared');
+const { ADMIN_STATISTICS, SUBSCRIPTION_PLAN, SUBSCRIPTION_PLANS } = require('@easecab/shared');
 
 const PRICE = SUBSCRIPTION_PLAN.PRICE_PAISE / 100;
 /** Percent rounded to 1 decimal; null when there is nothing to divide by. */
@@ -18,6 +18,7 @@ function toWeek(r) {
   return {
     week: r.week.toISOString().slice(0, 10),
     signups: r.signups, newPayers: r.newPayers, payments: r.payments,
+    renewals: Math.max(r.payments - r.newPayers, 0), // payments by drivers who had paid before
     revenue: r.revenuePaise / 100,
     activePaid: r.activePaid, mrr: Math.round(r.mrrPaise / 100), // per-plan monthly share (₹1,199/yr → ₹99)
     conversion: pct(r.totalPayers, r.totalSignups),
@@ -53,14 +54,30 @@ function createAdminStatsService({ repo }) {
         signups: r.signups,
         paidAccounts: r.paidAccounts,
         payments: r.payments,
+        renewals: r.payments - r.paidAccounts, // every payment that isn't a member's first
         revenue: r.revenuePaise / 100,
       }));
       const sum = (k) => days.reduce((t, d) => t + d[k], 0);
       const totals = {
         signups: sum('signups'), paidAccounts: sum('paidAccounts'),
-        payments: sum('payments'), revenue: sum('revenue'), activeMembers,
+        payments: sum('payments'), renewals: sum('renewals'), revenue: sum('revenue'), activeMembers,
       };
       return { since: ADMIN_STATISTICS.LAUNCH_DATE, totals, days };
+    },
+
+    /**
+     * Renewals page: payments after a member's first, newest first.
+     * @param {{ page: number, limit: number }} q
+     * @returns {Promise<{ items: object[], page: number, limit: number, total: number }>}
+     */
+    async renewals({ page, limit }) {
+      const rows = await repo.renewals({ offset: (page - 1) * limit, limit });
+      const items = rows.map((r) => ({
+        id: r.id, paidAt: r.paidAt, amount: r.amount, nth: r.nth,
+        months: SUBSCRIPTION_PLANS.find((pl) => pl.pricePaise === r.amount)?.months ?? null, // null = off-plan amount
+        member: { id: r.userId, name: r.name, phone: r.phone },
+      }));
+      return { items, page, limit, total: rows[0]?.total ?? 0 };
     },
 
     /**

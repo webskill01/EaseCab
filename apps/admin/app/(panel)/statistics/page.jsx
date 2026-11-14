@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart3, UserPlus, Crown, Receipt, IndianRupee, Users } from 'lucide-react'
+import { BarChart3, UserPlus, Crown, Receipt, IndianRupee, Users, RefreshCw } from 'lucide-react'
 import { useGrowth } from '@/features/statistics/hooks/useGrowth'
 import { BarChart } from '@/features/statistics/components/BarChart'
 import { StatCard } from '@/features/dashboard/components/StatCard'
@@ -18,6 +18,7 @@ const TOTALS = [
   { key: 'signups', label: 'Signups', icon: UserPlus, tone: 'sky' },
   { key: 'paidAccounts', label: 'Paid accounts', icon: Crown, tone: 'green' },
   { key: 'payments', label: 'Payments', icon: Receipt, tone: 'amber' },
+  { key: 'renewals', label: 'Renewals', icon: RefreshCw, tone: 'blue', hint: 'payments after a driver’s first', href: '/renewals' },
   { key: 'revenue', label: 'Revenue', icon: IndianRupee, tone: 'violet', fmt: inr },
   { key: 'activeMembers', label: 'Active members', icon: Users, tone: 'blue', hint: 'right now, joined since launch' },
 ]
@@ -25,6 +26,7 @@ const TOTALS = [
 const METRICS = [
   { id: 'signups', label: 'Signups', color: 'bg-sky-500' },
   { id: 'paidAccounts', label: 'Paid', color: 'bg-emerald-500' },
+  { id: 'renewals', label: 'Renewals', color: 'bg-blue-500' },
   { id: 'revenue', label: 'Revenue', color: 'bg-violet-500', fmt: inr },
 ]
 
@@ -32,6 +34,7 @@ const COLS = [
   { key: 'signups', label: 'Signups' },
   { key: 'paidAccounts', label: 'Paid' },
   { key: 'payments', label: 'Payments' },
+  { key: 'renewals', label: 'Renewals' },
   { key: 'revenue', label: 'Revenue', fmt: inr },
 ]
 
@@ -57,9 +60,9 @@ export default function StatisticsPage() {
 
       {data && (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-6">
             {TOTALS.map((t) => (
-              <StatCard key={t.key} label={t.label} icon={t.icon} tone={t.tone} hint={t.hint} value={(t.fmt ?? String)(data.totals[t.key])} />
+              <StatCard key={t.key} label={t.label} icon={t.icon} tone={t.tone} hint={t.hint} href={t.href} value={(t.fmt ?? String)(data.totals[t.key])} />
             ))}
           </div>
 

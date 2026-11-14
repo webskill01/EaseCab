@@ -20,8 +20,8 @@ test('growth maps rows, converts paise to rupees and sums totals', async () => {
   });
   const g = await svc.growth();
   assert.strictEqual(g.since, '2026-10-15');
-  assert.deepStrictEqual(g.days[0], { day: '2026-10-17', signups: 40, paidAccounts: 2, payments: 3, revenue: 447 });
-  assert.deepStrictEqual(g.totals, { signups: 90, paidAccounts: 3, payments: 4, revenue: 596, activeMembers: 3 });
+  assert.deepStrictEqual(g.days[0], { day: '2026-10-17', signups: 40, paidAccounts: 2, payments: 3, renewals: 1, revenue: 447 });
+  assert.deepStrictEqual(g.totals, { signups: 90, paidAccounts: 3, payments: 4, renewals: 1, revenue: 596, activeMembers: 3 });
 });
 
 const raw = (o = {}) => ({
@@ -35,7 +35,7 @@ test('trackRecord derives MRR, conversion, renewal, LTV and liquidity', async ()
   const t = await svc.trackRecord();
   assert.deepStrictEqual(t.targets, { renewalRate: 70, conversion: 10, liquidity: 60 });
   assert.deepStrictEqual(t.weeks[0], {
-    week: '2026-10-12', signups: 100, newPayers: 10, payments: 12, revenue: 1788,
+    week: '2026-10-12', signups: 100, newPayers: 10, payments: 12, renewals: 2, revenue: 1788,
     activePaid: 25, mrr: 3725, conversion: 15, renewalsDue: 20, renewalRate: 75,
     ltv: 596, activeDrivers: 40, contacts: 60, rides: 100, liquidity: 55,
   });
@@ -62,4 +62,26 @@ test('trackRecord counts active paid from payments only, never the live member c
   assert.strictEqual(now.activePaid, 30);
   assert.strictEqual(now.mrr, 4470); // the repo's per-plan monthly share, not activePaid × ₹149
   assert.strictEqual(prev.activePaid, 20);
+});
+
+test('renewals pages rows, maps plan months and the member', async () => {
+  let asked;
+  const at = new Date('2026-11-14T03:00:00Z');
+  const svc = createAdminStatsService({
+    repo: {
+      async renewals(q) {
+        asked = q;
+        return [
+          { id: 'p1', paidAt: at, amount: 14900, nth: 2, userId: 'u1', name: 'Ravi', phone: '+911111111111', total: 41 },
+          { id: 'p2', paidAt: at, amount: 12345, nth: 3, userId: 'u2', name: null, phone: '+912222222222', total: 41 },
+        ];
+      },
+    },
+  });
+  const r = await svc.renewals({ page: 2, limit: 30 });
+  assert.deepStrictEqual(asked, { offset: 30, limit: 30 });
+  assert.strictEqual(r.total, 41);
+  assert.deepStrictEqual(r.items[0], { id: 'p1', paidAt: at, amount: 14900, nth: 2, months: 1, member: { id: 'u1', name: 'Ravi', phone: '+911111111111' } });
+  assert.strictEqual(r.items[1].months, null);
+  assert.strictEqual((await createAdminStatsService({ repo: { async renewals() { return []; } } }).renewals({ page: 1, limit: 30 })).total, 0);
 });

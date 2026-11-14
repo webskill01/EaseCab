@@ -5,7 +5,7 @@ const {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
-  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY, ADMIN_SORT,
+  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_RENEWALS, ADMIN_COMPLIMENTARY, ADMIN_SORT,
 } = require('../constants/admin');
 const { BOT_FILTER_LIST } = require('../constants/botFilters');
 const { VERIFICATION_STATUS } = require('../constants/enums');
@@ -175,6 +175,11 @@ const adminFounderPaymentsQuerySchema = z.object({
   sort: z.enum(Object.values(ADMIN_SORT)).default(ADMIN_SORT.NEWEST),
 });
 
+const adminRenewalsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(ADMIN_RENEWALS.MAX_PAGE_SIZE).default(ADMIN_RENEWALS.PAGE_SIZE),
+});
+
 const adminFounderPaymentIdParamSchema = z.object({ paymentId: z.string().uuid() });
 
 /** Link a founder payment to a member. Accepts "98765 43210", "919876543210", "+91 98765-43210". */
@@ -199,6 +204,7 @@ module.exports = {
   adminComplimentaryCreateSchema,
   adminComplimentaryUserParamSchema,
   adminFounderPaymentsQuerySchema,
+  adminRenewalsQuerySchema,
   adminFounderPaymentIdParamSchema,
   adminFounderPaymentLinkSchema,
   adminBotFiltersQuerySchema,

@@ -42,13 +42,13 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <StatCard label="Signups today" value={today ? today.signups : wait} icon={UserPlus} tone="sky" />
         <StatCard label="Paid accounts today" value={today ? today.paidAccounts : wait} icon={Crown} tone="green" hint="first-time payers" />
-        {/* every captured payment: first-time payers + renewals/repeat buys by existing members */}
+        {/* every captured payment = first-time payers + renewals */}
         <StatCard
           label="Payments today"
           value={today ? today.payments : wait}
           icon={Receipt}
           tone="blue"
-          hint={today ? `${Math.max(today.payments - today.paidAccounts, 0)} renewal/repeat` : null}
+          hint={today ? `${today.renewals} renewal${today.renewals === 1 ? '' : 's'}` : null}
         />
         <StatCard label="Revenue today" value={today ? inr(today.revenue) : wait} icon={IndianRupee} tone="violet" />
         <div className="col-span-2 lg:col-span-1">

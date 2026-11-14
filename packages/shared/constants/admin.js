@@ -84,6 +84,9 @@ const ADMIN_STATISTICS = Object.freeze({
  * the founder pays ₹149 in the app from this account, then links that payment to the
  * member in the admin panel (payments.on_behalf_of_user_id). Stats credit the member.
  */
+/** Renewals list: captured payments that were not the member's first (Statistics → Renewals). */
+const ADMIN_RENEWALS = Object.freeze({ PAGE_SIZE: 30, MAX_PAGE_SIZE: 100 });
+
 const ADMIN_FOUNDER_PAYMENTS = Object.freeze({
   COLLECTION_PHONES: Object.freeze(['+916283380110']),
   PAGE_SIZE: 20,
@@ -108,7 +111,7 @@ const ADMIN_SORT = Object.freeze({ NEWEST: 'newest', OLDEST: 'oldest' });
 const ADMIN_COMPLIMENTARY = Object.freeze({ MAX_MONTHS: 12, NOTE_MAX: 200, LABEL_MAX: 60 });
 
 module.exports = {
-  ADMIN_STATISTICS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY, ADMIN_BORDER_TAX,
+  ADMIN_STATISTICS, ADMIN_RENEWALS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY, ADMIN_BORDER_TAX,
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, ADMIN_SORT, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,

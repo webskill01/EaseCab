@@ -163,6 +163,33 @@ function createAdminStatsRepository({ prisma }) {
     },
 
     /**
+     * Renewals since launch, newest first: captured payments that were not the member's first
+     * (nth > 1, counted over all their captured payments). Same member rules as growthDaily:
+     * credited to on_behalf_of_user_id, excluded phones + free members left out.
+     * @param {{ offset: number, limit: number }} page
+     * @returns {Promise<{ id: string, paidAt: Date, amount: number, nth: number, userId: string, name: ?string, phone: string, total: number }[]>}
+     */
+    async renewals({ offset, limit }) {
+      const { LAUNCH_DATE, TIMEZONE, EXCLUDED_PHONES } = ADMIN_STATISTICS;
+      const phones = [...EXCLUDED_PHONES];
+      // ponytail: window over every captured payment, fine at thousands; index (status, updated_at) past ~1M
+      return prisma.$queryRaw`
+        WITH p AS (
+          SELECT pm.id, pm.updated_at, pm.amount, COALESCE(pm.on_behalf_of_user_id, pm.user_id) AS uid,
+                 row_number() OVER (PARTITION BY COALESCE(pm.on_behalf_of_user_id, pm.user_id) ORDER BY pm.updated_at, pm.id) AS nth
+          FROM payments pm WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED}
+        )
+        SELECT p.id, p.updated_at AS "paidAt", p.amount, p.nth::int AS nth, u.id AS "userId", u.name, u.phone,
+               count(*) OVER ()::int AS total
+        FROM p JOIN users u ON u.id = p.uid
+        WHERE p.nth > 1 AND (p.updated_at AT TIME ZONE ${TIMEZONE})::date >= ${LAUNCH_DATE}::date
+          AND u.phone <> ALL(${phones})
+          AND NOT EXISTS (SELECT 1 FROM complimentary_members cm WHERE cm.user_id = u.id)
+        ORDER BY p.updated_at DESC
+        LIMIT ${limit} OFFSET ${offset}`;
+    },
+
+    /**
      * Members with time left right now who joined since launch OR paid since launch
      * (pre-launch signups who pay are real customers, same as growthDaily's paidAccounts),
      * excluding reviewer phones + free members.

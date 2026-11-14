@@ -52,6 +52,7 @@ const METRICS = [
     good: 'Compare full weeks: each week should beat the one before.' },
   { key: 'signups', label: 'Signups', fmt: num, explain: 'New drivers who created an account this week.' },
   { key: 'newPayers', label: 'New payers', fmt: num, explain: 'Drivers who paid for the very first time this week.' },
+  { key: 'renewals', label: 'Renewals', fmt: num, explain: 'Payments this week from drivers who had paid before (renewals, early top-ups, longer plans). Payments = new payers + renewals.' },
   { key: 'contacts', label: 'Contacts', fmt: num, explain: 'How many times drivers revealed a ride’s phone number this week.' },
   { key: 'rides', label: 'Rides', fmt: num, explain: 'Rides that came into the feed this week (WhatsApp groups + posted in the app).' },
 ]

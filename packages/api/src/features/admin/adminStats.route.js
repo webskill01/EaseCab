@@ -1,6 +1,8 @@
 'use strict';
 
 const express = require('express');
+const { adminRenewalsQuerySchema } = require('@easecab/shared');
+const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
 
 /**
@@ -24,6 +26,11 @@ function createAdminStatsRouter({ service, requireAdmin }) {
   router.get('/growth', async (_req, res) => {
     const growth = await service.growth();
     sendSuccess(res, { data: { growth } });
+  });
+
+  router.get('/renewals', validate(adminRenewalsQuerySchema, 'query'), async (req, res) => {
+    const { items, page, limit, total } = await service.renewals(req.valid.query);
+    sendSuccess(res, { data: { renewals: items }, meta: { page, limit, total } });
   });
 
   router.get('/track-record', async (_req, res) => {
