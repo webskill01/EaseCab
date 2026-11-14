@@ -89,6 +89,7 @@
       "already_paid": "Tax is already paid for this time.",
       "road_tax_expired": "Your vehicle's road tax has expired. Renew it first.",
       "no_tax_mode": "The portal has no tax option for this vehicle at this border.",
+      "bank_down": "The state govt payment site is down right now. Nothing was charged and your vehicle isn't blocked. Please try again later.",
       "no_handoff": "The portal didn't open the bank page. Please try again.",
       "pucc_expired": "Your vehicle's pollution certificate (PUC) has expired. Renew it, then file again.",
       "fitness_expired": "Your vehicle's fitness certificate has expired. Renew it, then file again.",

@@ -13,7 +13,7 @@ const FLOWS = Object.freeze({ HR: fileCheckpost, HP: fileCheckpost, UP: fileChec
 const DAY_MS = 86_400_000;
 const STOPPED = 'filing no longer active'; // driver cancelled / filing expired — not our fault, no alert
 // Our side broke (vs a driver/vehicle outcome like captcha timeout or expired PUC) → Telegram.
-const ALERT_ON = new Set([F.PORTAL_ERROR, F.NO_HANDOFF, F.NO_QR, F.PAYMENT_UNKNOWN]);
+const ALERT_ON = new Set([F.PORTAL_ERROR, F.BANK_DOWN, F.NO_HANDOFF, F.NO_QR, F.PAYMENT_UNKNOWN]);
 // Thrown at/after eTransPgi, where the portal mints a payment id: the attempt locks the vehicle in that state.
 const BANK_STEP = new Set([F.NO_HANDOFF, F.NO_QR, F.PAYMENT_FAILED, F.PAYMENT_TIMEOUT]);
 
@@ -160,6 +160,11 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, cl
         const own = req.status !== S.PAID && req.taxPaise && Math.round(Number(paidRow.amount) * 100) === req.taxPaise;
         if (own && (await service.latePaid(id, { receiptNo: paidRow.receiptNo, receiptKey: await storeReceipt(id, paidRow.pdf) }))) log('late payment found → paid');
         alert(`${req.stateCd} unlock ${id.slice(0, 8)}: pending attempt was PAID (${paidRow.receiptNo}${own ? ', this filing' : ''})`);
+      }
+      // bank PENDING: treasury never answered Vahan → ask again later; UNLOCK_TRIES of these → FAILED + alert
+      if (!unknown && !paidRow && rows.some((r) => r.result === 'bank_pending')) {
+        if (!(await service.unlockFailed(id, BORDER_TAX.UNLOCK_BANK_PENDING_SEC))) alert(`${req.stateCd} unlock ${id.slice(0, 8)} gave up: bank still PENDING`);
+        return;
       }
       // unknown: never re-tapped (it may be a paid row whose receipt didn't load) — ops checks it
       await service.unlockDone(id, { retryAt, receiptNo: paidRow?.receiptNo, failed: Boolean(unknown) });

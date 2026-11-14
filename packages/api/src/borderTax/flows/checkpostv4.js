@@ -15,9 +15,10 @@
  * BORDER_TAX_STATES (UP/UK have no '0'), distanceKm (HR only), date-only tax inputs (UP/RJ/UK),
  * district → checkpost codes (RJ/UK).
  */
-const { borderTaxWindow, BORDER_TAX_FAILURE, BORDER_TAX_STATES, TAX_MODE } = require('@easecab/shared');
+const { borderTaxWindow, BORDER_TAX, BORDER_TAX_FAILURE, BORDER_TAX_STATES, TAX_MODE } = require('@easecab/shared');
 const { portalError, visibleBtn, alertText, dismissAlert, solveCaptcha, VERDICT_MS } = require('./portal');
 const { bankHandoff } = require('./bank');
+const { TREASURY, treasuryUp } = require('./treasury');
 
 const ENTRY_URL = 'https://parivahan.gov.in/en/node/579';
 const SERVICE_TAX = '/public/payment/taxCollectionOnline';
@@ -219,6 +220,12 @@ async function disclaimerStep(page, io) {
  * @returns {Promise<{ from: Date, upto: Date, taxPaise: number, handoff?: { method: string, action: string, fields: string[][] }, payPage?: import("playwright").Page }>}
  */
 async function fileCheckpost(page, job, io) {
+  // treasury down → stop before Pay Online, which would leave a bank-side PENDING lock (HP, 2026-11-14).
+  // Proxied states skipped: eGRAS refuses even TCP from the VPS, so a direct check would always fail.
+  const host = TREASURY[job.stateCd]?.host;
+  if (host && !BORDER_TAX.PROXY_STATES.includes(job.stateCd) && !(await treasuryUp(host))) {
+    throw portalError(BORDER_TAX_FAILURE.BANK_DOWN, `${host} unreachable`);
+  }
   await openForm(page, job.stateCd);
   // io.progress(n) = steps done, the app's checklist ticks on these (real progress, not a timer)
   await ownerStep(page, job, io);

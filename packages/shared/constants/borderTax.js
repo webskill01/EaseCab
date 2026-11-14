@@ -216,6 +216,7 @@ const BORDER_TAX = Object.freeze({
   UNLOCK_POLL_SEC: 60, // worker checks for due unlocks this often
   UNLOCK_TRIES: 3, // portal/captcha errors before giving up (operator alerted)
   UNLOCK_RETRY_SEC: 300,
+  UNLOCK_BANK_PENDING_SEC: 3600, // portal: "pending at the bank side" (treasury down) → ask again after this, counts as a try
   UNLOCK_TTL_SEC: 86_400, // unlock status kept for the app this long
   CREATE_RATE_LIMIT: Object.freeze({ MAX_PER_WINDOW: 5, WINDOW_SEC: 3600 }),
   LIST: Object.freeze({ DEFAULT_LIMIT: 20, MAX_LIMIT: 50 }),
@@ -257,6 +258,7 @@ const BORDER_TAX_FAILURE = Object.freeze({
   FITNESS_EXPIRED: 'fitness_expired', // portal: the vehicle's fitness certificate has lapsed — driver renews first
   ROAD_TAX_EXPIRED: 'road_tax_expired', // portal: the vehicle's home road tax has lapsed — driver renews first
   NO_TAX_MODE: 'no_tax_mode', // portal offers no tax mode for this vehicle at this checkpost
+  BANK_DOWN: 'bank_down', // state treasury site unreachable — stopped before Vahan's Pay Online, so no lock
   NO_HANDOFF: 'no_handoff', // eTransPgi Submit never left Vahan for a bank page
   NO_QR: 'no_qr', // in-app QR: PayU opened but its UPI QR could not be read
   PAYMENT_FAILED: 'payment_failed', // in-app QR: PayU reported the payment as failed

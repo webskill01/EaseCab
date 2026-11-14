@@ -101,3 +101,15 @@ test('treasury page never loaded → the captured challan request is posted agai
   const bank = await passTreasury(context, { ...TREASURY.HP, findMs: 1500 }, captured, { log: () => {} }, again);
   assert.match(bank, /code=4bpd6c/);
 });
+
+test('treasuryUp: listening port → true, closed port → false', async () => {
+  const net = require('node:net');
+  const { treasuryUp } = require('../treasury');
+  const srv = net.createServer().listen(0, '127.0.0.1');
+  await new Promise((r) => srv.once('listening', r));
+  const { port } = srv.address();
+  assert.strictEqual(await treasuryUp('127.0.0.1', port, 2000), true);
+  srv.close();
+  await new Promise((r) => srv.once('close', r));
+  assert.strictEqual(await treasuryUp('127.0.0.1', port, 2000), false);
+});

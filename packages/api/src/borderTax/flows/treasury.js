@@ -1,6 +1,7 @@
 'use strict';
 
 /* global document, location -- page.evaluate callbacks run in the browser */
+const net = require('node:net');
 const { readCaptcha, keepMiss } = require('../ocr');
 const { captchaImage } = require('./portal');
 
@@ -26,6 +27,7 @@ const TRIES = 3; // fill + submit rounds (a wrong code brings a new captcha); th
 const VERDICT_MS = 20_000; // treasury submit → bank page
 // HR eGRAS never loaded within 30s on 2 live filings (2026-11-12): the bot's tab stayed on Vahan
 const FIND_MS = 60_000;
+const UP_MS = 10_000; // treasury TCP check before filing
 
 /** Tags the controls this page needs; returns which were found (names only — never values: PII). */
 async function tagControls(page, { mode, bank }) {
@@ -142,4 +144,21 @@ async function passTreasury(context, cfg, captured, io, again = null) {
   return null;
 }
 
-module.exports = { TREASURY, passTreasury };
+/**
+ * TCP check that the treasury host answers. HP himkosh was unreachable for hours on 2026-11-14 and a
+ * filing that reaches Vahan's Pay Online then locks the vehicle with a bank-side PENDING row.
+ * ponytail: TCP only, not HTTPS — NIC cert chains can trip Node's TLS while Chromium is fine.
+ * @param {string} host @param {number} [port] @param {number} [ms]
+ * @returns {Promise<boolean>}
+ */
+function treasuryUp(host, port = 443, ms = UP_MS) {
+  return new Promise((resolve) => {
+    const sock = net.connect({ host, port });
+    const done = (up) => { sock.destroy(); resolve(up); };
+    sock.setTimeout(ms, () => done(false));
+    sock.once('connect', () => done(true));
+    sock.once('error', () => done(false));
+  });
+}
+
+module.exports = { TREASURY, passTreasury, treasuryUp };

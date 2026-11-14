@@ -245,14 +245,14 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
       return repo.setUnlock(id, { status: receiptNo ? U.PAID : U.CLEARED, at: String(Date.now()), receiptNo: receiptNo || '' });
     },
 
-    /** Clear run errored. @returns {Promise<boolean>} false = gave up after UNLOCK_TRIES (FAILED) */
-    async unlockFailed(id) {
+    /** Clear run errored (or the bank still says PENDING). @returns {Promise<boolean>} false = gave up after UNLOCK_TRIES (FAILED) */
+    async unlockFailed(id, retrySec = BORDER_TAX.UNLOCK_RETRY_SEC) {
       const tries = Number((await repo.getUnlock(id)).tries || 0) + 1;
       if (tries >= BORDER_TAX.UNLOCK_TRIES) {
         await repo.setUnlock(id, { status: U.FAILED, tries: String(tries) });
         return false;
       }
-      await this.scheduleUnlock(id, Date.now() + BORDER_TAX.UNLOCK_RETRY_SEC * 1000, tries);
+      await this.scheduleUnlock(id, Date.now() + retrySec * 1000, tries);
       return true;
     },
 

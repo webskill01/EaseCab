@@ -89,6 +89,7 @@
       "already_paid": "Is time ke liye tax pehle se bhara hai.",
       "road_tax_expired": "Aapki gaadi ka road tax khatam ho gaya hai. Pehle renew karein.",
       "no_tax_mode": "Is border par is gaadi ke liye portal mein tax option nahi hai.",
+      "bank_down": "State govt ki payment site abhi down hai. Koi paisa nahi kata aur aapki gaadi block nahi hui. Thodi der baad dobara try karein.",
       "no_handoff": "Portal ne bank page nahi khola. Dobara try karein.",
       "pucc_expired": "Aapki gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
       "fitness_expired": "Aapki gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",

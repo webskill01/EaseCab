@@ -19,6 +19,8 @@ const VERDICT_MS = 15_000;
 const LOCK_MIN = 31; // portal frees an unpaid row 30 min after the attempt; +1 for clock skew
 const WAIT_RE = /try after\s*(\d+)\s*Minutes?(?:\s*(\d+)\s*Seconds?)?/i;
 const FAIL_RE = /transaction is fail|initiate transaction again/i;
+// treasury never answered Vahan (himkosh down, 2026-11-14): no verdict yet → retry later, not FAILED
+const BANK_PENDING_RE = /pending at the bank side|\(PENDING\)/i;
 const MISMATCH_RE = /captcha|mismatch|does not match|invalid/i;
 const MONTHS = Object.freeze({ jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 });
 
@@ -55,6 +57,15 @@ async function listRows(context, vehicleNo) {
   throw new Error('check pending: captcha not accepted');
 }
 
+/** Verdict page text → { result, waitSec? }, or null while it is still loading. */
+function verdictOf(text) {
+  const wait = text.match(WAIT_RE);
+  if (wait) return { result: 'wait', waitSec: Number(wait[1]) * 60 + Number(wait[2] || 0) };
+  if (FAIL_RE.test(text)) return { result: 'cleared' }; // "Your transaction is fail. Please initiate transaction again."
+  if (BANK_PENDING_RE.test(text)) return { result: 'bank_pending' };
+  return null;
+}
+
 /** Taps one row's Check Status and reads what the portal answered. */
 async function checkRow(page, paymentId, log) {
   const row = page.locator('table tbody tr', { hasText: paymentId }).first();
@@ -68,9 +79,8 @@ async function checkRow(page, paymentId, log) {
     if (/CustomerReceipt/i.test(page.url()) && RECEIPT_RE.test(text)) {
       return { result: 'paid', receiptNo: text.match(RECEIPT_RE)[1], pdf: await receiptPdf(page, log) };
     }
-    const wait = text.match(WAIT_RE);
-    if (wait) return { result: 'wait', waitSec: Number(wait[1]) * 60 + Number(wait[2] || 0) };
-    if (FAIL_RE.test(text)) return { result: 'cleared' }; // "Your transaction is fail. Please initiate transaction again."
+    const verdict = verdictOf(text);
+    if (verdict) return verdict;
   }
   return { result: 'unknown', note: `${page.url().split('#')[1]?.split('?')[0] || page.url()} ${(await body()).replace(/\s+/g, ' ').slice(-150)}` };
 }
@@ -107,4 +117,4 @@ async function clearPending(context, { stateCd, vehicleNo }, log, now = new Date
   }
 }
 
-module.exports = { clearPending, listRows, parseIst };
+module.exports = { clearPending, listRows, parseIst, verdictOf };
