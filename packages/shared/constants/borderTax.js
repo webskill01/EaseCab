@@ -216,6 +216,7 @@ const BORDER_TAX = Object.freeze({
   UNLOCK_POLL_SEC: 60, // worker checks for due unlocks this often
   UNLOCK_TRIES: 3, // portal/captcha errors before giving up (operator alerted)
   UNLOCK_RETRY_SEC: 300,
+  TREASURY_WATCH_SEC: 180, // treasury/bank host down/up check → Telegram on change (2 readings in a row)
   UNLOCK_BANK_PENDING_SEC: 3600, // portal: "pending at the bank side" (treasury down) → ask again after this, counts as a try
   UNLOCK_TTL_SEC: 86_400, // unlock status kept for the app this long
   CREATE_RATE_LIMIT: Object.freeze({ MAX_PER_WINDOW: 5, WINDOW_SEC: 3600 }),

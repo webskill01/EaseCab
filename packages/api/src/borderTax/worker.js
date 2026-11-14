@@ -18,6 +18,7 @@ const { r2FromEnv } = require('../lib/r2.js');
 const { ocrReady, stopOcr } = require('./ocr');
 const { proxyFor } = require('./proxy');
 const { canvasCodeHook } = require('./flows/portal');
+const { createTreasuryWatch } = require('./treasuryWatch');
 
 const QUEUE_POLL_SEC = 30; // BRPOP timeout — lets the loop notice shutdown
 const RECEIPT_SWEEP_MS = 3_600_000; // hourly: receipts go 24h after validity, an hour late is fine
@@ -61,6 +62,10 @@ async function main() {
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));
   sweep();
   const sweepTimer = setInterval(sweep, RECEIPT_SWEEP_MS);
+  const watch = createTreasuryWatch({ alert });
+  const watchTick = () => watch().catch((err) => logger.warn({ err: err.message }, 'treasury watch failed'));
+  watchTick();
+  const watchTimer = setInterval(watchTick, BORDER_TAX.TREASURY_WATCH_SEC * 1000);
 
   logger.info({ recovered: await service.recoverAfterRestart() }, 'border tax worker up');
   if (await ocrReady()) logger.info('captcha OCR ready');
@@ -87,6 +92,7 @@ async function main() {
     logger.info({ signal }, 'border tax worker stopping'); // in-flight jobs are swept on next boot
     stopping = true;
     clearInterval(sweepTimer);
+    clearInterval(watchTimer);
     stopOcr();
     await (await launching)?.close().catch((err) => logger.warn({ err: err.message }, 'browser close failed'));
     await Promise.race([Promise.allSettled([...lanes, unlocks]), new Promise((r) => setTimeout(r, 2000))]);
