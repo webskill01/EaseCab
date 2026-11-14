@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Crown, Check, Info, Shield } from '@/components/ui/icons'
-import { membershipView, MEMBERSHIP_STATE } from '../lib/membership'
+import { membershipView, MEMBERSHIP_STATE, RENEWAL_BANNER_DAYS } from '../lib/membership'
 import { formatPaymentDate } from '../lib/paymentView'
 import { useMembership } from '../hooks/useMembership'
 import { useCheckout } from '../hooks/useCheckout'
@@ -11,12 +11,13 @@ import { PaymentHistory } from './PaymentHistory'
 import { PlanPicker } from './PlanPicker'
 import { PLANS, DEFAULT_PLAN_ID, RENEW_PLAN_ID, rupees } from '../lib/plans'
 
-const CTA_KEY = Object.freeze({ none: 'subscribe', active: 'renew', expired: 'renew' })
+const CTA_KEY = Object.freeze({ none: 'subscribe', active: 'renew', ending: 'renew', expired: 'renew' })
 
 // Status-card chrome per state (membership.jsx stateMeta).
 const STATUS_META = Object.freeze({
   none: { wrap: 'border-ec-line bg-white', tile: 'bg-ec-blue', Icon: Crown },
   active: { wrap: 'border-ec-success/30 bg-ec-successBg', tile: 'bg-ec-success', Icon: Check },
+  ending: { wrap: 'border-ec-warning/40 bg-ec-warnBg', tile: 'bg-ec-warning', Icon: Info },
   expired: { wrap: 'border-ec-danger/30 bg-ec-dangerBg', tile: 'bg-ec-danger', Icon: Info },
 })
 
@@ -51,9 +52,11 @@ export function MembershipScreen() {
   // New users start on the cheapest entry point; returning members on the popular 6-month plan.
   const planId = picked ?? (v.state === MEMBERSHIP_STATE.NONE ? DEFAULT_PLAN_ID : RENEW_PLAN_ID)
   const price = rupees(PLANS.find((p) => p.id === planId).price)
+  // Same 7-day window as the feed banner, so the renew push/banner never lands on a calm green card
+  const card = v.state === MEMBERSHIP_STATE.ACTIVE && v.daysLeft <= RENEWAL_BANNER_DAYS ? 'ending' : v.state
   const note =
     v.state === MEMBERSHIP_STATE.ACTIVE
-      ? t('active.note', { date: formatPaymentDate(sub?.expiresAt) })
+      ? t(`${card}.note`, { date: formatPaymentDate(sub?.expiresAt) })
       : t(`${v.state}.note`)
 
   return (
@@ -70,7 +73,7 @@ export function MembershipScreen() {
         </section>
       ) : (
         <>
-          <StatusCard state={v.state} note={note} t={t} />
+          <StatusCard state={card} note={note} t={t} />
           <PlanPicker value={planId} onChange={setPicked} t={t} />
 
           {checkout.errorKey && <p className="text-[13px] font-semibold text-ec-danger">{t('error.checkout')}</p>}
@@ -84,7 +87,7 @@ export function MembershipScreen() {
               className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-ec-blue text-[15.5px] font-extrabold text-white shadow-ec-blue disabled:opacity-60"
             >
               <Crown size={18} />
-              {checkout.checkingOut ? t('cta.processing') : t('cta.withPrice', { label: t(`cta.${CTA_KEY[v.state]}`), price })}
+              {checkout.checkingOut ? t('cta.processing') : t('cta.withPrice', { label: t(`cta.${CTA_KEY[card]}`), price })}
             </button>
             <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11.5px] font-semibold text-ec-ink40">
               <Shield size={13} />{t('securedBy')}

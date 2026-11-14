@@ -9,6 +9,10 @@
     "badge": "Active",
     "note": "Access until {date}"
   },
+  "ending": {
+    "badge": "Ending soon",
+    "note": "Ends on {date} — renew now, the days you have left are kept."
+  },
   "expired": {
     "badge": "Expired",
     "note": "Your membership ended. Renew to contact drivers again."

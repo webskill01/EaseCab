@@ -98,9 +98,13 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
   if (membershipLoading) return null
 
   if (gatedOut) {
+    // A lapsed member is asked to renew, not to "subscribe" as if new
+    const g = membershipState === MEMBERSHIP_STATE.EXPIRED
+      ? { title: t('gate.renewTitle'), sub: t('gate.renewSub'), cta: t('gate.renew') }
+      : { title: t('gate.contactTitle'), sub: t('gate.contactSub'), cta: t('gate.subscribe') }
     return (
-      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('gate.contactTitle')}>
-        <SheetTitle icon={<Crown size={22} />} tone="blue" title={t('gate.contactTitle')} sub={t('gate.contactSub')} />
+      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={g.title}>
+        <SheetTitle icon={<Crown size={22} />} tone="blue" title={g.title} sub={g.sub} />
         <div className="flex flex-col gap-3 pb-2">
           <RouteLine ride={ride} />
           <div className="flex items-center gap-3 rounded-2xl bg-ec-sky px-4 py-3.5">
@@ -108,7 +112,7 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
             <p className="flex-1 text-[12.5px] font-semibold leading-snug text-ec-blueInk">{t('gate.planNote')}</p>
           </div>
           <Button type="button" size="lg" onClick={onUpgrade} className="w-full">
-            {t('gate.subscribe')}
+            {g.cta}
           </Button>
           <Button type="button" variant="ghost" onClick={onClose} className="w-full bg-ec-bg font-bold text-ec-ink60">
             {t('gate.notNow')}

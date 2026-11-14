@@ -9,6 +9,10 @@
     "badge": "Active",
     "note": "{date} tak access"
   },
+  "ending": {
+    "badge": "Jaldi khatam",
+    "note": "{date} ko khatam — abhi renew karein, bache hue din saath jud jayenge."
+  },
   "expired": {
     "badge": "Expired",
     "note": "Aapki membership khatam ho gayi. Drivers se dobara contact ke liye renew karo."

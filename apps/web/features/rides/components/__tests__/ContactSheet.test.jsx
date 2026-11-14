@@ -22,12 +22,12 @@ beforeEach(() => vi.clearAllMocks())
 const ride = { id: 'r1', kind: 'bot' }
 
 describe('ContactSheet', () => {
-  it('expired member sees the subscribe gate (no reveal call)', async () => {
+  it('expired member sees the renew gate (no reveal call)', async () => {
     const onUpgrade = vi.fn()
     const user = userEvent.setup()
     renderSheet(<ContactSheet ride={ride} membershipState={MEMBERSHIP_STATE.EXPIRED} onClose={vi.fn()} onUpgrade={onUpgrade} />)
-    expect(screen.getByText(/subscribe to contact/i)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /^subscribe$/i }))
+    expect(screen.getByText(/renew to contact/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^renew now$/i }))
     expect(onUpgrade).toHaveBeenCalled()
     expect(contactRide).not.toHaveBeenCalled()
   })

@@ -67,7 +67,7 @@
     "joinSub": "₹149/month — kisi bhi ride ke driver ko call & WhatsApp karein.",
     "join": "Join karein",
     "endingTitle": "{days, plural, one {Membership # din mein khatam} other {Membership # din mein khatam}}",
-    "endingSub": "Abhi renew karein — naye 30 din upar se jud jayenge."
+    "endingSub": "Abhi renew karein — bache hue din saath jud jayenge."
   },
   "pill": {
     "newRides": "nayi rides"
@@ -85,6 +85,8 @@
   "gate": {
     "contactTitle": "Contact ke liye subscribe karein",
     "contactSub": "₹149/month mein unlimited contact.",
+    "renewTitle": "Contact ke liye renew karein",
+    "renewSub": "Aapki membership khatam ho gayi. Drivers ko dobara call & WhatsApp karne ke liye renew karein.",
     "subscribe": "Subscribe",
     "renew": "Abhi renew karein",
     "notNow": "Abhi nahi",

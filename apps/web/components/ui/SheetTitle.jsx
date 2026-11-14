@@ -26,7 +26,7 @@ export function SheetTitle({ icon, tone = 'blue', title, sub }) {
         <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${TONES[tone]}`}>{icon}</span>
       ) : null}
       <div className="min-w-0 flex-1">
-        <h2 className="text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{title}</h2>
+        <h2 className="pr-8 text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{title}</h2>
         {sub ? <p className="mt-[3px] text-[13.5px] font-medium leading-snug text-ec-ink60">{sub}</p> : null}
       </div>
     </div>

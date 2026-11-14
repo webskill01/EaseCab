@@ -67,7 +67,7 @@
     "joinSub": "₹149/month — call & WhatsApp drivers for any ride.",
     "join": "Join now",
     "endingTitle": "{days, plural, one {Membership ends in # day} other {Membership ends in # days}}",
-    "endingSub": "Renew now — your new 30 days add on top."
+    "endingSub": "Renew now — the days you have left are kept."
   },
   "pill": {
     "newRides": "new rides"
@@ -85,6 +85,8 @@
   "gate": {
     "contactTitle": "Subscribe to contact",
     "contactSub": "Unlock unlimited contact for ₹149/month.",
+    "renewTitle": "Renew to contact",
+    "renewSub": "Your membership ended. Renew to call & WhatsApp drivers again.",
     "subscribe": "Subscribe",
     "renew": "Renew now",
     "notNow": "Not now",
