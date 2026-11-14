@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { ChevL, Ban, User } from '@/components/ui/icons'
 import { useBlocks } from '../hooks/useBlocks'
+import { ListSkeleton } from '@/components/ui/Skeleton'
 
 /** One blocked user row — avatar, name·city, and an unblock button. */
 function BlockedRow({ row, label, busy, onUnblock }) {
@@ -48,7 +49,7 @@ export function BlockedUsersScreen() {
 
       <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
-          <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
+          <ListSkeleton rows={3} />
         ) : isError ? (
           <p className="px-2 py-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</p>
         ) : blocks.length === 0 ? (

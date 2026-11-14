@@ -20,20 +20,20 @@ describe('FeedBanner', () => {
     const onUpgrade = vi.fn()
     const user = userEvent.setup()
     renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.NONE }} onUpgrade={onUpgrade} />)
-    expect(screen.getByText('Become an EaseCab member')).toBeInTheDocument()
+    expect(screen.getByText('Become a member')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /join now/i }))
     expect(onUpgrade).toHaveBeenCalled()
   })
 
   it('active member with ≤7 days left gets the ending banner', () => {
     renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.ACTIVE, daysLeft: 3 }} onUpgrade={vi.fn()} />)
-    expect(screen.getByText('Membership ends in 3 days')).toBeInTheDocument()
+    expect(screen.getByText('Membership: 3 days left')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /renew/i })).toBeInTheDocument()
   })
 
   it('singular day copy', () => {
     renderWithIntl(<FeedBanner membership={{ state: MEMBERSHIP_STATE.ACTIVE, daysLeft: 1 }} onUpgrade={vi.fn()} />)
-    expect(screen.getByText('Membership ends in 1 day')).toBeInTheDocument()
+    expect(screen.getByText('Membership: 1 day left')).toBeInTheDocument()
   })
 
   it('active member with 8+ days left sees nothing', () => {

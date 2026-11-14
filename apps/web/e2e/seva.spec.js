@@ -58,15 +58,17 @@ async function fillForm(page) {
 
 test('border tax tab: one preparing screen (captcha inline) → Payment Details → bank page in a new tab', async ({ page }) => {
   const { bankPosts, refreshes } = await mockSeva(page)
-  await page.goto('/seva') // parked hub redirects to the form
+  await page.goto('/seva') // Seva hub → Border Tax tile
+  await expect(page.getByRole('navigation').getByRole('button', { name: 'Seva' })).toHaveAttribute('aria-current', 'page')
+  await page.getByRole('button', { name: /border tax/i }).first().click()
   await expect(page.getByRole('heading', { name: 'Pay Border Tax' })).toBeVisible()
-  await expect(page.getByRole('navigation').getByRole('button', { name: 'Border Tax' })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByLabel(/date for apply/i)).toHaveCount(0) // step 1: RC, seats, state, border only
   await shot(page, '1-form-step1')
   await fillForm(page)
   await expect(page.getByText(/latest fee at this border: ₹230 for 1 day/i)).toBeVisible() // real quote from an earlier filing
   await shot(page, '2-form')
   await page.getByRole('button', { name: /^pay now$/i }).click()
+  await page.getByRole('dialog', { name: /confirm your tax validity/i }).getByRole('button', { name: 'Continue' }).click()
 
   await expect(page.getByRole('heading', { name: 'Preparing your border tax payment' })).toBeVisible()
   await expect(page.getByText('Keep this page open')).toBeVisible()
@@ -186,7 +188,7 @@ test('in-app QR: amount → QR → pay button; once the QR time is over it is hi
   const sheet = page.getByRole('dialog')
   await expect(sheet.getByText('₹230', { exact: true })).toBeVisible()
   const qr = sheet.getByRole('img', { name: /upi payment qr/i })
-  const pay = sheet.getByRole('link', { name: /pay ₹230 with upi app/i })
+  const pay = sheet.getByRole('link', { name: /^pay ₹230/i })
   await expect(qr).toBeVisible()
   expect((await qr.boundingBox()).y).toBeLessThan((await pay.boundingBox()).y) // QR above the button
   await shot(page, '10-qr')

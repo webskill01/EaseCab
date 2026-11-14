@@ -32,7 +32,7 @@ export function CityFilter({ selected, onToggle, onClear }) {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className={`relative flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold ${
+        className={`relative flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold ${
           filtered ? 'bg-ec-blue text-white shadow-ec-blue' : 'border-[1.5px] border-ec-line bg-white text-ec-blueInk shadow-ec-card'
         }`}
       >

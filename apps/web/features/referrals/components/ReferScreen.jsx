@@ -5,6 +5,7 @@ import { Whatsapp, Crown, Check } from '@/components/ui/icons'
 import { formatPaymentDate } from '@/features/subscription/lib/paymentView'
 import { useReferrals } from '../hooks/useReferrals'
 import { INVITE_BASE } from '../lib/invite'
+import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
 /**
  * Share the invite through the OS share sheet (Android lists WhatsApp and WhatsApp Business
@@ -47,7 +48,7 @@ export function ReferScreen() {
   const t = useTranslations('membership.refer')
   const { data, isLoading, isError } = useReferrals()
 
-  if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
+  if (isLoading) return <ScreenSkeleton />
   if (isError) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error')}</div>
 
   if (!data.enabled) return null // outside the rollout (REFERRAL_TESTERS) — entry points are hidden too

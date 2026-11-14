@@ -158,3 +158,28 @@
 .grecaptcha-badge {
   visibility: hidden;
 }
+
+/* Skeleton shimmer: one light band sweeps left → right across the whole placeholder
+   (transform only — composited, no layout/paint per frame). Bars stay bg-ec-line. */
+@layer components {
+  .ec-shimmer {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .ec-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.85) 50%, transparent 100%);
+    animation: ec-shimmer 1.4s ease-in-out infinite;
+  }
+  @keyframes ec-shimmer {
+    to { transform: translateX(100%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ec-shimmer::after { display: none; }
+  }
+}

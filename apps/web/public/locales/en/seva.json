@@ -1,13 +1,30 @@
 {
-  "title": "Driver Seva",
-  "sub": "Govt work done for you — free for members",
+  "title": "Seva",
+  "sub": "Border tax, WhatsApp group and more",
   "back": "Back",
   "sections": {
     "services": "Services"
   },
   "tiles": {
     "borderTax": "Border Tax",
-    "free": "Free"
+    "free": "Free",
+    "waGroup": "WhatsApp Group",
+    "new": "New",
+    "soon": "Coming soon"
+  },
+  "strip": {
+    "btSub": "Free for members",
+    "waSub": "See rides on WhatsApp"
+  },
+  "wa": {
+    "title": "Our WhatsApp Group",
+    "group": "PUNJAB TAXI & EASECAB",
+    "sub": "Our WhatsApp group — the same rides, right in WhatsApp",
+    "step1": "Tap Join group and send the join request.",
+    "step2": "Then message us on WhatsApp at <b>{number}</b>.",
+    "join": "Join group",
+    "message": "Message for approval",
+    "prefill": "Hi, I have sent the join request for the PUNJAB TAXI & EASECAB WhatsApp group. Kindly approve my request.\nName: {name}\nNumber: {phone}"
   },
   "bt": {
     "title": "Border Tax",
@@ -117,7 +134,7 @@
     },
     "gate": {
       "title": "Seva is for members",
-      "sub": "Border tax filing is free with EaseCab membership (₹149/month).",
+      "sub": "Border tax filing and our WhatsApp group are free with EaseCab membership (₹149/month).",
       "subscribe": "Become a member",
       "notNow": "Not now"
     },

@@ -1,13 +1,30 @@
 {
-  "title": "Driver Seva",
-  "sub": "Sarkari kaam hum karein — members ke liye free",
+  "title": "Seva",
+  "sub": "Border tax, WhatsApp group aur bhi bahut kuch",
   "back": "Wapas",
   "sections": {
     "services": "Services"
   },
   "tiles": {
     "borderTax": "Border Tax",
-    "free": "Free"
+    "free": "Free",
+    "waGroup": "WhatsApp Group",
+    "new": "New",
+    "soon": "Jaldi aa raha"
+  },
+  "strip": {
+    "btSub": "Members ke liye free",
+    "waSub": "Rides WhatsApp pe dekho"
+  },
+  "wa": {
+    "title": "Humara WhatsApp Group",
+    "group": "PUNJAB TAXI & EASECAB",
+    "sub": "Humara WhatsApp group — wahi rides, seedha WhatsApp pe",
+    "step1": "'Group join karo' dabao aur join request bhejo.",
+    "step2": "Phir <b>{number}</b> pe WhatsApp message karo.",
+    "join": "Group join karo",
+    "message": "Approval ke liye message karo",
+    "prefill": "Hi, maine PUNJAB TAXI & EASECAB WhatsApp group mein join request bhej di hai. Kindly meri request approve kar do.\nName: {name}\nNumber: {phone}"
   },
   "bt": {
     "title": "Border Tax",
@@ -117,7 +134,7 @@
     },
     "gate": {
       "title": "Seva members ke liye hai",
-      "sub": "EaseCab membership (₹149/mahina) ke saath border tax filing free hai.",
+      "sub": "Border tax filing aur humara WhatsApp group EaseCab membership (₹149/month) ke saath free hai.",
       "subscribe": "Member banein",
       "notNow": "Abhi nahi"
     },

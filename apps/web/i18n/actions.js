@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { LOCALES, LOCALE_COOKIE } from './config'
+import { LOCALES, LOCALE_COOKIE, LOCALE_PICKED_COOKIE } from './config'
 
 /**
  * Persists the chosen locale in a cookie and re-renders the layout tree so the
@@ -17,10 +17,8 @@ export async function setLocale(locale) {
     throw new Error(`Unsupported locale: ${locale}`)
   }
   const store = await cookies()
-  store.set(LOCALE_COOKIE, locale, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
-  })
+  const opts = { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' }
+  store.set(LOCALE_COOKIE, locale, opts)
+  store.set(LOCALE_PICKED_COOKIE, '1', opts)
   revalidatePath('/', 'layout')
 }

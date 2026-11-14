@@ -1,15 +1,17 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Road } from '@/components/ui/icons'
+import { Road, Whatsapp, Timer } from '@/components/ui/icons'
+import { WaGroupSheet } from './WaGroupSheet'
+import { SevaGateSheet } from './SevaGateSheet'
+import { useSevaActions } from '../hooks/useSevaActions'
 
 /**
- * Driver Seva — driver services as square tiles in sections (CabsWale "Suvidha" layout).
- * [sectionKey, [[tileKey, Icon, href | null], ...]]
+ * Driver Seva — driver services as square tiles in sections (CabsWale-style tiles); members-only like the feed strip.
+ * [sectionKey, [[tileKey, Icon, action (useSevaActions key) | null, badgeKey], ...]]
  */
 const SECTIONS = [
-  ['services', [['borderTax', Road, '/seva/border-tax']]],
+  ['services', [['borderTax', Road, 'openBorderTax', 'free'], ['waGroup', Whatsapp, 'openWaGroup', 'new'], ['soon', Timer, null, null], ['soon', Timer, null, null]]],
 ]
 
 function Tile({ label, badge, Icon, onClick }) {
@@ -22,7 +24,7 @@ function Tile({ label, badge, Icon, onClick }) {
       className="relative flex aspect-square flex-col items-center justify-center gap-2.5 rounded-2xl border border-ec-line bg-white p-2 shadow-ec-card transition-transform active:scale-[0.97] disabled:shadow-none"
     >
       {badge && (
-        <span className="absolute right-1.5 top-1.5 rounded-ec-chip bg-ec-successBg px-1.5 py-[1px] text-[9.5px] font-extrabold uppercase tracking-wide text-ec-successTx">
+        <span className={`absolute right-1.5 top-1.5 max-w-[calc(100%-12px)] truncate rounded-ec-chip px-1.5 py-[1px] text-[9.5px] font-extrabold uppercase tracking-wide ${live ? 'bg-ec-successBg text-ec-successTx' : 'bg-ec-line text-ec-ink60'}`}>
           {badge}
         </span>
       )}
@@ -36,7 +38,7 @@ function Tile({ label, badge, Icon, onClick }) {
 
 export function SevaScreen() {
   const t = useTranslations('seva')
-  const router = useRouter()
+  const seva = useSevaActions()
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-ec-bg px-4 pb-6 pt-2.5">
       <h1 className="text-[20px] font-extrabold tracking-tight text-ec-ink">{t('title')}</h1>
@@ -45,12 +47,14 @@ export function SevaScreen() {
         <section key={section} className="mt-5">
           <h2 className="mb-2.5 text-[15px] font-extrabold tracking-tight text-ec-ink">{t(`sections.${section}`)}</h2>
           <div className="grid grid-cols-3 gap-3">
-            {tiles.map(([key, Icon, href], i) => (
-              <Tile key={`${key}-${i}`} Icon={Icon} label={t(`tiles.${key}`)} badge={href ? t('tiles.free') : null} onClick={href ? () => router.push(href) : undefined} />
+            {tiles.map(([key, Icon, href, badge], i) => (
+              <Tile key={`${key}-${i}`} Icon={Icon} label={t(`tiles.${key}`)} badge={badge ? t(`tiles.${badge}`) : null} onClick={href ? seva[href] : undefined} />
             ))}
           </div>
         </section>
       ))}
+      {seva.sheet === 'wa' && <WaGroupSheet onClose={seva.close} />}
+      {seva.sheet === 'gate' && <SevaGateSheet onClose={seva.close} />}
     </div>
   )
 }

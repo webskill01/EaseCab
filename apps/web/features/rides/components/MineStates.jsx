@@ -2,9 +2,17 @@
 
 import { useTranslations } from 'next-intl'
 import { Plus, Chat } from '@/components/ui/icons'
+import { SkeletonCard, Bar } from '@/components/ui/Skeleton'
 
 export function MineCardSkeleton() {
-  return <div className="h-[150px] animate-pulse rounded-ec-card border border-ec-line bg-white" />
+  return (
+    <SkeletonCard className="space-y-3">
+      <div className="flex justify-between"><Bar className="h-3 w-24" /><Bar className="h-5 w-16 rounded-full" /></div>
+      <div className="flex items-center gap-3"><Bar className="h-4 flex-1" /><Bar className="h-5 w-5 rounded-full" /><Bar className="h-4 flex-1" /></div>
+      <Bar className="h-3 w-2/3" />
+      <div className="flex gap-1.5"><Bar className="h-10 flex-1 rounded-[11px]" /><Bar className="h-10 flex-1 rounded-[11px]" /></div>
+    </SkeletonCard>
+  )
 }
 
 /** Per-tab empty state with a CTA. @param {{ tab: 'posted'|'contacted', onCta: ()=>void }} props */

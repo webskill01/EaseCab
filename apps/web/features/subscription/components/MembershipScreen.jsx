@@ -10,6 +10,7 @@ import { useCheckout } from '../hooks/useCheckout'
 import { PaymentHistory } from './PaymentHistory'
 import { PlanPicker } from './PlanPicker'
 import { PLANS, DEFAULT_PLAN_ID, RENEW_PLAN_ID, rupees } from '../lib/plans'
+import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
 const CTA_KEY = Object.freeze({ none: 'subscribe', active: 'renew', ending: 'renew', expired: 'renew' })
 
@@ -45,7 +46,7 @@ export function MembershipScreen() {
   const checkout = useCheckout()
   const [picked, setPicked] = useState(null)
 
-  if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
+  if (isLoading) return <ScreenSkeleton />
   if (isError) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
 
   const v = membershipView(sub)

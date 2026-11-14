@@ -18,6 +18,7 @@ import { AppPermsSheet } from './AppPermsSheet'
 import { AccountActionsCard } from './AccountActionsCard'
 import { useLocalCityName } from '@/features/rides/hooks/useLocalNames'
 import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
+import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
 /** Support deep-link — WhatsApp when configured, else email (mirrors shell SupportButton). */
 function supportHref() {
@@ -85,7 +86,7 @@ export function ProfileScreen() {
     return () => el.removeEventListener('scroll', onScroll)
   }, [profile])
 
-  if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
+  if (isLoading) return <ScreenSkeleton />
   if (isError || !profile) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
 
   const v = profile.verification

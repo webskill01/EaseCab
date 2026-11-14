@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation'
+import { SevaScreen } from '@/features/seva/components/SevaScreen'
 
-/** Seva hub is parked while Border Tax is its only service: the tab opens the form directly. */
+/** Seva tab: driver services (Border Tax, WhatsApp group). */
 export default function SevaPage() {
-  redirect('/seva/border-tax')
+  return <SevaScreen />
 }

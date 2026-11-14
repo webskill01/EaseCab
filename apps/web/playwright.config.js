@@ -8,7 +8,14 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,
-  use: { baseURL: 'http://localhost:3100', ...devices['Desktop Chrome'] },
+  use: {
+    baseURL: 'http://localhost:3100',
+    ...devices['Desktop Chrome'],
+    // Specs assert English copy; the app defaults to Hinglish, so pin an explicit English pick.
+    storageState: { cookies: ['locale=en', 'locale_v2=1'].map((c) => { const [name, value] = c.split('='); return { name, value, domain: 'localhost', path: '/', expires: -1, httpOnly: false, secure: false, sameSite: 'Lax' } }),
+      // the once-a-day promo popup is a dice roll; mark it opened so it never covers a spec
+      origins: [{ origin: 'http://localhost:3100', localStorage: [{ name: 'ec_promo', value: JSON.stringify({ opened: { 'border-tax-2026-11': true } }) }] }] },
+  },
   webServer: {
     command: 'npm run dev -- -p 3100',
     url: 'http://localhost:3100',

@@ -158,7 +158,7 @@ export function RideCard({ ride, now, onContact, onReport }) {
   return (
     <article
       data-status={display}
-      className={`relative rounded-ec-card border p-3 shadow-ec-card ${
+      className={`relative rounded-ec-card border px-3 py-2.5 shadow-ec-card ${
         verified ? 'border-ec-blue/20 bg-white' : 'border-ec-line bg-white'
       }`}
     >

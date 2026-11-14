@@ -1,0 +1,63 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+import { BottomSheet } from '@/components/ui/BottomSheet'
+import { SheetTitle } from '@/components/ui/SheetTitle'
+import { Whatsapp, Chat } from '@/components/ui/icons'
+import { useProfile } from '@/features/profile/hooks/useProfile'
+import { WA_GROUP_URL, WA_APPROVAL_DISPLAY, waApprovalHref } from '../lib/waGroup'
+
+const BTN = 'flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-center text-[14px] font-extrabold leading-tight transition-transform active:scale-[0.98]'
+
+/** One numbered step: badge + text, its own action button underneath. */
+function Step({ n, children, action }) {
+  return (
+    <li className="rounded-2xl border border-ec-line bg-ec-bg p-3">
+      <div className="mb-2.5 flex items-start gap-2.5">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ec-wa text-[12px] font-extrabold text-white">{n}</span>
+        <p className="min-w-0 flex-1 pt-0.5 text-[13.5px] font-semibold leading-snug text-ec-ink">{children}</p>
+      </div>
+      {action}
+    </li>
+  )
+}
+
+/**
+ * "Humara WhatsApp group" popup: the invite link plus the approval step (the group is
+ * invite-only — after the join request the driver messages the admin number).
+ * @param {{ onClose: () => void }} props
+ */
+export function WaGroupSheet({ onClose }) {
+  const t = useTranslations('seva.wa')
+  const tc = useTranslations('common')
+  const profile = useProfile().data
+  const prefill = t('prefill', { name: profile?.name || '', phone: profile?.phone ? String(profile.phone).replace(/^\+91/, '') : '' })
+  return (
+    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('title')}>
+      <SheetTitle icon={<Whatsapp size={22} />} tone="success" title={t('title')} sub={t('sub')} />
+      <p className="mb-3 break-words rounded-xl bg-ec-successBg px-3 py-2 text-center text-[13.5px] font-extrabold tracking-wide text-ec-successTx">{t('group')}</p>
+      <ol className="space-y-2.5">
+        <Step
+          n={1}
+          action={
+            <a href={WA_GROUP_URL} target="_blank" rel="noopener noreferrer" className={`${BTN} bg-ec-wa text-white`}>
+              <Whatsapp size={18} />{t('join')}
+            </a>
+          }
+        >
+          {t('step1')}
+        </Step>
+        <Step
+          n={2}
+          action={
+            <a href={waApprovalHref(prefill)} target="_blank" rel="noopener noreferrer" className={`${BTN} border-[1.5px] border-ec-wa bg-white text-ec-successTx`}>
+              <Chat size={18} />{t('message')}
+            </a>
+          }
+        >
+          {t.rich('step2', { number: WA_APPROVAL_DISPLAY, b: (c) => <b className="whitespace-nowrap font-extrabold">{c}</b> })}
+        </Step>
+      </ol>
+    </BottomSheet>
+  )
+}

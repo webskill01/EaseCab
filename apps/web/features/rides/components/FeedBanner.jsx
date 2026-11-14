@@ -40,14 +40,14 @@ export function FeedBanner({ membership, onUpgrade }) {
   if (!b) return null
 
   return (
-    <div className="bg-ec-bg px-4 pb-2 pt-1">
-      <div className={`flex items-center gap-3 rounded-ec-card border px-3.5 py-3 ${b.tone.box}`}>
-        <div className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] text-white ${b.tone.icon}`}><Info size={18} /></div>
-        <div className="min-w-0 flex-1">
-          <div className={`text-[14px] font-extrabold ${b.tone.title}`}>{b.title}</div>
-          <div className={`mt-px text-[11.5px] font-semibold ${b.tone.sub}`}>{b.sub}</div>
+    <div className="bg-ec-bg px-4 pb-1 pt-1">
+      <div className={`rounded-ec-card border px-3 py-2 ${b.tone.box}`}>
+        <div className="flex items-center gap-2.5">
+          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] text-white ${b.tone.icon}`}><Info size={16} /></div>
+          <div className={`min-w-0 flex-1 text-[13.5px] font-extrabold leading-tight ${b.tone.title}`}>{b.title}</div>
+          <button type="button" onClick={onUpgrade} className={`h-7 shrink-0 whitespace-nowrap rounded-[10px] px-3 text-[12.5px] font-extrabold text-white ${b.tone.btn}`}>{b.cta}</button>
         </div>
-        <button type="button" onClick={onUpgrade} className={`h-9 shrink-0 rounded-xl px-3.5 text-[13.5px] font-extrabold text-white ${b.tone.btn}`}>{b.cta}</button>
+        <p className={`mt-1 text-[12px] font-semibold leading-snug ${b.tone.sub}`}>{b.sub}</p>
       </div>
     </div>
   )

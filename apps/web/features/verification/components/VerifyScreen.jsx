@@ -13,6 +13,7 @@ import { VehicleDetail } from './VehicleDetail'
 import { DlVerify } from './DlVerify'
 import { RcVerify } from './RcVerify'
 import { EditVerifyCenter } from './EditVerifyCenter'
+import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
 /**
  * /verify host (SCREENS §7). intent=driver → L2 hub; intent=dl/rc → the dedicated
@@ -25,7 +26,7 @@ export function VerifyScreen() {
   const { data: profile, isLoading } = useProfile()
   const flow = useAadhaarFlow()
 
-  if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
+  if (isLoading) return <ScreenSkeleton />
 
   const status = profile?.verification ?? { dlSubmitted: false, rcSubmitted: false }
   if (intent === 'driver') return <VerificationTimeline profile={profile} />

@@ -38,7 +38,7 @@ test('feed loads bot rides, switches to verified, and opens the contact sheet', 
   await expect(page.getByText('Delhi').first()).toBeVisible()
 
   // contact sheet opens at the action point and auto-reveals the number (active member)
-  await page.getByRole('button', { name: /whatsapp/i }).first().click()
+  await page.getByRole('button', { name: 'WhatsApp', exact: true }).first().click()
   await expect(page.getByRole('dialog', { name: /contact driver/i })).toBeVisible()
   await expect(page.getByText('+919876543210')).toBeVisible()
   await page.keyboard.press('Escape')

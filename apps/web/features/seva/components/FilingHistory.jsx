@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Spinner, Check, CircleX, Ban, Info } from '@/components/ui/icons'
 import { BT_STATES, BT_TONE, fmtWhen, rupees } from '../lib/borderTax'
+import { ListSkeleton } from '@/components/ui/Skeleton'
 
 const PILL = {
   progress: ['bg-ec-sky text-ec-blueInk', Spinner],
@@ -33,7 +34,7 @@ export function FilingHistory({ filings, isLoading, onOpen, hasMore, loadingMore
   return (
     <section className="mt-5">
       <h2 className="mb-2.5 text-[16px] font-extrabold tracking-tight text-ec-ink">{t('bt.history')}</h2>
-      {isLoading && <div className="h-28 animate-pulse rounded-ec-card bg-white" />}
+      {isLoading && <ListSkeleton rows={2} />}
       {!isLoading && filings.length === 0 && (
         <p className="rounded-ec-card border border-dashed border-ec-line bg-white px-4 py-6 text-center text-[13px] font-medium text-ec-ink60">{t('bt.historyEmpty')}</p>
       )}

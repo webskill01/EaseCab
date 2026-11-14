@@ -12,7 +12,7 @@ import { LanguageMenu } from './LanguageMenu'
 export function TopBar({ locale }) {
   const t = useTranslations('common')
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-ec-line bg-white px-3.5 py-2.5">
+    <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-ec-line bg-white px-3.5 py-1.5">
       {/* Logo + two-line wordmark (~36px). No leading-none here: with truncate's overflow-hidden it
           clips the Hindi/Punjabi vowel signs that sit above the line. */}
       <Image src="/icons/icon-96.png" unoptimized alt="" width={36} height={36} priority className="h-9 w-9 shrink-0 rounded-[9px]" />

@@ -63,10 +63,10 @@
     "expiredTitle": "Membership ended",
     "expiredSub": "Renew to contact drivers again.",
     "renew": "Renew",
-    "joinTitle": "Become an EaseCab member",
+    "joinTitle": "Become a member",
     "joinSub": "₹149/month — call & WhatsApp drivers for any ride.",
     "join": "Join now",
-    "endingTitle": "{days, plural, one {Membership ends in # day} other {Membership ends in # days}}",
+    "endingTitle": "{days, plural, one {Membership: # day left} other {Membership: # days left}}",
     "endingSub": "Renew now — the days you have left are kept."
   },
   "pill": {

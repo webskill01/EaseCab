@@ -11,6 +11,7 @@ import { geoDenied } from '@/features/notifications/services/geoClient'
 import { PermBlockedSheet, BLOCKED_PERM } from '@/features/notifications/components/PermBlockedSheet'
 import { LOCATION_CHIPS, cityToView, filterCities, groupCitiesByLetter, quickPickCities } from '../lib/allLocations'
 import { readRecentCities, pushRecentCity } from '../lib/cityLock'
+import { ListSkeleton } from '@/components/ui/Skeleton'
 
 /**
  * "All Locations" overlay (design-spec §7.4): search field, pastel quick-pick chip
@@ -136,7 +137,7 @@ export function AllLocationsOverlay({ selected, onClose, onToggle, onClear }) {
 
         <div className="mt-5">
           {isLoading ? (
-            <p className="text-center text-[13px] font-medium text-ec-ink40">…</p>
+            <ListSkeleton rows={5} />
           ) : groups.length === 0 ? (
             <p className="px-2.5 py-3 text-center text-[13px] font-medium text-ec-ink40">{t('filter.noResults')}</p>
           ) : (

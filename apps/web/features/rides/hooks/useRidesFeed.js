@@ -44,7 +44,7 @@ export function mergeNewestFirst(extra, base) {
  * @param {string} args.sub - FEED_SUB value
  * @param {string[]} args.cityIds - locked City ids ([] = All)
  */
-export function useRidesFeed({ sub, cityIds }) {
+export function useRidesFeed({ sub, cityIds, headerRef }) {
   const isVerified = sub === FEED_SUB.VERIFIED
 
   // Stable key + array identity from the (possibly new-each-render) cityIds prop, so
@@ -122,7 +122,8 @@ export function useRidesFeed({ sub, cityIds }) {
   const onScroll = useCallback((e) => {
     const el = e?.target
     if (el && el.scrollHeight - el.scrollTop - el.clientHeight < LOAD_MORE_PX) loadMoreRef.current()
-    const top = (el?.scrollTop ?? 0) < AT_TOP_PX
+    // headerRef: a header inside the scroller (feed full-screen mode) — the list's top is below it
+    const top = (el?.scrollTop ?? 0) < (headerRef?.current?.offsetHeight ?? 0) + AT_TOP_PX
     atTopRef.current = top
     setAtTop(top)
     if (top) {
@@ -132,17 +133,17 @@ export function useRidesFeed({ sub, cityIds }) {
         return p.length ? [] : p
       })
     }
-  }, [])
+  }, [headerRef])
 
   const flushPending = useCallback(() => {
-    if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    if (scrollRef.current) scrollRef.current.scrollTo({ top: headerRef?.current?.offsetHeight ?? 0, behavior: 'smooth' })
     atTopRef.current = true
     setAtTop(true)
     setPending((p) => {
       if (p.length) setExtra((ex) => [...p, ...ex].slice(0, LIVE_CAP))
       return []
     })
-  }, [])
+  }, [headerRef])
 
   const rides = useMemo(() => (isVerified ? base : mergeNewestFirst(extra, base)), [isVerified, extra, base])
 

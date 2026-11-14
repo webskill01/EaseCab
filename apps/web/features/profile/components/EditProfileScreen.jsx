@@ -9,6 +9,7 @@ import { useUpdateProfile } from '../hooks/useUpdateProfile'
 import { profileToForm } from '../lib/profileForm'
 import { ProfileForm } from './ProfileForm'
 import { env } from '@/config/env'
+import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
 /** Edit-profile page (#20) — its own route, not inline. Saves then returns to /profile. */
 export function EditProfileScreen() {
@@ -21,7 +22,7 @@ export function EditProfileScreen() {
   // Once a save lands, the ['profile'] cache is fresh — return to the hub.
   useEffect(() => { if (update.saved) router.push('/profile') }, [update.saved, router])
 
-  if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
+  if (isLoading) return <ScreenSkeleton />
   if (isError || !profile) return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('error.load')}</div>
 
   return (

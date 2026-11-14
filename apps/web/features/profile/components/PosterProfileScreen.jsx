@@ -11,6 +11,7 @@ import { useProfile } from '../hooks/useProfile'
 import { ReportUserSheet } from './ReportUserSheet'
 import { useLocalCityName } from '@/features/rides/hooks/useLocalNames'
 import { useVehicleLabel } from '@/features/rides/hooks/useLocalNames'
+import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
 // `i` drives per-cell borders (right except last column, top from the 2nd row) — a 2-row
 // grid can't use Tailwind `divide-*` cleanly (its sibling selectors break across rows).
@@ -57,7 +58,7 @@ export function PosterProfileScreen({ userId }) {
   )
   const back = header(false)
 
-  if (isLoading) return <div className="flex h-full flex-col bg-ec-bg">{back}<div className="flex flex-1 items-center justify-center text-ec-ink40">…</div></div>
+  if (isLoading) return <div className="flex h-full flex-col bg-ec-bg">{back}<ScreenSkeleton /></div>
   if (isError || !p) return <div className="flex h-full flex-col bg-ec-bg">{back}<div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('poster.error')}</div></div>
 
   const v = p.verification

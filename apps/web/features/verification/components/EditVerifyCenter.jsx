@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Shield, List, Car, User, Globe, Pin, Check, ChevR, Headset } from '@/components/ui/icons'
 import { env } from '@/config/env'
 import { useProfile } from '@/features/profile/hooks/useProfile'
+import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
 // Per-doc lifecycle (mirrors the API verification block). approved|submitted both count
 // toward completion %; rejected drops it back; none = not started.
@@ -79,7 +80,7 @@ export function EditVerifyCenter() {
   const router = useRouter()
   const { data: profile, isLoading, isError } = useProfile()
 
-  if (isLoading) return <div className="flex flex-1 items-center justify-center text-ec-ink40">…</div>
+  if (isLoading) return <ScreenSkeleton />
   if (isError || !profile) {
     return <div className="flex flex-1 items-center justify-center px-6 text-center text-[14px] font-semibold text-ec-danger">{t('errors.generic')}</div>
   }

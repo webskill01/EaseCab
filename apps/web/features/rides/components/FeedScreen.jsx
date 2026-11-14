@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { env } from '@/config/env'
@@ -14,7 +14,7 @@ import { CityFilter } from './CityFilter'
 import { FeedBanner } from './FeedBanner'
 import { LatePaidPopup } from '@/features/seva/components/LatePaidPopup'
 import { NotificationsButton } from './NotificationsButton'
-import { PromoBanner } from './PromoBanner'
+import { SevaStrip } from '@/features/seva/components/SevaStrip'
 import { PromoSheet } from './PromoSheet'
 import { activePromo, shouldPopup, readPromoState, markPromo, istDay } from '../lib/promos'
 import { RideCard } from './RideCard'
@@ -31,6 +31,9 @@ import { permissionState, shouldShowPrePrompt } from '@/features/notifications/l
 import { isPrePromptDismissed, dismissPrePrompt } from '@/features/notifications/lib/pushStorage'
 
 const DUTIES_COUNT_POLL_MS = 30000
+// Experiment (2026-11-15): the filter/Seva/tabs header scrolls away with the rides
+// (full-screen list) and comes back at the very top. false = old fixed header.
+const HEADER_SCROLLS_AWAY = true
 
 /**
  * Rides feed — the hero surface (SCREENS §2). Composes the sub-tabs, the live
@@ -41,13 +44,14 @@ const DUTIES_COUNT_POLL_MS = 30000
 export function FeedScreen() {
   const router = useRouter()
   const [sub, setSub] = useState(FEED_SUB.RIDES)
+  const headerRef = useRef(null)
   const [contactRideVM, setContactRideVM] = useState(null)
   const [reportRideVM, setReportRideVM] = useState(null)
 
   // Feed filter = alert cities (one server-side list, empty = All rides).
   const { selected: selectedCities, toggle: toggleCity, clear: clearCities } = useCityFilter()
 
-  const feed = useRidesFeed({ sub, cityIds: selectedCities.map((c) => c.id) })
+  const feed = useRidesFeed({ sub, cityIds: selectedCities.map((c) => c.id), headerRef: HEADER_SCROLLS_AWAY ? headerRef : null })
 
   // Driver Duties tab badge. Posted rides have no SSE, so poll (also refetches on focus).
   const cityKey = selectedCities.map((c) => c.id).join(',')
@@ -77,7 +81,7 @@ export function FeedScreen() {
   const dismissPre = () => { dismissPrePrompt(); setPrePromptOpen(false) }
   const enableAlerts = async () => { await alerts.enable(); setPrePromptOpen(false) }
 
-  // New-feature promo: banner for the promo's window + a random once-a-day popup.
+  // New-feature promo: a random once-a-day popup (the Seva strip replaced the banner).
   // Picked after mount (Date + localStorage) so server and client markup match.
   const [promo, setPromo] = useState(null)
   const [promoPopup, setPromoPopup] = useState(false)
@@ -89,26 +93,33 @@ export function FeedScreen() {
   }, [])
   const openPromo = () => { markPromo('opened', promo.id, true); setPromoPopup(false); router.push(promo.href) }
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
-      {promo && <PromoBanner promo={promo} onOpen={openPromo} />}
-      {/* Location buttons row (SCREENS §2): Duty Alerts overlay + the city-filter lock. */}
-      <div className="flex gap-3 bg-ec-bg px-4 pb-1 pt-2.5">
+  // Location buttons row (SCREENS §2) + Seva strip + Rides tabs + membership banner.
+  const header = (
+    <div ref={headerRef} className={HEADER_SCROLLS_AWAY ? '-mx-4 shrink-0' : undefined}>
+      <div className="flex gap-2 bg-ec-bg px-4 pt-2">
         <NotificationsButton onClick={() => router.push('/notifications')} />
         <div className="flex-1">
           <CityFilter selected={selectedCities} onToggle={toggleCity} onClear={clearCities} />
         </div>
       </div>
+      <SevaStrip />
       <SubTabs sub={sub} onChange={setSub} dutiesCount={dutiesCountQuery.data ?? 0} />
       <FeedBanner membership={membership} onUpgrade={goMembership} />
+    </div>
+  )
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
+      {!HEADER_SCROLLS_AWAY && header}
       <LatePaidPopup />
 
       <div
         ref={feed.scrollRef}
         onScroll={feed.onScroll}
-        className="relative flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4"
+        className="relative flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4 [overflow-anchor:none]"
       >
         <NewRidesPill count={feed.atTop ? 0 : feed.pendingCount} onClick={feed.flushPending} />
+        {HEADER_SCROLLS_AWAY && header}
         <div className="h-1.5 shrink-0" />
 
         {showPrePrompt && (

@@ -18,7 +18,7 @@ export function SubTabs({ sub, onChange, dutiesCount = 0 }) {
     [FEED_SUB.VERIFIED, t('tabs.verified'), true],
   ]
   return (
-    <div className="bg-ec-bg px-4 py-2">
+    <div className="bg-ec-bg px-4 pb-1 pt-2">
       <div className="flex gap-1 rounded-xl border border-ec-line bg-white p-1" role="tablist">
         {items.map(([key, label, withShield]) => {
           const on = sub === key
@@ -29,7 +29,7 @@ export function SubTabs({ sub, onChange, dutiesCount = 0 }) {
               role="tab"
               aria-selected={on}
               onClick={() => onChange(key)}
-              className={`relative flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[9px] text-[14px] font-bold transition-colors ${
+              className={`relative flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[9px] text-[14px] font-bold transition-colors ${
                 on ? 'bg-ec-blue text-white shadow-ec-blue' : 'bg-transparent text-ec-ink60'
               }`}
             >

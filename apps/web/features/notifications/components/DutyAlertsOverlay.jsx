@@ -9,6 +9,7 @@ import { usePushPreferences } from '../hooks/usePushPreferences'
 import { useEnableAlerts } from '../hooks/useEnableAlerts'
 import { permissionState, needsHomeScreen } from '../lib/pushFlow'
 import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
+import { ListSkeleton } from '@/components/ui/Skeleton'
 
 // Design-spec §7.3 "up to 5 city slots". Always ≤ the server cap (25), so valid.
 const ALERT_CITIES_MAX = 5
@@ -58,7 +59,7 @@ export function DutyAlertsOverlay({ onClose }) {
     }
   }, [prefs, slots])
 
-  if (isLoading || slots === null) return <Overlay onClose={onClose} label={t('dutyAlerts.title')}><OverlayHeader title={t('dutyAlerts.title')} onBack={onClose} backLabel={tc('actions.back')} /><div className="p-6 text-center text-ec-ink40">…</div></Overlay>
+  if (isLoading || slots === null) return <Overlay onClose={onClose} label={t('dutyAlerts.title')}><OverlayHeader title={t('dutyAlerts.title')} onBack={onClose} backLabel={tc('actions.back')} /><div className="p-4"><ListSkeleton rows={5} /></div></Overlay>
   if (isError || !prefs) return <Overlay onClose={onClose} label={t('dutyAlerts.title')}><OverlayHeader title={t('dutyAlerts.title')} onBack={onClose} backLabel={tc('actions.back')} /><div className="p-6 text-center text-[13px] font-semibold text-ec-danger">{t('error.geo')}</div></Overlay>
 
   const ids = new Set(slots.map((s) => s.id))

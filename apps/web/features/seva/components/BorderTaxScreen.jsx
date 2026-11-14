@@ -3,10 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { BottomSheet } from '@/components/ui/BottomSheet'
-import { SheetTitle } from '@/components/ui/SheetTitle'
-import { Button } from '@/components/ui/button'
-import { Crown } from '@/components/ui/icons'
+import { ChevronLeft } from '@/components/ui/icons'
 import { useMembership } from '@/features/subscription/hooks/useMembership'
 import { membershipView, MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { useFilings, useBorderTaxActions } from '../hooks/useBorderTax'
@@ -15,21 +12,7 @@ import { BorderTaxForm } from './BorderTaxForm'
 import { FilingHistory } from './FilingHistory'
 import { FilingSheet } from './FilingSheet'
 import { ConfirmValiditySheet } from './ConfirmValiditySheet'
-
-/** Members-only soft gate: everyone sees the form, the gate fires on submit (§1 soft gate). */
-function GateSheet({ onClose, onSubscribe }) {
-  const t = useTranslations('seva')
-  const tc = useTranslations('common')
-  return (
-    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('bt.gate.title')}>
-      <SheetTitle icon={<Crown size={22} />} tone="blue" title={t('bt.gate.title')} sub={t('bt.gate.sub')} />
-      <div className="flex flex-col gap-3 pb-2">
-        <Button type="button" size="lg" className="w-full" onClick={onSubscribe}>{t('bt.gate.subscribe')}</Button>
-        <Button type="button" variant="ghost" className="w-full bg-ec-bg font-bold text-ec-ink60" onClick={onClose}>{t('bt.gate.notNow')}</Button>
-      </div>
-    </BottomSheet>
-  )
-}
+import { SevaGateSheet } from './SevaGateSheet'
 
 /** Border Tax tab: form + history; a filing opens full-screen preparing → Payment Details → result. */
 export function BorderTaxScreen() {
@@ -84,7 +67,13 @@ export function BorderTaxScreen() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ec-bg">
-      <h1 className="px-4 pb-1 pt-3 text-[19px] font-extrabold tracking-tight text-ec-ink">{t('bt.title')}</h1>
+      <div className="flex items-center gap-1 px-2 pb-1 pt-2">
+        {/* history.length 1 = opened straight from a push/link: go to the Seva tab instead */}
+        <button type="button" onClick={() => (window.history.length > 1 ? router.back() : router.push('/seva'))} aria-label={t('back')} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ec-ink active:bg-ec-line/60">
+          <ChevronLeft size={24} />
+        </button>
+        <h1 className="min-w-0 truncate text-[19px] font-extrabold tracking-tight text-ec-ink">{t('bt.title')}</h1>
+      </div>
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-1">
         <BorderTaxForm form={form} onChange={(p) => setForm((f) => ({ ...f, ...p }))} onSubmit={submit} submitting={create.isPending} error={error} busyUntil={busyUntil} />
         <FilingHistory filings={filings.data ?? []} isLoading={filings.isLoading} onOpen={setOpenId}
@@ -92,7 +81,7 @@ export function BorderTaxScreen() {
       </div>
       {openId && <FilingSheet id={openId} seed={seed} onClose={() => setOpenId(null)} onRetry={retry} />}
       {confirm && <ConfirmValiditySheet form={form} onChange={() => { setConfirm(false); scroller.current?.scrollTo({ top: 0, behavior: 'smooth' }) }} onContinue={start} />}
-      {gate && <GateSheet onClose={() => setGate(false)} onSubscribe={() => router.push('/membership')} />}
+      {gate && <SevaGateSheet onClose={() => setGate(false)} />}
     </div>
   )
 }

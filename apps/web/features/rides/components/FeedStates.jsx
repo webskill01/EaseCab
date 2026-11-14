@@ -5,9 +5,9 @@ import { Info } from '@/components/ui/icons'
 
 /** One shimmering ride-card placeholder (chrome.jsx RideCardSkeleton). */
 export function RideCardSkeleton() {
-  const bar = 'animate-pulse rounded bg-ec-line'
+  const bar = 'rounded bg-ec-line'
   return (
-    <div className="rounded-ec-card border border-ec-line bg-white p-3.5 shadow-ec-card">
+    <div aria-hidden="true" className="ec-shimmer rounded-ec-card border border-ec-line bg-white p-3.5 shadow-ec-card">
       <div className="mb-3 flex items-center justify-between">
         <div className={`${bar} h-3 w-28`} />
         <div className={`${bar} h-5 w-16 rounded-full`} />

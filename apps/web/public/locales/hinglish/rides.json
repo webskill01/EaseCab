@@ -60,14 +60,14 @@
     "clear": "Filter hatao"
   },
   "banner": {
-    "expiredTitle": "Membership khatam ho gayi",
+    "expiredTitle": "Membership khatam",
     "expiredSub": "Driver se baat karne ke liye renew karein.",
     "renew": "Renew",
-    "joinTitle": "EaseCab member baniye",
-    "joinSub": "₹149/month — kisi bhi ride ke driver ko call & WhatsApp karein.",
+    "joinTitle": "Member baniye",
+    "joinSub": "₹149/month mein drivers ko call & WhatsApp karein.",
     "join": "Join karein",
-    "endingTitle": "{days, plural, one {Membership # din mein khatam} other {Membership # din mein khatam}}",
-    "endingSub": "Abhi renew karein — bache hue din saath jud jayenge."
+    "endingTitle": "{days, plural, one {Membership: # din baaki} other {Membership: # din baaki}}",
+    "endingSub": "Abhi renew karein, bache din jud jayenge."
   },
   "pill": {
     "newRides": "nayi rides"

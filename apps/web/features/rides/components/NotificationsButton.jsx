@@ -21,7 +21,7 @@ export function NotificationsButton({ onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="relative flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-bold text-ec-blueInk shadow-ec-card"
+      className="relative flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ec-line bg-white text-[14px] font-bold text-ec-blueInk shadow-ec-card"
     >
       <span className="inline-flex text-ec-blue"><BellEdit size={18} /></span>{t('filter.notifications')}
       {problem && (

@@ -11,6 +11,7 @@ import { geoDenied } from '../services/geoClient'
 import { PermBlockedSheet, BLOCKED_PERM } from './PermBlockedSheet'
 import { bubbleSupported, bubbleOn, setBubble } from '@/features/pwa/services/twaBubble'
 import { batteryRestricted, openAppSettings, alertSoundOff, openSoundSettings } from '../services/nativePush'
+import { ListSkeleton } from '@/components/ui/Skeleton'
 
 function Toggle({ on, onChange, label, hint, disabled }) {
   return (
@@ -42,7 +43,7 @@ export function NotificationSettings() {
   const [help, setHelp] = useState(null) // BLOCKED_PERM while the fix dialog is open
   const [bubble, setBubbleState] = useState(bubbleOn)
 
-  if (isLoading) return <div className="text-ec-ink40">…</div>
+  if (isLoading) return <ListSkeleton rows={4} />
   if (isError || !prefs) return <p className="text-[13px] font-semibold text-ec-danger">{t('error.load')}</p>
 
   const masterOn = permissionState() === 'granted' && (!!prefs.notifyBotRides || !!prefs.notifyPostedRides)
