@@ -120,7 +120,8 @@ test('eGRAS-style Go covered by an overlay → DOM click still submits (once)', 
   const html = `<form method="post" action="${BANK}"><input type="hidden" name="grn" value="1">
     <input type="submit" value="Continue" onclick="return confirm('continue?')"></form>
     <div style="position:fixed;inset:0;background:rgba(0,0,0,.3)">Charges for Online transaction!</div>`;
-  const ok = await setup(chromium, html);
+  let ok;
+  try { ok = await setup(chromium, html); } catch { return t.skip('chromium not launchable (CI)'); }
   t.after(() => ok.browser.close());
   const logs = [];
   const bank = await passTreasury(ok.context, { host: HOST }, ok.captured, { log: (m) => logs.push(m) });
