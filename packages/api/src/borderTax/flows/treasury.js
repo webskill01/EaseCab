@@ -31,6 +31,7 @@ const VERDICT_MS = 20_000; // treasury submit → bank page
 // HR eGRAS never loaded within 30s on 2 live filings (2026-11-12): the bot's tab stayed on Vahan
 const FIND_MS = 60_000;
 const UP_MS = 10_000; // treasury TCP check before filing
+const GO_CLICK_MS = 8000; // then a DOM click (clickGo)
 
 /** Tags the controls this page needs; returns which were found (names only — never values: PII). */
 async function tagControls(page, { mode, bank }) {
@@ -71,6 +72,21 @@ async function answerCaptcha(page, io) {
   return read;
 }
 
+/**
+ * Clicks the submit control. eGRAS Go sat 30s "not clickable" on 2 of ~20 HR filings (2026-11-15, no JS
+ * confirm ever fired) — something covered it. Then a DOM click, which no overlay blocks; the log keeps
+ * Playwright's reason (e.g. "<div …> intercepts pointer events") to map the overlay.
+ */
+async function clickGo(page, io) {
+  await page.click('[data-ec=go]', { timeout: GO_CLICK_MS }).catch(async (e) => {
+    const why = e.message.split('\n').find((l) => /intercepts|not visible|not enabled|not stable/i.test(l)) || e.message.split('\n')[0];
+    // clicked already, timed out after (waiting on its navigation): a 2nd click would post a 2nd challan
+    if (/click action done/i.test(e.message)) return io.log?.('treasury go: clicked, slow navigation');
+    io.log?.(`treasury go: ${why.trim().slice(0, 160)} — DOM click`);
+    return page.$eval('[data-ec=go]', (b) => b.click());
+  });
+}
+
 /** One fill + submit. @returns {Promise<?object>} the bank hand-off, or null */
 async function attempt(page, cfg, captured, io) {
   const found = await tagControls(page, cfg);
@@ -90,7 +106,7 @@ async function attempt(page, cfg, captured, io) {
   // the treasury page to pay outside the app → pending portal attempt / amount mismatch (2026-11-13).
   if (found.cap && !read) read = await io.captcha({ step: 'treasury', image: await captchaImage(page, '[data-ec=cap]') });
   if (read) await page.fill('[data-ec=cap]', read);
-  await page.click('[data-ec=go]');
+  await clickGo(page, io);
   return Promise.race([captured, page.waitForTimeout(VERDICT_MS).then(() => null)]);
 }
 

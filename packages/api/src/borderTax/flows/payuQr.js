@@ -58,6 +58,20 @@ async function describe(page) {
     .map((e) => (e.innerText || '').trim().slice(0, 20)).filter(Boolean).slice(0, 25).join(',')).catch(() => '');
 }
 
+/** Opens the QR tab and waits up to QR_WAIT_MS for the QR (+ the upi link `upiNow()` sniffed). */
+async function showQr(page, upiNow) {
+  await page.waitForLoadState('networkidle').catch(() => {});
+  const qrTab = page.getByText(/scan.*qr|upi\s*qr|qr\s*code/i).first();
+  if (await qrTab.isVisible().catch(() => false)) await qrTab.click();
+  else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); });
+  let tag = { qr: false, upi: null };
+  for (let t = 0; t < QR_WAIT_MS && !(tag.qr && (upiNow() || tag.upi)); t += 1000) {
+    await page.waitForTimeout(1000);
+    tag = await tagQr(page);
+  }
+  return tag;
+}
+
 /**
  * Opens PayU's UPI QR. @returns {Promise<{ qr: string, upi: ?string }>} qr = PNG data URL
  * @throws NO_QR
@@ -68,16 +82,14 @@ async function openQr(page, io) {
   page.context().on('response', onResponse);
   try {
     await page.waitForURL(/api\.payu\.in/, { timeout: QR_WAIT_MS });
-    await page.waitForLoadState('networkidle').catch(() => {});
-    const qrTab = page.getByText(/scan.*qr|upi\s*qr|qr\s*code/i).first();
-    if (await qrTab.isVisible().catch(() => false)) await qrTab.click();
-    else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); });
-    let tag = { qr: false, upi: null };
-    for (let t = 0; t < QR_WAIT_MS && !(tag.qr && upi); t += 1000) {
-      await page.waitForTimeout(1000);
-      tag = await tagQr(page);
-      upi = upi || tag.upi;
+    let tag = await showQr(page, () => upi);
+    // checkout rendered nothing for 25s (HR d549dc6c 2026-11-15: no button on the page) → reload once
+    if (!tag.qr && !(await describe(page))) {
+      io.log(`PayU checkout blank (${new URL(page.url()).pathname}) — reloading`);
+      await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+      tag = await showQr(page, () => upi);
     }
+    upi = upi || tag.upi;
     if (!tag.qr) throw portalError(F.NO_QR, `no UPI QR on PayU — [${await describe(page)}]`);
     const shot = await page.locator('[data-ec=qr]').screenshot();
     upi = decodeQr(shot) || upi;

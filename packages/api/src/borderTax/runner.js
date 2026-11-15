@@ -162,7 +162,8 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
           log('late payment found → paid');
           await onLatePaid(req).catch((err) => logger.warn({ id, err: err.message }, 'late-paid push failed')); // the app banner still shows it
         }
-        alert(`${req.stateCd} unlock ${id.slice(0, 8)}: pending attempt was PAID (${paidRow.receiptNo}${own ? ', this filing' : ''})`);
+        // not own = paid outside this filing (HR 94275939 2026-11-15: no EaseCab filing made that attempt) — FYI only
+        alert(`${req.stateCd} unlock ${id.slice(0, 8)}: pending attempt was PAID (${paidRow.receiptNo}${own ? ', this filing → marked paid' : ', not this filing — FYI, vehicle free'})`);
       }
       // bank PENDING: treasury never answered Vahan → ask again later; UNLOCK_TRIES of these → FAILED + alert
       if (!unknown && !paidRow && rows.some((r) => r.result === 'bank_pending')) {

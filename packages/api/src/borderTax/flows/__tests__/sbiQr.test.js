@@ -26,3 +26,8 @@ test('"Collect Request Initiated Successfully" is not a failure; out of time →
   const page = fakePage('https://merchant.sbi.bank.in/x', 'Collect Request Initiated Successfully');
   await assert.rejects(awaitSbiPaid(page, io, 1 - BORDER_TAX.PAY_GRACE_SEC), { failureCode: 'payment_timeout' });
 });
+
+test('SBI hands an expired QR back to parivahan with no receipt → payment_timeout, not payment_unknown', async () => {
+  const page = fakePage('https://services.parivahan.gov.in/checkpostv4/', '');
+  await assert.rejects(awaitSbiPaid(page, io, 1 - BORDER_TAX.PAY_GRACE_SEC), { failureCode: 'payment_timeout' });
+});

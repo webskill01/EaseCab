@@ -113,3 +113,17 @@ test('treasuryUp: listening port → true, closed port → false', async () => {
   await new Promise((r) => srv.once('close', r));
   assert.strictEqual(await treasuryUp('127.0.0.1', port, 2000), false);
 });
+
+test('eGRAS-style Go covered by an overlay → DOM click still submits (once)', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  const html = `<form method="post" action="${BANK}"><input type="hidden" name="grn" value="1">
+    <input type="submit" value="Continue" onclick="return confirm('continue?')"></form>
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.3)">Charges for Online transaction!</div>`;
+  const ok = await setup(chromium, html);
+  t.after(() => ok.browser.close());
+  const logs = [];
+  const bank = await passTreasury(ok.context, { host: HOST }, ok.captured, { log: (m) => logs.push(m) });
+  assert.match(bank, /grn=1/);
+  assert.ok(logs.some((m) => /intercepts pointer events.*DOM click/.test(m)), logs.join('\n'));
+});

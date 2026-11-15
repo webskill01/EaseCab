@@ -201,7 +201,7 @@ test('unlock: our own attempt was paid after all → filing PAID with the receip
   const u = unlockSetup({}, { rows: [{ paymentId: 'HRP1', amount: '100', result: 'paid', receiptNo: 'HRR7', pdf: Buffer.from('%PDF') }], retryAt: null });
   await u.unlock();
   assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.unlocks.b1.status, u.puts.length], ['paid', 'HRR7', 'paid', 1]);
-  assert.match(u.alerts.join(), /PAID \(HRR7, this filing\)/);
+  assert.match(u.alerts.join(), /PAID \(HRR7, this filing → marked paid\)/);
   assert.deepStrictEqual(u.pushed, ['b1'], 'driver pushed');
 });
 

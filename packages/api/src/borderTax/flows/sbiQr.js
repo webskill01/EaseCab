@@ -55,7 +55,8 @@ async function sbiStatus(page) {
  * @throws PAYMENT_FAILED, PAYMENT_TIMEOUT, PAYMENT_UNKNOWN (left SBI but no receipt: maybe paid → support)
  */
 async function awaitSbiPaid(page, io, secLeft) {
-  const until = Date.now() + ((secLeft ?? BORDER_TAX.PAY_WAIT_SEC) + BORDER_TAX.PAY_GRACE_SEC) * 1000;
+  const qrEnd = Date.now() + (secLeft ?? BORDER_TAX.PAY_WAIT_SEC) * 1000;
+  const until = qrEnd + BORDER_TAX.PAY_GRACE_SEC * 1000;
   let left = 0; // when the bank page went away (SBI → parivahan)
   while (Date.now() < until && !(left && Date.now() - left > BORDER_TAX.RECEIPT_WAIT_SEC * 1000)) {
     const found = await receiptOn(page.context());
@@ -72,7 +73,9 @@ async function awaitSbiPaid(page, io, secLeft) {
     }
     await new Promise((r) => setTimeout(r, 2000)); // not page.waitForTimeout: the page may be closed by now
   }
-  throw portalError(left ? F.PAYMENT_UNKNOWN : F.PAYMENT_TIMEOUT);
+  // SBI sends an expired QR back to parivahan too ("Your transaction status is Pending", UP 6da02f9a
+  // 2026-11-15, unpaid) → left after the QR's end = timeout. Unlock still turns a late payment into PAID.
+  throw portalError(left && left < qrEnd ? F.PAYMENT_UNKNOWN : F.PAYMENT_TIMEOUT);
 }
 
 module.exports = { openSbiQr, awaitSbiPaid };

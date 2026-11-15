@@ -33,6 +33,7 @@ const MODES_MS = 15_000;
 // UP AITP+AC filed straight after the selects quoted ₹0 ("Road Tax amount is zero", 2026-11-12); the same
 // form with a 1s pause (recon) quoted ₹150 — let the portal register the permit/service first
 const SELECT_SETTLE_MS = 1000;
+const CATEGORY_SEL = '#floatingVecCat';
 
 /** 'YYYY-MM-DDTHH:mm' in IST for a datetime-local input. */
 function istInput(date) {
@@ -105,8 +106,22 @@ async function pickCheckpost(page, job) {
   await page.selectOption('#floatingCheckpost', checkpost);
 }
 
+/**
+ * Vehicle Category is prefilled from Vahan (UP: LPV) but left blank for some vehicles: HP PB01G2474,
+ * MAXI CAB, offered only MPV → "Please select Vehicle Category!" (2026-11-15). Blank → the first option
+ * the portal offers for this vehicle class.
+ */
+async function fillCategory(page) {
+  const cat = page.locator(CATEGORY_SEL);
+  if (!(await cat.isVisible().catch(() => false)) || (await cat.inputValue())) return;
+  const ok = await page.waitForFunction((sel) => document.querySelector(sel)?.options.length > 1, CATEGORY_SEL, { timeout: MODES_MS })
+    .then(() => true, () => false);
+  if (ok) await page.selectOption(CATEGORY_SEL, { index: 1 });
+}
+
 async function vehicleStep(page, job) {
   await page.waitForSelector('#floatingPrmit', { state: 'visible' });
+  await fillCategory(page);
   await page.selectOption('#floatingPrmit', job.permitType);
   await page.waitForFunction(() => document.querySelector('#floatingService')?.options.length > 1);
   await page.selectOption('#floatingService', BORDER_TAX_STATES[job.stateCd].serviceType);
