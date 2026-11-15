@@ -1,6 +1,9 @@
 'use strict';
 
 /* global document, location, getComputedStyle -- page.evaluate callbacks run in the browser */
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { chromium } = require('playwright');
 const jsQR = require('jsqr');
 const { PNG } = require('pngjs');
@@ -11,21 +14,18 @@ const { portalError } = require('./portal');
  * HR in-app UPI QR (2026-11-11). The worker's own browser stays on PayU, so the payment, the eGRAS
  * response and the checkpost receipt all happen in the session that filed — a driver paying in his own
  * browser got "Payment id or transaction amount is mismatch" and no receipt (live, 2026-11-11).
- * PayU's checkout DOM was only seen from outside: the first live runs will need tuning here.
+ * HP gets one of two PayU checkouts (2026-11-16): a QR only counts once it decodes to a upi:// link.
  */
 const QR_WAIT_MS = 25_000;
 const IDLE_MS = 5000; // networkidle cap before looking for the QR
 const BLANK_MS = 8000; // nothing on the checkout this long → reload (normal QR shows in ~5s)
+const NUDGE_MS = 8000; // no QR yet → click UPI / QR options once
+const QR_CANDIDATES = 4; // square images tried per poll (logos, icons, the QR)
+const MISS_DIR = path.join(os.tmpdir(), 'easecab-payu-misses');
 const UPI_RE = /upi:\/\/pay\?[^"'\s\\<>]+/;
 const RECEIPT_RE = /Receipt\s*No\.?\s*:?\s*([A-Z]{2}[A-Z0-9]{6,})/i; // HRR2611110358690; other states same portal
 const BAKE_STYLE = ['position', 'top', 'left', 'right', 'bottom', 'width', 'height', 'z-index', 'opacity', 'transform', 'display', 'margin'];
 const BASE = '<base href="https://services.parivahan.gov.in/checkpostv4/">';
-
-/** First upi://pay intent in a PayU response body (JSON escapes undone). */
-function findUpi(text) {
-  const m = String(text).replace(/\\\//g, '/').replace(/\\u0026/gi, '&').match(UPI_RE);
-  return m ? m[0].replace(/&amp;/g, '&') : null;
-}
 
 /**
  * The upi://pay link the QR itself encodes (payee + amount + PayU's txn ref) — what a scan pays, so the
@@ -61,54 +61,95 @@ async function describe(page) {
 }
 
 /**
- * Opens the QR tab and waits up to QR_WAIT_MS for the QR (+ the upi link `upiNow()` sniffed).
- * `bailBlank`: stop after BLANK_MS if the checkout shows nothing at all — a blank PayU page never fills
- * in by itself, a reload does (HR 588ad820 2026-11-15: 32s blank, QR 5s after reload).
+ * Candidate QR elements (visible square-ish img/canvas/svg ≥ 120px, biggest first) → the first whose
+ * screenshot decodes to a upi:// link. Only a decoded QR counts: on HP's other PayU checkout the biggest
+ * square was not a QR and a sniffed link was PayU's test VPA (test@payu, ₹100 — 2026-11-16).
+ * @returns {Promise<?{ shot: Buffer, upi: string }>}
  */
-async function showQr(page, upiNow, bailBlank = false) {
-  // ponytail: capped — a blank checkout kept the network busy and sat out Playwright's 30s default
-  await page.waitForLoadState('networkidle', { timeout: IDLE_MS }).catch(() => {});
-  const qrTab = page.getByText(/scan.*qr|upi\s*qr|qr\s*code/i).first();
-  if (await qrTab.isVisible().catch(() => false)) await qrTab.click();
-  else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); }).catch(() => {});
-  let tag = { qr: false, upi: null };
-  for (let t = 0; t < QR_WAIT_MS && !(tag.qr && (upiNow() || tag.upi)); t += 1000) {
-    await page.waitForTimeout(1000);
-    tag = await tagQr(page);
-    if (bailBlank && !tag.qr && t + 1000 >= BLANK_MS && !(await describe(page))) break;
+async function findQr(page) {
+  const n = await page.evaluate((max) => {
+    const els = [...document.querySelectorAll('img, canvas, svg')].map((e) => [e, e.getBoundingClientRect()])
+      .filter(([e, r]) => e.offsetParent !== null && r.width >= 120 && Math.abs(r.width - r.height) < r.width * 0.15);
+    els.sort((a, b) => b[1].width - a[1].width);
+    els.slice(0, max).forEach(([e], i) => e.setAttribute('data-ec-qr', String(i)));
+    return Math.min(els.length, max);
+  }, QR_CANDIDATES).catch(() => 0);
+  for (let i = 0; i < n; i += 1) {
+    const shot = await page.locator(`[data-ec-qr="${i}"]`).screenshot({ timeout: 3000 }).catch(() => null);
+    const upi = shot && decodeQr(shot);
+    if (upi) return { shot, upi };
   }
-  return tag;
+  return null;
+}
+
+/** No QR yet: open the UPI option, then a QR / scan option (HP's other PayU checkout hides the QR there). */
+async function nudge(page) {
+  for (const re of [/^\s*UPI\b/i, /scan|qr/i]) {
+    const el = page.getByText(re).first();
+    if (await el.isVisible().catch(() => false)) {
+      await el.click({ timeout: 3000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+    }
+  }
+}
+
+/** Full-page screenshot of a QR miss → VPS tmp, to map the checkout that beat us. Path or null. */
+async function keepMissShot(page) {
+  try {
+    fs.mkdirSync(MISS_DIR, { recursive: true });
+    const file = path.join(MISS_DIR, `${Date.now()}.png`);
+    await page.screenshot({ path: file, fullPage: true, timeout: 5000 });
+    return file;
+  } catch {
+    return null; // ponytail: diagnostics only
+  }
 }
 
 /**
- * Opens PayU's UPI QR. @returns {Promise<{ qr: string, upi: ?string }>} qr = PNG data URL
+ * Opens the QR tab and waits up to QR_WAIT_MS for a decodable QR (nudging once at NUDGE_MS).
+ * `bailBlank`: stop after BLANK_MS if the checkout shows nothing at all — a blank PayU page never fills
+ * in by itself, a reload does (HR 588ad820 2026-11-15: 32s blank, QR 5s after reload).
+ */
+async function showQr(page, bailBlank = false) {
+  // ponytail: capped — a blank checkout kept the network busy and sat out Playwright's 30s default
+  await page.waitForLoadState('networkidle', { timeout: IDLE_MS }).catch(() => {});
+  const qrTab = page.getByText(/scan.*qr|upi\s*qr|qr\s*code/i).first();
+  if (await qrTab.isVisible().catch(() => false)) await qrTab.click().catch(() => {});
+  else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); }).catch(() => {});
+  let found = null;
+  let nudged = false;
+  for (let t = 0; t < QR_WAIT_MS && !found; t += 1000) {
+    await page.waitForTimeout(1000);
+    found = await findQr(page);
+    if (found) break;
+    if (bailBlank && t + 1000 >= BLANK_MS && !(await describe(page))) break;
+    if (!nudged && t + 1000 >= NUDGE_MS) { nudged = true; await nudge(page); }
+  }
+  return found;
+}
+
+/**
+ * Opens PayU's UPI QR. @returns {Promise<{ qr: string, upi: string }>} qr = PNG data URL
  * @throws NO_QR
  */
 async function openQr(page, io) {
-  let upi = null;
-  const onResponse = (r) => { if (!upi && /payu\.in/.test(r.url())) r.text().then((t) => { upi = upi || findUpi(t); }, () => {}); };
-  page.context().on('response', onResponse);
-  try {
-    await page.waitForURL(/api\.payu\.in/, { timeout: QR_WAIT_MS });
-    let tag = await showQr(page, () => upi, true);
-    // checkout rendered nothing (HR d549dc6c 2026-11-15: no button on the page) → reload once
-    if (!tag.qr && !(await describe(page))) {
-      io.log(`PayU checkout blank (${new URL(page.url()).pathname}) — reloading`);
-      await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
-      tag = await showQr(page, () => upi);
-    }
-    upi = upi || tag.upi;
-    if (!tag.qr) throw portalError(F.NO_QR, `no UPI QR on PayU — [${await describe(page)}]`);
-    const shot = await page.locator('[data-ec=qr]').screenshot();
-    upi = decodeQr(shot) || upi;
-    const qr = `data:image/png;base64,${shot.toString('base64')}`;
-    // never the link itself (payment data) — its param names + mode tell whether UPI apps accept it as an intent
-    const shape = upi ? [...new URL(upi.replace('upi://', 'https://x/')).searchParams].map(([k, v]) => (k === 'mode' ? `mode=${v}` : k)).join(',') : 'missing';
-    io.log(`PayU QR ready (upi link ${shape})`);
-    return { qr, upi };
-  } finally {
-    page.context().off('response', onResponse);
+  await page.waitForURL(/api\.payu\.in/, { timeout: QR_WAIT_MS });
+  let found = await showQr(page, true);
+  // checkout rendered nothing (HR d549dc6c 2026-11-15: no button on the page) → reload once
+  if (!found && !(await describe(page))) {
+    io.log(`PayU checkout blank (${new URL(page.url()).pathname}) — reloading`);
+    await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+    found = await showQr(page);
   }
+  if (!found) {
+    const file = await keepMissShot(page);
+    throw portalError(F.NO_QR, `no UPI QR on PayU ${new URL(page.url()).pathname} — [${await describe(page)}]${file ? ` shot ${file}` : ''}`);
+  }
+  const { shot, upi } = found;
+  // never the link itself (payment data) — its param names + mode tell whether UPI apps accept it as an intent
+  const shape = [...new URL(upi.replace('upi://', 'https://x/')).searchParams].map(([k, v]) => (k === 'mode' ? `mode=${v}` : k)).join(',');
+  io.log(`PayU QR ready (upi link ${shape})`);
+  return { qr: `data:image/png;base64,${shot.toString('base64')}`, upi };
 }
 
 /** PayU's result post back to the treasury (`back` host). @returns {Promise<string>} PayU status ('success' when paid) @throws PAYMENT_TIMEOUT */
@@ -182,4 +223,4 @@ async function awaitPaid(page, io, back) {
   return { receiptNo: found.receiptNo, pdf: await receiptPdf(found.page, io.log) };
 }
 
-module.exports = { openQr, awaitPaid, receiptOn, receiptPdf, findUpi, decodeQr, tagQr, describe, RECEIPT_RE };
+module.exports = { openQr, awaitPaid, receiptOn, receiptPdf, decodeQr, findQr, tagQr, describe, RECEIPT_RE };
