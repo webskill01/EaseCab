@@ -14,6 +14,8 @@ const { portalError } = require('./portal');
  * PayU's checkout DOM was only seen from outside: the first live runs will need tuning here.
  */
 const QR_WAIT_MS = 25_000;
+const IDLE_MS = 5000; // networkidle cap before looking for the QR
+const BLANK_MS = 8000; // nothing on the checkout this long → reload (normal QR shows in ~5s)
 const UPI_RE = /upi:\/\/pay\?[^"'\s\\<>]+/;
 const RECEIPT_RE = /Receipt\s*No\.?\s*:?\s*([A-Z]{2}[A-Z0-9]{6,})/i; // HRR2611110358690; other states same portal
 const BAKE_STYLE = ['position', 'top', 'left', 'right', 'bottom', 'width', 'height', 'z-index', 'opacity', 'transform', 'display', 'margin'];
@@ -58,16 +60,22 @@ async function describe(page) {
     .map((e) => (e.innerText || '').trim().slice(0, 20)).filter(Boolean).slice(0, 25).join(',')).catch(() => '');
 }
 
-/** Opens the QR tab and waits up to QR_WAIT_MS for the QR (+ the upi link `upiNow()` sniffed). */
-async function showQr(page, upiNow) {
-  await page.waitForLoadState('networkidle').catch(() => {});
+/**
+ * Opens the QR tab and waits up to QR_WAIT_MS for the QR (+ the upi link `upiNow()` sniffed).
+ * `bailBlank`: stop after BLANK_MS if the checkout shows nothing at all — a blank PayU page never fills
+ * in by itself, a reload does (HR 588ad820 2026-11-15: 32s blank, QR 5s after reload).
+ */
+async function showQr(page, upiNow, bailBlank = false) {
+  // ponytail: capped — a blank checkout kept the network busy and sat out Playwright's 30s default
+  await page.waitForLoadState('networkidle', { timeout: IDLE_MS }).catch(() => {});
   const qrTab = page.getByText(/scan.*qr|upi\s*qr|qr\s*code/i).first();
   if (await qrTab.isVisible().catch(() => false)) await qrTab.click();
-  else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); });
+  else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); }).catch(() => {});
   let tag = { qr: false, upi: null };
   for (let t = 0; t < QR_WAIT_MS && !(tag.qr && (upiNow() || tag.upi)); t += 1000) {
     await page.waitForTimeout(1000);
     tag = await tagQr(page);
+    if (bailBlank && !tag.qr && t + 1000 >= BLANK_MS && !(await describe(page))) break;
   }
   return tag;
 }
@@ -82,8 +90,8 @@ async function openQr(page, io) {
   page.context().on('response', onResponse);
   try {
     await page.waitForURL(/api\.payu\.in/, { timeout: QR_WAIT_MS });
-    let tag = await showQr(page, () => upi);
-    // checkout rendered nothing for 25s (HR d549dc6c 2026-11-15: no button on the page) → reload once
+    let tag = await showQr(page, () => upi, true);
+    // checkout rendered nothing (HR d549dc6c 2026-11-15: no button on the page) → reload once
     if (!tag.qr && !(await describe(page))) {
       io.log(`PayU checkout blank (${new URL(page.url()).pathname}) — reloading`);
       await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
