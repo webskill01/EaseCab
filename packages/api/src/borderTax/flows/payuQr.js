@@ -14,12 +14,12 @@ const { portalError } = require('./portal');
  * HR in-app UPI QR (2026-11-11). The worker's own browser stays on PayU, so the payment, the eGRAS
  * response and the checkpost receipt all happen in the session that filed — a driver paying in his own
  * browser got "Payment id or transaction amount is mismatch" and no receipt (live, 2026-11-11).
- * HP gets one of two PayU checkouts (2026-11-16): a QR only counts once it decodes to a upi:// link.
+ * HP gets one of two PayU checkouts (2026-11-16): a QR only counts once it decodes to a upi:// link;
+ * the newer one needs a "Generate QR" click first.
  */
 const QR_WAIT_MS = 25_000;
 const IDLE_MS = 5000; // networkidle cap before looking for the QR
 const BLANK_MS = 8000; // nothing on the checkout this long → reload (normal QR shows in ~5s)
-const NUDGE_MS = 8000; // no QR yet → click UPI / QR options once
 const QR_CANDIDATES = 4; // square images tried per poll (logos, icons, the QR)
 const MISS_DIR = path.join(os.tmpdir(), 'easecab-payu-misses');
 const UPI_RE = /upi:\/\/pay\?[^"'\s\\<>]+/;
@@ -82,15 +82,13 @@ async function findQr(page) {
   return null;
 }
 
-/** No QR yet: open the UPI option, then a QR / scan option (HP's other PayU checkout hides the QR there). */
-async function nudge(page) {
-  for (const re of [/^\s*UPI\b/i, /scan|qr/i]) {
-    const el = page.getByText(re).first();
-    if (await el.isVisible().catch(() => false)) {
-      await el.click({ timeout: 3000 }).catch(() => {});
-      await page.waitForTimeout(1500);
-    }
-  }
+/**
+ * HP's other PayU checkout ("webcheckoutpro/…/recommended", live 2026-11-16) shows a blurred dummy QR
+ * (it decodes to nothing) under a "Generate QR" button; the real QR shows ~1s after the click.
+ */
+async function generate(page) {
+  const btn = page.getByText(/^\s*generate\s*qr\s*$/i).first();
+  if (await btn.isVisible().catch(() => false)) await btn.click({ timeout: 3000 }).catch(() => {});
 }
 
 /** Full-page screenshot of a QR miss → VPS tmp, to map the checkout that beat us. Path or null. */
@@ -106,7 +104,7 @@ async function keepMissShot(page) {
 }
 
 /**
- * Opens the QR tab and waits up to QR_WAIT_MS for a decodable QR (nudging once at NUDGE_MS).
+ * Opens the QR tab and waits up to QR_WAIT_MS for a decodable QR (pressing Generate QR when shown).
  * `bailBlank`: stop after BLANK_MS if the checkout shows nothing at all — a blank PayU page never fills
  * in by itself, a reload does (HR 588ad820 2026-11-15: 32s blank, QR 5s after reload).
  */
@@ -117,13 +115,11 @@ async function showQr(page, bailBlank = false) {
   if (await qrTab.isVisible().catch(() => false)) await qrTab.click().catch(() => {});
   else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); }).catch(() => {});
   let found = null;
-  let nudged = false;
   for (let t = 0; t < QR_WAIT_MS && !found; t += 1000) {
+    await generate(page);
     await page.waitForTimeout(1000);
     found = await findQr(page);
-    if (found) break;
-    if (bailBlank && t + 1000 >= BLANK_MS && !(await describe(page))) break;
-    if (!nudged && t + 1000 >= NUDGE_MS) { nudged = true; await nudge(page); }
+    if (bailBlank && !found && t + 1000 >= BLANK_MS && !(await describe(page))) break;
   }
   return found;
 }

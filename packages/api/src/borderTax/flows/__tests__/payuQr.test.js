@@ -54,3 +54,21 @@ test('findQr: skips a bigger square logo, takes the QR that decodes; logo only â
   await page.setContent(`<body>${logo}</body>`);
   assert.strictEqual(await findQr(page), null);
 });
+
+test('openQr: HP webcheckoutpro â€” dummy QR until "Generate QR" is pressed', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  let browser;
+  try { browser = await chromium.launch(); } catch { return t.skip('chromium not launchable (CI)'); }
+  t.after(() => browser.close());
+  const { openQr } = require('../payuQr');
+  const png = require('fs').readFileSync(require('path').join(__dirname, 'fixtures/upi-qr.png')).toString('base64');
+  const context = await browser.newContext();
+  await context.route('https://api.payu.in/**', (route) => route.fulfill({ contentType: 'text/html', body: `<body>
+    <div id="q"><svg width="200" height="200"><rect width="200" height="200" fill="#999"/></svg></div>
+    <button onclick="document.getElementById('q').innerHTML='<img width=200 height=200 src=data:image/png;base64,${png}>'">Generate QR</button></body>` }));
+  const page = await context.newPage();
+  await page.goto('https://api.payu.in/webcheckoutpro/x/y/recommended');
+  const { upi } = await openQr(page, { log: () => {} });
+  assert.strictEqual(upi, 'upi://pay?pa=test@payu&am=100.00&tr=TEST1&mode=04');
+});
