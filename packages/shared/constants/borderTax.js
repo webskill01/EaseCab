@@ -281,6 +281,7 @@ const BORDER_TAX_FAILURE = Object.freeze({
   ALREADY_PAID: 'already_paid', // portal: tax already paid for the requested window — driver picks new dates
   PUCC_EXPIRED: 'pucc_expired', // portal: the vehicle's pollution certificate (PUC) has lapsed — driver renews first
   FITNESS_EXPIRED: 'fitness_expired', // portal: the vehicle's fitness certificate has lapsed — driver renews first
+  SEAT_CLASS_MISMATCH: 'seat_class_mismatch', // portal: RC class vs seats (MAXI CAB needs 7–17; PB01B1302 = MAXI CAB, 5 seats) — RC fix
   ROAD_TAX_EXPIRED: 'road_tax_expired', // portal: the vehicle's home road tax has lapsed — driver renews first
   SAME_STATE: 'same_state', // portal: a vehicle registered in the filing state owes no border tax there
   NO_TAX_MODE: 'no_tax_mode', // portal offers no tax mode for this vehicle at this checkpost

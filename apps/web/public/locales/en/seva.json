@@ -111,6 +111,7 @@
       "no_handoff": "The portal didn't open the bank page. Please try again.",
       "pucc_expired": "Your vehicle's pollution certificate (PUC) has expired. Renew it, then file again.",
       "fitness_expired": "Your vehicle's fitness certificate has expired. Renew it, then file again.",
+      "seat_class_mismatch": "Your RC on Vahan doesn't match the vehicle type (e.g. MAXI CAB with fewer than 7 seats), so the portal won't take online tax. Get the RC corrected at the RTO, or pay at the border. Nothing was charged.",
       "no_qr": "The govt payment page didn't show the UPI QR, so we stopped before any payment — no money was taken. We're clearing the portal hold; then please try again.",
       "payment_failed": "The payment didn't go through. If money was debited, contact support.",
       "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",

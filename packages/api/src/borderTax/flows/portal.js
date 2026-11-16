@@ -37,6 +37,7 @@ function canvasCodeHook() {
 const PAPERS = Object.freeze([ // live HR runs 2026-11-11
   [/PUCC Validity/i, BORDER_TAX_FAILURE.PUCC_EXPIRED],
   [/Fitness Validity/i, BORDER_TAX_FAILURE.FITNESS_EXPIRED],
+  [/Seating capacity should be/i, BORDER_TAX_FAILURE.SEAT_CLASS_MISMATCH], // HR 2026-11-16: MAXI CAB with 5 seats on Vahan
 ]);
 
 /** Error carrying a failure_code for the runner. */

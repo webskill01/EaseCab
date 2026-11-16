@@ -14,6 +14,7 @@ test('portalError: an expired-PUC refusal gets its own code; other portal errors
   assert.strictEqual(portalError(F.CAPTCHA_WRONG, pucc).failureCode, F.CAPTCHA_WRONG);
   const fit = 'Fitness Validity Must Be Greater Than Or Equal Current Date..\nPlease renew your vehicle Fitness\nOK'; // live, 2026-11-11
   assert.strictEqual(portalError(F.PORTAL_ERROR, fit).failureCode, F.FITNESS_EXPIRED);
+  assert.strictEqual(portalError(F.PORTAL_ERROR, 'Seating capacity should be 7 to 17.\nOK').failureCode, F.SEAT_CLASS_MISMATCH); // live HR 2026-11-16
 });
 
 // Declaration captcha as checkpostv4 draws it (main.js, 2026-11-13): random code, canvas, checked in-page.
