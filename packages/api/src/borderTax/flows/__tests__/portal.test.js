@@ -53,3 +53,11 @@ test('declaration captcha: typed exactly as the page drew it — no OCR, no driv
     assert.match(logs[0], /^captcha declaration: read off the page "[1-9a-zA-Z@#]{6}"$/);
   }
 });
+
+test('vahanRefusal: no-record and same-state answers get their own codes; a wrong captcha passes', () => {
+  const { vahanRefusal } = require('../checkpostv4');
+  const noData = 'i\nNo data found for this vehicle number.\nPlease enter the details..\nOr clear your browser history.\nOK'; // live HR a7f5c3a3, 2026-11-16
+  assert.throws(() => vahanRefusal(noData), (e) => e.failureCode === F.VEHICLE_NOT_FOUND);
+  assert.throws(() => vahanRefusal('Same State Vehicle not allowed'), (e) => e.failureCode === F.SAME_STATE);
+  assert.doesNotThrow(() => vahanRefusal('Invalid Captcha'));
+});

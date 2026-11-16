@@ -26,6 +26,7 @@ const ALREADY_PAID = /already paid/i;
 const PENDING = /pending for verification/i; // an earlier unpaid attempt locks the vehicle
 const ROAD_TAX_EXPIRED = /road tax validity is expired/i; // UK, PB01C7365 (2026-11-04)
 const SAME_STATE = /same state vehicle/i; // HR, after Get Details (2026-11-14)
+const NO_DATA = /no data found for this vehicle/i; // HR a7f5c3a3 2026-11-16: number not on Vahan, Get Details then disabled
 const OPEN_TRIES = 3;
 const VAHAN_CAPTCHA_LEN = 6; // portal: "Captcha must be six characters"
 const CALC_MS = 30_000;
@@ -62,6 +63,12 @@ async function openForm(page, stateCd) {
   await page.waitForSelector('#floatingvehicle');
 }
 
+/** Vahan lookup answers no captcha retry can fix (the retry would hit a disabled Get Details). */
+function vahanRefusal(alert) {
+  if (SAME_STATE.test(alert)) throw portalError(BORDER_TAX_FAILURE.SAME_STATE, alert);
+  if (NO_DATA.test(alert)) throw portalError(BORDER_TAX_FAILURE.VEHICLE_NOT_FOUND, alert);
+}
+
 async function ownerStep(page, job, io) {
   const getDetails = async () => {
     await visibleBtn(page, 'Get Details').click();
@@ -72,7 +79,7 @@ async function ownerStep(page, job, io) {
   await solveCaptcha(page, io, {
     reopen: getDetails,
     step: 'vahan',
-    refuse: (alert) => { if (SAME_STATE.test(alert)) throw portalError(BORDER_TAX_FAILURE.SAME_STATE, alert); },
+    refuse: vahanRefusal,
     input: '#inputVahanCap',
     length: VAHAN_CAPTCHA_LEN,
     submit: () => page.locator('.modal.show button:visible', { hasText: 'OK' }).first().click(),
@@ -251,4 +258,4 @@ async function fileCheckpost(page, job, io) {
   throw portalError(BORDER_TAX_FAILURE.NO_QR, `no in-app QR page (bank ${new URL(handoff.action).hostname})`);
 }
 
-module.exports = { fileCheckpost, istInput, portalWindow, fromPortal };
+module.exports = { fileCheckpost, istInput, portalWindow, fromPortal, vahanRefusal };

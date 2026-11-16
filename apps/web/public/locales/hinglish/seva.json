@@ -112,6 +112,7 @@
       "pucc_expired": "Aapki gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
       "fitness_expired": "Aapki gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
       "seat_class_mismatch": "Vahan par aapki RC mein gaadi ki class aur seats match nahi karti (jaise MAXI CAB par 7 se kam seats), isliye portal online tax nahi le raha. RTO se RC theek karwayein, ya border par tax bharein. Koi paisa nahi kata.",
+      "vehicle_not_found": "Govt Vahan site par is gaadi number ka koi record nahi mila. RC par number check karke dobara bharein. Koi paisa nahi kata.",
       "no_qr": "Govt payment page pe UPI QR nahi aaya, isliye humne payment se pehle hi rok diya — koi paisa nahi kata. Hum portal ka hold hata rahe hain; phir dobara try karein.",
       "payment_failed": "Payment nahi hua. Agar paise kate hain to support se baat karein.",
       "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",

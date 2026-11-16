@@ -283,6 +283,7 @@ const BORDER_TAX_FAILURE = Object.freeze({
   FITNESS_EXPIRED: 'fitness_expired', // portal: the vehicle's fitness certificate has lapsed — driver renews first
   SEAT_CLASS_MISMATCH: 'seat_class_mismatch', // portal: RC class vs seats (MAXI CAB needs 7–17; PB01B1302 = MAXI CAB, 5 seats) — RC fix
   ROAD_TAX_EXPIRED: 'road_tax_expired', // portal: the vehicle's home road tax has lapsed — driver renews first
+  VEHICLE_NOT_FOUND: 'vehicle_not_found', // portal: Vahan has no record for this number (typo / not on Vahan) — driver checks it
   SAME_STATE: 'same_state', // portal: a vehicle registered in the filing state owes no border tax there
   NO_TAX_MODE: 'no_tax_mode', // portal offers no tax mode for this vehicle at this checkpost
   BANK_DOWN: 'bank_down', // state treasury site unreachable — stopped before Vahan's Pay Online, so no lock
