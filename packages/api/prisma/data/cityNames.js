@@ -696,7 +696,6 @@ const CITY_NAMES = Object.freeze({
   Jalgaon: { pa: 'ਜਲਗਾਓਂ', hi: 'जलगांव' },
   Bhusawal: { pa: 'ਭੁਸਾਵਲ', hi: 'भुसावल' },
   Dhule: { pa: 'ਧੂਲੇ', hi: 'धुले' },
-  Amravati: { pa: 'ਅਮਰਾਵਤੀ', hi: 'अमरावती' },
   Achalpur: { pa: 'ਅਚਲਪੁਰ', hi: 'अचलपुर' },
   Sinnar: { pa: 'ਸਿੰਨਰ', hi: 'सिन्नर' },
   Jamshedpur: { pa: 'ਜਮਸ਼ੇਦਪੁਰ', hi: 'जमशेदपुर' },

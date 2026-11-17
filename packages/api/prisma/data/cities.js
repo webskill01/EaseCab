@@ -155,7 +155,7 @@ const CITIES = [
   // ----------------------------- Chandigarh (UT) + Tricity -----------------------------
   { canonicalName: 'Chandigarh', state: 'Chandigarh', district: 'Chandigarh', type: 'metro', lat: 30.7333, lng: 76.7794, aliases: ['manimajra', 'mani majra', 'chandigarh', 'chd', 'chadigarh', 'chandighar', 'ਚੰਡੀਗੜ੍ਹ', 'चंडीगढ़', 'chandi', 'chandhigarh', 'chandigrah', 'chandiarh', 'chandigad', 'chandigarh airport', 'chandigarh sector', 'isbt 17', 'isbt 43', 'isbt chandigarh', 'sector 17', 'sector 35', '43 bus stand', '43 isbt', 'bus stand 43', 'chandigarh 43', 'pgi', 'pgimer'] },
   { canonicalName: 'Mohali', state: 'Punjab', district: 'SAS Nagar', type: 'city', lat: 30.7046, lng: 76.7179, aliases: ['mohali', 'sas nagar', 'sahibzada ajit singh nagar', 'mohli', 'ਮੋਹਾਲੀ', 'mhl', 'mohaali', 'moali', 'mohali airport', 'mohali phase', 'mohali sector', 'phase 10', 'phase 11'] },
-  { canonicalName: 'Panchkula', state: 'Haryana', district: 'Panchkula', type: 'city', lat: 30.6942, lng: 76.8606, aliases: ['panchkula', 'panchkoola', 'पंचकूला', 'pkl'] },
+  { canonicalName: 'Panchkula', state: 'Haryana', district: 'Panchkula', type: 'city', lat: 30.6942, lng: 76.8606, aliases: ['panchkula', 'panchkoola', 'पंचकूला', 'pkl', 'amravati', 'amravati enclave'] },
   { canonicalName: 'Zirakpur', state: 'Punjab', district: 'SAS Nagar', type: 'town', lat: 30.6425, lng: 76.8173, aliases: ['zirakpur', 'zirkpur', 'jirakpur', 'zkp', 'zirkapur', 'jerkpur', 'zirapur', 'dhakoli', 'dhakauli'] },
   { canonicalName: 'Kharar', state: 'Punjab', district: 'SAS Nagar', type: 'town', lat: 30.7460, lng: 76.6457, aliases: ['kharar', 'kharad', 'khrar', 'kahrar'] },
 
@@ -851,7 +851,6 @@ const CITIES = [
   { canonicalName: 'Jalgaon', state: 'Maharashtra', district: 'Jalgaon', type: 'city', lat: 21.0070, lng: 75.5630, aliases: ['jalgaon'] },
   { canonicalName: 'Bhusawal', state: 'Maharashtra', district: 'Jalgaon', type: 'city', lat: 21.0430, lng: 75.7850, aliases: ['bhusawal', 'bhusaval'] },
   { canonicalName: 'Dhule', state: 'Maharashtra', district: 'Dhule', type: 'city', lat: 20.9020, lng: 74.7740, aliases: ['dhule'] },
-  { canonicalName: 'Amravati', state: 'Maharashtra', district: 'Amravati', type: 'city', lat: 20.9370, lng: 77.7790, aliases: ['amravati'] },
   { canonicalName: 'Achalpur', state: 'Maharashtra', district: 'Amravati', type: 'town', lat: 21.2570, lng: 77.5100, aliases: ['achalpur'] },
   { canonicalName: 'Sinnar', state: 'Maharashtra', district: 'Nashik', type: 'town', lat: 19.8450, lng: 73.9980, aliases: ['sinnar'] },
   { canonicalName: 'Jamshedpur', state: 'Jharkhand', district: 'East Singhbhum', type: 'city', lat: 22.8050, lng: 86.2030, aliases: ['jamshedpur', 'tatanagar'] },
