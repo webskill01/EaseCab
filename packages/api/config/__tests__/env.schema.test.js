@@ -58,3 +58,9 @@ test('rejects a non-positive STALE_AFTER_MIN, naming it', () => {
   assert.equal(r.success, false);
   assert.ok(r.errors.some((e) => e.startsWith('STALE_AFTER_MIN')));
 });
+
+test('cron env carries the direct-duty house phone (default + override)', () => {
+  const base = { DATABASE_URL: 'postgresql://u:p@h:6543/db?pgbouncer=true', REDIS_URL: 'redis://localhost:6379' };
+  assert.equal(parseEnv(base).data.DIRECT_DUTY_POSTER_PHONE, '+916283380110');
+  assert.equal(parseEnv({ ...base, DIRECT_DUTY_POSTER_PHONE: '+919999999999' }).data.DIRECT_DUTY_POSTER_PHONE, '+919999999999');
+});
