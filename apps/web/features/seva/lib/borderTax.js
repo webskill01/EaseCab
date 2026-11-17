@@ -264,3 +264,6 @@ export function submitHandoff({ method, action, fields }, doc = document) {
   doc.body.appendChild(form)
   form.submit()
 }
+
+/** Failure message key. Missing or untranslated code → the govt-portal message: the default blame is the portal (user, 2026-11-18). */
+export const failKey = (t, code) => (code && t.has(`bt.fail.${code}`) ? `bt.fail.${code}` : 'bt.fail.portal_error')

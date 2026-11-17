@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createRequire } from 'node:module'
 import {
-  formFrom, resumable, lateUnseen, BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING, prepStep, prepDeadline, markPayOpened, BT_CAPTCHA_SEC, BT_PREP_SEC,
+  formFrom, resumable, lateUnseen, failKey, BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING, prepStep, prepDeadline, markPayOpened, BT_CAPTCHA_SEC, BT_PREP_SEC,
   BT_STATES, BT_STATUS, BT_FINAL, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_VEHICLE_RE,
   defaultStart, validUpto, BT_RECEIPT_KEEP_SEC, receiptGone, isFilable, isStarted, toCreateBody, emptyForm, createErrorKey, submitHandoff, toLocalInput, gettingReceipt,
   canUnlock, unlocking,
@@ -177,5 +177,16 @@ describe('lateUnseen', () => {
     expect(lateUnseen([f(49)], now, [])?.id).toBe('a') // found by the unlock
     expect(lateUnseen([f(49)], now, ['a'])).toBe(null) // seen
     expect(lateUnseen([f(49)], now + 4 * 86_400_000, [])).toBe(null) // old
+  })
+})
+
+describe('failKey', () => {
+  const seva = require('../../../../public/locales/hinglish/seva.json')
+  const t = { has: (k) => k.split('.').reduce((o, p) => o?.[p], seva) !== undefined }
+  it('known code → its own text; missing or untranslated → the govt-portal message', () => {
+    expect(failKey(t, 'pucc_expired')).toBe('bt.fail.pucc_expired')
+    expect(failKey(t, null)).toBe('bt.fail.portal_error')
+    expect(failKey(t, 'brand_new_code')).toBe('bt.fail.portal_error')
+    expect(seva.bt.fail.portal_error).toMatch(/Sarkari portal/)
   })
 })

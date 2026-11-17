@@ -8,7 +8,7 @@ import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Bank, External, CircleX, Ban, Car, Headset, Receipt, CalendarCheck } from '@/components/ui/icons'
 import { useFiling, useReceiptUrl, useBorderTaxActions } from '../hooks/useBorderTax'
-import { BT_STATUS as S, BT_STATES, markPayOpened, BT_FAIL_NO_RETRY, BT_FAIL_ALREADY_PAID, markLateSeen, isFinal, daysOf, isDaysMode, fmtWhen, rupees, submitHandoff, gettingReceipt, receiptGoneAt, receiptGone, canUnlock, BT_UNLOCK } from '../lib/borderTax'
+import { BT_STATUS as S, BT_STATES, markPayOpened, BT_FAIL_NO_RETRY, BT_FAIL_ALREADY_PAID, markLateSeen, isFinal, daysOf, isDaysMode, fmtWhen, rupees, submitHandoff, gettingReceipt, receiptGoneAt, receiptGone, canUnlock, BT_UNLOCK, failKey } from '../lib/borderTax'
 import { PreparingScreen } from './PreparingScreen'
 import { PayQrSheet } from './PayQrSheet'
 
@@ -58,7 +58,7 @@ function head(f, t) {
     const [a, b] = [fmtWhen(f.taxFrom), fmtWhen(f.taxUpto)]
     return [<CalendarCheck key="i" size={22} />, 'sky', t('bt.fail.alreadyPaidT'), t('bt.fail.alreadyPaidS', { from: `${a.date}, ${a.time}`, to: `${b.date}, ${b.time}` })]
   }
-  return [<CircleX key="i" size={22} />, 'danger', t(`bt.status.${f.status}.t`), t(`bt.fail.${f.failureCode || 'portal_error'}`)]
+  return [<CircleX key="i" size={22} />, 'danger', t(`bt.status.${f.status}.t`), t(failKey(t, f.failureCode))]
 }
 
 /** Pending-lock clear: status line + "Clear lock" (vehicle_pending only). */

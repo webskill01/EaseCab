@@ -116,10 +116,10 @@
       "fitness_expired": "Your vehicle's fitness certificate has expired. Renew it, then file again.",
       "seat_class_mismatch": "Your RC on Vahan doesn't match the vehicle type (e.g. MAXI CAB with fewer than 7 seats), so the portal won't take online tax. Get the RC corrected at the RTO, or pay at the border. Nothing was charged.",
       "vehicle_not_found": "The govt Vahan site has no record for this vehicle number. Check the number on your RC and file again. Nothing was charged.",
-      "no_qr": "The govt payment page didn't show the UPI QR, so we stopped before any payment — no money was taken. We're clearing the portal hold; then please try again.",
+      "no_qr": "The govt payment page didn't show the UPI QR, so no payment started — no money was taken. The portal hold is being cleared; please try again in a while.",
       "payment_failed": "The payment didn't go through. If money was debited, contact support.",
       "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",
-      "payment_unknown": "We lost the payment page. If you paid, contact support — don't pay again.",
+      "payment_unknown": "The govt payment page closed. If you paid, contact support — don't pay again.",
       "alreadyPaidT": "Tax already paid",
       "alreadyPaidS": "Border tax is already paid for {from} – {to}. Pick a start date after that and file again."
     },
@@ -195,10 +195,10 @@
       "sending": "Asking…",
       "error": "Couldn't start. Try again in a minute.",
       "queued": "Clearing the lock on the govt portal now…",
-      "waiting": "The portal frees this vehicle at {time}. We will clear it then. If you already paid on the portal yourself, don't pay again.",
+      "waiting": "The portal frees this vehicle at {time}, then the lock is cleared. If you already paid on the portal yourself, don't pay again.",
       "cleared": "Lock cleared. You can file again now.",
       "paid": "The earlier payment went through. Receipt no. {no}",
-      "failed": "We couldn't clear the lock. Please contact support."
+      "failed": "The portal didn't release the lock. Please contact support."
     },
     "issues": {
       "vehicle": "Enter a valid vehicle number, e.g. PB10AB1234",

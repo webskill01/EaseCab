@@ -116,7 +116,7 @@
       "fitness_expired": "Aapki gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
       "seat_class_mismatch": "Vahan par aapki RC mein gaadi ki class aur seats match nahi karti (jaise MAXI CAB par 7 se kam seats), isliye portal online tax nahi le raha. RTO se RC theek karwayein, ya border par tax bharein. Koi paisa nahi kata.",
       "vehicle_not_found": "Govt Vahan site par is gaadi number ka koi record nahi mila. RC par number check karke dobara bharein. Koi paisa nahi kata.",
-      "no_qr": "Govt payment page pe UPI QR nahi aaya, isliye humne payment se pehle hi rok diya — koi paisa nahi kata. Hum portal ka hold hata rahe hain; phir dobara try karein.",
+      "no_qr": "Govt payment page pe UPI QR nahi aaya, isliye payment shuru nahi hua — koi paisa nahi kata. Portal ka hold hat raha hai; thodi der baad dobara try karein.",
       "payment_failed": "Payment nahi hua. Agar paise kate hain to support se baat karein.",
       "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
       "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
@@ -195,7 +195,7 @@
       "sending": "Bhej rahe hain…",
       "error": "Start nahi hua. Ek minute baad try karo.",
       "queued": "Govt portal pe lock hata rahe hain…",
-      "waiting": "Portal ye gaadi {time} pe chhodega. Tab hum lock hata denge. Agar aapne portal pe khud pay kiya hai, to dobara pay na karein.",
+      "waiting": "Portal ye gaadi {time} pe chhodega, tab lock hat jayega. Agar aapne portal pe khud pay kiya hai, to dobara pay na karein.",
       "cleared": "Lock hat gaya. Ab dobara file kar sakte ho.",
       "paid": "Pichla payment ho chuka tha. Receipt no. {no}",
       "failed": "Lock nahi hat paya. Support se baat karo."

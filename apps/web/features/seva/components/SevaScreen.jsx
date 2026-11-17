@@ -11,7 +11,7 @@ import { useSevaActions } from '../hooks/useSevaActions'
  * [sectionKey, [[tileKey, Icon, action (useSevaActions key) | null, badgeKey], ...]]
  */
 const SECTIONS = [
-  ['services', [['borderTax', Road, 'openBorderTax', 'free'], ['waGroup', Whatsapp, 'openWaGroup', 'new'], ['refer', Gift, 'openRefer', 'new'], ['soon', Timer, null, null]]],
+  ['services', [['borderTax', Road, 'openBorderTax', 'free'], ['waGroup', Whatsapp, 'openWaGroup', 'new'], ['refer', Gift, 'openRefer', 'new'], ['soon', Timer, null, null], ['soon', Timer, null, null]]],
 ]
 
 function Tile({ label, badge, Icon, onClick }) {

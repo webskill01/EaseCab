@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Spinner, Check, CircleX, Ban, Info } from '@/components/ui/icons'
-import { BT_STATES, BT_TONE, fmtWhen, rupees } from '../lib/borderTax'
+import { BT_STATES, BT_TONE, fmtWhen, rupees, failKey } from '../lib/borderTax'
 import { ListSkeleton } from '@/components/ui/Skeleton'
 
 const PILL = {
@@ -22,7 +22,7 @@ function StatusPill({ status, failureCode }) {
       <span className="mt-0.5"><Icon size={18} /></span>
       <div>
         <p className="text-[14px] font-extrabold">{t(`bt.status.${status}.t`)}</p>
-        <p className="text-[12.5px] font-medium opacity-80">{BT_TONE[status] === 'bad' ? t(`bt.fail.${failureCode || 'portal_error'}`) : t(`bt.status.${status}.s`)}</p>
+        <p className="text-[12.5px] font-medium opacity-80">{BT_TONE[status] === 'bad' ? t(failKey(t, failureCode)) : t(`bt.status.${status}.s`)}</p>
       </div>
     </div>
   )
