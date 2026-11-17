@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { TrendingUp } from 'lucide-react'
 import { useTrackRecord } from '@/features/trackRecord/hooks/useTrackRecord'
 import { MetricCard } from '@/features/trackRecord/components/MetricCard'
+import { MonthlyTable } from '@/features/trackRecord/components/MonthlyTable'
 import { BarChart } from '@/features/statistics/components/BarChart'
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { Segmented } from '@/features/shell/components/Segmented'
@@ -82,6 +83,8 @@ export default function TrackRecordPage() {
         title="Track Record"
         description={`Weekly health since launch${data ? ` (${data.since})` : ''} · Mon–Sun IST · this week is still running · reviewer excluded`}
       />
+
+      <MonthlyTable />
 
       {isLoading && <ListSkeleton />}
       {isError && <ErrorState message="Failed to load track record." />}

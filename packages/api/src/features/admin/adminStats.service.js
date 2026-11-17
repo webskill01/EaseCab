@@ -30,6 +30,24 @@ function toWeek(r) {
 }
 
 /**
+ * One raw monthly row → month with renewed (paid before this month) and churn %.
+ * Churn % = plans that ended and were not renewed ÷ plans that ended and are settled
+ * (grace over or renewed); null until a plan has settled.
+ * @param {object} r - row from repo.monthly()
+ */
+function toMonth(r) {
+  const settled = r.plansEnded - r.pending;
+  return {
+    start: r.start.toISOString().slice(0, 10), end: r.end.toISOString().slice(0, 10),
+    newPayers: r.newPayers, renewed: r.payers - r.newPayers, payers: r.payers,
+    revenue: r.revenuePaise / 100,
+    plansEnded: r.plansEnded, churned: r.churned, pending: r.pending,
+    churnRate: pct(r.churned, settled),
+    activeEnd: r.activeEnd,
+  };
+}
+
+/**
  * Admin dashboard stats service (business layer). Thin today — just surfaces the
  * queue/ride counts — but keeps the route handler free of data access (§4 layering).
  *
@@ -91,6 +109,15 @@ function createAdminStatsService({ repo }) {
       const { TARGETS, LAUNCH_DATE } = ADMIN_STATISTICS;
       const targets = { renewalRate: TARGETS.RENEWAL_PCT, conversion: TARGETS.CONVERSION_PCT, liquidity: TARGETS.LIQUIDITY_PCT };
       return { since: LAUNCH_DATE, targets, weeks: rows.map(toWeek) };
+    },
+
+    /**
+     * Track Record monthly view: per billing month (16th → 15th IST), newest first.
+     * @returns {Promise<{ months: object[] }>}
+     */
+    async monthly() {
+      const rows = await repo.monthly();
+      return { months: rows.map(toMonth) };
     },
   };
 }

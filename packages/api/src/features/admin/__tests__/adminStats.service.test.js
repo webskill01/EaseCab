@@ -85,3 +85,18 @@ test('renewals pages rows, maps plan months and the member', async () => {
   assert.strictEqual(r.items[1].months, null);
   assert.strictEqual((await createAdminStatsService({ repo: { async renewals() { return []; } } }).renewals({ page: 1, limit: 30 })).total, 0);
 });
+
+test('monthly derives renewed and churn % from settled plans', async () => {
+  const row = {
+    start: new Date('2026-10-15T00:00:00Z'), end: new Date('2026-11-15T00:00:00Z'),
+    newPayers: 16, payers: 20, revenuePaise: 298000, plansEnded: 10, churned: 2, pending: 2, activeEnd: 18,
+  };
+  const empty = { ...row, plansEnded: 1, churned: 0, pending: 1 };
+  const svc = createAdminStatsService({ repo: { async monthly() { return [row, empty]; } } });
+  const [a, b] = (await svc.monthly()).months;
+  assert.deepStrictEqual(a, {
+    start: '2026-10-15', end: '2026-11-15', newPayers: 16, renewed: 4, payers: 20, revenue: 2980,
+    plansEnded: 10, churned: 2, pending: 2, churnRate: 25, activeEnd: 18,
+  });
+  assert.strictEqual(b.churnRate, null); // nothing settled yet
+});

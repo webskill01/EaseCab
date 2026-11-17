@@ -163,6 +163,58 @@ function createAdminStatsRepository({ prisma }) {
     },
 
     /**
+     * Billing months (16th → 15th IST, first one from launch day), newest first.
+     * newPayers = first captured payment in the month; payers = distinct members who paid
+     * in it. plansEnded = paid windows that ended in the month so far; churned = no later payment and
+     * grace over; pending = no later payment yet, still inside grace. activeEnd = members
+     * covered at month end (or now). Same member rules as trackRecordWeekly.
+     * @returns {Promise<object[]>}
+     */
+    async monthly() {
+      const { LAUNCH_DATE, TIMEZONE: tz, EXCLUDED_PHONES, RENEWAL_GRACE_DAYS: grace, MONTH_CYCLE_START } = ADMIN_STATISTICS;
+      const phones = [...EXCLUDED_PHONES];
+      const period = SUBSCRIPTION_PLAN.PERIOD_DAYS;
+      const plans = JSON.stringify(SUBSCRIPTION_PLANS.map((pl) => ({ amount: pl.pricePaise, days: pl.days })));
+      // ponytail: correlated subqueries per month, same ceiling as trackRecordWeekly
+      return prisma.$queryRaw`
+        WITH u AS (
+          SELECT id FROM users
+          WHERE phone <> ALL(${phones}) AND (created_at AT TIME ZONE ${tz})::date >= ${LAUNCH_DATE}::date
+            AND NOT EXISTS (SELECT 1 FROM complimentary_members cm WHERE cm.user_id = users.id)
+        ),
+        pay AS (
+          SELECT u.id AS user_id, pm.updated_at AT TIME ZONE ${tz} AS at, pm.amount,
+            COALESCE(pl.days, GREATEST(1, round(pm.amount / ${SUBSCRIPTION_PLAN.PRICE_PAISE}::numeric)) * ${period}::int)::int AS days
+          FROM payments pm JOIN u ON u.id = COALESCE(pm.on_behalf_of_user_id, pm.user_id)
+          LEFT JOIN jsonb_to_recordset(${plans}::jsonb) AS pl(amount int, days int) ON pl.amount = pm.amount
+          WHERE pm.status::text = ${PAYMENT_STATUS.CAPTURED}
+        ),
+        firstpay AS (SELECT user_id, min(at) AS at FROM pay GROUP BY 1),
+        m AS (
+          SELECT CASE WHEN g = ${MONTH_CYCLE_START}::timestamp THEN ${LAUNCH_DATE}::timestamp ELSE g END AS ms,
+                 g + interval '1 month' AS me, LEAST(g + interval '1 month', now() AT TIME ZONE ${tz}) AS asof
+          FROM generate_series(${MONTH_CYCLE_START}::timestamp, now() AT TIME ZONE ${tz}, interval '1 month') g
+        )
+        SELECT m.ms::date AS "start", (m.me - interval '1 day')::date AS "end",
+          (SELECT count(*) FROM firstpay f WHERE f.at >= m.ms AND f.at < m.me)::int AS "newPayers",
+          (SELECT count(DISTINCT p.user_id) FROM pay p WHERE p.at >= m.ms AND p.at < m.me)::int AS "payers",
+          (SELECT COALESCE(sum(p.amount), 0) FROM pay p WHERE p.at >= m.ms AND p.at < m.me)::int AS "revenuePaise",
+          (SELECT count(*) FROM pay p WHERE p.at + make_interval(days => p.days) >= m.ms
+            AND p.at + make_interval(days => p.days) < m.asof)::int AS "plansEnded",
+          (SELECT count(*) FROM pay p WHERE p.at + make_interval(days => p.days) >= m.ms
+            AND p.at + make_interval(days => p.days) < m.asof
+            AND NOT EXISTS (SELECT 1 FROM pay n WHERE n.user_id = p.user_id AND n.at > p.at)
+            AND p.at + make_interval(days => p.days + ${grace}::int) <= now() AT TIME ZONE ${tz})::int AS "churned",
+          (SELECT count(*) FROM pay p WHERE p.at + make_interval(days => p.days) >= m.ms
+            AND p.at + make_interval(days => p.days) < m.asof
+            AND NOT EXISTS (SELECT 1 FROM pay n WHERE n.user_id = p.user_id AND n.at > p.at)
+            AND p.at + make_interval(days => p.days + ${grace}::int) > now() AT TIME ZONE ${tz})::int AS "pending",
+          (SELECT count(DISTINCT p.user_id) FROM pay p WHERE p.at < m.asof
+            AND p.at + make_interval(days => p.days) >= m.asof)::int AS "activeEnd"
+        FROM m ORDER BY m.ms DESC`;
+    },
+
+    /**
      * Renewals since launch, newest first: captured payments that were not the member's first
      * (nth > 1, counted over all their captured payments). Same member rules as growthDaily:
      * credited to on_behalf_of_user_id, excluded phones + free members left out.
