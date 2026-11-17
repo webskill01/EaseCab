@@ -16,7 +16,7 @@ const MS_PER_MIN = 60 * 1000;
  * @param {import('./rideLifecycle.repository').createRideLifecycleRepository} deps.repository
  * @param {() => Date} [deps.clock] - injectable wall clock (tests pin it)
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
- * @returns {{ runTransitions(): Promise<?{booked:number, hidden:number, deleted:number, fingerprintsPurged:number, postedExpired:number, chatsClosed:number}> }}
+ * @returns {{ runTransitions(): Promise<?{booked:number, hidden:number, deleted:number, fingerprintsPurged:number, postedExpired:number, chatsClosed:number, directDutiesDone:number}> }}
  */
 function createRideLifecycleService({ repository, clock, logger }) {
   const now = clock || (() => new Date());
@@ -37,8 +37,9 @@ function createRideLifecycleService({ repository, clock, logger }) {
       const deleted = await repository.hardDelete(at);
       const fingerprintsPurged = await repository.purgeFingerprints(at);
       const { postedExpired, chatsClosed } = await repository.expirePostedRides(at);
+      const directDutiesDone = await repository.closeDirectDuties(bookedCutoff);
 
-      const summary = { booked, hidden, deleted, fingerprintsPurged, postedExpired, chatsClosed };
+      const summary = { booked, hidden, deleted, fingerprintsPurged, postedExpired, chatsClosed, directDutiesDone };
       log.info(summary, 'ride lifecycle cycle complete');
       return summary;
     } catch (err) {

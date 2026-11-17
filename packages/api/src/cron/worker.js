@@ -28,7 +28,7 @@ async function main() {
   // decision — see DECISIONS.md 2026-06-01). Read-only use of easecab:bot:* keys.
   const redis = new Redis(env.REDIS_URL);
 
-  const repository = createRideLifecycleRepository({ prisma });
+  const repository = createRideLifecycleRepository({ prisma, directDutyPosterPhone: env.DIRECT_DUTY_POSTER_PHONE });
   const service = createRideLifecycleService({ repository, logger });
 
   const notify = createTelegramNotifier({

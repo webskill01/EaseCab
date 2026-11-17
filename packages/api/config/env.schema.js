@@ -120,6 +120,9 @@ const serverEnvSchema = envSchema.extend({
   // STUB until incorporation: set SUREPASS_STUB=true to inject the deterministic
   // client (server.js); swap to a real token at go-live with zero code change.
   SUREPASS_TOKEN: z.string().min(16),
+  // House profile the bot posts direct-duty group rides under (same var as the bot).
+  // The cron marks its active posts done at the group-ride booked age.
+  DIRECT_DUTY_POSTER_PHONE: z.string().regex(/^\+91\d{10}$/).default('+916283380110'),
   SUREPASS_BASE_URL: z.string().url().default('https://kyc-api.surepass.io'),
   SUREPASS_STUB: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   // Cloudflare R2 (Step 21a) — presigned uploads for DP/car/KYC images. Backend

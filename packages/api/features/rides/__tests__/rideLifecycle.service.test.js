@@ -23,6 +23,7 @@ function spyRepo(overrides = {}) {
     hardDelete: overrides.hardDelete || make('hardDelete', 3),
     purgeFingerprints: overrides.purgeFingerprints || make('purgeFingerprints', 4),
     expirePostedRides: overrides.expirePostedRides || make('expirePostedRides', { postedExpired: 5, chatsClosed: 6 }),
+    closeDirectDuties: overrides.closeDirectDuties || make('closeDirectDuties', 7),
   };
 }
 
@@ -34,8 +35,9 @@ test('runTransitions runs all four jobs in order and returns the counts', async 
 
   const result = await svc.runTransitions();
 
-  assert.deepEqual(result, { booked: 1, hidden: 2, deleted: 3, fingerprintsPurged: 4, postedExpired: 5, chatsClosed: 6 });
-  assert.deepEqual(repository.order, ['markBooked', 'markHidden', 'hardDelete', 'purgeFingerprints', 'expirePostedRides']);
+  assert.deepEqual(result, { booked: 1, hidden: 2, deleted: 3, fingerprintsPurged: 4, postedExpired: 5, chatsClosed: 6, directDutiesDone: 7 });
+  assert.deepEqual(repository.order, ['markBooked', 'markHidden', 'hardDelete', 'purgeFingerprints', 'expirePostedRides', 'closeDirectDuties']);
+  assert.deepEqual(repository.seen.closeDirectDuties, repository.seen.markBooked); // same 10-min cutoff
 });
 
 test('booked cutoff is now minus BOOKED_AFTER_MIN (10 min); others get now', async () => {

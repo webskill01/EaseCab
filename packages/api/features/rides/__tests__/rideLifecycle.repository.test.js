@@ -135,3 +135,16 @@ test('expirePostedRides is a no-op (no chat write) when nothing is expiring', as
   assert.deepEqual(result, { postedExpired: 0, chatsClosed: 0 });
   assert.equal(prisma.calls.some((c) => c.name === 'chat.updateMany'), false);
 });
+
+test('closeDirectDuties marks only the house profile\'s active posts past the cutoff done', async () => {
+  const prisma = mockPrisma({ postedUpdate: 2 });
+  const repo = createRideLifecycleRepository({ prisma, directDutyPosterPhone: '+910000000001' });
+  const cutoff = new Date('2026-06-01T11:50:00.000Z');
+
+  assert.equal(await repo.closeDirectDuties(cutoff), 2);
+  assert.deepEqual(prisma.calls[0].args, {
+    where: { status: 'active', createdAt: { lte: cutoff }, poster: { phone: '+910000000001' } },
+    data: { status: 'done', isClosed: true },
+  });
+  assert.equal(await createRideLifecycleRepository({ prisma }).closeDirectDuties(cutoff), 0); // no house phone → no-op
+});

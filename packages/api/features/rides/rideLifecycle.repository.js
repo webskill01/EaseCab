@@ -16,9 +16,10 @@ const { RIDE_STATUS, POSTED_RIDE_STATUS, ADMIN_STATISTICS } = require('@easecab/
  *   markHidden(now: Date): Promise<number>,
  *   hardDelete(now: Date): Promise<number>,
  *   purgeFingerprints(now: Date): Promise<number>,
+ *   closeDirectDuties(cutoff: Date): Promise<number>,
  * }}
  */
-function createRideLifecycleRepository({ prisma }) {
+function createRideLifecycleRepository({ prisma, directDutyPosterPhone }) {
   /**
    * Flip fresh rides first seen on/before the cutoff to booked.
    * @param {Date} bookedCutoff - now minus RIDE_TIMING.BOOKED_AFTER_MIN
@@ -120,7 +121,23 @@ function createRideLifecycleRepository({ prisma }) {
     return { postedExpired: ids.length, chatsClosed };
   }
 
-  return { markBooked, markHidden, hardDelete, purgeFingerprints, expirePostedRides };
+  /**
+   * Direct duties (group rides the bot posts under the house profile) go done at
+   * the same age a group ride goes booked: greyed, not contactable, still listed
+   * until their 24h expiry. Only the house profile's posts; drivers' own posts never.
+   * @param {Date} cutoff - now minus RIDE_TIMING.BOOKED_AFTER_MIN
+   * @returns {Promise<number>} posts closed
+   */
+  async function closeDirectDuties(cutoff) {
+    if (!directDutyPosterPhone) return 0;
+    const { count } = await prisma.postedRide.updateMany({
+      where: { status: POSTED_RIDE_STATUS.ACTIVE, createdAt: { lte: cutoff }, poster: { phone: directDutyPosterPhone } },
+      data: { status: POSTED_RIDE_STATUS.DONE, isClosed: true },
+    });
+    return count;
+  }
+
+  return { markBooked, markHidden, hardDelete, purgeFingerprints, expirePostedRides, closeDirectDuties };
 }
 
 module.exports = { createRideLifecycleRepository };
