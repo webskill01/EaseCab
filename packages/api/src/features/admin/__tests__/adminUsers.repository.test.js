@@ -56,6 +56,27 @@ test('listUsers(q) matches phone contains OR name insensitive', async () => {
   assert.deepStrictEqual(OR[1], { name: { contains: '98765', mode: 'insensitive' } });
 });
 
+test('listUsers(q) reduces any typed phone format to its digits (last 10)', async () => {
+  const cases = { '+91 98765 43210': '9876543210', '98765 43210': '9876543210', '098765-43210': '9876543210',
+    '(98765) 43210': '9876543210', '+91 98765': '9198765', '919876543210': '9876543210', 'Ravi 98': 'Ravi 98' };
+  for (const [q, needle] of Object.entries(cases)) {
+    const { prisma, calls } = fakePrisma();
+    await createAdminUsersRepository({ prisma }).listUsers({ page: 1, limit: 20, status: 'all', q });
+    assert.deepStrictEqual(frags(calls).at(-1).OR[0], { phone: { contains: needle } }, q);
+  }
+});
+
+test('listUsers sort: newest (default) / oldest / name A–Z', async () => {
+  const order = async (sort) => {
+    const { prisma, calls } = fakePrisma();
+    await createAdminUsersRepository({ prisma }).listUsers({ page: 1, limit: 20, status: 'all', sort });
+    return calls.findMany[0].orderBy;
+  };
+  assert.deepStrictEqual(await order(undefined), { createdAt: 'desc' });
+  assert.deepStrictEqual(await order('oldest'), { createdAt: 'asc' });
+  assert.deepStrictEqual((await order('name'))[0], { name: { sort: 'asc', nulls: 'last' } });
+});
+
 test('listUsers plan filter: active = unexpired active sub; expired = lapsed; none = never paid', async () => {
   const { prisma, calls } = fakePrisma();
   const repo = createAdminUsersRepository({ prisma });

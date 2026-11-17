@@ -1,8 +1,8 @@
 import { apiFetch } from '@/lib/api/client'
 
-/** GET /admin/users?page=&status=&plan=&joined=&q= → { users, meta }. */
-export async function fetchUsers({ page = 1, status = 'active', plan = 'all', joined = 'all', q = '' } = {}) {
-  const params = new URLSearchParams({ page: String(page), status, plan, joined })
+/** GET /admin/users?page=&status=&plan=&joined=&sort=&q= → { users, meta }. */
+export async function fetchUsers({ page = 1, status = 'active', plan = 'all', joined = 'all', q = '', sort = 'newest' } = {}) {
+  const params = new URLSearchParams({ page: String(page), status, plan, joined, sort })
   if (q) params.set('q', q)
   const { data, meta } = await apiFetch(`/admin/users?${params.toString()}`)
   return { users: data.users, meta }

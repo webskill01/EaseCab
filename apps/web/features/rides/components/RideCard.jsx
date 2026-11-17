@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { Swap, User, Whatsapp, Phone, Flag, Forward, VehicleIcon } from '@/components/ui/icons'
+import { Swap, User, Whatsapp, Phone, Flag, Forward, VehicleIcon, Check, Trash } from '@/components/ui/icons'
 import { useVehicleLabel } from '../hooks/useLocalNames'
 import { statusOf, ageClock, relParts, ageMinFrom, vehIconKey, pickCityName, rideSlot, RIDE_DISPLAY_STATUS } from '../lib/rideView'
 
@@ -93,6 +93,37 @@ function CardActions({ ride, disabled, onContact, onReport }) {
   )
 }
 
+/** Poster's own Driver Duties card: Done / Repost / Delete instead of contact buttons. */
+function OwnerActions({ ride, done, owner }) {
+  const t = useTranslations('mine')
+  const btn = 'flex h-[40px] items-center justify-center gap-1.5 rounded-[11px] border-[1.5px] text-[13.5px] font-bold'
+  return (
+    <div className="flex gap-1.5">
+      {!done && (
+        <button type="button" onClick={() => owner.onMarkDone(ride)} className={`${btn} flex-1 border-ec-success/40 bg-ec-successBg/60 text-ec-successTx`}>
+          <Check size={16} />{t('posted.markDone')}
+        </button>
+      )}
+      <button type="button" onClick={() => owner.onRepost(ride)} className={`${btn} flex-1 border-ec-blue/30 bg-ec-sky text-ec-blue`}>
+        <Swap size={15} />{t('posted.repost')}
+      </button>
+      <button type="button" onClick={() => owner.onDelete(ride)} aria-label={t('posted.delete')} className={`${btn} w-[40px] border-ec-danger/30 bg-ec-dangerBg text-ec-danger`}>
+        <Trash size={16} />
+      </button>
+    </div>
+  )
+}
+
+/** "Completed" pill for a Driver Duties post its owner marked done. */
+function DoneBadge() {
+  const t = useTranslations('mine')
+  return (
+    <span className="inline-flex h-[23px] items-center gap-1.5 rounded-ec-chip bg-ec-bg px-2.5 text-[11.5px] font-extrabold text-ec-ink60">
+      <span className="h-1.5 w-1.5 rounded-full bg-ec-ink40" />{t('posted.done')}
+    </span>
+  )
+}
+
 /** Verified-ride poster block (dirA): profile photo (initial fallback) + name + trust line
  * (Aadhaar verified · base city · experience), with a "View profile" button → /u/[id].
  * Only rendered when the ride carries a posterId. */
@@ -140,8 +171,10 @@ function PosterRow({ ride }) {
  * @param {number} props.now - epoch ms for live ageing
  * @param {(ride: object, channel: 'wa'|'call') => void} props.onContact
  * @param {(ride: object) => void} props.onReport
+ * @param {{ onMarkDone: Function, onRepost: Function, onDelete: Function }} [props.owner] -
+ *   set when the viewer posted this duty: owner actions replace Call/WhatsApp/Report
  */
-export function RideCard({ ride, now, onContact, onReport }) {
+export function RideCard({ ride, now, onContact, onReport, owner }) {
   const t = useTranslations('rides')
   const locale = useLocale()
   const verified = ride.kind === 'verified'
@@ -154,15 +187,16 @@ export function RideCard({ ride, now, onContact, onReport }) {
   const slot = verified ? rideSlot(ride.date, ride.time, locale) : null
   const fresh = display === RIDE_DISPLAY_STATUS.FRESH
   const veh = useVehicleLabel()
+  const done = Boolean(ride.done)
 
   return (
     <article
       data-status={display}
       className={`relative rounded-ec-card border px-3 py-2.5 shadow-ec-card ${
-        verified ? 'border-ec-blue/20 bg-white' : 'border-ec-line bg-white'
+        done ? 'border-ec-line bg-ec-bg' : verified ? 'border-ec-blue/20 bg-white' : 'border-ec-line bg-white'
       }`}
     >
-      {verified && <div className="absolute left-3 right-3 top-0 h-[3px] rounded-b-[3px] bg-ec-blue" />}
+      {verified && !done && <div className="absolute left-3 right-3 top-0 h-[3px] rounded-b-[3px] bg-ec-blue" />}
 
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[12px] font-semibold text-ec-ink60">
@@ -170,9 +204,10 @@ export function RideCard({ ride, now, onContact, onReport }) {
             ? <span className="tabular-nums">{t('time.liveAgo', { time: ageClock(ride.receivedAt, now) })}</span>
             : t(`time.${rel.key}`, { count: rel.count ?? 0 })}</b>
         </span>
-        <StatusBadge status={display} />
+        {done ? <DoneBadge /> : <StatusBadge status={display} />}
       </div>
 
+      <div className={done ? 'opacity-[0.62]' : undefined}>
       <RouteRow from={from} to={to} />
 
       {verified && ride.posterId ? <PosterRow ride={ride} /> : null}
@@ -219,8 +254,12 @@ export function RideCard({ ride, now, onContact, onReport }) {
         </div>
       )}
 
+      </div>
+
       <div className="mt-2">
-        <CardActions ride={ride} disabled={booked} onContact={onContact} onReport={onReport} />
+        {owner
+          ? <OwnerActions ride={ride} done={done} owner={owner} />
+          : <CardActions ride={ride} disabled={booked || done} onContact={onContact} onReport={onReport} />}
       </div>
     </article>
   )

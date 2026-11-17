@@ -28,9 +28,9 @@ function createAdminWaGroupsService({ repo, redis, logger }) {
       return { items: rows, total, page, limit, counts: { on, off } };
     },
 
-    /** Switch one group's ingest. NOT_FOUND if the id is unknown. */
-    async toggle(id, enabled) {
-      const group = await repo.setEnabled(id, enabled);
+    /** Switch one group's ingest and/or direct-duty routing. NOT_FOUND if the id is unknown. */
+    async toggle(id, patch) {
+      const group = await repo.update(id, patch);
       if (!group) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       await notifyBot();
       return group;

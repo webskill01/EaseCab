@@ -1,6 +1,7 @@
 'use client'
 
 import { Landmark, FileDown, Eye } from 'lucide-react'
+import { UserLink } from '@/features/shell/components/UserLink'
 import { useFilings } from '@/features/borderTax/hooks/useBorderTax'
 import { fetchReceiptUrl } from '@/features/borderTax/services/borderTaxApi'
 import { StateSwitches } from '@/features/borderTax/components/StateSwitches'
@@ -54,7 +55,7 @@ function Row({ f }) {
           {f.vehicleNo} · {f.stateCd} {f.checkpost || ''} · {f.seats}{f.taxPaise ? ` · ${inr(f.taxPaise)}` : ''}
         </p>
         <p className="mt-0.5 text-xs text-ec-ink60">
-          {when(f.createdAt)} · {f.userName || 'Driver'}{f.isTest ? ' (test)' : ''}{f.receiptNo ? ` · ${f.receiptNo}` : ''}
+          {when(f.createdAt)} · <UserLink id={f.userId}>{f.userName || 'Driver'}</UserLink>{f.isTest ? ' (test)' : ''}{f.receiptNo ? ` · ${f.receiptNo}` : ''}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">

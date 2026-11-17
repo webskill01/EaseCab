@@ -1,6 +1,6 @@
 'use strict';
 
-const { ADMIN_STATISTICS, SUBSCRIPTION_STATUS, USER_PLAN_FILTER, USER_JOINED_FILTER } = require('@easecab/shared');
+const { ADMIN_STATISTICS, SUBSCRIPTION_STATUS, USER_PLAN_FILTER, USER_JOINED_FILTER, USER_SORT } = require('@easecab/shared');
 
 /** User row for the admin directory (phone masked in the service — §10). */
 const USER_SELECT = Object.freeze({
@@ -54,9 +54,26 @@ function planWhere(plan, now) {
 function buildWhere({ status, plan, joined, q }) {
   const and = [statusWhere(status), planWhere(plan, new Date())];
   if (joined === USER_JOINED_FILTER.LAUNCH) and.push({ createdAt: { gte: launchStart() } });
-  if (q) and.push({ OR: [{ phone: { contains: q } }, { name: { contains: q, mode: 'insensitive' } }] });
+  if (q) and.push({ OR: [{ phone: { contains: phoneNeedle(q) } }, { name: { contains: q, mode: 'insensitive' } }] });
   return { AND: and };
 }
+
+/**
+ * Phones are stored "+91XXXXXXXXXX". A number-looking query ("+91 98765 43210",
+ * "98765-43210", "098765 43210") is reduced to its digits, keeping the last 10 when
+ * longer, so every way of typing a number matches. Anything else is used as-is.
+ */
+function phoneNeedle(q) {
+  if (!/^[\d\s+()-]+$/.test(q)) return q;
+  const digits = q.replace(/\D/g, '');
+  return digits.length > 10 ? digits.slice(-10) : digits || q;
+}
+
+const ORDER_BY = Object.freeze({
+  [USER_SORT.NEWEST]: { createdAt: 'desc' },
+  [USER_SORT.OLDEST]: { createdAt: 'asc' },
+  [USER_SORT.NAME]: [{ name: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }],
+});
 
 /**
  * Admin user-directory data access (CLAUDE.md §4 — Prisma only, no policy). Offset
@@ -68,14 +85,14 @@ function buildWhere({ status, plan, joined, q }) {
 function createAdminUsersRepository({ prisma }) {
   return {
     /**
-     * Page of users (newest first) + total, filtered by status/plan/joined and optional `q`.
+     * Page of users (sorted by `sort`, newest first by default) + total, filtered by status/plan/joined and optional `q`.
      * @returns {Promise<{ rows: object[], total: number }>}
      */
-    async listUsers({ page, limit, status, plan, joined, q }) {
+    async listUsers({ page, limit, status, plan, joined, q, sort }) {
       const where = buildWhere({ status, plan, joined, q });
       const [rows, total] = await prisma.$transaction([
         prisma.user.findMany({
-          where, orderBy: { createdAt: 'desc' },
+          where, orderBy: ORDER_BY[sort] ?? ORDER_BY[USER_SORT.NEWEST],
           skip: (page - 1) * limit, take: limit, select: USER_SELECT,
         }),
         prisma.user.count({ where }),

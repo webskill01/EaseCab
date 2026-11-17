@@ -9,6 +9,7 @@ const KEY_FOR_LIST = Object.freeze({
   [BOT_FILTER_LIST.BLOCKED_PHONE]: 'blockedPhoneNumbers',
   [BOT_FILTER_LIST.BLOCKED_SENDER]: 'blockedSenders',
   [BOT_FILTER_LIST.BRANDING]: 'knownBrandings',
+  [BOT_FILTER_LIST.MUTED_PICKUP]: 'mutedPickups',
 });
 
 /**

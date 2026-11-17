@@ -44,6 +44,7 @@ const BOT_FILTER_LIST = Object.freeze({
   BLOCKED_PHONE: 'blocked_phone',
   BLOCKED_SENDER: 'blocked_sender',
   BRANDING: 'branding',
+  MUTED_PICKUP: 'muted_pickup',
 });
 
 /**

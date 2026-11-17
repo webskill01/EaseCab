@@ -3,6 +3,7 @@
 import { Check, X, ExternalLink, Car } from 'lucide-react'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { UserLink } from '@/features/shell/components/UserLink'
 import { button, pill, card } from '@/lib/ui'
 import { BadgeControl } from './BadgeControl'
 
@@ -72,7 +73,7 @@ export function VerificationCard({ group, onApprove, onReject, onBadge }) {
           <Avatar name={user.name} src={dp} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2">
-              <span className="font-semibold text-ec-ink">{user.name ?? '—'}</span>
+              <UserLink id={user.id} className="font-semibold text-ec-ink">{user.name ?? '—'}</UserLink>
               <PhoneLink phone={user.phone} />
             </div>
             <p className="mt-0.5 flex items-center gap-1.5 text-sm text-ec-ink60">

@@ -5,7 +5,7 @@ const {
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
   USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, CITY_STRING_ACTION, ADMIN_CITY_STRINGS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
-  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_RENEWALS, ADMIN_COMPLIMENTARY, ADMIN_SORT,
+  USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_RENEWALS, ADMIN_COMPLIMENTARY, ADMIN_SORT, USER_SORT,
 } = require('../constants/admin');
 const { BOT_FILTER_LIST } = require('../constants/botFilters');
 const { VERIFICATION_STATUS } = require('../constants/enums');
@@ -68,6 +68,7 @@ const adminUsersQuerySchema = z.object({
   status: z.enum(['active', 'deleted', 'all']).default('active'),
   plan: z.enum(Object.values(USER_PLAN_FILTER)).default(USER_PLAN_FILTER.ALL),
   joined: z.enum(Object.values(USER_JOINED_FILTER)).default(USER_JOINED_FILTER.ALL),
+  sort: z.enum(Object.values(USER_SORT)).default(USER_SORT.NEWEST),
 });
 
 /** Soft-delete or restore a user (flag only). */
@@ -155,8 +156,11 @@ const adminWaGroupsQuerySchema = z.object({
   status: z.enum(Object.values(WA_GROUP_STATUS)).default(WA_GROUP_STATUS.ALL),
 });
 
-/** Switch one group's ingest on/off. */
-const adminWaGroupToggleSchema = z.object({ enabled: z.boolean() });
+/** Switch one group's ingest on/off and/or its direct-duty routing (Phase 28). */
+const adminWaGroupToggleSchema = z
+  .object({ enabled: z.boolean().optional(), directDuty: z.boolean().optional() })
+  .strict()
+  .refine((b) => b.enabled !== undefined || b.directDuty !== undefined, { message: 'nothing to update' });
 
 /** Switch many groups at once — every group, or only those matching `q`. */
 const adminWaGroupBulkSchema = z.object({

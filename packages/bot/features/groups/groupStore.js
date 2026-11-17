@@ -22,16 +22,18 @@ function toGroupRecord(meta) {
  * BOT_GROUPS_CHANGED_CHANNEL like the filter store.
  *
  * @param {{ prisma: object, logger: { info: Function, warn: Function } }} deps
- * @returns {{ start: () => Promise<void>, reload: () => Promise<void>, shouldIngest: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, namelessJids: () => string[], record: (groups: object[]) => Promise<void> }}
+ * @returns {{ start: () => Promise<void>, reload: () => Promise<void>, shouldIngest: (jid: string) => boolean, isDirectDuty: (jid: string) => boolean, nameOf: (jid: string) => string|undefined, namelessJids: () => string[], record: (groups: object[]) => Promise<void> }}
  */
 function createGroupStore({ prisma, logger }) {
   let disabled = new Set();
+  let directDuty = new Set(); // trusted groups routed to Driver Duties (Phase 28)
   const names = new Map();
   const known = new Set(); // every group jid seen (DB or WhatsApp)
 
   async function load() {
-    const rows = await prisma.waGroup.findMany({ select: { jid: true, name: true, enabled: true } });
+    const rows = await prisma.waGroup.findMany({ select: { jid: true, name: true, enabled: true, directDuty: true } });
     disabled = new Set(rows.filter((r) => !r.enabled).map((r) => r.jid));
+    directDuty = new Set(rows.filter((r) => r.directDuty).map((r) => r.jid));
     for (const r of rows) {
       known.add(r.jid);
       if (r.name) names.set(r.jid, r.name);
@@ -54,6 +56,8 @@ function createGroupStore({ prisma, logger }) {
     shouldIngest(jid) {
       return typeof jid === 'string' && jid.endsWith(GROUP_JID_SUFFIX) && !disabled.has(jid);
     },
+
+    isDirectDuty: (jid) => directDuty.has(jid),
 
     nameOf: (jid) => names.get(jid),
 

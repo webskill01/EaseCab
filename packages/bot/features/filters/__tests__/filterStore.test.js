@@ -21,6 +21,7 @@ test('buildFilters groups rows into the processMessage filter shape', () => {
     blockedPhoneNumbers: ['9876543210'],
     blockedSenders: ['9000000000'],
     knownBrandings: ['- 🚨 Forwarded Duty 🚨'],
+    mutedPickups: [],
   });
 });
 

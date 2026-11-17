@@ -104,6 +104,9 @@ const ADMIN_BORDER_TAX = Object.freeze({
 /** Date order for admin lists that only need newest/oldest. */
 const ADMIN_SORT = Object.freeze({ NEWEST: 'newest', OLDEST: 'oldest' });
 
+/** Users directory sort: join date either way, or name A–Z. */
+const USER_SORT = Object.freeze({ ...ADMIN_SORT, NAME: 'name' });
+
 /**
  * Free (barter/help) members: admin gives N months of plan time; these users are left
  * out of every analytics number. 0 months = just mark someone who already has time.
@@ -113,7 +116,7 @@ const ADMIN_COMPLIMENTARY = Object.freeze({ MAX_MONTHS: 12, NOTE_MAX: 200, LABEL
 module.exports = {
   ADMIN_STATISTICS, ADMIN_RENEWALS, ADMIN_FOUNDER_PAYMENTS, ADMIN_COMPLIMENTARY, ADMIN_BORDER_TAX,
   REVIEW_ACTION, ADMIN_VERIFICATIONS, REPORT_ACTION, ADMIN_REPORTS,
-  USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, ADMIN_SORT, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
+  USER_ACTION, ADMIN_USERS, USER_PLAN_FILTER, USER_JOINED_FILTER, ADMIN_SORT, USER_SORT, CITY_STRING_ACTION, ADMIN_CITY_STRINGS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS,
   UNRESOLVED_RIDE_ACTION, UNRESOLVED_RIDE_SIDE, ADMIN_UNRESOLVED_RIDES,
   USER_REPORT_ACTION, ADMIN_USER_REPORTS,
 };

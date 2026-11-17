@@ -1,6 +1,6 @@
 'use client'
 
-import { MessagesSquare, Search, Power, PowerOff, Users } from 'lucide-react'
+import { MessagesSquare, Search, Power, PowerOff, Users, BadgeCheck } from 'lucide-react'
 import { useWaGroups } from '@/features/wa-groups/hooks/useWaGroups'
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { Segmented } from '@/features/shell/components/Segmented'
@@ -95,12 +95,24 @@ export default function WaGroupsPage() {
                     </p>
                   </div>
                 </div>
+                <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  aria-pressed={row.directDuty}
+                  disabled={g.directDuty.isPending}
+                  onClick={() => g.directDuty.mutate({ id: row.id, on: !row.directDuty })}
+                  title="Direct duty: rides from this group go to Driver Duties under the Punjab Taxi profile, with the duty's own number"
+                  className={cn(pill({ tone: row.directDuty ? 'violet' : 'slate' }), 'cursor-pointer disabled:opacity-40', !row.directDuty && 'opacity-60 hover:opacity-100')}
+                >
+                  <BadgeCheck size={12} />{row.directDuty ? 'Direct duty' : 'Make direct duty'}
+                </button>
                 <Switch
                   on={row.enabled}
                   label={`Read rides from ${row.name || row.jid}`}
                   disabled={g.toggle.isPending}
                   onToggle={() => g.toggle.mutate({ id: row.id, enabled: !row.enabled })}
                 />
+                </div>
               </li>
             ))}
           </ul>

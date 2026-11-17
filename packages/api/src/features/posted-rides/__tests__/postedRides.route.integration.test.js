@@ -48,6 +48,7 @@ function fakePrisma(seed = {}) {
         let rows = [...posts.values()];
         if (where.postedBy) rows = rows.filter((p) => p.postedBy === where.postedBy);
         if (where.status && where.status.not) rows = rows.filter((p) => p.status !== where.status.not);
+        else if (where.status && where.status.in) rows = rows.filter((p) => where.status.in.includes(p.status));
         else if (where.status) rows = rows.filter((p) => p.status === where.status);
         if (where.expiresAt) rows = rows.filter((p) => p.expiresAt > where.expiresAt.gt);
         rows.sort((a, b) => b.createdAt - a.createdAt || (a.id < b.id ? 1 : -1));
@@ -127,6 +128,17 @@ test('GET /posted-rides → masked feed of active posts', async () => {
   assert.equal(res.status, 200);
   assert.equal(res.body.data.posts.length, 1);
   assert.equal('phone' in res.body.data.posts[0], false);
+});
+
+test('GET /posted-rides → done posts stay listed (greyed) until expiry; deleted ones do not', async () => {
+  const base = { postedBy: 'u9', createdAt: new Date(), expiresAt: FUTURE, phone: '+919999999999' };
+  const app = makeApp({ posts: [
+    { ...base, id: UUID(1), status: 'active' },
+    { ...base, id: UUID(2), status: 'done' },
+    { ...base, id: UUID(3), status: 'deleted' },
+  ] });
+  const res = await request(app).get('/api/v1/posted-rides').set('Cookie', cookieFor('u1'));
+  assert.deepEqual(res.body.data.posts.map((p) => p.status).sort(), ['active', 'done']);
 });
 
 test('GET /posted-rides/count → active, unexpired posts for the city lock', async () => {

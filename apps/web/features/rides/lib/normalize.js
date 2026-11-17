@@ -77,6 +77,7 @@ export function toVerifiedVM(p) {
     kind: RIDE_KIND.VERIFIED,
     id: p.id,
     status: 'verified',
+    done: p.status === 'done', // owner closed it: stays listed (greyed) until expiry, no contact
     receivedAt: p.createdAt,
     posterId: p.posterId ?? null, // backs the card's "View profile" link → /u/[id]
     posterName: p.posterName ?? null,
@@ -87,6 +88,8 @@ export function toVerifiedVM(p) {
     verifiedDriver: p.verifiedDriver ?? false,
     from: cityLabel(p.fromCityName, p.fromCityRaw),
     to: cityLabel(p.toCityName, p.toCityRaw),
+    fromCityId: p.fromCityId ?? null, // Repost prefill (owner actions)
+    toCityId: p.toCityId ?? null,
     fromLocalized: { pa: p.fromCityNamePa ?? null, hi: p.fromCityNameHi ?? null },
     toLocalized: { pa: p.toCityNamePa ?? null, hi: p.toCityNameHi ?? null },
     vehicleType: p.vehicleType ?? null,

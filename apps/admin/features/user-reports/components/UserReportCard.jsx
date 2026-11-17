@@ -4,6 +4,7 @@ import { ImageIcon, Eye, EyeOff } from 'lucide-react'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { button, pill, card, REASONS } from '@/lib/ui'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { UserLink } from '@/features/shell/components/UserLink'
 
 /**
  * One reported user + all their open reports. `reinstate` un-hides the driver (clears
@@ -17,7 +18,7 @@ export function UserReportCard({ item, onAction }) {
         <Avatar name={user.name} src={user.avatarUrl} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-ec-ink">{user.name ?? '—'}</span>
+            <UserLink id={user.id} className="font-semibold text-ec-ink">{user.name ?? '—'}</UserLink>
             {user.flagged && <span className={pill({ tone: 'red' })}>Hidden</span>}
           </div>
           <p className="mt-0.5 text-sm text-ec-ink60">{[user.baseCity, user.vehicleType].filter(Boolean).join(' · ') || '—'}</p>
@@ -32,7 +33,7 @@ export function UserReportCard({ item, onAction }) {
             <li key={r.id} className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={pill({ tone: reason.tone })}>{reason.label}</span>
-                <span className="text-ec-ink60">by {r.reporter.name ?? '—'} <PhoneLink phone={r.reporter.phone} className="text-ec-ink60" /></span>
+                <span className="text-ec-ink60">by <UserLink id={r.reporter.id}>{r.reporter.name ?? '—'}</UserLink> <PhoneLink phone={r.reporter.phone} className="text-ec-ink60" /></span>
                 {r.screenshotUrl && (
                   <a href={r.screenshotUrl} target="_blank" rel="noreferrer" className="ml-auto flex items-center gap-1 text-xs font-medium text-ec-blue hover:underline">
                     <ImageIcon size={13} /> Screenshot

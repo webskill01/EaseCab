@@ -2,6 +2,7 @@
 
 const {
   RIDES_NEW_CHANNEL, RIDE_STATUS, RIDE_TIMING, BOT_MSG_CLAIM_TTL_SEC, botMsgClaimKey,
+  POSTED_RIDES, POSTED_RIDES_NEW_CHANNEL,
 } = require('@easecab/shared');
 
 const PRISMA_UNIQUE_VIOLATION = 'P2002';
@@ -17,11 +18,14 @@ const MS_PER_HOUR = 60 * MS_PER_MIN;
  * @param {object} deps
  * @param {import('@prisma/client').PrismaClient} deps.prisma
  * @param {{ publish: (channel: string, message: string) => Promise<unknown> }} deps.redis
+ * @param {string} [deps.directDutyPosterPhone] - +91 phone of the house profile that
+ *   owns trusted-group duties (saveDirectDuty)
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
- * @returns {{ claimMessage: Function, releaseMessage: Function, isDuplicate(fp: string): Promise<boolean>, saveRide(data: object): Promise<?object> }}
+ * @returns {{ claimMessage: Function, releaseMessage: Function, isDuplicate(fp: string): Promise<boolean>, saveRide(data: object): Promise<?object>, saveDirectDuty(data: object): Promise<?object> }}
  */
-function createRideRepository({ prisma, redis, logger }) {
+function createRideRepository({ prisma, redis, directDutyPosterPhone, logger }) {
   const log = logger || { info() {}, warn() {}, error() {} };
+  let posterId = null; // house-profile user id, looked up once
 
   /**
    * Claim a WhatsApp message for processing (multi-session dedup). Every number in a
@@ -154,7 +158,54 @@ function createRideRepository({ prisma, redis, logger }) {
     return ride;
   }
 
-  return { claimMessage, releaseMessage, isDuplicate, saveRide };
+  /**
+   * Save a trusted-group duty as a Driver Duties post owned by the house profile,
+   * with the duty's own number as the contact phone. Its fingerprint is recorded
+   * too, so the same text forwarded into other groups never lands in the bot feed.
+   * @param {{ fromCityId: ?string, toCityId: ?string, fromCityRaw: ?string, toCityRaw: ?string,
+   *   vehicleType: ?string, phone: string, notes: string, fingerprint: string }} data
+   * @returns {Promise<?object>} the post, or null on a duplicate race
+   * @throws {Error} when the house profile does not exist
+   */
+  async function saveDirectDuty(data) {
+    if (!posterId) {
+      const user = await prisma.user.findUnique({ where: { phone: directDutyPosterPhone }, select: { id: true } });
+      if (!user) throw new Error('direct-duty poster profile not found');
+      posterId = user.id;
+    }
+    const now = Date.now();
+    let post;
+    try {
+      post = await prisma.$transaction(async (tx) => {
+        const created = await tx.postedRide.create({
+          data: {
+            postedBy: posterId,
+            fromCityId: data.fromCityId, toCityId: data.toCityId,
+            fromCityRaw: data.fromCityRaw, toCityRaw: data.toCityRaw,
+            vehicleType: data.vehicleType,
+            phone: `+91${data.phone}`,
+            notes: data.notes.replaceAll('\u0000', '').slice(0, POSTED_RIDES.NOTES_MAX),
+            expiresAt: new Date(now + POSTED_RIDES.TTL_HOURS * MS_PER_HOUR),
+          },
+        });
+        await tx.rideFingerprint.create({
+          data: { fingerprint: data.fingerprint, expiresAt: new Date(now + RIDE_TIMING.FINGERPRINT_TTL_HRS * MS_PER_HOUR) },
+        });
+        return created;
+      });
+    } catch (err) {
+      if (err && err.code === PRISMA_UNIQUE_VIOLATION) return null;
+      throw err;
+    }
+    try {
+      await redis.publish(POSTED_RIDES_NEW_CHANNEL, JSON.stringify({ id: post.id, fromCityId: post.fromCityId, toCityId: post.toCityId }));
+    } catch (err) {
+      log.warn({ err: err.message, postedRideId: post.id }, 'direct duty saved but push publish failed');
+    }
+    return post;
+  }
+
+  return { claimMessage, releaseMessage, isDuplicate, saveRide, saveDirectDuty };
 }
 
 module.exports = { createRideRepository };

@@ -43,8 +43,8 @@ function createAdminUsersService({ repo, r2 }) {
 
   return {
     /** Offset-paginated user directory (filtered by status/plan/joined + optional q). */
-    async list({ page, limit, status, plan, joined, q }) {
-      const { rows, total } = await repo.listUsers({ page, limit, status, plan, joined, q });
+    async list({ page, limit, status, plan, joined, q, sort }) {
+      const { rows, total } = await repo.listUsers({ page, limit, status, plan, joined, q, sort });
       return { items: await Promise.all(rows.map(toItem)), total, page, limit };
     },
 

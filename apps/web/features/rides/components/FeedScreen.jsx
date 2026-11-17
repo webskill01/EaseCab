@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { env } from '@/config/env'
 import { useRidesFeed, FEED_SUB } from '../hooks/useRidesFeed'
 import { useCityFilter } from '../hooks/useCityFilter'
@@ -22,6 +23,9 @@ import { RideCardSkeleton, CatchingUp, EmptyFeed } from './FeedStates'
 import { NewRidesPill } from './NewRidesPill'
 import { ContactSheet } from './ContactSheet'
 import { ReportSheet } from './ReportSheet'
+import { ConfirmSheet } from './ConfirmSheet'
+import { useOwnPostActions } from '../hooks/useOwnPostActions'
+import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
 import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
 import { useSyncPushToken } from '@/features/notifications/hooks/useSyncPushToken'
@@ -47,6 +51,10 @@ export function FeedScreen() {
   const headerRef = useRef(null)
   const [contactRideVM, setContactRideVM] = useState(null)
   const [reportRideVM, setReportRideVM] = useState(null)
+  const tMine = useTranslations('mine')
+  const meId = useProfile().data?.id
+  const own = useOwnPostActions()
+  const ownerProps = { onMarkDone: own.askDone, onRepost: own.repost, onDelete: own.askDelete }
 
   // Feed filter = alert cities (one server-side list, empty = All rides).
   const { selected: selectedCities, toggle: toggleCity, clear: clearCities } = useCityFilter()
@@ -142,6 +150,7 @@ export function FeedScreen() {
                   now={feed.now}
                   onContact={(r) => setContactRideVM(r)}
                   onReport={(r) => setReportRideVM(r)}
+                  owner={meId && ride.posterId === meId ? ownerProps : undefined}
                 />
               </div>
             ))}
@@ -162,6 +171,17 @@ export function FeedScreen() {
       )}
 
       {promoPopup && promo && <PromoSheet promo={promo} onOpen={openPromo} onClose={() => setPromoPopup(false)} />}
+
+      {own.confirm && (
+        <ConfirmSheet
+          title={tMine(own.confirm.kind === 'done' ? 'confirm.doneTitle' : 'confirm.deleteTitle')}
+          body={tMine(own.confirm.kind === 'done' ? 'confirm.doneBody' : 'confirm.deleteBody')}
+          confirmLabel={tMine(own.confirm.kind === 'done' ? 'confirm.doneCta' : 'confirm.deleteCta')}
+          danger={own.confirm.kind === 'delete'}
+          onConfirm={own.runConfirm}
+          onClose={own.closeConfirm}
+        />
+      )}
 
       {reportRideVM && (
         <ReportSheet ride={reportRideVM} onClose={() => setReportRideVM(null)} />

@@ -14,6 +14,7 @@ function toTarget(row) {
       displayText: r.displayText,
       fromCity: r.pickupCity?.canonicalName ?? r.pickupRaw ?? null,
       toCity: r.dropCity?.canonicalName ?? r.dropRaw ?? null,
+      posterId: null,
       posterName: null,
     };
   }
@@ -27,6 +28,7 @@ function toTarget(row) {
       displayText: null,
       fromCity: p.fromCity?.canonicalName ?? p.fromCityRaw ?? null,
       toCity: p.toCity?.canonicalName ?? p.toCityRaw ?? null,
+      posterId: p.postedBy ?? null,
       posterName: p.poster?.name ?? null,
     };
   }

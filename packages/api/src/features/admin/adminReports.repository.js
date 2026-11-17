@@ -14,7 +14,7 @@ const RIDE_SELECT = Object.freeze({
 
 /** Reported app-posted-ride summary. */
 const POSTED_RIDE_SELECT = Object.freeze({
-  id: true, status: true, fromCityRaw: true, toCityRaw: true, createdAt: true,
+  id: true, status: true, fromCityRaw: true, toCityRaw: true, createdAt: true, postedBy: true,
   fromCity: { select: { canonicalName: true } },
   toCity: { select: { canonicalName: true } },
   poster: { select: { name: true } },

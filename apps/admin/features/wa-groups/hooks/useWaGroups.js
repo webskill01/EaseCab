@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { fetchWaGroups, setWaGroupEnabled, setAllWaGroupsEnabled } from '../services/waGroupsApi'
+import { fetchWaGroups, setWaGroupEnabled, setWaGroupDirectDuty, setAllWaGroupsEnabled } from '../services/waGroupsApi'
 import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 /**
@@ -19,6 +19,7 @@ export function useWaGroups() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ['waGroups'] })
 
   const toggle = useMutation({ mutationFn: ({ id, enabled }) => setWaGroupEnabled(id, enabled), onSuccess: invalidate, meta: { success: ({ enabled }) => (enabled ? 'Group switched on' : 'Group switched off') } })
+  const directDuty = useMutation({ mutationFn: ({ id, on }) => setWaGroupDirectDuty(id, on), onSuccess: invalidate, meta: { success: ({ directDuty: on }) => (on ? 'Duties now go to Driver Duties' : 'Duties back to the live feed') } })
   const bulk = useMutation({ mutationFn: (enabled) => setAllWaGroupsEnabled(enabled, q), onSuccess: invalidate })
 
   return {
@@ -32,6 +33,7 @@ export function useWaGroups() {
     isLoading: query.isLoading,
     isError: query.isError,
     toggle,
+    directDuty,
     bulk,
   }
 }

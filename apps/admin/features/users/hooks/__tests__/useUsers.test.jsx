@@ -17,7 +17,7 @@ describe('useUsers', () => {
     const { result } = renderHook(() => useUsers(), { wrapper })
     await waitFor(() => expect(result.current.items).toHaveLength(1))
     expect(result.current.total).toBe(1)
-    expect(fetch).toHaveBeenCalledWith({ page: 1, status: 'active', plan: 'all', joined: 'launch', q: '' })
+    expect(fetch).toHaveBeenCalledWith({ page: 1, status: 'active', plan: 'all', joined: 'launch', sort: 'newest', q: '' })
   })
 
   it('re-queries when the search term changes', async () => {
@@ -25,7 +25,7 @@ describe('useUsers', () => {
     const { result } = renderHook(() => useUsers(), { wrapper })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     act(() => result.current.setQ('98765'))
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith({ page: 1, status: 'active', plan: 'all', joined: 'launch', q: '98765' }))
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith({ page: 1, status: 'active', plan: 'all', joined: 'launch', sort: 'newest', q: '98765' }))
   })
 
   it('runs the soft-delete mutation', async () => {

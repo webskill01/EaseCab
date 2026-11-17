@@ -122,3 +122,10 @@ test('record strips NUL bytes from group names (Postgres 22021)', async () => {
   assert.strictEqual(prisma.upserts[1].create.name, null);
   assert.strictEqual(store.nameOf('n@g.us'), 'Taxi Ambala');
 });
+
+test('isDirectDuty follows the admin direct-duty switch', async () => {
+  const store = createGroupStore({ prisma: fakePrisma([{ jid: 'pt@g.us', name: 'PT', enabled: true, directDuty: true }, ...ROWS]), logger });
+  await store.start();
+  assert.strictEqual(store.isDirectDuty('pt@g.us'), true);
+  assert.strictEqual(store.isDirectDuty('on@g.us'), false);
+});

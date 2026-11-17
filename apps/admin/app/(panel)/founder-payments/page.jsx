@@ -9,6 +9,7 @@ import { Pagination } from '@/features/shell/components/Pagination'
 import { ListFilters } from '@/features/shell/components/ListFilters'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { UserLink } from '@/features/shell/components/UserLink'
 import { button, pill, input } from '@/lib/ui'
 
 const STATUSES = [
@@ -93,7 +94,7 @@ export default function FounderPaymentsPage() {
                 <div className="min-w-0">
                   <p className="font-medium text-ec-ink">{inr(p.amount)} · {when(p.paidAt)}</p>
                   {p.member
-                    ? <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 size={13} /> For {p.member.name || 'member'} <PhoneLink phone={p.member.phone} className="font-medium text-emerald-700" /></p>
+                    ? <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 size={13} /> For <UserLink id={p.member.id}>{p.member.name || 'member'}</UserLink> <PhoneLink phone={p.member.phone} className="font-medium text-emerald-700" /></p>
                     : <p className="mt-0.5 text-xs text-amber-700">Not linked yet</p>}
                 </div>
               </div>

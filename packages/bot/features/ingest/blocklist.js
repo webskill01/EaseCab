@@ -70,4 +70,25 @@ function isBlockedSender(jid, blockedSenders) {
   return blockedSenders.some((b) => digitsOnly(b).slice(-10) === senderLast10);
 }
 
-module.exports = { containsBlockedNumber, isBlockedSender };
+/**
+ * True when a ride's pickup is a muted location. Matches the resolved city's
+ * canonical name exactly (so an alias like "Bombay" hits a muted "Mumbai"), or
+ * the muted word as a whole word inside the raw pickup ("Pune Station" hits "pune").
+ * @param {{ raw: ?string, name: ?string }} pickup
+ * @param {string[]} mutedPickups
+ * @returns {boolean}
+ */
+function isMutedPickup({ raw, name }, mutedPickups) {
+  if (!mutedPickups || mutedPickups.length === 0) return false;
+  const canon = (name || '').toLowerCase();
+  const rawLower = (raw || '').toLowerCase();
+  return mutedPickups.some((m) => {
+    const word = m.trim().toLowerCase();
+    if (!word) return false;
+    if (word === canon) return true;
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'u').test(rawLower);
+  });
+}
+
+module.exports = { containsBlockedNumber, isBlockedSender, isMutedPickup };

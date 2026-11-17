@@ -98,4 +98,20 @@ describe('RideCard', () => {
     await user.click(screen.getByRole('button', { name: /whatsapp/i }))
     expect(onContact).toHaveBeenCalledWith(ride, 'wa')
   })
+  it('a done Driver Duty stays listed greyed with contact disabled', () => {
+    renderWithIntl(<RideCard ride={{ ...botRide(), kind: 'verified', done: true }} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    expect(screen.getByText('Completed')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /whatsapp/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /call/i })).toBeDisabled()
+  })
+
+  it("the poster's own duty shows Done / Repost / Delete instead of contact", async () => {
+    const owner = { onMarkDone: vi.fn(), onRepost: vi.fn(), onDelete: vi.fn() }
+    renderWithIntl(<RideCard ride={{ ...botRide(), kind: 'verified' }} now={NOW} onContact={vi.fn()} onReport={vi.fn()} owner={owner} />)
+    expect(screen.queryByRole('button', { name: /whatsapp/i })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: /mark done/i }))
+    await userEvent.click(screen.getByRole('button', { name: /repost/i }))
+    await userEvent.click(screen.getByRole('button', { name: /delete/i }))
+    expect([owner.onMarkDone, owner.onRepost, owner.onDelete].every((f) => f.mock.calls.length === 1)).toBe(true)
+  })
 })

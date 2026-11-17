@@ -1,6 +1,6 @@
 'use strict';
 
-const { isBlockedSender, containsBlockedNumber } = require('./blocklist');
+const { isBlockedSender, containsBlockedNumber, isMutedPickup } = require('./blocklist');
 const { isRideMessage } = require('./isRideMessage');
 const { extractPhone } = require('./extractPhone');
 const { extractCities } = require('./extractCities');
@@ -19,9 +19,11 @@ const REASON = Object.freeze({
   NOT_RIDE: 'not_ride',
   NO_PHONE: 'no_phone',
   NO_ROUTE: 'no_route',
+  MUTED_PICKUP: 'muted_pickup', // pickup is an admin-muted location
   DUPLICATE: 'duplicate',
   CLAIMED_ELSEWHERE: 'claimed_elsewhere', // another number already took this exact message
   SAVED: 'saved',
+  DIRECT_DUTY: 'direct_duty', // trusted-group duty saved as a Driver Duties post
   ERROR: 'error',
 });
 
@@ -37,24 +39,28 @@ const REASON = Object.freeze({
  * @param {string[]} deps.cityNames - DB-loaded city vocabulary (canonical + aliases)
  * @param {{ rideKeywords: string[], ignoreKeywords: string[], blockedPhoneNumbers: string[], blockedSenders: string[], knownBrandings?: string[] }} deps.filters
  * @param {{ record: () => Promise<void> }} [deps.heartbeat] - ingestion heartbeat; fired only on a successful save (Phase 2.5 6b)
+ * @param {(groupId: string) => boolean} [deps.isDirectDutyGroup] - trusted groups (admin
+ *   Groups → Direct duty) whose duties go to Driver Duties (posted_rides) under the
+ *   house profile instead of the bot feed
  * @param {{ info?: Function, warn?: Function, error?: Function }} [deps.logger]
  * @returns {(msg: {text: string, senderJid: string, groupId?: string, groupName?: string, msgId?: string, botId?: string}) => Promise<{saved: boolean, reason: string, ride?: object}>}
  */
-function createProcessMessage({ resolver, repository, cityNames, filters, heartbeat, logger }) {
+function createProcessMessage({ resolver, repository, cityNames, filters, heartbeat, isDirectDutyGroup, logger }) {
   const log = logger || { info() {}, warn() {}, error() {} };
 
   /**
-   * Resolve a raw city fragment to a canonical id, or null. A resolver throw
+   * Resolve a raw city fragment to its canonical { id, name } (both null if unresolved). A resolver throw
    * (e.g. a VALIDATION_ERROR on a junk fragment) is non-fatal — treated as
    * unresolved so the raw fragment is still stored for later re-resolution.
    * @param {?string} raw
-   * @returns {Promise<?string>}
+   * @returns {Promise<{ id: ?string, name: ?string }>}
    */
-  async function resolveCityId(raw) {
-    if (!raw) return null;
+  async function resolveCity(raw) {
+    const none = { id: null, name: null };
+    if (!raw) return none;
     try {
       const res = await resolver.resolve(raw);
-      return res && res.status === 'resolved' ? res.cityId : null;
+      return res && res.status === 'resolved' ? { id: res.cityId, name: res.canonicalName } : none;
     } catch (err) {
       // Log a truncated fragment, never the full raw value — it comes from
       // untrusted WA text and could carry partial PII (CLAUDE.md §10).
@@ -62,7 +68,7 @@ function createProcessMessage({ resolver, repository, cityNames, filters, heartb
         { err: err.message, fragment: String(raw).slice(0, 30) },
         'city resolve failed; treating as unresolved',
       );
-      return null;
+      return none;
     }
   }
 
@@ -98,14 +104,25 @@ function createProcessMessage({ resolver, repository, cityNames, filters, heartb
         return { saved: false, reason: REASON.NO_ROUTE };
       }
 
-      const [pickupCityId, dropCityId] = await Promise.all([
-        resolveCityId(pickup),
-        resolveCityId(drop),
-      ]);
+      const [pickupCity, dropCity] = await Promise.all([resolveCity(pickup), resolveCity(drop)]);
+      if (isMutedPickup({ raw: pickup, name: pickupCity.name }, filters.mutedPickups)) {
+        return { saved: false, reason: REASON.MUTED_PICKUP };
+      }
+      const pickupCityId = pickupCity.id;
+      const dropCityId = dropCity.id;
 
       const fp = fingerprint(text);
       if (await repository.isDuplicate(fp)) {
         return { saved: false, reason: REASON.DUPLICATE };
+      }
+
+      if (isDirectDutyGroup && isDirectDutyGroup(groupId)) {
+        const post = await repository.saveDirectDuty({
+          fromCityId: pickupCityId, toCityId: dropCityId, fromCityRaw: pickup, toCityRaw: drop,
+          vehicleType: extractVehicle(text), phone, notes: maskPhone(text, phone), fingerprint: fp,
+        });
+        if (!post) return { saved: false, reason: REASON.DUPLICATE };
+        return { saved: true, reason: REASON.DIRECT_DUTY, ride: { ...post, pickupCityId: post.fromCityId } };
       }
 
       const ride = await repository.saveRide({

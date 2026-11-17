@@ -14,6 +14,12 @@ export async function setWaGroupEnabled(id, enabled) {
   return data.group
 }
 
+/** PATCH /admin/wa-groups/:id — route a group's duties to Driver Duties (Phase 28). */
+export async function setWaGroupDirectDuty(id, directDuty) {
+  const { data } = await apiFetch(`/admin/wa-groups/${id}`, { method: 'PATCH', body: JSON.stringify({ directDuty }) })
+  return data.group
+}
+
 /** POST /admin/wa-groups/bulk — switch every group, or those matching q. */
 export async function setAllWaGroupsEnabled(enabled, q = '') {
   const body = q ? { enabled, q } : { enabled }

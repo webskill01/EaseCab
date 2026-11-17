@@ -8,7 +8,7 @@ const istMidnight = (day) => new Date(`${day}T00:00:00+05:30`);
 /** Filing row for the admin list. receiptKey only to tell if a PDF exists (never sent as is). */
 const ROW_SELECT = Object.freeze({
   id: true, vehicleNo: true, stateCd: true, checkpost: true, seats: true, taxMode: true, status: true,
-  taxPaise: true, failureCode: true, receiptNo: true, receiptKey: true, createdAt: true, paidAt: true,
+  taxPaise: true, failureCode: true, receiptNo: true, receiptKey: true, createdAt: true, paidAt: true, userId: true,
   user: { select: { name: true, phone: true } },
 });
 

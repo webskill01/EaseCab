@@ -3,7 +3,7 @@
 const { WA_GROUP_STATUS } = require('@easecab/shared');
 
 const GROUP_SELECT = Object.freeze({
-  id: true, jid: true, name: true, participants: true, enabled: true, lastSeenAt: true,
+  id: true, jid: true, name: true, participants: true, enabled: true, directDuty: true, lastSeenAt: true,
 });
 
 /** Prisma `where` for a name/JID search plus the on/off filter. */
@@ -38,9 +38,13 @@ function createAdminWaGroupsRepository({ prisma }) {
       return { rows, total, on, off };
     },
 
-    /** @returns {Promise<object|null>} the updated group, or null if the id doesn't exist. */
-    async setEnabled(id, enabled) {
-      const { count } = await prisma.waGroup.updateMany({ where: { id }, data: { enabled } });
+    /**
+     * @param {string} id
+     * @param {{ enabled?: boolean, directDuty?: boolean }} data
+     * @returns {Promise<object|null>} the updated group, or null if the id doesn't exist.
+     */
+    async update(id, data) {
+      const { count } = await prisma.waGroup.updateMany({ where: { id }, data });
       return count === 0 ? null : prisma.waGroup.findUnique({ where: { id }, select: GROUP_SELECT });
     },
 

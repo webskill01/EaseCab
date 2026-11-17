@@ -21,6 +21,12 @@ const STATUSES = [
   { id: 'all', label: 'All' },
 ]
 
+const SORTS = [
+  { id: 'newest', label: 'Newest' },
+  { id: 'oldest', label: 'Oldest' },
+  { id: 'name', label: 'Name A–Z' },
+]
+
 const JOINED = [
   { id: 'launch', label: 'Since launch' },
   { id: 'all', label: 'Incl. test' },
@@ -39,6 +45,7 @@ export default function UsersPage() {
           { label: 'Plan', options: PLANS, value: u.plan, onChange: u.setPlan },
           { label: 'Account', options: STATUSES, value: u.status, onChange: u.setStatus },
           { label: 'Joined', options: JOINED, value: u.joined, onChange: u.setJoined },
+          { label: 'Sort', options: SORTS, value: u.sort, onChange: u.setSort },
         ]}
       />
 

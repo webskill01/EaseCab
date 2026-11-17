@@ -47,7 +47,7 @@ function fakePrisma() {
         updates.push(args);
         return { count: args.where.id && args.where.id !== GROUP_ID ? 0 : 1 };
       },
-      async findUnique() { return { ...GROUP, enabled: false }; },
+      async findUnique() { return { ...GROUP, enabled: false, ...updates.at(-1)?.data }; },
     },
   };
 }
@@ -96,6 +96,10 @@ test('PATCH /admin/wa-groups/:id switches a group and notifies the bot; unknown 
   assert.deepStrictEqual(published, ['easecab:bot:groups:changed']);
   assert.strictEqual((await agent.patch('/api/v1/admin/wa-groups/33333333-3333-3333-3333-333333333333').send({ enabled: true })).status, 404);
   assert.strictEqual((await agent.patch(`/api/v1/admin/wa-groups/${GROUP_ID}`).send({ enabled: 'yes' })).status, 422);
+  assert.strictEqual((await agent.patch(`/api/v1/admin/wa-groups/${GROUP_ID}`).send({})).status, 422);
+  const dd = await agent.patch(`/api/v1/admin/wa-groups/${GROUP_ID}`).send({ directDuty: true });
+  assert.strictEqual(dd.status, 200);
+  assert.strictEqual(dd.body.data.group.directDuty, true);
 });
 
 test('POST /admin/wa-groups/bulk switches all groups matching the search', async () => {

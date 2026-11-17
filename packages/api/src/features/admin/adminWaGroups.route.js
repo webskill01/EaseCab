@@ -35,7 +35,7 @@ function createAdminWaGroupsRouter({ service, requireAdmin }) {
     validate(adminWaGroupIdParamSchema, 'params'),
     validate(adminWaGroupToggleSchema),
     async (req, res) => {
-      sendSuccess(res, { data: { group: await service.toggle(req.valid.params.id, req.valid.body.enabled) } });
+      sendSuccess(res, { data: { group: await service.toggle(req.valid.params.id, req.valid.body) } });
     },
   );
 

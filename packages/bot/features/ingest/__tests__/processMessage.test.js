@@ -210,3 +210,36 @@ test('two numbers delivering the same message save one ride', async () => {
   assert.strictEqual(saved, 1);
   assert.deepStrictEqual([a.reason, b.reason].sort(), ['claimed_elsewhere', 'saved']);
 });
+
+test('drops a ride whose pickup is muted (canonical name match)', async () => {
+  const deps = baseDeps();
+  deps.filters.mutedPickups = ['delhi'];
+  const r = await createProcessMessage(deps)(msg());
+  assert.deepStrictEqual([r.saved, r.reason], [false, 'muted_pickup']);
+});
+
+test('a muted drop city does not mute the ride', async () => {
+  const deps = baseDeps();
+  deps.filters.mutedPickups = ['Chandigarh'];
+  const r = await createProcessMessage(deps)(msg());
+  assert.strictEqual(r.saved, true);
+});
+
+test('direct-duty group: saved as a posted ride with the duty phone, not the bot feed', async () => {
+  const deps = baseDeps();
+  let posted;
+  deps.repository.saveRide = async () => assert.fail('must not hit the bot feed');
+  deps.repository.saveDirectDuty = async (d) => { posted = d; return { id: 'p1', fromCityId: d.fromCityId }; };
+  deps.isDirectDutyGroup = (jid) => jid === 'pt@g.us';
+  const r = await createProcessMessage(deps)(msg({ groupId: 'pt@g.us' }));
+  assert.deepStrictEqual([r.saved, r.reason, r.ride.pickupCityId], [true, 'direct_duty', 'c-delhi']);
+  assert.strictEqual(posted.phone, '9876543210');
+  assert.ok(!posted.notes.includes('9876543210'));
+});
+
+test('isMutedPickup: whole-word raw match only', () => {
+  const { isMutedPickup } = require('../blocklist');
+  assert.strictEqual(isMutedPickup({ raw: 'Pune Station', name: null }, ['pune']), true);
+  assert.strictEqual(isMutedPickup({ raw: 'Jaunpur', name: null }, ['una']), false);
+  assert.strictEqual(isMutedPickup({ raw: 'Bombay', name: 'Mumbai' }, ['Mumbai']), true);
+});

@@ -17,6 +17,7 @@ const LISTS = [
   { id: 'blocked_sender', fleet: true, label: 'Blocked senders', hint: 'WhatsApp sender numbers. Same formats as blocked numbers. Also sent to the fleet panel.' },
   { id: 'ignore_keyword', fleet: true, label: 'Ignore words', hint: 'A message containing any of these is dropped. Also sent to the fleet panel.' },
   { id: 'ride_keyword', label: 'Ride words', hint: 'Words that mark a message as a ride.' },
+  { id: 'muted_pickup', label: 'Muted pickups', hint: 'Pickup locations to skip, e.g. Pune, Mumbai, Surat. A ride picking up here is dropped; the rest of that group still comes through. Matches the city or any alias of it.' },
   { id: 'branding', label: 'Stamps', hint: 'Exact trailing "Forwarded Duty" lines stripped before dedup. Keep in sync with the fleet.' },
 ]
 

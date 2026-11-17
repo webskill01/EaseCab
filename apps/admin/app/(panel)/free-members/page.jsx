@@ -8,6 +8,7 @@ import { QueryState } from '@/features/shell/components/QueryState'
 import { ListFilters } from '@/features/shell/components/ListFilters'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { UserLink } from '@/features/shell/components/UserLink'
 import { filterMembers } from '@/features/freeMembers/lib/filterMembers'
 import { button, pill, input, card } from '@/lib/ui'
 import { useSessionState } from '@/features/shell/hooks/useSessionState'
@@ -72,7 +73,7 @@ function Row({ m, remove }) {
         <Avatar name={m.label || m.name} src={m.avatarUrl} />
         <div className="min-w-0">
           <p className="font-medium text-ec-ink">
-            {m.label || m.name || 'No name'} <PhoneLink phone={m.phone} />
+            <UserLink id={m.userId}>{m.label || m.name || 'No name'}</UserLink> <PhoneLink phone={m.phone} />
             {m.label && m.name && m.label !== m.name && <span className="ml-1 text-xs font-normal text-ec-ink40">· app name {m.name}</span>}
           </p>
           <p className="mt-0.5 text-xs text-ec-ink60">

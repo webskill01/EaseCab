@@ -98,7 +98,7 @@ async function main() {
   }, CITY_REFRESH_MS);
 
   const resolver = createCityResolver({ prisma, redis, logger });
-  const repository = createRideRepository({ prisma, redis, logger });
+  const repository = createRideRepository({ prisma, redis, directDutyPosterPhone: env.DIRECT_DUTY_POSTER_PHONE, logger });
   const heartbeat = createHeartbeat({ redis, logger });
   const ingest = createProcessMessage({
     resolver,
@@ -106,6 +106,7 @@ async function main() {
     cityNames,
     filters: filterStore.filters,
     heartbeat,
+    isDirectDutyGroup: groupStore.isDirectDuty,
     logger,
   });
   // Per-session outcome counters for the admin Sessions tab (best-effort).

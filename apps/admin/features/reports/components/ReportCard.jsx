@@ -3,6 +3,7 @@
 import { ArrowRight, ImageIcon, X, Trash2 } from 'lucide-react'
 import { button, pill, card, REASONS } from '@/lib/ui'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { UserLink } from '@/features/shell/components/UserLink'
 
 const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
 const VERDICT = { dismiss: 'Dismissed', remove: 'Ride removed' }
@@ -15,7 +16,7 @@ export function ReportCard({ item, onAction }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className={pill({ tone: reason.tone })}>{reason.label}</span>
         {target && <span className={pill({ tone: target.kind === 'posted' ? 'blue' : 'violet' })}>{target.kind}</span>}
-        <span className="text-sm text-ec-ink60">by {reporter.name ?? '—'}</span>
+        <span className="text-sm text-ec-ink60">by <UserLink id={reporter.id}>{reporter.name ?? '—'}</UserLink></span>
         <PhoneLink phone={reporter.phone} />
       </div>
 
@@ -35,7 +36,7 @@ export function ReportCard({ item, onAction }) {
           <p className="mt-1 text-xs text-ec-ink60">
             {target.postedAt && <>Posted {when(target.postedAt)}</>}
             {target.postedAt && target.posterName && ' · '}
-            {target.posterName && <>Poster: <span className="text-ec-ink">{target.posterName}</span></>}
+            {target.posterName && <>Poster: <UserLink id={target.posterId} className="text-ec-ink">{target.posterName}</UserLink></>}
           </p>
         )}
       </div>

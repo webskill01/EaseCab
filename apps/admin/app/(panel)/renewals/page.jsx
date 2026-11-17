@@ -7,6 +7,7 @@ import { QueryState } from '@/features/shell/components/QueryState'
 import { Pagination } from '@/features/shell/components/Pagination'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { UserLink } from '@/features/shell/components/UserLink'
 import { pill } from '@/lib/ui'
 
 const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
@@ -44,7 +45,7 @@ export default function RenewalsPage() {
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar name={p.member.name} />
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-ec-ink">{p.member.name || 'Driver'}</p>
+                  <p className="truncate font-medium text-ec-ink"><UserLink id={p.member.id}>{p.member.name || 'Driver'}</UserLink></p>
                   <PhoneLink phone={p.member.phone} className="text-xs text-ec-ink60" />
                 </div>
               </div>

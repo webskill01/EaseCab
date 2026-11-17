@@ -8,6 +8,7 @@ import { Pagination } from '@/features/shell/components/Pagination'
 import { ListFilters } from '@/features/shell/components/ListFilters'
 import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
+import { UserLink } from '@/features/shell/components/UserLink'
 import { pill } from '@/lib/ui'
 
 const STATUSES = [
@@ -25,7 +26,7 @@ const SORTS = [
 const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
 function Who({ p }) {
   if (!p) return '—'
-  return <>{p.name || 'No name'} <PhoneLink phone={p.phone} className="text-ec-ink60" /></>
+  return <><UserLink id={p.id}>{p.name || 'No name'}</UserLink> <PhoneLink phone={p.phone} className="text-ec-ink60" /></>
 }
 
 function rolloutLabel(r) {

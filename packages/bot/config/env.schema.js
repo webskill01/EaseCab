@@ -30,6 +30,9 @@ const envSchema = z.object({
   // OPTIONAL: unset → alerts stay Redis + logs only. Backend-only secret.
   TELEGRAM_ALERT_BOT_TOKEN: z.string().min(1).optional(),
   TELEGRAM_ALERT_CHAT_ID: z.string().min(1).optional(),
+  // House profile that owns duties from direct-duty groups (admin Groups → Direct duty);
+  // each duty keeps its own number as the contact.
+  DIRECT_DUTY_POSTER_PHONE: z.string().regex(/^\+91\d{10}$/).default('+916283380110'),
 });
 
 /**

@@ -21,11 +21,11 @@ function useUserAction() {
  */
 export function useUsers() {
   const [page, setPage] = useSessionState('users:page', 1)
-  const [filters, setFilters] = useSessionState('users:filters', { status: 'active', plan: 'all', joined: 'launch', q: '' })
+  const [filters, setFilters] = useSessionState('users:filters', { status: 'active', plan: 'all', joined: 'launch', sort: 'newest', q: '' })
 
   const query = useQuery({
     queryKey: ['users', filters, page],
-    queryFn: () => fetchUsers({ page, ...filters }),
+    queryFn: () => fetchUsers({ page, sort: 'newest', ...filters }),
     placeholderData: keepPreviousData,
   })
   const setFilter = (key) => (value) => { setFilters((f) => ({ ...f, [key]: value })); setPage(1) }
@@ -35,8 +35,9 @@ export function useUsers() {
     total: query.data?.meta?.total ?? 0,
     limit: query.data?.meta?.limit ?? 20,
     page, setPage,
+    sort: 'newest',
     ...filters,
-    setStatus: setFilter('status'), setPlan: setFilter('plan'), setJoined: setFilter('joined'), setQ: setFilter('q'),
+    setStatus: setFilter('status'), setPlan: setFilter('plan'), setJoined: setFilter('joined'), setSort: setFilter('sort'), setQ: setFilter('q'),
     isLoading: query.isLoading,
     isError: query.isError,
     action: useUserAction(),

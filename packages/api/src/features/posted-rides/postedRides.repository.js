@@ -37,12 +37,14 @@ function toTime(hhmm) {
 }
 
 /**
- * Public-feed filter: active, unexpired, poster not auto-flagged (mass-reported,
- * pending admin review — P13-12 #5). City lock matches the FROM (pickup) city only,
- * same rule as the bot feed. Multi-select.
+ * Public-feed filter: unexpired, poster not auto-flagged (mass-reported, pending
+ * admin review — P13-12 #5). City lock matches the FROM (pickup) city only, same
+ * rule as the bot feed. Multi-select. `withDone` keeps owner-closed posts listed
+ * (greyed, not contactable) until their 24h expiry; the tab badge counts active only.
  */
-function activeFeedWhere(cityIds) {
-  const where = { status: POSTED_RIDE_STATUS.ACTIVE, expiresAt: { gt: new Date() }, poster: { flaggedAt: null } };
+function activeFeedWhere(cityIds, { withDone = false } = {}) {
+  const status = withDone ? { in: [POSTED_RIDE_STATUS.ACTIVE, POSTED_RIDE_STATUS.DONE] } : POSTED_RIDE_STATUS.ACTIVE;
+  const where = { status, expiresAt: { gt: new Date() }, poster: { flaggedAt: null } };
   if (cityIds && cityIds.length > 0) where.fromCityId = { in: cityIds };
   return where;
 }
@@ -135,7 +137,7 @@ function createPostedRidesRepository({ prisma, redis }) {
      * (createdAt, id) in (createdAt DESC, id DESC) order.
      */
     async listActivePosts({ createdAt, id, cityIds, limit }) {
-      const where = activeFeedWhere(cityIds);
+      const where = activeFeedWhere(cityIds, { withDone: true });
       if (createdAt && id) {
         where.OR = [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }];
       }

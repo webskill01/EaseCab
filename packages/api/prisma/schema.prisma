@@ -116,6 +116,7 @@ enum BotFilterList {
   blocked_phone // spammer number seen in message text
   blocked_sender // spammer sender JID (last 10 digits)
   branding // fleet "Forwarded Duty" stamp stripped before fingerprinting
+  muted_pickup // pickup location whose rides are dropped (e.g. Pune/Mumbai)
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +273,9 @@ model WaGroup {
   name         String?
   participants Int?
   enabled      Boolean  @default(true)
+  // Trusted group (e.g. Punjab Taxi): its duties go to Driver Duties under the house
+  // profile with the duty's own phone, not to the bot feed (Phase 28).
+  directDuty   Boolean  @default(false) @map("direct_duty")
   lastSeenAt   DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6) // last time the bot saw it joined
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 

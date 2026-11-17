@@ -12,7 +12,7 @@ function setup(repoOver = {}) {
   const published = [];
   const repo = {
     async list() { return { rows: [{ id: ID }], total: 1, on: 290, off: 10 }; },
-    async setEnabled(id, enabled) { return id === ID ? { id, enabled } : null; },
+    async update(id, data) { return id === ID ? { id, ...data } : null; },
     async setEnabledMany() { return 300; },
     ...repoOver,
   };
@@ -29,13 +29,13 @@ test('list returns groups, offset meta and overall on/off counts', async () => {
 
 test('toggle switches one group and tells the bot', async () => {
   const { service, published } = setup();
-  assert.deepStrictEqual(await service.toggle(ID, false), { id: ID, enabled: false });
+  assert.deepStrictEqual(await service.toggle(ID, { enabled: false }), { id: ID, enabled: false });
   assert.deepStrictEqual(published, [BOT_GROUPS_CHANGED_CHANNEL]);
 });
 
 test('toggle on an unknown id is NOT_FOUND and tells nobody', async () => {
   const { service, published } = setup();
-  await assert.rejects(service.toggle('22222222-2222-2222-2222-222222222222', true), { code: 'NOT_FOUND' });
+  await assert.rejects(service.toggle('22222222-2222-2222-2222-222222222222', { enabled: true }), { code: 'NOT_FOUND' });
   assert.strictEqual(published.length, 0);
 });
 
@@ -50,9 +50,9 @@ test('bulk switches and notifies only when something changed', async () => {
 
 test('a publish failure does not fail the switch', async () => {
   const svc = createAdminWaGroupsService({
-    repo: { async setEnabled(id, enabled) { return { id, enabled }; } },
+    repo: { async update(id, data) { return { id, ...data }; } },
     redis: { async publish() { throw new Error('redis down'); } },
     logger,
   });
-  assert.deepStrictEqual(await svc.toggle(ID, true), { id: ID, enabled: true });
+  assert.deepStrictEqual(await svc.toggle(ID, { enabled: true }), { id: ID, enabled: true });
 });
