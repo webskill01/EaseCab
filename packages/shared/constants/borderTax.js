@@ -229,7 +229,6 @@ const BORDER_TAX = Object.freeze({
   RECEIPT_WAIT_SEC: 120, // PayU success → checkpost receipt page in the bot's own session
   RECEIPT_LOOKUP_TRIES: 3, // in-session receipt missed → Print Payment Receipt lookups, RECEIPT_LOOKUP_GAP_SEC apart
   RECEIPT_LOOKUP_GAP_SEC: 60,
-  REQUEUE_BELOW_PROGRESS: 3, // worker restart before this step (tax quoted): nothing sent to the portal yet → the filing runs again
   RECEIPT_KEEP_SEC: 86_400, // receipt PDF deleted from R2 this long after the tax validity ends — the driver saves it to the phone
   RECEIPT_SWEEP_BATCH: 100, // receipts deleted per cron tick
   BUSY_RETRY_SEC: 60, // all worker lanes busy: the app's "try again in" countdown (a lane frees at an unknown time)

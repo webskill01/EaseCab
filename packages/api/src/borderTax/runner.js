@@ -125,7 +125,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
       atBank = true;
       paid = await collect(id, req, result, io);
     } catch (err) {
-      // shutdown closed the browser under this filing (deploy restart): the boot sweep re-queues or fails it
+      // shutdown closed the browser under this filing (deploy restart): the boot sweep fails it as worker_restart (clear retry message, not portal_error)
       if (isStopping()) return void (interrupted = true, logger.info({ id, err: err.message }, 'border tax filing interrupted by shutdown'));
       const failureCode = err.failureCode || F.PORTAL_ERROR;
       logger.warn({ id, failureCode, err: err.message }, 'border tax filing stopped');

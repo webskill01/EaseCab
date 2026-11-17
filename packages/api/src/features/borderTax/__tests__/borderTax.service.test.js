@@ -8,7 +8,7 @@ const logger = { info() {}, warn() {} };
 const MEMBER = { status: 'active', expiresAt: new Date(Date.now() + 86_400_000) };
 
 /** In-memory repo with the real compare-and-set semantics. */
-function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0, paused = [], jobs = {} } = {}) {
+function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0, paused = [] } = {}) {
   const queue = [];
   const handoffs = {};
   const unlocks = {};
@@ -37,7 +37,6 @@ function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0, paused = [], jobs = {} 
     async findForUser(id, userId) { return rows[id] && rows[id].userId === userId ? rows[id] : null; },
     async setHandoff(id, h) { handoffs[id] = h; },
     async clearHandoff(id) { delete handoffs[id]; },
-    async getJob(id) { return jobs[id] || {}; },
   };
 }
 
@@ -116,15 +115,15 @@ test('captcha timeout ends as EXPIRED, other failures as FAILED', async () => {
   assert.deepStrictEqual([repo.rows.a.status, repo.rows.b.status], ['expired', 'failed']);
 });
 
-test('recoverAfterRestart: requeue QUEUED + filings cut before the quote; fail the rest; leave HANDED_OFF alone', async () => {
+test('recoverAfterRestart: requeue QUEUED, fail in-flight as worker_restart (driver retries), leave HANDED_OFF alone', async () => {
   const repo = fakeRepo({
-    q: { id: 'q', status: 'queued' }, f: { id: 'f', status: 'filling' }, v: { id: 'v', status: 'awaiting_captcha' },
-    p: { id: 'p', status: 'filling' }, c: { id: 'c', status: 'awaiting_captcha' }, h: { id: 'h', status: 'handed_off' },
-  }, { jobs: { f: { progress: '1' }, v: { progress: '0' }, p: { progress: '3' } } }); // c: job hash gone → unknown
-  assert.strictEqual(await createBorderTaxService({ repo, logger }).recoverAfterRestart(), 5);
-  assert.deepStrictEqual(repo.queue, ['q', 'f', 'v']); // deploy restart mid-Vahan (live 2026-11-17): runs again, no failure
-  assert.deepStrictEqual(['f', 'v', 'p', 'c', 'h'].map((k) => repo.rows[k].status), ['queued', 'queued', 'failed', 'failed', 'handed_off']);
-  assert.deepStrictEqual([repo.rows.p.failureCode, repo.rows.c.failureCode], ['worker_restart', 'worker_restart']);
+    q: { id: 'q', status: 'queued' }, f: { id: 'f', status: 'filling' },
+    c: { id: 'c', status: 'awaiting_captcha' }, h: { id: 'h', status: 'handed_off' },
+  });
+  assert.strictEqual(await createBorderTaxService({ repo, logger }).recoverAfterRestart(), 3);
+  assert.deepStrictEqual(repo.queue, ['q']); // never re-run a started filing behind the driver's back (user, 2026-11-18)
+  assert.deepStrictEqual(['f', 'c', 'h'].map((k) => repo.rows[k].status), ['failed', 'failed', 'handed_off']);
+  assert.deepStrictEqual([repo.rows.f.failureCode, repo.rows.c.failureCode], ['worker_restart', 'worker_restart']);
 });
 
 test('rates: latest real quote per border, whole days, recent window only, no personal fields', async () => {

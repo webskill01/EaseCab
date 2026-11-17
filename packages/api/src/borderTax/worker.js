@@ -106,7 +106,7 @@ async function main() {
   })();
 
   const shutdown = async (signal) => {
-    logger.info({ signal }, 'border tax worker stopping'); // in-flight jobs are swept on next boot (re-queued if cut before the quote)
+    logger.info({ signal }, 'border tax worker stopping'); // in-flight jobs are swept on next boot
     stopping = true;
     clearInterval(sweepTimer);
     clearInterval(watchTimer);
