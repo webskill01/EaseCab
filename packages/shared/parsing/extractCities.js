@@ -196,17 +196,21 @@ function extractCities(text, cities) {
 
   // Pattern 5: "pickup: X" and/or "drop: Y"
   // Separator tolerates ":" and "-" (the ":-" stylistic colon is everywhere in
-  // these messages: "PICK UP :-", "DROP :-").
-  const pickupPattern = /\bpick\s?up\s*[:-]*\s*([a-z\s]+?)(?:\s*drop|\s*to|\s*phone|\s*[^a-z\s]|$)/i;
-  const dropExplicitPattern = /\bdrop\s*[:-]*\s*([a-z\s]+?)(?:\s*pickup|\s*from|\s*phone|\s*[^a-z\s]|$)/i;
+  // these messages: "PICK UP :-", "DROP :-"). Terminators are lookaheads and stop at
+  // the next label, so "Pickup Date :- today / Pickup Time current / Pickup :- Rajpura"
+  // can't swallow the real "Pickup :-" line into an earlier match.
+  const pickupPattern = /\bpick\s?up\s*[:-]*\s*([a-z\s]+?)(?=\s*drop|\s*to|\s*phone|\s*pick\s?up|\s*[^a-z\s]|$)/i;
+  const dropExplicitPattern = /\bdrop\s*[:-]*\s*([a-z\s]+?)(?=\s*pickup|\s*from|\s*phone|\s*drop|\s*[^a-z\s]|$)/i;
 
   // "booking drop cab type : ... drop :- dehli": the first "drop" is the trip type, so
   // take the first label whose value holds a city, else the first label at all.
   const labelMatch = (re) => {
     let first = null;
     for (const m of normalized.matchAll(new RegExp(re.source, 'gi'))) {
-      if (scanWords(m[1].trim().split(/\s+/).slice(0, 3)).length > 0) return m;
-      first = first || m;
+      const words = m[1].trim().split(/\s+/).slice(0, 3);
+      if (scanWords(words).length > 0) return m;
+      // No city anywhere: prefer a label carrying real place text over "Pickup Date :- today".
+      if (!first || (!rawPlace(first[1].trim().split(/\s+/).slice(0, 3)) && rawPlace(words))) first = m;
     }
     return first;
   };

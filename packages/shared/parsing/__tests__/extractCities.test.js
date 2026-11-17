@@ -142,3 +142,9 @@ test('"DROP : Mohali" followed by "TIME :2:30" still reads the drop (live 2026-1
   assert.equal(r.pickup, 'Sujanpur Tira');
   assert.equal(r.drop, 'Mohali');
 });
+
+test('"Pickup Date" / "Pickup Time" labels don\'t swallow the real "Pickup :-" (live 2026-11-17)', () => {
+  const t = '*Pickup🗓️ Date* :- *TODAY*\n\n*Pickup ⏳Time* *CURRENT*\n\n*Pickup*📍:- *RAJPURA RAILWAY STATION*\n\n*Drop* :- *DELHI AIRPORT*\n\n*RATE* *3000*';
+  assert.deepEqual(extractCities(t, [...VOCAB, 'Rajpura']), { pickup: 'Rajpura', drop: 'Delhi', allCities: ['Rajpura', 'Delhi'] });
+  assert.equal(extractCities(t, VOCAB).pickup, 'rajpura'); // unknown city → raw text for backfill, not "today"
+});
