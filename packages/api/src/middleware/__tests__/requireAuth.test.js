@@ -44,3 +44,20 @@ test('rejects a tampered/invalid token as AUTH_REQUIRED (never leaks jwt detail)
   assert.ok(forwarded instanceof AppError);
   assert.equal(forwarded.code, ERROR_CODES.AUTH_REQUIRED);
 });
+
+test('rejects a valid token whose sid was replaced by a login on another device', async () => {
+  const gate = createRequireAuth({ jwt, getSessionId: async () => 'new-sid' });
+  const token = jwt.signAccess({ sub: 'u1', role: 'user', sid: 'old-sid' });
+  let forwarded = null;
+  await gate({ cookies: { [AUTH_COOKIES.ACCESS_TOKEN]: token } }, {}, (e) => { forwarded = e; });
+  assert.equal(forwarded.code, ERROR_CODES.AUTH_REQUIRED);
+});
+
+test('accepts the current device token', async () => {
+  const gate = createRequireAuth({ jwt, getSessionId: async () => 's1' });
+  const req = { cookies: { [AUTH_COOKIES.ACCESS_TOKEN]: jwt.signAccess({ sub: 'u1', role: 'user', sid: 's1' }) } };
+  let err = 'untouched';
+  await gate(req, {}, (e) => { err = e; });
+  assert.equal(err, undefined);
+  assert.equal(req.user.id, 'u1');
+});

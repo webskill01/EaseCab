@@ -25,7 +25,7 @@ const fakeR2 = {
 
 function appWith() {
   return buildApp({
-    prisma: {}, redis: { async eval() { return 1; } }, logger: pino({ level: 'silent' }), config: CONFIG,
+    prisma: {}, redis: { async eval() { return 1; }, async get() { return null; } }, logger: pino({ level: 'silent' }), config: CONFIG,
     identity: { verifyOtpToken: async () => ({ phone: '+919876543210' }) },
     subscriber: inertSubscriber,
     cashfree: { async createOrder() { return { id: 'order_new' }; } },

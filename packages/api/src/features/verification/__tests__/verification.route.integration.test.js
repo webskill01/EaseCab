@@ -18,7 +18,7 @@ const inertSubscriber = { on() {}, removeListener() {}, async subscribe() {}, as
 const jwt = createJwt(CONFIG.jwt);
 const authCookie = `${AUTH_COOKIES.ACCESS_TOKEN}=${jwt.signAccess({ sub: 'u1', role: 'user' })}`;
 
-function fakeRedis() { const c = new Map(); return { async eval(_s, _n, k) { c.set(k, (c.get(k) || 0) + 1); return c.get(k); } }; }
+function fakeRedis() { const c = new Map(); return { async eval(_s, _n, k) { c.set(k, (c.get(k) || 0) + 1); return c.get(k); }, async get() { return null; } }; }
 function fakePrisma() {
   const user = { id: 'u1', aadhaarVerified: false, dlSubmitted: false, rcSubmitted: false, verificationStatus: 'none' };
   const subs = [];

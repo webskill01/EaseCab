@@ -225,13 +225,13 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
   app.get('/ping', (_req, res) => sendSuccess(res, { data: { status: 'ok' } }));
 
   // Shared cookie auth gate for the protected routers (auth routes are public).
-  const requireAuth = createRequireAuth({ jwt: app.locals.jwt });
+  const authRepo = createAuthRepository({ prisma, redis });
+  const requireAuth = createRequireAuth({ jwt: app.locals.jwt, getSessionId: authRepo.getSessionId });
 
   // Versioned API surface.
   const v1 = express.Router();
 
   // Auth (Step 9) — public.
-  const authRepo = createAuthRepository({ prisma, redis });
   const authService = createAuthService({ repo: authRepo, jwt: app.locals.jwt, identity, smsOtp, testLogin });
   v1.use('/auth', createAuthRouter({ service: authService, config, requireAuth }));
 

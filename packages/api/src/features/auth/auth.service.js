@@ -32,6 +32,18 @@ function codesMatch(a, b) {
 }
 
 /**
+ * Single-device rule: a token is live only if its `sid` matches the one stored at the
+ * user's latest OTP login. No stored sid (legacy pre-rollout tokens, reviewer number,
+ * Redis flushed) → allowed, so a deploy never logs everyone out.
+ * @param {?string} storedSid
+ * @param {?string} tokenSid
+ * @returns {boolean}
+ */
+function isCurrentSession(storedSid, tokenSid) {
+  return storedSid === null || storedSid === tokenSid;
+}
+
+/**
  * Auth business logic (CLAUDE.md §4 service layer). Two OTP paths (Phase 16.5):
  * `identity.verifyOtpToken` (Firebase, legacy) and `smsOtp` (2Factor, server-side,
  * present only when OTP_PROVIDER=twofactor). Never logs phone, code or token (§10).
@@ -47,8 +59,8 @@ function codesMatch(a, b) {
 function createAuthService({ repo, jwt, identity, smsOtp = null, testLogin = null }) {
   const isTestPhone = (phone) => Boolean(testLogin) && phone === testLogin.phone;
 
-  function issueTokens(user) {
-    const payload = { sub: user.id, role: USER_ROLE };
+  function issueTokens(user, sid) {
+    const payload = { sub: user.id, role: USER_ROLE, sid };
     return { accessToken: jwt.signAccess(payload), refreshToken: jwt.signRefresh(payload) };
   }
 
@@ -62,7 +74,11 @@ function createAuthService({ repo, jwt, identity, smsOtp = null, testLogin = nul
     } else if (user.isDeleted) {
       user = await repo.restoreUser(user.id);
     }
-    return { user, isNewUser, ...issueTokens(user) };
+    // New login → new session id; every other device's tokens stop working.
+    // Reviewer number is exempt (several Play reviewers may sign in at once).
+    const sid = crypto.randomUUID();
+    if (!isTestPhone(phone)) await repo.setSessionId(user.id, sid);
+    return { user, isNewUser, ...issueTokens(user, sid) };
   }
 
   async function phoneFromFirebase(idToken) {
@@ -139,10 +155,10 @@ function createAuthService({ repo, jwt, identity, smsOtp = null, testLogin = nul
         throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
       }
       const user = await repo.findActiveUserById(payload.sub);
-      if (!user) {
+      if (!user || !isCurrentSession(await repo.getSessionId(user.id), payload.sid)) {
         throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
       }
-      return issueTokens(user);
+      return issueTokens(user, payload.sid);
     },
 
     /**
@@ -156,4 +172,4 @@ function createAuthService({ repo, jwt, identity, smsOtp = null, testLogin = nul
   };
 }
 
-module.exports = { createAuthService, toPublicUser };
+module.exports = { createAuthService, toPublicUser, isCurrentSession };

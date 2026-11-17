@@ -17,6 +17,7 @@ function createAuthRepository({ prisma, redis }) {
   const countKey = (phone) => redisKey('otp', 'count', phone);
   const sessionKey = (phone) => redisKey('otp', 'session', phone);
   const verifyKey = (phone) => redisKey('otp', 'verify', phone);
+  const sidKey = (userId) => redisKey('auth', 'sid', userId);
 
   return {
     /** @returns {Promise<number>} TTL secs of the resend-cooldown key (-2 if none). */
@@ -58,6 +59,16 @@ function createAuthRepository({ prisma, redis }) {
     /** Fixed-window count of verify attempts for this phone. */
     async incrementVerifyAttempts(phone, windowSec) {
       return fixedWindowIncr(redis, verifyKey(phone), windowSec);
+    },
+
+    /** Make `sid` the user's only live session (single-device login). No TTL: one tiny key per user. */
+    async setSessionId(userId, sid) {
+      await redis.set(sidKey(userId), sid);
+    },
+
+    /** @returns {Promise<?string>} the user's live session id, or null if none recorded. */
+    async getSessionId(userId) {
+      return redis.get(sidKey(userId));
     },
 
     /** Look up by phone WITHOUT an isDeleted filter (phone is @unique; a soft-deleted

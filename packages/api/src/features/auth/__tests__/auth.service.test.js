@@ -20,6 +20,8 @@ function baseRepo(overrides = {}) {
     findActiveUserById: async () => ({ id: 'u1' }),
     createUser: async (phone) => ({ id: 'new', phone, isDeleted: false, subscription: { status: 'expired', expiresAt: null } }),
     restoreUser: async (id) => ({ id, isDeleted: false }),
+    setSessionId: async () => {},
+    getSessionId: async () => null,
     ...overrides,
   };
 }
@@ -194,4 +196,44 @@ test('twofactor: reviewer number gets no SMS and signs in with the fixed code on
 test('firebase mode: phone+code body is refused (no server OTP configured)', async () => {
   const svc = make(smsRepo(), null);
   await assert.rejects(svc.verifyOtp({ phone: PHONE, otp: '123456' }), (e) => e.code === ERROR_CODES.AUTH_REQUIRED);
+});
+
+// --- Single-device sessions ---
+
+test('verifyOtp records a fresh sid and stamps it into the tokens', async () => {
+  const identity = { verifyOtpToken: async () => ({ phone: '+919876543210' }) };
+  const stored = [];
+  const signed = [];
+  const svc = createAuthService({
+    repo: baseRepo({ setSessionId: async (...a) => { stored.push(a); } }),
+    jwt: { ...jwtStub, signAccess: (p) => { signed.push(p); return 'a'; } },
+    identity,
+  });
+  await svc.verifyOtp({ idToken: 'x' });
+  await svc.verifyOtp({ idToken: 'x' });
+  assert.strictEqual(stored.length, 2);
+  assert.notStrictEqual(stored[0][1], stored[1][1]); // each login replaces the session
+  assert.strictEqual(signed[1].sid, stored[1][1]);
+});
+
+test('refresh rejects a token from a device replaced by a newer login', async () => {
+  const jwt = { ...jwtStub, verifyRefresh: () => ({ sub: 'u1', sid: 'old' }) };
+  const svc = createAuthService({ repo: baseRepo({ getSessionId: async () => 'new' }), jwt, identity: null });
+  await assert.rejects(svc.refresh('t'), (e) => e.code === ERROR_CODES.AUTH_REQUIRED);
+});
+
+test('refresh keeps the current device signed in with the same sid', async () => {
+  const signed = [];
+  const jwt = { ...jwtStub, verifyRefresh: () => ({ sub: 'u1', sid: 's1' }), signAccess: (p) => { signed.push(p); return 'a'; } };
+  const svc = createAuthService({ repo: baseRepo({ getSessionId: async () => 's1' }), jwt, identity: null });
+  await svc.refresh('t');
+  assert.strictEqual(signed[0].sid, 's1');
+});
+
+test('isCurrentSession: no stored sid (legacy/reviewer) passes, mismatch fails', () => {
+  const { isCurrentSession } = require('../auth.service');
+  assert.strictEqual(isCurrentSession(null, undefined), true);
+  assert.strictEqual(isCurrentSession('a', 'a'), true);
+  assert.strictEqual(isCurrentSession('a', 'b'), false);
+  assert.strictEqual(isCurrentSession('a', undefined), false); // pre-rollout token after a new login
 });
