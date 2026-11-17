@@ -59,8 +59,8 @@ function DetailRow({ label, children }) {
   )
 }
 
-/** WhatsApp / Call / Report. Disabled (dim) when a bot ride has aged to "booked". */
-function CardActions({ ride, disabled, onContact, onReport }) {
+/** WhatsApp / Call / Report (Delete for moderator numbers). Disabled (dim) when a bot ride has aged to "booked". */
+function CardActions({ ride, disabled, onContact, onReport, onModDelete }) {
   const t = useTranslations('rides')
   const btn = 'flex h-[40px] items-center justify-center gap-1.5 rounded-[11px] text-[13.5px] font-bold text-white'
   return (
@@ -83,11 +83,11 @@ function CardActions({ ride, disabled, onContact, onReport }) {
       </button>
       <button
         type="button"
-        onClick={() => onReport(ride)}
-        aria-label={t('actions.report')}
+        onClick={() => (onModDelete ? onModDelete(ride) : onReport(ride))}
+        aria-label={onModDelete ? t('actions.delete') : t('actions.report')}
         className="flex h-[40px] w-[40px] items-center justify-center rounded-[11px] bg-ec-dangerBg text-ec-danger"
       >
-        <Flag size={17} />
+        {onModDelete ? <Trash size={16} /> : <Flag size={17} />}
       </button>
     </div>
   )
@@ -174,7 +174,7 @@ function PosterRow({ ride }) {
  * @param {{ onMarkDone: Function, onRepost: Function, onDelete: Function }} [props.owner] -
  *   set when the viewer posted this duty: owner actions replace Call/WhatsApp/Report
  */
-export function RideCard({ ride, now, onContact, onReport, owner }) {
+export function RideCard({ ride, now, onContact, onReport, onModDelete, owner }) {
   const t = useTranslations('rides')
   const locale = useLocale()
   const verified = ride.kind === 'verified'
@@ -259,7 +259,7 @@ export function RideCard({ ride, now, onContact, onReport, owner }) {
       <div className="mt-2">
         {owner
           ? <OwnerActions ride={ride} done={done} owner={owner} />
-          : <CardActions ride={ride} disabled={booked || done} onContact={onContact} onReport={onReport} />}
+          : <CardActions ride={ride} disabled={booked || done} onContact={onContact} onReport={onReport} onModDelete={onModDelete} />}
       </div>
     </article>
   )

@@ -2,7 +2,7 @@
 
 const {
   AppError, ERROR_CODES, POSTED_RIDES, POSTED_RIDE_STATUS, CONTACT_RATE_LIMIT,
-  hasSubmittedKyc, isProfileComplete, isSubscriptionActive, CONTACT_SOURCE,
+  hasSubmittedKyc, isProfileComplete, isSubscriptionActive, CONTACT_SOURCE, isRideModerator,
 } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
@@ -185,9 +185,10 @@ function createPostedRidesService({ repo, logger, uploads, requireKyc = false })
       return { id: postedRideId, status: POSTED_RIDE_STATUS.DONE };
     },
 
-    /** Owner soft-deletes a post. NOT_FOUND if they don't own it. */
+    /** Owner (or a moderator number) soft-deletes a post. NOT_FOUND if neither. */
     async removePost({ userId, postedRideId }) {
-      const count = await repo.softDeletePost(postedRideId, userId);
+      const mod = isRideModerator(await repo.findUserPhone(userId));
+      const count = await repo.softDeletePost(postedRideId, mod ? undefined : userId);
       if (count === 0) {
         throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       }

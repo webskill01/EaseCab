@@ -219,10 +219,16 @@ function createPostedRidesRepository({ prisma, redis }) {
     /** Owner soft-deletes a post (any non-deleted status) → deleted. count 0 if not owner. */
     async softDeletePost(id, userId) {
       const { count } = await prisma.postedRide.updateMany({
+        // userId undefined = moderator removal, any poster
         where: { id, postedBy: userId, status: { not: POSTED_RIDE_STATUS.DELETED } },
         data: { status: POSTED_RIDE_STATUS.DELETED, isClosed: true },
       });
       return count;
+    },
+
+    /** Caller's phone, for the moderator check. */
+    async findUserPhone(id) {
+      return (await prisma.user.findUnique({ where: { id }, select: { phone: true } }))?.phone ?? null;
     },
 
     /** Existence check for the report path — null if the post is gone. */

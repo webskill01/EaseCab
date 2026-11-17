@@ -113,7 +113,7 @@ test('toPublicUser exposes only safe fields', () => {
     subscription: { status: 'expired', expiresAt: null, razorpaySubId: 'SECRET' },
   });
   assert.deepStrictEqual(pub, {
-    id: 'u1', phone: '+91x', name: 'A', verificationStatus: 'none',
+    id: 'u1', phone: '+91x', name: 'A', verificationStatus: 'none', isModerator: false,
     subscription: { status: 'expired', expiresAt: null },
   });
 });

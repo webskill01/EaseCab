@@ -136,6 +136,17 @@ function createRidesRepository({ prisma, redis }) {
       return prisma.ride.findUnique({ where: { id }, select: { id: true } });
     },
 
+    /** Caller's phone, for the moderator check. */
+    async findUserPhone(id) {
+      return (await prisma.user.findUnique({ where: { id }, select: { phone: true } }))?.phone ?? null;
+    },
+
+    /** Moderator removal: hide the ride (the cron hard-deletes it later). @returns {Promise<number>} */
+    async hideRide(id) {
+      const { count } = await prisma.ride.updateMany({ where: { id, status: { not: RIDE_STATUS.HIDDEN } }, data: { status: RIDE_STATUS.HIDDEN } });
+      return count;
+    },
+
     /** Write a user report against a bot ride (feeds the admin moderation queue, 24c). */
     async createRideReport({ reporterId, rideId, reason, remarks, screenshotKey }) {
       return prisma.rideReport.create({

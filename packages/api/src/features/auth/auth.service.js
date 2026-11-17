@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const { AppError, ERROR_CODES, OTP_RATE_LIMIT, OTP_CHANNEL, OTP_SESSION, USER_ROLE } = require('@easecab/shared');
+const { AppError, ERROR_CODES, OTP_RATE_LIMIT, OTP_CHANNEL, OTP_SESSION, USER_ROLE, isRideModerator } = require('@easecab/shared');
 
 /**
  * Reduce a Prisma user (+subscription) to the fields safe to return to the client
@@ -15,6 +15,7 @@ function toPublicUser(user) {
     phone: user.phone,
     name: user.name ?? null,
     verificationStatus: user.verificationStatus ?? 'none',
+    isModerator: isRideModerator(user.phone),
     subscription: user.subscription
       ? {
           status: user.subscription.status,

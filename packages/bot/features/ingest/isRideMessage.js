@@ -20,6 +20,11 @@ const ROUTE_PATTERNS = [
 const DO_NOT_FORWARD =
   /\b(?:don'?t|dont|do\s*not|no|not(?:\s+for)?)\s+(?:to\s+)?(?:forward(?:ing|ed)?|fwd|frwd|farward|forword|froward)\b|\b(?:forward|fwd|frwd)\s+(?:mat|na|nahi|nhi|nahin)\b/i;
 
+// Service ads that slip through the route patterns ("travel ads to attract more clients").
+// Words no real duty uses; generic ones like "dm me" are left out on purpose.
+const PROMO_AD =
+  /\b(?:promotional|reels?|digital\s+marketing|social\s+media|attract\s+(?:more\s+)?(?:clients|customers)|advertis(?:e|ing|ement)s?|graphic\s+design(?:er|ing)?|website\s+(?:design|development)|followers)\b/i;
+
 /**
  * Ride-message gate — ports multibot `isTaxiRequest`. Rejects if any ignore
  * keyword is present (Unicode-aware word boundary for non-ASCII ignore words);
@@ -43,6 +48,8 @@ function isRideMessage(text, cfg) {
 
   // Curly apostrophes + markers/extra spaces folded so "*Don’t*  forward" still matches.
   if (DO_NOT_FORWARD.test(cleanedText.replace(/[‘’`´]/g, "'").replace(/\s+/g, ' '))) return false;
+
+  if (PROMO_AD.test(cleanedText)) return false;
 
   for (const ignoreWord of ignoreKeywords) {
     const ignoreWordLower = ignoreWord.normalize('NFKD').toLowerCase();

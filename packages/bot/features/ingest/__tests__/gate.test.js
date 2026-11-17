@@ -46,3 +46,10 @@ test('rejects every "don\'t forward" spelling, even without an ignore entry', ()
 test('rejects "don\'t forward" written in a fancy font (live 2026-11-13)', () => {
   assert.strictEqual(isRideMessage("📍 *PICKUP* *:-Sujanpur*\n📍 *DROP* *: Mohali*\n𝘿𝙊𝙉'𝙏 𝙁𝙊𝙍𝙒𝘼𝙍𝘿", CFG), false);
 });
+
+test('service ads are not rides even when "x to y" matches', () => {
+  const ad = 'If anyone needs promotional reels for travel ads to attract more clients Dm me for demo 9876543210';
+  assert.strictEqual(isRideMessage(ad, CFG), false);
+  assert.strictEqual(isRideMessage('Grow your social media followers, drop us a msg', CFG), false);
+  assert.strictEqual(isRideMessage('Patiala to Delhi sedan dm me 9876543210', CFG), true);
+});

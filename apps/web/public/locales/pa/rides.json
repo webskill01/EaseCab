@@ -44,7 +44,8 @@
   "actions": {
     "whatsapp": "WhatsApp",
     "call": "ਕਾਲ",
-    "report": "ਰਿਪੋਰਟ"
+    "report": "ਰਿਪੋਰਟ",
+    "delete": "ਮਿਟਾਓ"
   },
   "filter": {
     "alert": {"blocked": "ਅਲਰਟ ਬੰਦ", "sound": "ਆਵਾਜ਼ ਬੰਦ"},

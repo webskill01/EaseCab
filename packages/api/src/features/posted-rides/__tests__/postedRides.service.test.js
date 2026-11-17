@@ -29,7 +29,8 @@ function baseRepo(over = {}) {
     async incrementContactCount() { return over.count ?? 1; },
     async recordContact() { return { contactedAt: new Date('2026-06-02T00:00:00.000Z') }; },
     async closePost() { return over.closeCount ?? 1; },
-    async softDeletePost() { return over.delCount ?? 1; },
+    async softDeletePost(id, userId) { over.delArgs = [id, userId]; return over.delCount ?? 1; },
+    async findUserPhone() { return over.phone ?? '+911111111111'; },
     async findPostExists() { return over.exists === undefined ? { id: 'p1' } : over.exists; },
     async createPostReport(data) { (over.reports ??= []).push(data); return { id: 'rep1', createdAt: new Date() }; },
   };
@@ -228,4 +229,14 @@ test('reportPost throws NOT_FOUND for a missing post', async () => {
 test('reportPost rejects reporting your own post with VALIDATION_ERROR', async () => {
   const svc = createPostedRidesService({ repo: baseRepo({ exists: { id: 'p1', postedBy: 'u1' } }) });
   await assert.rejects(() => svc.reportPost({ userId: 'u1', postedRideId: 'p1', reason: 'fake' }), code('VALIDATION_ERROR'));
+});
+
+test('removePost: a moderator number deletes any post (no owner filter)', async () => {
+  const over = { phone: '+916284992669' };
+  const svc = createPostedRidesService({ repo: baseRepo(over) });
+  await svc.removePost({ userId: 'u9', postedRideId: 'p1' });
+  assert.deepEqual(over.delArgs, ['p1', undefined]);
+  const own = { };
+  await createPostedRidesService({ repo: baseRepo(own) }).removePost({ userId: 'u1', postedRideId: 'p1' });
+  assert.deepEqual(own.delArgs, ['p1', 'u1']);
 });

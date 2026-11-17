@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, CONTACT_RATE_LIMIT, isSubscriptionActive, CONTACT_SOURCE } = require('@easecab/shared');
+const { AppError, ERROR_CODES, CONTACT_RATE_LIMIT, isSubscriptionActive, CONTACT_SOURCE, isRideModerator } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
 // A group subject can carry an admin's phone number ("Taxi Duty 98xxxxxxxx") —
@@ -141,6 +141,18 @@ function createRidesService({ repo, uploads }) {
         ? (await uploads.verifyUpload({ userId, purpose: 'report_screenshot', key: screenshotKey })).key
         : null;
       return repo.createRideReport({ reporterId: userId, rideId, reason, remarks, screenshotKey: storedKey });
+    },
+
+    /**
+     * Moderator removes a bot ride from the feed. NOT_FOUND for non-moderators (the
+     * endpoint stays invisible) and for rides already gone.
+     * @param {{ userId: string, rideId: string }} args
+     * @returns {Promise<{ id: string }>}
+     */
+    async removeRide({ userId, rideId }) {
+      if (!isRideModerator(await repo.findUserPhone(userId))) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      if ((await repo.hideRide(rideId)) === 0) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      return { id: rideId };
     },
   };
 }

@@ -64,3 +64,10 @@ export async function logContactVerifiedRide(postedRideId) {
  * needs a full URL and rides the httpOnly cookie via `withCredentials` (§12).
  */
 export const RIDES_STREAM_URL = `${env.NEXT_PUBLIC_API_URL}/api/v1/rides/stream`
+
+/** Moderator numbers only: remove any feed card (bot ride → hidden, posted → deleted). */
+export async function moderatorRemoveRide(ride) {
+  const path = ride.kind === 'verified' ? `/posted-rides/${ride.id}` : `/rides/${ride.id}`
+  const { data } = await apiFetch(path, { method: 'DELETE' })
+  return data
+}

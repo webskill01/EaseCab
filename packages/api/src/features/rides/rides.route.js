@@ -88,6 +88,12 @@ function createRidesRouter({ service, feed, requireAuth }) {
     sendSuccess(res, { data, status: HTTP_STATUS.CREATED });
   });
 
+  // DELETE /api/v1/rides/:id — moderator numbers only (RIDE_MODERATOR_PHONES).
+  router.delete('/:id', validate(rideIdParamSchema, 'params'), async (req, res) => {
+    const data = await service.removeRide({ userId: req.user.id, rideId: req.valid.params.id });
+    sendSuccess(res, { data });
+  });
+
   return router;
 }
 

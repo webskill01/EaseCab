@@ -44,7 +44,8 @@
   "actions": {
     "whatsapp": "WhatsApp",
     "call": "Call",
-    "report": "Report"
+    "report": "Report",
+    "delete": "Delete"
   },
   "filter": {
     "alert": {"blocked": "Alerts off", "sound": "Sound off"},

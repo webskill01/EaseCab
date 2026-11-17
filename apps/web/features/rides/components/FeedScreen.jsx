@@ -25,6 +25,7 @@ import { ContactSheet } from './ContactSheet'
 import { ReportSheet } from './ReportSheet'
 import { ConfirmSheet } from './ConfirmSheet'
 import { useOwnPostActions } from '../hooks/useOwnPostActions'
+import { useModeratorDelete } from '../hooks/useModeratorDelete'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
 import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
@@ -52,7 +53,9 @@ export function FeedScreen() {
   const [contactRideVM, setContactRideVM] = useState(null)
   const [reportRideVM, setReportRideVM] = useState(null)
   const tMine = useTranslations('mine')
-  const meId = useProfile().data?.id
+  const profile = useProfile().data
+  const meId = profile?.id
+  const mod = useModeratorDelete()
   const own = useOwnPostActions()
   const ownerProps = { onMarkDone: own.askDone, onRepost: own.repost, onDelete: own.askDelete }
 
@@ -150,6 +153,7 @@ export function FeedScreen() {
                   now={feed.now}
                   onContact={(r) => setContactRideVM(r)}
                   onReport={(r) => setReportRideVM(r)}
+                  onModDelete={profile?.isModerator ? mod.ask : undefined}
                   owner={meId && ride.posterId === meId ? ownerProps : undefined}
                 />
               </div>
@@ -180,6 +184,17 @@ export function FeedScreen() {
           danger={own.confirm.kind === 'delete'}
           onConfirm={own.runConfirm}
           onClose={own.closeConfirm}
+        />
+      )}
+
+      {mod.target && (
+        <ConfirmSheet
+          title={tMine('confirm.deleteTitle')}
+          body={tMine('confirm.deleteBody')}
+          confirmLabel={tMine('confirm.deleteCta')}
+          danger
+          onConfirm={mod.run}
+          onClose={mod.close}
         />
       )}
 

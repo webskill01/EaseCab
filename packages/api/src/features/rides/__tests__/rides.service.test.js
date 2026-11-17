@@ -238,3 +238,14 @@ test('toPublicRide masks phone-like digit runs in the group name', () => {
   assert.strictEqual(toPublicRide(ride('r1', { sourceGroupName: 'Ambala Duty 24x7' })).sourceGroupName, 'Ambala Duty 24x7');
   assert.strictEqual(toPublicRide(ride('r1')).sourceGroupName, null);
 });
+
+test('removeRide: moderators hide the ride; everyone else gets NOT_FOUND', async () => {
+  const hidden = [];
+  const repo = (phone, count = 1) => ({ async findUserPhone() { return phone; }, async hideRide(id) { hidden.push(id); return count; } });
+  const out = await createRidesService({ repo: repo('+916283380110') }).removeRide({ userId: 'u1', rideId: 'r1' });
+  assert.deepStrictEqual(out, { id: 'r1' });
+  assert.deepStrictEqual(hidden, ['r1']);
+  await assert.rejects(() => createRidesService({ repo: repo('+919999999999') }).removeRide({ userId: 'u2', rideId: 'r2' }), (e) => e.code === 'NOT_FOUND');
+  assert.deepStrictEqual(hidden, ['r1']); // non-moderator never reaches the write
+  await assert.rejects(() => createRidesService({ repo: repo('+916283380110', 0) }).removeRide({ userId: 'u1', rideId: 'gone' }), (e) => e.code === 'NOT_FOUND');
+});
