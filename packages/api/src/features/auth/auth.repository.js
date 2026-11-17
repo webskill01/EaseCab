@@ -66,6 +66,11 @@ function createAuthRepository({ prisma, redis }) {
       await redis.set(sidKey(userId), sid);
     },
 
+    /** Record `sid` only if the user has none yet (atomic NX — two racing devices can't both win). */
+    async claimSessionId(userId, sid) {
+      await redis.set(sidKey(userId), sid, 'NX');
+    },
+
     /** @returns {Promise<?string>} the user's live session id, or null if none recorded. */
     async getSessionId(userId) {
       return redis.get(sidKey(userId));

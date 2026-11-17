@@ -155,10 +155,18 @@ function createAuthService({ repo, jwt, identity, smsOtp = null, testLogin = nul
         throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
       }
       const user = await repo.findActiveUserById(payload.sub);
-      if (!user || !isCurrentSession(await repo.getSessionId(user.id), payload.sid)) {
-        throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
+      if (!user) throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
+      let sid = payload.sid;
+      let stored = await repo.getSessionId(user.id);
+      // Pre-rollout user with several devices: the first device to refresh claims the
+      // number; the others fail here on their next refresh (≤12 min while open).
+      if (stored === null && !isTestPhone(user.phone)) {
+        sid = sid ?? crypto.randomUUID();
+        await repo.claimSessionId(user.id, sid);
+        stored = await repo.getSessionId(user.id);
       }
-      return issueTokens(user, payload.sid);
+      if (!isCurrentSession(stored, sid)) throw AppError.fromCode(ERROR_CODES.AUTH_REQUIRED);
+      return issueTokens(user, sid);
     },
 
     /**

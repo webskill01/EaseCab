@@ -22,6 +22,7 @@ function baseRepo(overrides = {}) {
     restoreUser: async (id) => ({ id, isDeleted: false }),
     setSessionId: async () => {},
     getSessionId: async () => null,
+    claimSessionId: async () => {},
     ...overrides,
   };
 }
@@ -236,4 +237,30 @@ test('isCurrentSession: no stored sid (legacy/reviewer) passes, mismatch fails',
   assert.strictEqual(isCurrentSession('a', 'a'), true);
   assert.strictEqual(isCurrentSession('a', 'b'), false);
   assert.strictEqual(isCurrentSession('a', undefined), false); // pre-rollout token after a new login
+});
+
+test('refresh: first pre-rollout device claims the number, a second one is logged out', async () => {
+  const store = new Map();
+  const repo = baseRepo({
+    getSessionId: async (id) => store.get(id) ?? null,
+    claimSessionId: async (id, sid) => { if (!store.has(id)) store.set(id, sid); },
+  });
+  const signed = [];
+  const jwt = { ...jwtStub, verifyRefresh: () => ({ sub: 'u1' }), signAccess: (p) => { signed.push(p); return 'a'; } };
+  const svc = createAuthService({ repo, jwt, identity: null });
+  await svc.refresh('device-A'); // legacy token, no sid → claims
+  assert.strictEqual(signed[0].sid, store.get('u1'));
+  await assert.rejects(svc.refresh('device-B'), (e) => e.code === ERROR_CODES.AUTH_REQUIRED);
+});
+
+test('refresh: reviewer number never claims (stays multi-device)', async () => {
+  let claimed = false;
+  const repo = baseRepo({
+    findActiveUserById: async () => ({ id: 'u1', phone: '+910000000000' }),
+    claimSessionId: async () => { claimed = true; },
+  });
+  const jwt = { ...jwtStub, verifyRefresh: () => ({ sub: 'u1' }) };
+  const svc = createAuthService({ repo, jwt, identity: null, testLogin: { phone: '+910000000000', code: '123456' } });
+  await svc.refresh('t');
+  assert.strictEqual(claimed, false);
 });
