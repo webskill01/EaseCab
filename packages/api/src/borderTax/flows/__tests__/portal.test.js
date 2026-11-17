@@ -15,6 +15,8 @@ test('portalError: an expired-PUC refusal gets its own code; other portal errors
   const fit = 'Fitness Validity Must Be Greater Than Or Equal Current Date..\nPlease renew your vehicle Fitness\nOK'; // live, 2026-11-11
   assert.strictEqual(portalError(F.PORTAL_ERROR, fit).failureCode, F.FITNESS_EXPIRED);
   assert.strictEqual(portalError(F.PORTAL_ERROR, 'Seating capacity should be 7 to 17.\nOK').failureCode, F.SEAT_CLASS_MISMATCH); // live HR 2026-11-16
+  const zero = 'i\nMV Tax Calculation of Road Tax amount is zero, it should not be. Please check details.\nOK'; // live HR 2026-11-17
+  assert.strictEqual(portalError(F.PORTAL_ERROR, zero).failureCode, F.ALREADY_PAID);
 });
 
 // Declaration captcha as checkpostv4 draws it (main.js, 2026-11-13): random code, canvas, checked in-page.
@@ -60,4 +62,15 @@ test('vahanRefusal: no-record and same-state answers get their own codes; a wron
   assert.throws(() => vahanRefusal(noData), (e) => e.failureCode === F.VEHICLE_NOT_FOUND);
   assert.throws(() => vahanRefusal('Same State Vehicle not allowed'), (e) => e.failureCode === F.SAME_STATE);
   assert.doesNotThrow(() => vahanRefusal('Invalid Captcha'));
+});
+
+test('entryUrl: statecd decodes the way checkpostv4 reads it (parivahandecryptEncData, 2026-11-17)', () => {
+  const { entryUrl } = require('../checkpostv4');
+  const decode = (url) => { // the portal's own decoder, ported
+    const hex = Buffer.from(decodeURIComponent(url.match(/statecd=([^#&]+)/)[1]), 'base64').toString();
+    const txt = hex.match(/../g).map((h) => String.fromCharCode(parseInt(h, 16))).join('');
+    return txt.startsWith('7c606d287b6d6b7') ? txt.slice(15) : txt;
+  };
+  for (const st of ['HR', 'HP', 'UP', 'PB']) assert.strictEqual(decode(entryUrl(st)), st);
+  assert.match(entryUrl('HR'), /^https:\/\/services\.parivahan\.gov\.in\/checkpostv4\/#\/admin\/taxHome\?statecd=/);
 });

@@ -20,7 +20,8 @@ const { portalError, visibleBtn, alertText, solveCaptcha, VERDICT_MS } = require
 const { bankHandoff } = require('./bank');
 const { TREASURY, treasuryUp } = require('./treasury');
 
-const ENTRY_URL = 'https://parivahan.gov.in/en/node/579';
+const ENTRY_URL = 'https://services.parivahan.gov.in/checkpostv4/#/admin/taxHome?statecd=';
+const ENTRY_SALT = '7c606d287b6d6b7'; // checkpostv4 main.js parivahandecryptEncData prefix
 const SERVICE_TAX = '/public/payment/taxCollectionOnline';
 const ALREADY_PAID = /already paid/i;
 const PENDING = /pending for verification/i; // an earlier unpaid attempt locks the vehicle
@@ -49,14 +50,24 @@ async function setDateTime(page, sel, value) {
   await page.locator(sel).dispatchEvent('change');
 }
 
-/** The portal sometimes bounces to the parivahan home page right after loading (its own JS error) — retry. */
+/**
+ * checkpostv4's own state hand-off (admin/taxHome reads `statecd` = base64(hex(salt + state)), from its
+ * bundle) — straight there, not via parivahan.gov.in/en/node/579, which reset every connection
+ * 16:56–17:53 IST 2026-11-17 while checkpostv4 stayed up (3 HR filings lost).
+ */
+function entryUrl(stateCd) {
+  const code = Buffer.from(Buffer.from(`${ENTRY_SALT}${stateCd}`).toString('hex')).toString('base64');
+  return `${ENTRY_URL}${encodeURIComponent(code)}`;
+}
+
+/** Opens the tax form for the state; retries a page that loads without its service list. */
 async function openForm(page, stateCd) {
   for (let attempt = 1; ; attempt += 1) {
-    await page.goto(ENTRY_URL, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await page.selectOption('select', stateCd);
-    const ok = await page.waitForSelector('select[name=serviceName]', { timeout: 20_000 }).then(() => true, () => false);
-    if (ok && page.url().includes('checkpostv4')) break;
-    if (attempt >= OPEN_TRIES) throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, 'kept bouncing to the home page');
+    await page.goto(entryUrl(stateCd), { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(() => {});
+    const ok = await page.waitForFunction((v) => [...(document.querySelector('select[name=serviceName]')?.options || [])]
+      .some((o) => o.value === v), SERVICE_TAX, { timeout: 20_000 }).then(() => true, () => false);
+    if (ok) break;
+    if (attempt >= OPEN_TRIES) throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, `checkpost form never loaded (${page.url().slice(0, 80)})`);
   }
   await page.selectOption('select[name=serviceName]', SERVICE_TAX);
   await visibleBtn(page, 'Go').click();
@@ -258,4 +269,4 @@ async function fileCheckpost(page, job, io) {
   throw portalError(BORDER_TAX_FAILURE.NO_QR, `no in-app QR page (bank ${new URL(handoff.action).hostname})`);
 }
 
-module.exports = { fileCheckpost, istInput, portalWindow, fromPortal, vahanRefusal };
+module.exports = { fileCheckpost, istInput, portalWindow, fromPortal, vahanRefusal, entryUrl };
