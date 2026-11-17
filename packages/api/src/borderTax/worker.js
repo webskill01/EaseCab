@@ -71,7 +71,7 @@ async function main() {
     const { staleTokens } = await pushSender.sendToTokens({ tokens, data: { type: PAID_PUSH.TYPE, source: PAID_PUSH.SOURCE, title: PAID_PUSH.TITLE, body, url: `${PAID_PUSH.CLICK_PATH}?open=${req.id}`, action: PAID_PUSH.ACTION } });
     await pushRepo.pruneTokens(staleTokens);
   };
-  const runner = createRunner({ service, repo, newPage, logger, r2, alert, onLatePaid });
+  const runner = createRunner({ service, repo, newPage, logger, r2, alert, onLatePaid, isStopping: () => stopping });
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));
   sweep();
   const sweepTimer = setInterval(sweep, RECEIPT_SWEEP_MS);
@@ -106,7 +106,7 @@ async function main() {
   })();
 
   const shutdown = async (signal) => {
-    logger.info({ signal }, 'border tax worker stopping'); // in-flight jobs are swept on next boot
+    logger.info({ signal }, 'border tax worker stopping'); // in-flight jobs are swept on next boot (re-queued if cut before the quote)
     stopping = true;
     clearInterval(sweepTimer);
     clearInterval(watchTimer);

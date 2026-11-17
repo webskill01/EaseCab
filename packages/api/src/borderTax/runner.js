@@ -41,7 +41,7 @@ function toJob(req) {
  * @param {Record<string, Function>} [deps.flows]
  * @param {(ms: number) => Promise<void>} [deps.sleep]
  */
-function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, onLatePaid = async () => {}, clearLocks = clearPending, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, onLatePaid = async () => {}, isStopping = () => false, clearLocks = clearPending, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
   const until = (sec) => String(Date.now() + sec * 1000);
 
   function makeIo(id, conn) {
@@ -114,6 +114,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
     let page = null;
     let atBank = false; // an unpaid attempt left on the portal locks the vehicle in this state → clear it later
     let paid = false;
+    let interrupted = false;
     try {
       page = await newPage({ stateCd: req.stateCd, sid: id }); // inside try: a dead browser fails the filing instead of leaving the driver on a spinner
       logger.info({ id, stateCd: req.stateCd }, 'border tax filing started'); // step timings = log time deltas from here
@@ -124,13 +125,15 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
       atBank = true;
       paid = await collect(id, req, result, io);
     } catch (err) {
+      // shutdown closed the browser under this filing (deploy restart): the boot sweep re-queues or fails it
+      if (isStopping()) return void (interrupted = true, logger.info({ id, err: err.message }, 'border tax filing interrupted by shutdown'));
       const failureCode = err.failureCode || F.PORTAL_ERROR;
       logger.warn({ id, failureCode, err: err.message }, 'border tax filing stopped');
       if (ALERT_ON.has(failureCode) && err.message !== STOPPED) alert(`${req.stateCd} filing ${id.slice(0, 8)} failed: ${failureCode} (${err.message.slice(0, 200)})`);
       await service.fail(id, failureCode);
       atBank ||= BANK_STEP.has(failureCode) || Boolean(err.atBank);
     } finally {
-      if (atBank && !paid) await service.scheduleUnlock(id).catch((e) => logger.warn({ id, err: e.message }, 'unlock schedule failed'));
+      if (atBank && !paid && !interrupted) await service.scheduleUnlock(id).catch((e) => logger.warn({ id, err: e.message }, 'unlock schedule failed'));
       await page?.context().close().catch((e) => logger.warn({ id, err: e.message }, 'context close failed'));
     }
   }

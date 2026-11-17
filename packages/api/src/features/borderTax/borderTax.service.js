@@ -23,6 +23,7 @@ const toUnlock = (u) => (u.status ? { status: u.status, at: u.at ? new Date(Numb
  * is refused. HANDED_OFF is final: the driver may be paying the govt on the bank page.
  */
 const FROM = Object.freeze({
+  [S.QUEUED]: [S.FILLING, S.AWAITING_CAPTCHA], // restart before the quote only (recoverAfterRestart)
   [S.FILLING]: [S.QUEUED, S.AWAITING_CAPTCHA],
   [S.AWAITING_CAPTCHA]: [S.FILLING],
   [S.HANDED_OFF]: [S.FILLING],
@@ -43,6 +44,13 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
    * Compare-and-set status change along FROM.
    * @returns {Promise<boolean>} false if the row was no longer in an allowed source status
    */
+  /** Unknown progress (job hash gone) counts as past the quote — never re-run a filing that may have reached the bank. */
+  async function beforeQuote(id, status) {
+    if (!IN_FLIGHT.includes(status)) return false;
+    const { progress } = await repo.getJob(id);
+    return progress !== undefined && Number(progress) < BORDER_TAX.REQUEUE_BELOW_PROGRESS;
+  }
+
   async function move(id, to, fields = {}) {
     if (!FROM[to]) throw new Error(`border tax: no transition into ${to}`);
     const moved = await repo.transition(id, FROM[to], to, fields);
@@ -267,13 +275,15 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     },
 
     /**
-     * Worker boot: browser sessions died with the old process. In-flight rows fail, QUEUED
-     * rows are re-queued — the QUEUED→FILLING compare-and-set makes a duplicate entry harmless.
+     * Worker boot: browser sessions died with the old process. QUEUED rows, and filings cut before
+     * the tax was quoted (nothing sent to the portal), are re-queued — the QUEUED→FILLING
+     * compare-and-set makes a duplicate entry harmless. Other in-flight rows fail.
      */
     async recoverAfterRestart() {
       const rows = await repo.listByStatus([...RUNNING]);
       for (const { id, status } of rows) {
         if (status === S.QUEUED) await repo.enqueue(id);
+        else if (await beforeQuote(id, status)) { if (await move(id, S.QUEUED)) await repo.enqueue(id); }
         // the PayU session died with the browser: the driver may or may not have paid → support checks
         else if (status === S.AWAITING_PAYMENT) {
           await move(id, S.FAILED, { failureCode: F.PAYMENT_UNKNOWN });

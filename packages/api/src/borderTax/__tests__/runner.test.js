@@ -226,3 +226,11 @@ test('unlock: errors retry, then give up with an alert', async () => {
   await u.unlock();
   assert.deepStrictEqual([u.unlocks.b1.status, u.alerts.length, u.closed()], ['failed', 1, 3]);
 });
+
+test('worker shutting down: the filing the closed browser broke is left for the boot sweep, not failed', async () => {
+  const t = setup();
+  const flow = async () => { throw new Error('elementHandle.screenshot: Element is not attached to the DOM'); }; // live 2026-11-17 deploy restart
+  await createRunner({ ...t, logger, flows: { HR: flow }, isStopping: () => true }).run('b1', {});
+  assert.strictEqual(t.rows.b1.status, 'filling');
+  assert.deepStrictEqual(t.due, {});
+});
