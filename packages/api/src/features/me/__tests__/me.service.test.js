@@ -83,3 +83,9 @@ test('deleteAccount soft-deletes the caller and reports deleted', async () => {
   assert.deepStrictEqual(calls, ['u1']);
   assert.deepStrictEqual(out, { deleted: true });
 });
+
+test('getProfile flags the moderator numbers only', async () => {
+  const svc = (phone) => createMeService({ repo: { getProfile: async () => ({ id: 'u1', phone }) } });
+  assert.strictEqual((await svc('+916284992669').getProfile('u1')).isModerator, true);
+  assert.strictEqual((await svc('+919999999999').getProfile('u1')).isModerator, false);
+});

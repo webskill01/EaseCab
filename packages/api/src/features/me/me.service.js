@@ -1,6 +1,6 @@
 'use strict';
 
-const { isProfileComplete, VERIFICATION_STATUS, VERIFICATION_DOC_TYPE } = require('@easecab/shared');
+const { isProfileComplete, VERIFICATION_STATUS, VERIFICATION_DOC_TYPE, isRideModerator } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
 /**
@@ -33,7 +33,7 @@ const PURPOSE_FIELD = Object.freeze({
 /** Client-safe profile shape: editable fields + derived completeness + verification block. */
 function toPublicProfile(u) {
   return {
-    id: u.id, phone: u.phone, name: u.name ?? null, bio: u.bio ?? null,
+    id: u.id, phone: u.phone, name: u.name ?? null, bio: u.bio ?? null, isModerator: isRideModerator(u.phone),
     baseCity: u.baseCity ?? null, vehicleType: u.vehicleType ?? null,
     profilePicUrl: u.profilePicUrl ?? null, languagesSpoken: u.languagesSpoken ?? [],
     experience: u.experience ?? null, workingCity: u.workingCity ?? null,
