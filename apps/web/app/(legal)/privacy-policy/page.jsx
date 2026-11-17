@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
     <article className="prose prose-gray max-w-none">
       <h1>Privacy Policy</h1>
       <p className="text-sm text-gray-500">
-        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: September 23, 2026
+        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: November 17, 2026
       </p>
 
       <h2>1. Introduction</h2>
@@ -54,6 +54,16 @@ export default function PrivacyPolicy() {
         status, plan period, and Cashfree order and payment identifiers.
       </p>
 
+      <h3>2.4A Border Tax Filings</h3>
+      <p>
+        If you file border tax through EaseCab, we store the vehicle number and trip details you
+        enter, the status of the filing, the tax amount the portal quotes, and the government
+        receipt number. The receipt file itself is deleted 24 hours after the tax validity ends.
+        We send these details to the government Parivahan checkpost portal only to file
+        the tax you asked for. You pay the government directly through your own UPI app. We never
+        see your UPI or bank details.
+      </p>
+
       <h3>2.5 Usage Data</h3>
       <p>
         We collect standard server logs including IP address, device type, operating system,
@@ -87,7 +97,7 @@ export default function PrivacyPolicy() {
           Privacy Policy applies to all payment data.
         </li>
         <li>
-          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures. Uploads are made through time-limited presigned URLs only — the storage bucket
+          <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures and border tax receipts (receipts are deleted 24 hours after the tax validity ends). Uploads are made through time-limited presigned URLs only — the storage bucket
           is never publicly accessible.
         </li>
       </ul>
@@ -105,6 +115,10 @@ export default function PrivacyPolicy() {
         <li>
           <strong>Payment records:</strong> retained for 7 years as required under Indian financial
           regulations.
+        </li>
+        <li>
+          <strong>Border tax receipts:</strong> the receipt file is deleted 24 hours after the tax
+          validity ends; the filing record and receipt number stay with your account.
         </li>
         <li>
           <strong>Server logs:</strong> retained for 30 days, then automatically deleted.

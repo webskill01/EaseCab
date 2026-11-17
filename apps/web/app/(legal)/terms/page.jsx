@@ -9,7 +9,7 @@ export default function TermsAndConditions() {
     <article className="prose prose-gray max-w-none">
       <h1>Terms &amp; Conditions</h1>
       <p className="text-sm text-gray-500">
-        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: November 1, 2026
+        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: November 17, 2026
       </p>
 
       <h2>1. Acceptance of Terms</h2>
@@ -130,6 +130,42 @@ export default function TermsAndConditions() {
         <li>City-based filtering and targeted push notifications for new leads</li>
         <li>In-app contact (phone number reveal) for subscribed members</li>
         <li>Ability to post your own rides (24-hour visibility)</li>
+      </ul>
+
+      <h2>6A. Border Tax Filing</h2>
+      <p>
+        EaseCab can fill the state border (checkpost) tax form for you on the government Parivahan
+        checkpost portal, in the states shown in the app. When you use it:
+      </p>
+      <ul>
+        <li>
+          EaseCab only fills the form, using the vehicle number and trip details you enter
+          (state, checkpost, dates, seats, permit type and distance). The portal reads your owner
+          and vehicle details from Vahan.
+        </li>
+        <li>
+          You pay the tax yourself, from your own UPI app, directly to the state treasury. EaseCab
+          does not collect, hold or receive the tax amount and charges no fee on it.
+        </li>
+        <li>
+          The receipt is issued by the government portal. Its records are final. EaseCab keeps a
+          copy of the receipt in the app only until 24 hours after the tax validity ends, then
+          deletes it. Save it to your phone if you need it later.
+        </li>
+        <li>
+          You are responsible for the details you enter and for your vehicle&apos;s papers
+          (registration class, PUC, fitness, permit). If the portal refuses a filing for these
+          reasons, no money is taken.
+        </li>
+        <li>
+          Do not pay again on the portal for a filing you have already paid. A payment you start on
+          the portal outside EaseCab can lock the vehicle on the portal for a while.
+        </li>
+        <li>
+          EaseCab is not affiliated with, authorised by or acting for any government department.
+          Tax amounts, rules and portal availability are set by each state and may change without
+          notice.
+        </li>
       </ul>
 
       <h2>7. What EaseCab Does Not Guarantee</h2>

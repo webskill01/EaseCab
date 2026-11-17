@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
-import { Shield, Crown, BellEdit, ChevR, Pin, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock, Ban, Bolt, Whatsapp } from '@/components/ui/icons'
+import { Shield, Crown, BellEdit, ChevR, Pin, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock, Ban, Bolt, Gift } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { env } from '@/config/env'
 import { LOCALE_NAMES } from '@/i18n/config'
@@ -168,7 +168,7 @@ export function ProfileScreen() {
           onClick={() => router.push('/verify?intent=driver')} /> : null}
         {env.NEXT_PUBLIC_VERIFICATION_ENABLED ? <NavRow icon={<Pencil size={16} />} tone="blue" label={t('nav.editReverify')} value={t('edit')} onClick={() => router.push('/verify?intent=center')} /> : null}
         <NavRow icon={<Crown size={16} />} tone={memTone || 'warning'} label={t('nav.membership')} value={memValue} valueTint={memTint} onClick={() => router.push('/membership')} />
-        {referrals?.enabled && <NavRow icon={<Whatsapp size={18} />} tone="success" label={t('nav.refer')} value={t('nav.referValue')} valueTint="text-ec-success" onClick={() => router.push('/refer')} />}
+        {referrals?.enabled && <NavRow icon={<Gift size={18} />} tone="success" label={t('nav.refer')} value={t('nav.referValue')} valueTint="text-ec-success" onClick={() => router.push('/refer')} />}
         <NavRow icon={<BellEdit size={18} />} tone="blue" label={t('nav.notifications')} value={alertCityCount > 0 ? t('nav.notificationsCount', { count: alertCityCount }) : undefined} onClick={() => router.push('/notifications')} />
         <NavRow icon={<Globe size={18} />} tone="blue" label={t('nav.language')} value={LOCALE_NAMES[locale] ?? locale} onClick={() => router.push('/profile/language')} last />
       </nav>
