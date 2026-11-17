@@ -182,5 +182,12 @@
     "emptyHint": "People you block from chats will appear here.",
     "unblock": "Unblock",
     "unblocking": "Unblocking…"
+  },
+  "gate": {
+    "title": "Just 1 step left!",
+    "sub": "Complete your profile so drivers know who you are and trust your duties. Takes 1 minute.",
+    "progress": "{done} of {total} done",
+    "cta": "Complete profile",
+    "later": "Later"
   }
 }

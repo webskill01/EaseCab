@@ -40,6 +40,7 @@ function createMemberSyncService({ repo }) {
         const agg = byUser.get(s.userId) || { paidCount: 0, last: null };
         return {
           phone: shortPhone(s.user.phone),
+          name: s.user.name || null,
           status: s.status,
           expiresAt: s.expiresAt ? s.expiresAt.toISOString() : null,
           paidCount: agg.paidCount,

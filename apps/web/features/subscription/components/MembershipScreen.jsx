@@ -11,6 +11,8 @@ import { PaymentHistory } from './PaymentHistory'
 import { PlanPicker } from './PlanPicker'
 import { PLANS, DEFAULT_PLAN_ID, RENEW_PLAN_ID, rupees } from '../lib/plans'
 import { ScreenSkeleton } from '@/components/ui/Skeleton'
+import { useProfile } from '@/features/profile/hooks/useProfile'
+import { ProfileSteps } from '@/features/profile/components/ProfileGate'
 
 const CTA_KEY = Object.freeze({ none: 'subscribe', active: 'renew', ending: 'renew', expired: 'renew' })
 
@@ -44,6 +46,7 @@ export function MembershipScreen() {
   const t = useTranslations('membership')
   const { data: sub, isLoading, isError } = useMembership()
   const checkout = useCheckout()
+  const profile = useProfile().data
   const [picked, setPicked] = useState(null)
 
   if (isLoading) return <ScreenSkeleton />
@@ -72,7 +75,13 @@ export function MembershipScreen() {
           <p className="text-[17px] font-extrabold text-ec-ink">{t('success.title')}</p>
           <p className="mt-1 text-[13px] font-medium text-ec-ink60">{t('success.body')}</p>
         </section>
-      ) : (
+      ) : null}
+      {checkout.succeeded && profile && !profile.profileComplete ? (
+        <section className="rounded-2xl border border-ec-line bg-white p-4">
+          <ProfileSteps profile={profile} sub={t('success.profileNext')} />
+        </section>
+      ) : null}
+      {checkout.succeeded ? null : (
         <>
           <StatusCard state={card} note={note} t={t} />
           <PlanPicker value={planId} onChange={setPicked} t={t} />

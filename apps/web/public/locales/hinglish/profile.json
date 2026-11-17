@@ -182,5 +182,12 @@
     "emptyHint": "Jinhe aap chat se block karte ho woh yahan dikhenge.",
     "unblock": "Unblock",
     "unblocking": "Unblock ho raha…"
+  },
+  "gate": {
+    "title": "Bas 1 step baaki!",
+    "sub": "Profile poori karein — drivers aapko naam aur photo se pehchanenge aur aapki duties par bharosa karenge. Sirf 1 minute.",
+    "progress": "{total} mein se {done} poore",
+    "cta": "Profile poori karein",
+    "later": "Baad mein"
   }
 }

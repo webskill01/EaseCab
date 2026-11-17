@@ -14,7 +14,7 @@ function createMemberSyncRepository({ prisma }) {
     /**
      * Subscriptions changed since `since` (all when omitted), optionally only for these
      * full phones (+91…). Takes MAX_ROWS + 1 so the caller can tell a truncated page.
-     * @returns {Promise<Array<{ userId: string, status: string, expiresAt: Date|null, user: { phone: string } }>>}
+     * @returns {Promise<Array<{ userId: string, status: string, expiresAt: Date|null, user: { phone: string, name: string|null } }>>}
      */
     async listSubscriptions({ since, phones }) {
       const where = {};
@@ -24,7 +24,7 @@ function createMemberSyncRepository({ prisma }) {
         where,
         orderBy: { updatedAt: 'asc' },
         take: MEMBER_SYNC.MAX_ROWS + 1,
-        select: { userId: true, status: true, expiresAt: true, user: { select: { phone: true } } },
+        select: { userId: true, status: true, expiresAt: true, user: { select: { phone: true, name: true } } },
       });
     },
 

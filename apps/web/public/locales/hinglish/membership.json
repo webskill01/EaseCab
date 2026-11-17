@@ -25,7 +25,8 @@
   },
   "success": {
     "title": "Sab set hai!",
-    "body": "Aapki membership active hai — unlimited access enjoy karo."
+    "body": "Aapki membership active hai — unlimited access enjoy karo.",
+    "profileNext": "Ab bas profile poori karein, taaki drivers aapko pehchanein."
   },
   "history": {
     "title": "Payment history",

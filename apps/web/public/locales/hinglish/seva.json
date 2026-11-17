@@ -24,7 +24,8 @@
     "step2": "Phir <b>{number}</b> pe WhatsApp message karo.",
     "join": "Group join karo",
     "message": "Approval ke liye message karo",
-    "prefill": "Hi, maine PUNJAB TAXI & EASECAB WhatsApp group mein join request bhej di hai. Kindly meri request approve kar do.\nName: {name}\nNumber: {phone}"
+    "prefill": "Hi, maine PUNJAB TAXI & EASECAB WhatsApp group mein join request bhej di hai. Kindly meri request approve kar do.\nName: {name}\nNumber: {phone}",
+    "needProfile": "Group join karne se pehle profile poori karein — admin aapko naam se approve karte hain."
   },
   "bt": {
     "title": "Border Tax",

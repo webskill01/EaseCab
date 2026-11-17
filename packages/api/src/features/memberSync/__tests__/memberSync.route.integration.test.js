@@ -84,7 +84,7 @@ test('GET /memberships returns 10-digit phones with expiry and payment info', as
   assert.strictEqual(res.status, 200);
   assert.ok(seen.subWhere.updatedAt.gte instanceof Date, 'since becomes a Date filter');
   assert.deepStrictEqual(res.body.data.members, [{
-    phone: '9876543210', status: 'active', expiresAt: '2026-11-16T10:00:00.000Z',
+    phone: '9876543210', name: null, status: 'active', expiresAt: '2026-11-16T10:00:00.000Z',
     paidCount: 1, lastPaidAt: '2026-10-16T10:00:00.000Z', lastAmount: 149,
   }]);
   assert.deepStrictEqual(res.body.meta, { total: 1, truncated: false });

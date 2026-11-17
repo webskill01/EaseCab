@@ -25,7 +25,8 @@
   },
   "success": {
     "title": "You're all set!",
-    "body": "Your membership is active — enjoy unlimited access."
+    "body": "Your membership is active — enjoy unlimited access.",
+    "profileNext": "Next: complete your profile so drivers recognise you."
   },
   "history": {
     "title": "Payment history",

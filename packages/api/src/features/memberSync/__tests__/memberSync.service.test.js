@@ -28,7 +28,7 @@ function fakeRepo({ subs = [], pays = [] } = {}) {
 test('listMemberships shapes each sub into a 10-digit phone with count and latest payment', async () => {
   const repo = fakeRepo({
     subs: [
-      { userId: 'u1', status: 'active', expiresAt: d('2026-11-16T10:00:00Z'), user: { phone: '+919876543210' } },
+      { userId: 'u1', status: 'active', expiresAt: d('2026-11-16T10:00:00Z'), user: { phone: '+919876543210', name: 'Gurpreet' } },
       { userId: 'u2', status: 'expired', expiresAt: null, user: { phone: '+919123456789' } },
     ],
     pays: [
@@ -41,8 +41,8 @@ test('listMemberships shapes each sub into a 10-digit phone with count and lates
   assert.strictEqual(out.truncated, false);
   assert.ok(!Number.isNaN(Date.parse(out.now)));
   assert.deepStrictEqual(out.members, [
-    { phone: '9876543210', status: 'active', expiresAt: '2026-11-16T10:00:00.000Z', paidCount: 2, lastPaidAt: '2026-10-16T10:00:00.000Z', lastAmount: 149 },
-    { phone: '9123456789', status: 'expired', expiresAt: null, paidCount: 0, lastPaidAt: null, lastAmount: null },
+    { phone: '9876543210', name: 'Gurpreet', status: 'active', expiresAt: '2026-11-16T10:00:00.000Z', paidCount: 2, lastPaidAt: '2026-10-16T10:00:00.000Z', lastAmount: 149 },
+    { phone: '9123456789', name: null, status: 'expired', expiresAt: null, paidCount: 0, lastPaidAt: null, lastAmount: null },
   ]);
 });
 

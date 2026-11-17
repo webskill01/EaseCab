@@ -5,6 +5,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Whatsapp, Chat } from '@/components/ui/icons'
 import { useProfile } from '@/features/profile/hooks/useProfile'
+import { ProfileSteps } from '@/features/profile/components/ProfileGate'
 import { WA_GROUP_URL, WA_APPROVAL_DISPLAY, waApprovalHref } from '../lib/waGroup'
 
 const BTN = 'flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-center text-[14px] font-extrabold leading-tight transition-transform active:scale-[0.98]'
@@ -24,7 +25,9 @@ function Step({ n, children, action }) {
 
 /**
  * "Humara WhatsApp group" popup: the invite link plus the approval step (the group is
- * invite-only — after the join request the driver messages the admin number).
+ * invite-only — after the join request the driver messages the admin number). An
+ * incomplete profile sees the profile steps instead: the approval message and the
+ * manager bots' templates need the name.
  * @param {{ onClose: () => void }} props
  */
 export function WaGroupSheet({ onClose }) {
@@ -32,6 +35,13 @@ export function WaGroupSheet({ onClose }) {
   const tc = useTranslations('common')
   const profile = useProfile().data
   const prefill = t('prefill', { name: profile?.name || '', phone: profile?.phone ? String(profile.phone).replace(/^\+91/, '') : '' })
+  if (profile && !profile.profileComplete) {
+    return (
+      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('title')}>
+        <ProfileSteps profile={profile} sub={t('needProfile')} />
+      </BottomSheet>
+    )
+  }
   return (
     <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('title')}>
       <SheetTitle icon={<Whatsapp size={22} />} tone="success" title={t('title')} sub={t('sub')} />
@@ -50,7 +60,7 @@ export function WaGroupSheet({ onClose }) {
         <Step
           n={2}
           action={
-            <a href={waApprovalHref(prefill)} target="_blank" rel="noopener noreferrer" className={`${BTN} border-[1.5px] border-ec-wa bg-white text-ec-successTx`}>
+            <a href={waApprovalHref(prefill)} target="_blank" rel="noopener noreferrer" className={`${BTN} bg-ec-wa text-white`}>
               <Chat size={18} />{t('message')}
             </a>
           }
