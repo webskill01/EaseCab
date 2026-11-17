@@ -10,11 +10,13 @@
     "free": "Free",
     "waGroup": "WhatsApp Group",
     "new": "New",
-    "soon": "Coming soon"
+    "soon": "Coming soon",
+    "refer": "Refer & Earn"
   },
   "strip": {
     "btSub": "Free for members",
-    "waSub": "See rides on WhatsApp"
+    "waSub": "See rides on WhatsApp",
+    "referSub": "1 month free"
   },
   "wa": {
     "title": "Our WhatsApp Group",
@@ -107,7 +109,7 @@
       "already_paid": "Tax is already paid for these dates. Pick another start date.",
       "road_tax_expired": "Your vehicle's road tax has expired. Renew it first.",
       "same_state": "This vehicle is registered in this state, so no border tax is needed here. Nothing was charged.",
-      "no_tax_mode": "The portal has no tax option for this vehicle at this border.",
+      "no_tax_mode": "The portal has no tax option for this vehicle at this border. Check on your RC that the vehicle is registered as a taxi (MOTOR CAB / MAXI CAB). Nothing was charged.",
       "bank_down": "The state govt payment site is down right now. Nothing was charged and your vehicle isn't blocked. Please try again later.",
       "no_handoff": "The portal didn't open the bank page. Please try again.",
       "pucc_expired": "Your vehicle's pollution certificate (PUC) has expired. Renew it, then file again.",
@@ -193,7 +195,7 @@
       "sending": "Asking…",
       "error": "Couldn't start. Try again in a minute.",
       "queued": "Clearing the lock on the govt portal now…",
-      "waiting": "The portal frees this vehicle at {time}. We will clear it then.",
+      "waiting": "The portal frees this vehicle at {time}. We will clear it then. If you already paid on the portal yourself, don't pay again.",
       "cleared": "Lock cleared. You can file again now.",
       "paid": "The earlier payment went through. Receipt no. {no}",
       "failed": "We couldn't clear the lock. Please contact support."

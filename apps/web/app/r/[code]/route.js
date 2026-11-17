@@ -46,7 +46,7 @@ var standalone = navigator.standalone || matchMedia('(display-mode: standalone)'
 var ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPadOS says Mac
 var android = /Android/i.test(ua) && !standalone;
 if (ios && !standalone) { document.getElementById('open').hidden = true; document.getElementById('ios').hidden = false; }
-else location.replace(android ? ${js(market)} : ios ? '/feed' : '/');
+else location.replace(android ? ${js(market)} : standalone ? '/feed' : '/'); // standalone = installed app (iPhone home screen or Android app link)
 </script></body></html>`
 
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } })

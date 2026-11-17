@@ -6,7 +6,7 @@ import {
   IconSearch, IconPlus, IconDotsVertical, IconPhoto, IconListDetails, IconCar, IconCarSuv, IconBus,
   IconAlertTriangle, IconArrowForwardUp, IconLayoutGrid, IconRoad, IconReceipt, IconShieldCheck,
   IconReceiptTax, IconMinus, IconExternalLink, IconLoader2, IconCircleX, IconCalendarCheck,
-  IconBuildingBank, IconCalendarEvent, IconRosetteDiscountCheckFilled, IconArrowRight, IconChevronDown, IconStopwatch,
+  IconBuildingBank, IconCalendarEvent, IconRosetteDiscountCheckFilled, IconArrowRight, IconChevronDown, IconStopwatch, IconGift,
 } from '@tabler/icons-react'
 
 /**
@@ -80,6 +80,7 @@ export const Calendar = ic(IconCalendarEvent, 18)
 export const Verified = ic(IconRosetteDiscountCheckFilled, 22)
 export const ArrowR = ic(IconArrowRight, 18)
 export const Timer = ic(IconStopwatch, 26)
+export const Gift = ic(IconGift, 26)
 
 /**
  * Vehicle glyph by icon key (the `rideView.vehIconKey` output). Falls back to a

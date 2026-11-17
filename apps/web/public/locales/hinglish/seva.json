@@ -10,11 +10,13 @@
     "free": "Free",
     "waGroup": "WhatsApp Group",
     "new": "New",
-    "soon": "Jaldi aa raha"
+    "soon": "Jaldi aa raha",
+    "refer": "Refer karo, kamao"
   },
   "strip": {
     "btSub": "Members ke liye free",
-    "waSub": "Rides WhatsApp pe dekho"
+    "waSub": "Rides WhatsApp pe dekho",
+    "referSub": "1 mahina free"
   },
   "wa": {
     "title": "Humara WhatsApp Group",
@@ -107,7 +109,7 @@
       "already_paid": "In dates ka tax pehle se bhara hai. Doosri start date chunein.",
       "road_tax_expired": "Aapki gaadi ka road tax khatam ho gaya hai. Pehle renew karein.",
       "same_state": "Yeh gaadi isi state mein registered hai, isliye yahan border tax nahi lagta. Koi paisa nahi kata.",
-      "no_tax_mode": "Is border par is gaadi ke liye portal mein tax option nahi hai.",
+      "no_tax_mode": "Is border par is gaadi ke liye portal mein tax option nahi hai. Vahan par aapki gaadi taxi (MOTOR CAB / MAXI CAB) mein registered hai ya nahi, RC check karein. Koi paisa nahi kata.",
       "bank_down": "State govt ki payment site abhi down hai. Koi paisa nahi kata aur aapki gaadi block nahi hui. Thodi der baad dobara try karein.",
       "no_handoff": "Portal ne bank page nahi khola. Dobara try karein.",
       "pucc_expired": "Aapki gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
@@ -193,7 +195,7 @@
       "sending": "Bhej rahe hain…",
       "error": "Start nahi hua. Ek minute baad try karo.",
       "queued": "Govt portal pe lock hata rahe hain…",
-      "waiting": "Portal ye gaadi {time} pe chhodega. Tab hum lock hata denge.",
+      "waiting": "Portal ye gaadi {time} pe chhodega. Tab hum lock hata denge. Agar aapne portal pe khud pay kiya hai, to dobara pay na karein.",
       "cleared": "Lock hat gaya. Ab dobara file kar sakte ho.",
       "paid": "Pichla payment ho chuka tha. Receipt no. {no}",
       "failed": "Lock nahi hat paya. Support se baat karo."

@@ -7,7 +7,7 @@ vi.mock('../../hooks/useReferrals', () => ({ useReferrals: vi.fn(), useClaimRefe
 import { useReferrals, useClaimReferrer } from '../../hooks/useReferrals'
 import { ReferScreen } from '../ReferScreen'
 import { AutoClaimReferral } from '../AutoClaimReferral'
-import { saveInvite, readInvite } from '../../lib/invite'
+import { saveInvite, readInvite, captureInviteFromUrl } from '../../lib/invite'
 
 const CODE = '11111111-1111-4111-8111-111111111111'
 const overview = (over = {}) => ({
@@ -59,13 +59,37 @@ describe('ReferScreen', () => {
 describe('AutoClaimReferral', () => {
   it('claims a stored invite once and clears it', () => {
     saveInvite(CODE)
-    const mutate = vi.fn((_b, { onSettled }) => onSettled())
+    const mutate = vi.fn((_b, { onSuccess }) => onSuccess())
     useClaimReferrer.mockReturnValue(claimStub({ mutate }))
     useReferrals.mockReturnValue({ data: overview({ canClaim: true }) })
     render(<AutoClaimReferral />)
     expect(useReferrals).toHaveBeenCalledWith({ enabled: true })
     expect(mutate).toHaveBeenCalledWith({ code: CODE }, expect.any(Object))
     expect(readInvite()).toBeNull()
+  })
+
+  it('keeps the invite after a network/5xx failure (retry next open), drops it on a final 409', () => {
+    saveInvite(CODE)
+    let fail = { status: 0 }
+    const mutate = vi.fn((_b, { onError }) => onError(fail))
+    useClaimReferrer.mockReturnValue(claimStub({ mutate }))
+    useReferrals.mockReturnValue({ data: overview({ canClaim: true }) })
+    const { unmount } = render(<AutoClaimReferral />)
+    expect(readInvite()).toBe(CODE)
+    unmount()
+    fail = { status: 409 }
+    render(<AutoClaimReferral />)
+    expect(readInvite()).toBeNull()
+  })
+
+  it('captures ?ref=<code> from the Android app launch URL; ignores junk', () => {
+    window.history.replaceState(null, '', '/feed?bubble=1&ref=not-a-code')
+    captureInviteFromUrl()
+    expect(readInvite()).toBeNull()
+    window.history.replaceState(null, '', `/feed?bubble=1&ref=${CODE}`)
+    captureInviteFromUrl()
+    expect(readInvite()).toBe(CODE)
+    window.history.replaceState(null, '', '/')
   })
 
   it('drops the invite when the claim window is over; does nothing without one', () => {

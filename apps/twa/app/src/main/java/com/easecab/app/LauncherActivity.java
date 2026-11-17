@@ -43,6 +43,7 @@ public class LauncherActivity
     private static final String CHROME = "com.android.chrome";
     private static final long TOKEN_WAIT_MS = 3000;
     private boolean launched;
+    private int pending; // first-open waits still outstanding (UI thread only)
     
 
     
@@ -62,9 +63,15 @@ public class LauncherActivity
         BubbleService.appVisible = true;
         BubbleService.startIfAllowed(this);
         if (!shouldLaunchImmediately()) {
-            // First open: wait (briefly) for the FCM token so the site can register it now.
+            // First open: wait (briefly) for the FCM token and the Play install referrer so
+            // the site gets both on this launch. Whichever is missing; TOKEN_WAIT_MS caps it.
             Runnable go = () -> { if (!launched) { launched = true; launchTwa(); } };
-            PushService.refreshToken(this, () -> runOnUiThread(go));
+            boolean needToken = !PushService.hasToken(this);
+            boolean needRef = !InstallRef.checked(this);
+            pending = (needToken ? 1 : 0) + (needRef ? 1 : 0);
+            Runnable oneDone = () -> runOnUiThread(() -> { if (--pending <= 0) go.run(); });
+            PushService.refreshToken(this, needToken ? oneDone : null);
+            if (needRef) InstallRef.read(this, oneDone);
             new Handler(Looper.getMainLooper()).postDelayed(go, TOKEN_WAIT_MS);
         } else {
             PushService.refreshToken(this, null); // keep the saved token fresh for next time
@@ -74,7 +81,7 @@ public class LauncherActivity
 
     @Override
     protected boolean shouldLaunchImmediately() {
-        return PushService.hasToken(this);
+        return PushService.hasToken(this) && InstallRef.checked(this);
     }
 
     /**
@@ -141,6 +148,8 @@ public class LauncherActivity
         uri = uri.buildUpon().appendQueryParameter("bubble", "1").build();
         // Native push: permission, battery state, FCM token, contacts made from alerts.
         uri = PushService.launchUri(this, uri);
+        // Referral from the Play install (first open only) → ?ref=<code>.
+        uri = InstallRef.appendOnce(this, uri);
 
         
 

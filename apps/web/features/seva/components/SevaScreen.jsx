@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Road, Whatsapp, Timer } from '@/components/ui/icons'
+import { Road, Whatsapp, Timer, Gift } from '@/components/ui/icons'
 import { WaGroupSheet } from './WaGroupSheet'
 import { SevaGateSheet } from './SevaGateSheet'
 import { useSevaActions } from '../hooks/useSevaActions'
@@ -11,7 +11,7 @@ import { useSevaActions } from '../hooks/useSevaActions'
  * [sectionKey, [[tileKey, Icon, action (useSevaActions key) | null, badgeKey], ...]]
  */
 const SECTIONS = [
-  ['services', [['borderTax', Road, 'openBorderTax', 'free'], ['waGroup', Whatsapp, 'openWaGroup', 'new'], ['soon', Timer, null, null], ['soon', Timer, null, null]]],
+  ['services', [['borderTax', Road, 'openBorderTax', 'free'], ['waGroup', Whatsapp, 'openWaGroup', 'new'], ['refer', Gift, 'openRefer', 'new'], ['soon', Timer, null, null]]],
 ]
 
 function Tile({ label, badge, Icon, onClick }) {
