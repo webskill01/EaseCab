@@ -88,8 +88,9 @@ test('ADMIN_USERS exposes frozen offset-pagination tuning', () => {
 });
 
 test('adminUsersQuerySchema defaults status=active, plan/joined=all and page/limit', () => {
-  assert.deepEqual(adminUsersQuerySchema.parse({}), { page: 1, limit: 20, status: 'active', plan: 'all', joined: 'all' });
+  assert.deepEqual(adminUsersQuerySchema.parse({}), { page: 1, limit: 20, status: 'active', plan: 'all', joined: 'all', sort: 'newest' });
   assert.throws(() => adminUsersQuerySchema.parse({ plan: 'gold' }));
+  assert.throws(() => adminUsersQuerySchema.parse({ sort: 'random' }));
 });
 
 test('adminUsersQuerySchema trims q and accepts the status filter', () => {
