@@ -131,7 +131,8 @@ test('treasury dead on the first IP → re-posted on a fresh proxy session, then
 test('treasury never loads, even re-posted → treasury_down (driver told the govt site is down)', async (t) => {
   let chromium;
   try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
-  const browser = await chromium.launch();
+  let browser;
+  try { browser = await chromium.launch(); } catch { return t.skip('chromium not installed'); } // CI has none
   t.after(() => browser.close());
   const dead = async () => {
     const c = await browser.newContext();
