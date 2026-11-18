@@ -13,9 +13,9 @@ const FLOWS = Object.freeze({ HR: fileCheckpost, HP: fileCheckpost, UP: fileChec
 const DAY_MS = 86_400_000;
 const STOPPED = 'filing no longer active'; // driver cancelled / filing expired — not our fault, no alert
 // Our side broke (vs a driver/vehicle outcome like captcha timeout or expired PUC) → Telegram.
-const ALERT_ON = new Set([F.PORTAL_ERROR, F.BANK_DOWN, F.NO_HANDOFF, F.NO_QR, F.PAYMENT_UNKNOWN]);
+const ALERT_ON = new Set([F.PORTAL_ERROR, F.BANK_DOWN, F.NO_HANDOFF, F.NO_QR, F.TREASURY_DOWN, F.PAYMENT_UNKNOWN]);
 // Thrown at/after eTransPgi, where the portal mints a payment id: the attempt locks the vehicle in that state.
-const BANK_STEP = new Set([F.NO_HANDOFF, F.NO_QR, F.PAYMENT_FAILED, F.PAYMENT_TIMEOUT]);
+const BANK_STEP = new Set([F.NO_HANDOFF, F.NO_QR, F.TREASURY_DOWN, F.PAYMENT_FAILED, F.PAYMENT_TIMEOUT]);
 
 /** DB row → flow job. Window ends a minute early, so +1 min gives whole days. */
 function toJob(req) {

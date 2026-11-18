@@ -27,6 +27,7 @@
     "join": "Group join karo",
     "message": "Approval ke liye message karo",
     "prefill": "Hi, maine PUNJAB TAXI & EASECAB WhatsApp group mein join request bhej di hai. Kindly meri request approve kar do.\nName: {name}\nNumber: {phone}",
+    "sameNumber": "Join request aur approval message dono same WhatsApp number se bhejo — wahi number jo EaseCab app pe hai.",
     "needProfile": "Group join karne se pehle profile poori karein — admin aapko naam se approve karte hain."
   },
   "bt": {
@@ -117,6 +118,7 @@
       "seat_class_mismatch": "Vahan par aapki RC mein gaadi ki class aur seats match nahi karti (jaise MAXI CAB par 7 se kam seats), isliye portal online tax nahi le raha. RTO se RC theek karwayein, ya border par tax bharein. Koi paisa nahi kata.",
       "vehicle_not_found": "Govt Vahan site par is gaadi number ka koi record nahi mila. RC par number check karke dobara bharein. Koi paisa nahi kata.",
       "no_qr": "Govt payment page pe UPI QR nahi aaya, isliye payment shuru nahi hua — koi paisa nahi kata. Portal ka hold hat raha hai; thodi der baad dobara try karein.",
+      "treasury_down": "Govt payment site abhi down hai, isliye payment page nahi khula — koi paisa nahi kata. Thodi der baad dobara try karein.",
       "payment_failed": "Payment nahi hua. Agar paise kate hain to support se baat karein.",
       "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
       "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",

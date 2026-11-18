@@ -3,7 +3,8 @@
 /* global document, location -- page.evaluate callbacks run in the browser */
 const net = require('node:net');
 const { readCaptcha, keepMiss } = require('../ocr');
-const { captchaImage } = require('./portal');
+const { BORDER_TAX_FAILURE } = require('@easecab/shared');
+const { captchaImage, portalError } = require('./portal');
 
 /**
  * State treasury challan pages between Vahan and the bank. HP himkosh asks again for payment type,
@@ -123,7 +124,8 @@ async function treasuryPage(context, host, findMs = FIND_MS) {
 /** Submits the captured treasury request ({ method, action, fields }) again as a form in the first tab. */
 async function repost(context, req, io) {
   io.log?.('treasury pass-through: page never loaded — posting the challan request again');
-  const page = context.pages()[0];
+  // ponytail: a fresh context posts from about:blank (no Vahan referer) — eGRAS took it in tests; watch the first live one
+  const page = context.pages()[0] || (await context.newPage());
   await page?.evaluate(({ method, action, fields }) => {
     const form = Object.assign(document.createElement('form'), { method, action });
     for (const [name, value] of fields) form.appendChild(Object.assign(document.createElement('input'), { type: 'hidden', name, value }));
@@ -137,16 +139,22 @@ async function repost(context, req, io) {
  * @param {import('playwright').BrowserContext} context
  * @param {{ host: string, mode: RegExp, bank: RegExp }} cfg
  * @param {Promise<?object>} captured resolves with the bank hand-off once a page leaves the treasury
+ * @param {?() => Promise<import('playwright').BrowserContext>} [respawn] wired context on a new proxy session
  * @returns {Promise<?object>} bank page, or null → the filing fails no_qr (never handed to the driver)
+ * @throws TREASURY_DOWN when the treasury page never loads, even after the re-post
  */
-async function passTreasury(context, cfg, captured, io, again = null) {
+async function passTreasury(context, cfg, captured, io, again = null, respawn = null) {
   let page = await treasuryPage(context, cfg.host, cfg.findMs);
-  if (!page && again) { // first load died/hung: post the same challan request again from Vahan's tab
+  if (!page && again) { // first load died/hung: post the same challan request again, on a new proxy IP when there is one
+    const fresh = respawn && (await respawn().catch((e) => void io.log?.(`treasury: fresh proxy session failed: ${e.message.split('\n')[0]}`)));
+    if (fresh) io.log?.('treasury pass-through: switching to a fresh proxy session');
+    context = fresh || context;
     await repost(context, again, io);
     page = await treasuryPage(context, cfg.host, cfg.findMs);
   }
   if (!page) {
     io.log?.(`treasury pass-through: no ${cfg.host} tab — tabs: ${context.pages().map((p) => { try { const u = new URL(p.url()); return `${u.hostname}${u.pathname}`; } catch { return p.url().slice(0, 30); } }).join(' | ')}`);
+    if (again) throw portalError(BORDER_TAX_FAILURE.TREASURY_DOWN, `${cfg.host} never loaded (re-posted)`);
     return null;
   }
   for (let i = 0; i < TRIES; i += 1) {

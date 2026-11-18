@@ -62,7 +62,7 @@ async function bankHandoff(page, stateCd, io) {
   const captured = new Promise((resolve) => { found = resolve; });
   const atTreasury = new Promise((resolve) => { reachedTreasury = resolve; });
   // context, not page: eGRAS may open the bank in a new window (2026-11-06 live: 60s with no capture)
-  await page.context().route('**/*', (route) => {
+  const onRoute = (route) => {
     if (staying) return route.continue();
     const req = route.request();
     const host = new URL(req.url()).hostname;
@@ -78,7 +78,7 @@ async function bankHandoff(page, stateCd, io) {
     if (treasury?.qr?.test(host)) { staying = true; found({ live: frame.page(), ref, pay: treasury }); return route.continue(); }
     found(toHandoff(req));
     return route.abort();
-  });
+  };
   // Playwright would dismiss (= Cancel) a JS confirm. Portal messages are logged: an error alert here is
   // otherwise invisible. ponytail: portal text, not driver data — trimmed to 120 chars
   const onDialog = (d) => {
@@ -86,13 +86,20 @@ async function bankHandoff(page, stateCd, io) {
     io?.log?.(`bank step ${d.type()}: ${d.message().slice(0, 120)}`);
     d.accept().catch(() => {});
   };
-  page.context().on('page', (p) => p.on('dialog', onDialog));
   // why a bank/treasury page never loaded (HR eGRAS, 2026-11-12) — host + path + network error only
-  page.context().on('requestfailed', (r) => {
+  const onFailed = (r) => {
     if (!r.isNavigationRequest()) return;
     const u = new URL(r.url());
     io?.log?.(`bank nav failed ${u.hostname}${u.pathname}: ${r.failure()?.errorText}`);
-  });
+  };
+  const wire = async (context) => {
+    await context.route('**/*', onRoute);
+    context.on('page', (p) => p.on('dialog', onDialog));
+    context.on('requestfailed', onFailed);
+    return context;
+  };
+  await wire(page.context());
+  const respawn = page.context().respawn && (async () => wire(await page.context().respawn()));
   page.on('dialog', onDialog);
   await page.selectOption('#dropOperator', gateway);
   await page.check('#checkme');
@@ -100,7 +107,7 @@ async function bankHandoff(page, stateCd, io) {
   // ponytail: a SweetAlert confirm after Submit was seen once on HP — click it if it shows, no wait otherwise
   page.locator('.swal2-popup button.swal2-confirm:visible').click({ timeout: 10_000 }).catch(() => {});
   const first = await Promise.race([captured, atTreasury, page.waitForTimeout(HANDOFF_MS).then(() => null)]);
-  const handoff = first === true ? (await passTreasury(page.context(), treasury, captured, io, viaTreasury)) || viaTreasury : first;
+  const handoff = first === true ? (await passTreasury(page.context(), treasury, captured, io, viaTreasury, respawn)) || viaTreasury : first;
   if (!handoff) throw portalError(BORDER_TAX_FAILURE.NO_HANDOFF, `no bank page after Submit (${gateway}) — at ${await whereStuck(page)}`);
   return handoff;
 }

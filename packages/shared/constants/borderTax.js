@@ -289,6 +289,7 @@ const BORDER_TAX_FAILURE = Object.freeze({
   BANK_DOWN: 'bank_down', // state treasury site unreachable — stopped before Vahan's Pay Online, so no lock
   NO_HANDOFF: 'no_handoff', // eTransPgi Submit never left Vahan for a bank page
   NO_QR: 'no_qr', // in-app QR: PayU opened but its UPI QR could not be read
+  TREASURY_DOWN: 'treasury_down', // treasury page (HR eGRAS) never loaded, even on a fresh proxy IP — past Pay Online, so locked
   PAYMENT_FAILED: 'payment_failed', // in-app QR: PayU reported the payment as failed
   PAYMENT_TIMEOUT: 'payment_timeout', // in-app QR: not paid within PAY_WAIT_SEC
   PAYMENT_UNKNOWN: 'payment_unknown', // in-app QR: the bot lost the payment page (restart) — driver may have paid

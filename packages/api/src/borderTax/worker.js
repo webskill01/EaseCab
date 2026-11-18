@@ -54,10 +54,21 @@ async function main() {
     return launching;
   };
   await browser(); // fail fast at boot if Chromium can't start
-  const newPage = async (job) => {
+  const open = async (job) => {
     // IST clock: the VPS runs Europe/Berlin, and the portal read our IST tax_from as browser-local → receipts 4h30 late (2026-11-14)
     const context = await (await browser()).newContext({ viewport: VIEWPORT, timezoneId: 'Asia/Kolkata', proxy: proxyFor(env.BORDER_TAX_PROXY_URL, job) });
     await context.addInitScript(canvasCodeHook); // declaration captcha typed exactly as drawn (portal.js)
+    return context;
+  };
+  const newPage = async (job) => {
+    const context = await open(job);
+    // spare context on a new proxy session (new IP) for the treasury re-post — HR eGRAS dropped the
+    // connection on one IP (2026-11-17/18); closed with the filing's own context
+    context.respawn = async () => {
+      const spare = await open(job && { ...job, sid: `r${job.sid}` });
+      context.once('close', () => spare.close().catch(() => {}));
+      return spare;
+    };
     return context.newPage();
   };
   const r2 = r2FromEnv(serverEnv);

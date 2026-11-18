@@ -46,6 +46,7 @@ export function WaGroupSheet({ onClose }) {
     <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('title')}>
       <SheetTitle icon={<Whatsapp size={22} />} tone="success" title={t('title')} sub={t('sub')} />
       <p className="mb-3 break-words rounded-xl bg-ec-successBg px-3 py-2 text-center text-[13.5px] font-extrabold tracking-wide text-ec-successTx">{t('group')}</p>
+      <p className="mb-3 rounded-xl bg-ec-warnBg px-3 py-2 text-center text-[13px] font-bold leading-snug text-ec-warning">{t('sameNumber')}</p>
       <ol className="space-y-2.5">
         <Step
           n={1}

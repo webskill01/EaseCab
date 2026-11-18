@@ -27,6 +27,7 @@
     "join": "Join group",
     "message": "Message for approval",
     "prefill": "Hi, I have sent the join request for the PUNJAB TAXI & EASECAB WhatsApp group. Kindly approve my request.\nName: {name}\nNumber: {phone}",
+    "sameNumber": "Send the join request and the approval message from the same WhatsApp number — the number you use on EaseCab.",
     "needProfile": "Complete your profile first — the admin approves you by your name."
   },
   "bt": {
@@ -117,6 +118,7 @@
       "seat_class_mismatch": "Your RC on Vahan doesn't match the vehicle type (e.g. MAXI CAB with fewer than 7 seats), so the portal won't take online tax. Get the RC corrected at the RTO, or pay at the border. Nothing was charged.",
       "vehicle_not_found": "The govt Vahan site has no record for this vehicle number. Check the number on your RC and file again. Nothing was charged.",
       "no_qr": "The govt payment page didn't show the UPI QR, so no payment started — no money was taken. The portal hold is being cleared; please try again in a while.",
+      "treasury_down": "The govt payment site is down right now, so the payment page didn't open — no money was taken. Please try again in a while.",
       "payment_failed": "The payment didn't go through. If money was debited, contact support.",
       "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",
       "payment_unknown": "The govt payment page closed. If you paid, contact support — don't pay again.",

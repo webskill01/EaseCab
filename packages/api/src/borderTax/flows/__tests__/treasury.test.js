@@ -102,6 +102,49 @@ test('treasury page never loaded → the captured challan request is posted agai
   assert.match(bank, /code=4bpd6c/);
 });
 
+test('treasury dead on the first IP → re-posted on a fresh proxy session, then filled', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  t.after(stopOcr);
+  if (!(await ocrReady())) return t.skip('ddddocr not installed');
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const dead = await browser.newContext(); // eGRAS drops this IP (2026-11-18 ERR_CONNECTION_CLOSED)
+  await dead.route(`https://${HOST}/**`, (route) => route.abort('connectionclosed'));
+  await (await dead.newPage()).goto('about:blank');
+  let found;
+  const captured = new Promise((r) => { found = r; });
+  const respawn = async () => {
+    const c = await browser.newContext();
+    await c.route(`${BANK}*`, (route) => { found(route.request().postData()); return route.abort(); });
+    await c.route(`https://${HOST}/**`, (route) => route.fulfill({ contentType: 'text/html', body: HIMKOSH() }));
+    c.on('page', (p) => p.on('dialog', (d) => d.accept()));
+    return c;
+  };
+  const logs = [];
+  const again = { method: 'POST', action: `https://${HOST}/echallan`, fields: [['grn', '1']] };
+  const bank = await passTreasury(dead, { ...TREASURY.HP, findMs: 1500 }, captured, { log: (m) => logs.push(m) }, again, respawn);
+  assert.match(bank, /code=4bpd6c/);
+  assert.ok(logs.some((m) => /fresh proxy session/.test(m)));
+});
+
+test('treasury never loads, even re-posted → treasury_down (driver told the govt site is down)', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const dead = async () => {
+    const c = await browser.newContext();
+    await c.route(`https://${HOST}/**`, (route) => route.abort('connectionclosed'));
+    return c;
+  };
+  const context = await dead();
+  await (await context.newPage()).goto('about:blank');
+  const again = { method: 'POST', action: `https://${HOST}/echallan`, fields: [['grn', '1']] };
+  await assert.rejects(passTreasury(context, { ...TREASURY.HP, findMs: 1000 }, new Promise(() => {}), { log: () => {} }, again, dead),
+    (e) => e.failureCode === 'treasury_down');
+});
+
 test('treasuryUp: listening port → true, closed port → false', async () => {
   const net = require('node:net');
   const { treasuryUp } = require('../treasury');
