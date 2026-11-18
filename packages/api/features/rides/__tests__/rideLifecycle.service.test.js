@@ -37,16 +37,16 @@ test('runTransitions runs all four jobs in order and returns the counts', async 
 
   assert.deepEqual(result, { booked: 1, hidden: 2, deleted: 3, fingerprintsPurged: 4, postedExpired: 5, chatsClosed: 6, directDutiesDone: 7 });
   assert.deepEqual(repository.order, ['markBooked', 'markHidden', 'hardDelete', 'purgeFingerprints', 'expirePostedRides', 'closeDirectDuties']);
-  assert.deepEqual(repository.seen.closeDirectDuties, repository.seen.markBooked); // same 10-min cutoff
+  assert.deepEqual(repository.seen.closeDirectDuties, repository.seen.markBooked); // same BOOKED_AFTER_MIN cutoff
 });
 
-test('booked cutoff is now minus BOOKED_AFTER_MIN (10 min); others get now', async () => {
+test('booked cutoff is now minus BOOKED_AFTER_MIN; others get now', async () => {
   const repository = spyRepo();
   const svc = createRideLifecycleService({ repository, clock: fixedClock });
 
   await svc.runTransitions();
 
-  assert.equal(repository.seen.markBooked.toISOString(), '2026-06-01T11:50:00.000Z');
+  assert.equal(repository.seen.markBooked.toISOString(), '2026-06-01T11:30:00.000Z');
   assert.equal(repository.seen.markHidden.getTime(), FIXED.getTime());
   assert.equal(repository.seen.hardDelete.getTime(), FIXED.getTime());
   assert.equal(repository.seen.purgeFingerprints.getTime(), FIXED.getTime());

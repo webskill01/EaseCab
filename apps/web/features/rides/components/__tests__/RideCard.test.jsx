@@ -35,7 +35,7 @@ describe('RideCard', () => {
   })
 
   it('a bot ride past the fresh window reads "Likely booked" and disables contact', () => {
-    renderWithIntl(<RideCard ride={botRide({ receivedAt: ago(10) })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
+    renderWithIntl(<RideCard ride={botRide({ receivedAt: ago(30) })} now={NOW} onContact={vi.fn()} onReport={vi.fn()} />)
     expect(screen.getByText('Likely booked')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /whatsapp/i })).toBeDisabled()
   })

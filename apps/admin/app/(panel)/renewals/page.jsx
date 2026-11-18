@@ -9,6 +9,7 @@ import { Avatar } from '@/features/shell/components/Avatar'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { UserLink } from '@/features/shell/components/UserLink'
 import { pill } from '@/lib/ui'
+import { MonthlyTable } from '@/features/trackRecord/components/MonthlyTable'
 
 const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
 const inr = (paise) => `₹${(paise / 100).toLocaleString('en-IN')}`
@@ -30,6 +31,8 @@ export default function RenewalsPage() {
         description="Every payment from a driver who had paid before, newest first, since launch. Test accounts and free members are left out."
         actions={<span className={pill({ tone: 'blue' })}>{r.total} renewals</span>}
       />
+
+      <MonthlyTable />
 
       <QueryState
         isLoading={r.isLoading}

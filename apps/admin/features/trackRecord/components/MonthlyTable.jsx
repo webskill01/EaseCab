@@ -19,7 +19,7 @@ const COLS = [
   { key: 'activeEnd', label: 'Active at end', tip: 'Drivers with a paid plan running at month end (or now)' },
 ]
 
-/** Billing months (16th → 15th) with new vs renewed payers and churn. */
+/** Billing months (16th → 16th) with new vs renewed payers and churn. */
 export function MonthlyTable() {
   const { data, isLoading, isError } = useMonthly()
   if (isLoading) return <ListSkeleton />
@@ -30,7 +30,7 @@ export function MonthlyTable() {
     <div className="mb-6 overflow-hidden rounded-ec-card border border-ec-line bg-white shadow-ec-card">
       <div className="px-4 pt-4">
         <h2 className="font-semibold text-ec-ink">Month by month</h2>
-        <p className="text-sm text-ec-ink60">Billing months run 16th → 15th IST · the current month is still running · churn = left ÷ plans that ended and are settled</p>
+        <p className="text-sm text-ec-ink60">Billing months run 16th → 16th IST · the current month is still running · churn = left ÷ plans that ended and are settled</p>
       </div>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[820px] text-sm">

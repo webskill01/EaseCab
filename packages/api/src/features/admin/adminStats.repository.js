@@ -163,7 +163,7 @@ function createAdminStatsRepository({ prisma }) {
     },
 
     /**
-     * Billing months (16th → 15th IST, first one from launch day), newest first.
+     * Billing months (16th → 16th IST, first one also takes launch day), newest first.
      * newPayers = first captured payment in the month; payers = distinct members who paid
      * in it. plansEnded = paid windows that ended in the month so far; churned = no later payment and
      * grace over; pending = no later payment yet, still inside grace. activeEnd = members
@@ -191,11 +191,11 @@ function createAdminStatsRepository({ prisma }) {
         ),
         firstpay AS (SELECT user_id, min(at) AS at FROM pay GROUP BY 1),
         m AS (
-          SELECT CASE WHEN g = ${MONTH_CYCLE_START}::timestamp THEN ${LAUNCH_DATE}::timestamp ELSE g END AS ms,
+          SELECT g AS label, CASE WHEN g = ${MONTH_CYCLE_START}::timestamp THEN ${LAUNCH_DATE}::timestamp ELSE g END AS ms,
                  g + interval '1 month' AS me, LEAST(g + interval '1 month', now() AT TIME ZONE ${tz}) AS asof
           FROM generate_series(${MONTH_CYCLE_START}::timestamp, now() AT TIME ZONE ${tz}, interval '1 month') g
         )
-        SELECT m.ms::date AS "start", (m.me - interval '1 day')::date AS "end",
+        SELECT m.label::date AS "start", m.me::date AS "end",
           (SELECT count(*) FROM firstpay f WHERE f.at >= m.ms AND f.at < m.me)::int AS "newPayers",
           (SELECT count(DISTINCT p.user_id) FROM pay p WHERE p.at >= m.ms AND p.at < m.me)::int AS "payers",
           (SELECT COALESCE(sum(p.amount), 0) FROM pay p WHERE p.at >= m.ms AND p.at < m.me)::int AS "revenuePaise",

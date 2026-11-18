@@ -76,7 +76,7 @@ const ADMIN_STATISTICS = Object.freeze({
   LIQUIDITY_WINDOW_MIN: 30,
   // A payment counts as renewed if the same user pays again by expiry + this grace.
   RENEWAL_GRACE_DAYS: 3,
-  // Monthly view: billing months run 16th → 15th IST; the first one also takes launch day.
+  // Monthly view: billing months run 16th → 16th IST (boundary at 00:00 on the 16th); the first one also takes launch day.
   MONTH_CYCLE_START: '2026-10-16',
   // Health targets (percent) the Track Record tab colours against.
   TARGETS: Object.freeze({ RENEWAL_PCT: 70, CONVERSION_PCT: 10, LIQUIDITY_PCT: 60 }),
