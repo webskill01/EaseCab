@@ -8,6 +8,7 @@ const { buildApp } = require('../../../app');
 
 const HASH = '$2a$10$qNpq1zI26z0IYF4tkwP2JOAav42VeONDnUvoVMUQevsXKgOyhRya.';
 const GROUP_ID = '22222222-2222-2222-2222-222222222222';
+const LINK_ID = '33333333-3333-3333-3333-333333333333';
 
 const CONFIG = {
   corsOrigins: ['http://localhost:3001'],
@@ -27,6 +28,8 @@ function fakeRedis() {
     async eval(_s, _n, k) { const c = (m.get(k) || 0) + 1; m.set(k, c); return c; },
     async set() { return 'OK'; }, async get() { return null; }, async del() { return 0; },
     async publish(ch) { published.push(ch); return 1; },
+    async smismember(_k, ...jids) { return jids.map(() => 1); },
+    async smembers() { return ['120363@g.us']; },
   };
 }
 
@@ -39,6 +42,14 @@ function fakePrisma() {
     adminUser: {
       async findUnique({ where }) { return where.email === ADMIN.email ? { ...ADMIN } : null; },
       async findFirst({ where }) { return where.id === ADMIN.id ? { ...ADMIN } : null; },
+    },
+    waSession: { async findMany() { return [{ slot: 'slot-1', name: 'Tanishq' }]; } },
+    waInviteLink: {
+      async findMany() { return [{ id: LINK_ID, code: 'AbCdEfGhIjKlMnOpQrStUv', status: 'new', groupJid: null, sourceGroupJid: '120363@g.us' }]; },
+      async count() { return 1; },
+      async groupBy() { return [{ status: 'new', _count: { _all: 1 } }]; },
+      async updateMany({ where }) { return { count: where.id === LINK_ID ? 1 : 0 }; },
+      async findUnique() { return { id: LINK_ID, status: 'avoided' }; },
     },
     waGroup: {
       async findMany() { return [GROUP]; },
@@ -110,4 +121,29 @@ test('POST /admin/wa-groups/bulk switches all groups matching the search', async
   assert.deepStrictEqual(res.body.data, { updated: 1 });
   assert.deepStrictEqual(updates[0].data, { enabled: true });
   assert.ok(updates[0].where.OR);
+});
+
+test('GET /admin/wa-groups rows carry the sessions in each group', async () => {
+  const res = await (await adminAgent()).get('/api/v1/admin/wa-groups?status=shared');
+  assert.strictEqual(res.status, 200);
+  assert.deepStrictEqual(res.body.data.groups[0].sessions, ['Tanishq']);
+});
+
+test('GET /admin/wa-invites: links with join URL, source group name and tab counts', async () => {
+  assert.strictEqual((await request(app()).get('/api/v1/admin/wa-invites')).status, 401);
+  const res = await (await adminAgent()).get('/api/v1/admin/wa-invites?status=new');
+  assert.strictEqual(res.status, 200);
+  const [link] = res.body.data.links;
+  assert.strictEqual(link.url, 'https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv');
+  assert.strictEqual(link.sourceGroupName, 'PUNJAB TAXI');
+  assert.deepStrictEqual(res.body.data.counts, { new: 1, joined: 0, avoided: 0, invalid: 0 });
+});
+
+test("PATCH /admin/wa-invites/:id avoids; joined is the bot's call only; unknown id 404", async () => {
+  const agent = await adminAgent();
+  const ok = await agent.patch(`/api/v1/admin/wa-invites/${LINK_ID}`).send({ status: 'avoided' });
+  assert.strictEqual(ok.status, 200);
+  assert.strictEqual(ok.body.data.link.status, 'avoided');
+  assert.strictEqual((await agent.patch(`/api/v1/admin/wa-invites/${LINK_ID}`).send({ status: 'joined' })).status, 422);
+  assert.strictEqual((await agent.patch(`/api/v1/admin/wa-invites/${GROUP_ID}`).send({ status: 'avoided' })).status, 404);
 });

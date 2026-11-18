@@ -43,7 +43,8 @@ const ADMIN_BOT_FILTERS = Object.freeze({ PAGE_SIZE: 50, MAX_PAGE_SIZE: 200, VAL
 
 /** WhatsApp groups page (Phase 18). STATUS filters the list by ingest switch. */
 const ADMIN_WA_GROUPS = Object.freeze({ PAGE_SIZE: 50, MAX_PAGE_SIZE: 200 });
-const WA_GROUP_STATUS = Object.freeze({ ALL: 'all', ON: 'on', OFF: 'off' });
+// SHARED: the group is in 2+ bot sessions (duplicates to leave from one device).
+const WA_GROUP_STATUS = Object.freeze({ ALL: 'all', ON: 'on', OFF: 'off', SHARED: 'shared' });
 
 /** Unresolved-rides queue verbs: `set_city` fills a missing pickup/drop FK on a
  * live bot ride; `hide` takes the ride down (RideStatus.hidden). */

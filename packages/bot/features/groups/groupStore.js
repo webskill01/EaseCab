@@ -61,6 +61,9 @@ function createGroupStore({ prisma, logger }) {
 
     nameOf: (jid) => names.get(jid),
 
+    /** Any session has ever been in this group (wa_groups row or seen live). */
+    isKnown: (jid) => known.has(jid),
+
     /** Enabled groups we still have no name for (the bulk fetch often returns no subject). */
     namelessJids: () => [...known].filter((jid) => !names.has(jid) && !disabled.has(jid)),
 

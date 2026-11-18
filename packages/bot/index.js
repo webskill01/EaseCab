@@ -21,6 +21,7 @@ const { createSlotRegistry } = require('./features/whatsapp/slotRegistry');
 const { createNumberPool } = require('./features/whatsapp/numberPool');
 const { createFilterStore } = require('./features/filters/filterStore');
 const { createGroupStore } = require('./features/groups/groupStore');
+const { createInviteCatcher } = require('./features/invites/inviteCatcher');
 const { createSessionStore } = require('./features/sessions/sessionStore');
 const { createPairingManager, moveAside } = require('./features/sessions/pairingManager');
 
@@ -74,6 +75,7 @@ async function main() {
   await filterStore.start();
   const groupStore = createGroupStore({ prisma, logger });
   await groupStore.start();
+  const invites = createInviteCatcher({ prisma, logger, isKnownGroup: groupStore.isKnown });
   // Which numbers run = wa_sessions (Phase 25, admin Sessions tab); WA_NUMBERS only seeds it once.
   const sessionStore = createSessionStore({ prisma, logger, seedSlots: env.WA_NUMBERS });
   await sessionStore.start();
@@ -154,6 +156,12 @@ async function main() {
       if (jids.length) tx.sadd(key, ...jids);
       tx.exec().catch((err) => logger.warn({ err: err.message, slot }, 'could not store session groups'));
     },
+    // Joined while connected (e.g. from a caught link) → the admin sees it on this session now.
+    onGroupsAdded: (slot, jids) => {
+      redis.sadd(botSlotGroupsKey(slot), ...jids)
+        .catch((err) => logger.warn({ err: err.message, slot }, 'could not add session groups'));
+    },
+    invites,
   });
   pool.start();
   const pairing = createPairingManager({

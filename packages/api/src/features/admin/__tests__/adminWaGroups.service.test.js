@@ -8,23 +8,37 @@ const { createAdminWaGroupsService } = require('../adminWaGroups.service');
 const ID = '11111111-1111-1111-1111-111111111111';
 const logger = { warn() {} };
 
+let lastList;
 function setup(repoOver = {}) {
   const published = [];
   const repo = {
-    async list() { return { rows: [{ id: ID }], total: 1, on: 290, off: 10 }; },
+    async list(args) { lastList = args; return { rows: [{ id: ID, jid: 'g1@g.us' }], total: 1, on: 290, off: 10 }; },
+    async sessions() { return [{ slot: 'slot-1', name: 'Tanishq' }, { slot: 'slot-2', name: 'Admin' }]; },
     async update(id, data) { return id === ID ? { id, ...data } : null; },
     async setEnabledMany() { return 300; },
     ...repoOver,
   };
-  const redis = { async publish(ch) { published.push(ch); } };
+  const sets = { 'easecab:bot:slot_groups:slot-1': ['g1@g.us', 'g2@g.us'], 'easecab:bot:slot_groups:slot-2': ['g1@g.us'] };
+  const redis = {
+    async publish(ch) { published.push(ch); },
+    async smismember(key, ...jids) { return jids.map((j) => ((sets[key] || []).includes(j) ? 1 : 0)); },
+    async smembers(key) { return sets[key] || []; },
+  };
   return { service: createAdminWaGroupsService({ repo, redis, logger }), published };
 }
 
-test('list returns groups, offset meta and overall on/off counts', async () => {
+test('list returns groups with the sessions in each, offset meta and on/off counts', async () => {
   const { service } = setup();
   assert.deepStrictEqual(await service.list({ page: 1, limit: 50, status: 'all' }), {
-    items: [{ id: ID }], total: 1, page: 1, limit: 50, counts: { on: 290, off: 10 },
+    items: [{ id: ID, jid: 'g1@g.us', sessions: ['Tanishq', 'Admin'] }], total: 1, page: 1, limit: 50, counts: { on: 290, off: 10 },
   });
+  assert.strictEqual(lastList.jids, undefined);
+});
+
+test('status shared narrows the list to groups 2+ sessions are in', async () => {
+  const { service } = setup();
+  await service.list({ page: 1, limit: 50, status: 'shared' });
+  assert.deepStrictEqual(lastList.jids, ['g1@g.us']);
 });
 
 test('toggle switches one group and tells the bot', async () => {

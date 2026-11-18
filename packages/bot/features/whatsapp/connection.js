@@ -133,11 +133,13 @@ async function backfillGroupNames(sock, groups, isClosed, logger) {
  * @param {() => void} [deps.onOpen] - called once the connection is open
  * @param {(code: number|undefined) => void} [deps.onClose] - called after cleanup on close, with the disconnect status code
  * @param {(jids: string[]) => void} [deps.onGroups] - every group this number is in, after each connect (admin stats)
+ * @param {(jids: string[]) => void} [deps.onGroupsAdded] - groups this number joined while connected
+ * @param {{ see: Function, markJoined: Function }} [deps.invites] - group-link catcher (Phase 29)
  * @param {(qr: string) => void} [deps.onQr] - called with each QR string while unpaired (pairing only; supervised slots are already paired)
  * @param {{ info: Function, warn: Function, error: Function }} deps.logger
  * @returns {Promise<object>} the live socket (caller may end it on timeout/shutdown)
  */
-async function createConnection({ sessionPath, groups, onMessage, onOpen, onClose, onGroups, onQr, logger }) {
+async function createConnection({ sessionPath, groups, onMessage, onOpen, onClose, onGroups, onGroupsAdded, invites, onQr, logger }) {
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
   // Pin the current WhatsApp Web build — a stale version makes WA reject the
   // handshake (405) and makes the phone say "Couldn't link device" on QR scan.
@@ -187,6 +189,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       sock.groupFetchAllParticipating()
         .then((all) => {
           if (onGroups) onGroups(Object.keys(all || {}));
+          if (invites) invites.markJoined(Object.keys(all || {}));
           return groups.record(Object.values(all || {}).map(toGroupRecord));
         })
         .then(() => logger.info('wa groups recorded'))
@@ -221,6 +224,9 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
 
   // Joined a new group while connected → record it (ingest already applies: default ON).
   sock.ev.on('groups.upsert', (joined) => {
+    const jids = (joined || []).map((g) => g.id).filter(Boolean);
+    if (onGroupsAdded && jids.length) onGroupsAdded(jids);
+    if (invites) invites.markJoined(jids);
     groups.record((joined || []).map(toGroupRecord))
       .catch((err) => logger.warn({ err: err.message }, 'could not record joined group'));
   });
@@ -242,6 +248,7 @@ async function createConnection({ sessionPath, groups, onMessage, onOpen, onClos
       if (!groups.shouldIngest(jid) || m.key.fromMe) continue;
       const text = extractText(m.message);
       if (!text) continue;
+      if (invites) invites.see(text, jid, sock); // never throws; not awaited so rides aren't delayed
       const senderJid = senderOf(m.key, jid);
       diag.pass();
       try {

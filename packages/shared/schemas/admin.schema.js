@@ -8,6 +8,7 @@ const {
   USER_REPORT_ACTION, ADMIN_USER_REPORTS, ADMIN_BOT_FILTERS, ADMIN_WA_GROUPS, WA_GROUP_STATUS, ADMIN_FOUNDER_PAYMENTS, ADMIN_RENEWALS, ADMIN_COMPLIMENTARY, ADMIN_SORT, USER_SORT,
 } = require('../constants/admin');
 const { BOT_FILTER_LIST } = require('../constants/botFilters');
+const { WA_INVITE_STATUS, WA_INVITES } = require('../constants/waInvites');
 const { VERIFICATION_STATUS } = require('../constants/enums');
 
 /**
@@ -170,6 +171,19 @@ const adminWaGroupBulkSchema = z.object({
 
 const adminWaGroupIdParamSchema = z.object({ id: z.string().uuid() });
 
+/** Caught group links (Phase 29): one status tab, optional name search. */
+const adminWaInvitesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(WA_INVITES.MAX_PAGE_SIZE).default(WA_INVITES.PAGE_SIZE),
+  q: z.string().trim().min(1).max(100).optional(),
+  status: z.enum(Object.values(WA_INVITE_STATUS)).default(WA_INVITE_STATUS.NEW),
+});
+
+/** Avoid a link, or put an avoided one back to new. joined/invalid are the bot's to set. */
+const adminWaInvitePatchSchema = z
+  .object({ status: z.enum([WA_INVITE_STATUS.AVOIDED, WA_INVITE_STATUS.NEW]) })
+  .strict();
+
 /** Founder payments list (offset, admin §8). */
 const adminFounderPaymentsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -218,6 +232,8 @@ module.exports = {
   adminWaGroupToggleSchema,
   adminWaGroupBulkSchema,
   adminWaGroupIdParamSchema,
+  adminWaInvitesQuerySchema,
+  adminWaInvitePatchSchema,
   adminLoginSchema,
   adminVerificationsQuerySchema,
   adminReviewActionSchema,

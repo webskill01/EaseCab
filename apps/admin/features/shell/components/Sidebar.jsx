@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, BarChart3, TrendingUp, BadgeCheck, Flag, UserX, Users, MapPin, Route, Filter, MessagesSquare, X, HandCoins, Gift, HeartHandshake, Smartphone, Landmark, RefreshCw,
+  LayoutDashboard, BarChart3, TrendingUp, BadgeCheck, Flag, UserX, Users, MapPin, Route, Filter, MessagesSquare, Link2, X, HandCoins, Gift, HeartHandshake, Smartphone, Landmark, RefreshCw,
 } from 'lucide-react'
 import { useStats } from '@/features/dashboard/hooks/useStats'
 import { cn } from '@/lib/utils'
@@ -32,6 +32,7 @@ const NAV = [
     { href: '/referrals', label: 'Referrals', icon: Gift },
     { href: '/bot-filters', label: 'Bot Filters', icon: Filter },
     { href: '/wa-groups', label: 'WhatsApp Groups', icon: MessagesSquare },
+    { href: '/wa-invites', label: 'Group Links', icon: Link2 },
     { href: '/sessions', label: 'WhatsApp Sessions', icon: Smartphone },
   ] },
 ]

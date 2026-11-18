@@ -11,6 +11,7 @@ module.exports = {
   ...require('./rides'),
   ...require('./bot'),
   ...require('./waSessions'),
+  ...require('./waInvites'),
   ...require('./botFilters'),
   ...require('./auth'),
   ...require('./subscription'),

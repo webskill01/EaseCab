@@ -50,7 +50,7 @@ const RUN = Object.freeze({
  */
 function createNumberPool({
   groups, onMessage, logger, redis, alerter, registry, connectionFactory, loggedOutCode,
-  busy = new Set(), onPhone = () => {}, onGroups = () => {},
+  busy = new Set(), onPhone = () => {}, onGroups = () => {}, onGroupsAdded = () => {}, invites = null,
 }) {
   const sups = new Map(); // slot -> supervisor
   const meta = new Map(); // slot -> { state, lastCode, since }
@@ -148,6 +148,8 @@ function createNumberPool({
           groups,
           onMessage: tagged,
           onGroups: (jids) => onGroups(slot, jids),
+          onGroupsAdded: (jids) => onGroupsAdded(slot, jids),
+          invites,
           logger: logger.child ? logger.child({ slot }) : logger,
           onOpen: () => {
             if (stopped || myToken !== token) return;

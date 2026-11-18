@@ -82,6 +82,9 @@ const { createFinanceSyncRouter } = require('./features/financeSync/financeSync.
 const { createAdminWaGroupsRepository } = require('./features/admin/adminWaGroups.repository');
 const { createAdminWaGroupsService } = require('./features/admin/adminWaGroups.service');
 const { createAdminWaGroupsRouter } = require('./features/admin/adminWaGroups.route');
+const { createAdminWaInvitesRepository } = require('./features/admin/adminWaInvites.repository');
+const { createAdminWaInvitesService } = require('./features/admin/adminWaInvites.service');
+const { createAdminWaInvitesRouter } = require('./features/admin/adminWaInvites.route');
 const { createAdminWaSessionsRepository } = require('./features/admin/adminWaSessions.repository');
 const { createAdminWaSessionsService } = require('./features/admin/adminWaSessions.service');
 const { createAdminWaSessionsRouter, createWaPairPublicRouter } = require('./features/admin/adminWaSessions.route');
@@ -309,10 +312,14 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     });
     v1.use('/admin/bot-filters', createAdminBotFiltersRouter({ service: adminBotFiltersService, requireAdmin }));
     // WhatsApp groups (Phase 18): switch which groups easecab-bot reads rides from.
-    const adminWaGroupsService = createAdminWaGroupsService({
-      repo: createAdminWaGroupsRepository({ prisma }), redis, logger,
-    });
+    const adminWaGroupsRepo = createAdminWaGroupsRepository({ prisma });
+    const adminWaGroupsService = createAdminWaGroupsService({ repo: adminWaGroupsRepo, redis, logger });
     v1.use('/admin/wa-groups', createAdminWaGroupsRouter({ service: adminWaGroupsService, requireAdmin }));
+    // Group links (Phase 29): chat.whatsapp.com invites the bot caught, to join or avoid.
+    const adminWaInvitesService = createAdminWaInvitesService({
+      repo: createAdminWaInvitesRepository({ prisma }), groupsRepo: adminWaGroupsRepo, redis,
+    });
+    v1.use('/admin/wa-invites', createAdminWaInvitesRouter({ service: adminWaInvitesService, requireAdmin }));
     // WhatsApp sessions (Phase 25): add / name / pause / pair the numbers easecab-bot runs,
     // plus the public share page someone remote scans the QR from (token-gated).
     const adminWaSessionsService = createAdminWaSessionsService({

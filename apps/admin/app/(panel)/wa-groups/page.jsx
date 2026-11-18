@@ -1,6 +1,6 @@
 'use client'
 
-import { MessagesSquare, Search, Power, PowerOff, Users, BadgeCheck } from 'lucide-react'
+import { MessagesSquare, Search, Power, PowerOff, Users, BadgeCheck, Smartphone } from 'lucide-react'
 import { useWaGroups } from '@/features/wa-groups/hooks/useWaGroups'
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { Segmented } from '@/features/shell/components/Segmented'
@@ -13,6 +13,7 @@ const STATUSES = [
   { id: 'all', label: 'All' },
   { id: 'on', label: 'Reading' },
   { id: 'off', label: 'Switched off' },
+  { id: 'shared', label: 'In 2+ sessions' },
 ]
 
 function lastSeen(iso) {
@@ -93,6 +94,13 @@ export default function WaGroupsPage() {
                     <p className="truncate text-xs text-ec-ink60">
                       {row.participants ?? '?'} members · seen {lastSeen(row.lastSeenAt)} · {row.jid}
                     </p>
+                    {row.sessions?.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {row.sessions.map((s) => (
+                          <span key={s} className={pill({ tone: row.sessions.length > 1 ? 'amber' : 'blue' })}><Smartphone size={11} />{s}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">

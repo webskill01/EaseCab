@@ -282,6 +282,33 @@ model WaGroup {
   @@map("wa_groups")
 }
 
+// WhatsApp group invite links easecab-bot catches in group messages (Phase 29). One
+// row per invite code however often it is spammed; seenCount says how often.
+enum WaInviteStatus {
+  new
+  joined
+  avoided
+  invalid
+}
+
+model WaInviteLink {
+  id             String         @id @default(uuid()) @db.Uuid
+  code           String         @unique // chat.whatsapp.com/<code> (case-sensitive)
+  status         WaInviteStatus @default(new)
+  groupJid       String?        @map("group_jid") // from WhatsApp's link preview
+  name           String?
+  size           Int?
+  seenCount      Int            @default(1) @map("seen_count")
+  sourceGroupJid String?        @map("source_group_jid") // where it was first seen
+  resolvedAt     DateTime?      @map("resolved_at") @db.Timestamptz(6)
+  firstSeenAt    DateTime       @default(now()) @map("first_seen_at") @db.Timestamptz(6)
+  lastSeenAt     DateTime       @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+
+  @@index([status, lastSeenAt])
+  @@index([groupJid])
+  @@map("wa_invite_links")
+}
+
 // WhatsApp number sessions easecab-bot ingests from (Phase 25, multi-session). Managed
 // from the admin Sessions tab; `slot` is the session dir label on the VPS.
 model WaSession {
