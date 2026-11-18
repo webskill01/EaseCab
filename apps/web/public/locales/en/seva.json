@@ -21,14 +21,14 @@
   "wa": {
     "title": "Our WhatsApp Group",
     "group": "PUNJAB TAXI & EASECAB",
+    "step1": "Tap the button below and send this message on WhatsApp to <b>{number}</b>.",
+    "step2": "Our team will send you the group link in the same chat.",
+    "step3": "Open the link and send the join request — it gets approved instantly and you're in the group.",
     "sub": "Our WhatsApp group — the same rides, right in WhatsApp",
-    "step1": "Tap Join group and send the join request.",
-    "step2": "Then message us on WhatsApp at <b>{number}</b>.",
-    "join": "Join group",
-    "message": "Message for approval",
-    "prefill": "Hi, I have sent the join request for the PUNJAB TAXI & EASECAB WhatsApp group. Kindly approve my request.\nName: {name}\nNumber: {phone}",
-    "sameNumber": "Send the join request and the approval message from the same WhatsApp number — the number you use on EaseCab.",
-    "needProfile": "Complete your profile first — the admin approves you by your name."
+    "needProfile": "Complete your profile first — the admin approves you by your name.",
+    "message": "Message to join",
+    "prefill": "Hi, I want to join the PUNJAB TAXI & EASECAB WhatsApp group. Please send the group link to this number.\nName: {name}\nNumber: {phone}",
+    "sameNumber": "Send the message from the WhatsApp number you want to add to the group."
   },
   "bt": {
     "title": "Border Tax",
