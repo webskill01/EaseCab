@@ -136,11 +136,12 @@ test('GET /admin/wa-invites: links with join URL, source group name and tab coun
   const [link] = res.body.data.links;
   assert.strictEqual(link.url, 'https://chat.whatsapp.com/AbCdEfGhIjKlMnOpQrStUv');
   assert.strictEqual(link.sourceGroupName, 'PUNJAB TAXI');
-  assert.deepStrictEqual(res.body.data.counts, { new: 1, joined: 0, avoided: 0, invalid: 0 });
+  assert.deepStrictEqual(res.body.data.counts, { new: 1, requested: 0, later: 0, joined: 0, avoided: 0, invalid: 0 });
 });
 
 test("PATCH /admin/wa-invites/:id avoids; joined is the bot's call only; unknown id 404", async () => {
   const agent = await adminAgent();
+  assert.strictEqual((await agent.patch(`/api/v1/admin/wa-invites/${LINK_ID}`).send({ status: 'later' })).status, 200);
   const ok = await agent.patch(`/api/v1/admin/wa-invites/${LINK_ID}`).send({ status: 'avoided' });
   assert.strictEqual(ok.status, 200);
   assert.strictEqual(ok.body.data.link.status, 'avoided');

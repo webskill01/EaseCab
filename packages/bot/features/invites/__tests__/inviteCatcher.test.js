@@ -100,12 +100,12 @@ test('see: a failed preview is retried on a later sighting; avoided links are no
   t.mock.timers.tick(WA_INVITES.RESOLVE_GAP_MS);
 });
 
-test('markJoined: only new/invalid links of those groups flip to joined', async () => {
+test('markJoined: only new/requested/later/invalid links of those groups flip to joined', async () => {
   const prisma = fakePrisma();
   const c = createInviteCatcher({ prisma, logger, isKnownGroup: () => false });
   await c.markJoined([]);
   assert.strictEqual(prisma.updates.length, 0);
   await c.markJoined(['g1@g.us']);
-  assert.deepStrictEqual(prisma.updates[0].where.status.in, ['new', 'invalid']);
+  assert.deepStrictEqual(prisma.updates[0].where.status.in, ['new', 'requested', 'later', 'invalid']);
   assert.strictEqual(prisma.updates[0].data.status, 'joined');
 });

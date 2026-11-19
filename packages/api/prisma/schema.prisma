@@ -286,6 +286,8 @@ model WaGroup {
 // row per invite code however often it is spammed; seenCount says how often.
 enum WaInviteStatus {
   new
+  requested
+  later
   joined
   avoided
   invalid

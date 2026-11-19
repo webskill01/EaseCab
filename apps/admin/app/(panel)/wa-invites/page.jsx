@@ -1,6 +1,6 @@
 'use client'
 
-import { Link2, Search, ExternalLink, Ban, Undo2, Users, Smartphone } from 'lucide-react'
+import { Link2, Search, ExternalLink, Ban, Undo2, Users, Smartphone, Clock } from 'lucide-react'
 import { useWaInvites } from '@/features/wa-invites/hooks/useWaInvites'
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { Segmented } from '@/features/shell/components/Segmented'
@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils'
 
 const EMPTY = {
   new: ['No new links', 'Links appear as the bot sees them shared in groups.'],
+  requested: ['No requests pending', 'Links you tapped Join on wait here until a session is in the group.'],
+  later: ['Nothing saved for later', 'Tap Later on a new link to park it here.'],
   joined: ['Nothing joined yet', 'A link moves here once any session is in that group.'],
   avoided: ['Nothing avoided', 'Avoided links never come back to New.'],
   invalid: ['No dead links', 'Revoked or expired links land here.'],
@@ -19,6 +21,8 @@ const EMPTY = {
 function when(iso) {
   return new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
 }
+
+const CAN_JOIN = new Set(['new', 'later'])
 
 function LinkRow({ row, busy, onStatus }) {
   return (
@@ -37,18 +41,25 @@ function LinkRow({ row, busy, onStatus }) {
           </div>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2 pl-12 sm:pl-0">
-        {row.status === 'avoided' ? (
+      <div className="flex shrink-0 flex-wrap items-center gap-2 pl-12 sm:pl-0">
+        {row.status === 'avoided' && (
           <button type="button" disabled={busy} onClick={() => onStatus('new')} className={button({ size: 'sm' })}><Undo2 size={14} /> Restore</button>
-        ) : (
-          <>
-            {row.status !== 'invalid' && (
-              <a href={row.url} target="_blank" rel="noopener noreferrer" className={button({ variant: 'success', size: 'sm' })}><ExternalLink size={14} /> Join</a>
-            )}
-            {row.status === 'new' && (
-              <button type="button" disabled={busy} onClick={() => onStatus('avoided')} className={button({ variant: 'dangerOutline', size: 'sm' })}><Ban size={14} /> Avoid</button>
-            )}
-          </>
+        )}
+        {CAN_JOIN.has(row.status) && (
+          // Opens WhatsApp and files the link under Request sent; the bot moves it to Joined once in.
+          <a href={row.url} target="_blank" rel="noopener noreferrer" onClick={() => onStatus('requested')} className={button({ variant: 'success', size: 'sm' })}><ExternalLink size={14} /> Join</a>
+        )}
+        {(row.status === 'requested' || row.status === 'joined') && (
+          <a href={row.url} target="_blank" rel="noopener noreferrer" className={button({ size: 'sm' })}><ExternalLink size={14} /> Open</a>
+        )}
+        {row.status === 'new' && (
+          <button type="button" disabled={busy} onClick={() => onStatus('later')} className={button({ size: 'sm' })}><Clock size={14} /> Later</button>
+        )}
+        {(row.status === 'later' || row.status === 'requested') && (
+          <button type="button" disabled={busy} onClick={() => onStatus('new')} className={button({ size: 'sm' })}><Undo2 size={14} /> Back to New</button>
+        )}
+        {CAN_JOIN.has(row.status) && (
+          <button type="button" disabled={busy} onClick={() => onStatus('avoided')} className={button({ variant: 'dangerOutline', size: 'sm' })}><Ban size={14} /> Avoid</button>
         )}
       </div>
     </li>
@@ -59,6 +70,8 @@ export default function WaInvitesPage() {
   const g = useWaInvites()
   const tabs = [
     { id: 'new', label: `New (${g.counts.new})` },
+    { id: 'requested', label: `Request sent (${g.counts.requested})` },
+    { id: 'later', label: `Later (${g.counts.later})` },
     { id: 'joined', label: `Joined (${g.counts.joined})` },
     { id: 'avoided', label: `Avoided (${g.counts.avoided})` },
     { id: 'invalid', label: `Dead (${g.counts.invalid})` },
@@ -70,7 +83,7 @@ export default function WaInvitesPage() {
       <PageHeader
         icon={Link2}
         title="Group Links"
-        description="WhatsApp group links shared in any group the bot's sessions are in, each listed once however often it is shared. Join opens WhatsApp; once any session is in the group the link moves to Joined by itself. Avoid hides a link for good."
+        description="WhatsApp group links shared in any group the bot's sessions are in, each listed once however often it is shared. Join opens WhatsApp and moves the link to Request sent; once any session is in the group it moves to Joined by itself. Later parks a link to keep New fresh. Avoid hides it for good."
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

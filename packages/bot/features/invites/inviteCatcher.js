@@ -3,7 +3,9 @@
 const { WA_INVITES, WA_INVITE_STATUS, extractInviteCodes } = require('@easecab/shared');
 
 // WhatsApp's answer for a revoked / expired / unknown invite (Boom status codes).
-const GONE_CODES = new Set([401, 404, 406, 410]);
+// Avoided / joined / dead links are never looked up again.
+const PREVIEW_STATUSES = new Set([WA_INVITE_STATUS.NEW, WA_INVITE_STATUS.REQUESTED, WA_INVITE_STATUS.LATER]);
+const GONE_CODES = new Set([400, 401, 404, 406, 410]); // 400 bad-request = reset link (seen live 2026-11-19)
 
 /**
  * Group-link catcher (Phase 29). Every group message on every session goes through
@@ -73,7 +75,7 @@ function createInviteCatcher({ prisma, logger, isKnownGroup }) {
       select: { status: true, resolvedAt: true },
     });
     // ponytail: retry rides on re-sightings (≤ once per RESEEN_WINDOW_MS per code), no retry timer
-    if (!row.resolvedAt && row.status === WA_INVITE_STATUS.NEW && sock && queue.length < WA_INVITES.RESOLVE_QUEUE_MAX) {
+    if (!row.resolvedAt && PREVIEW_STATUSES.has(row.status) && sock && queue.length < WA_INVITES.RESOLVE_QUEUE_MAX) {
       queue.push({ code, sock });
       drain().catch((err) => logger.warn({ err: err.message }, 'invite preview queue failed'));
     }
@@ -98,14 +100,14 @@ function createInviteCatcher({ prisma, logger, isKnownGroup }) {
     },
 
     /**
-     * A session is (now) in these groups → their links are joined. Avoided ones stay avoided.
+     * A session is (now) in these groups → their new / requested / later / dead links are joined. Avoided ones stay avoided.
      * @param {string[]} jids
      */
     async markJoined(jids) {
       if (!jids.length) return;
       try {
         await prisma.waInviteLink.updateMany({
-          where: { groupJid: { in: jids }, status: { in: [WA_INVITE_STATUS.NEW, WA_INVITE_STATUS.INVALID] } },
+          where: { groupJid: { in: jids }, status: { in: [WA_INVITE_STATUS.NEW, WA_INVITE_STATUS.REQUESTED, WA_INVITE_STATUS.LATER, WA_INVITE_STATUS.INVALID] } },
           data: { status: WA_INVITE_STATUS.JOINED },
         });
       } catch (err) {

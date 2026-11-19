@@ -181,7 +181,7 @@ const adminWaInvitesQuerySchema = z.object({
 
 /** Avoid a link, or put an avoided one back to new. joined/invalid are the bot's to set. */
 const adminWaInvitePatchSchema = z
-  .object({ status: z.enum([WA_INVITE_STATUS.AVOIDED, WA_INVITE_STATUS.NEW]) })
+  .object({ status: z.enum([WA_INVITE_STATUS.NEW, WA_INVITE_STATUS.REQUESTED, WA_INVITE_STATUS.LATER, WA_INVITE_STATUS.AVOIDED]) })
   .strict();
 
 /** Founder payments list (offset, admin §8). */

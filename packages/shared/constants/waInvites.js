@@ -7,6 +7,8 @@
  */
 const WA_INVITE_STATUS = Object.freeze({
   NEW: 'new',
+  REQUESTED: 'requested', // admin tapped Join (request sent); the bot flips it to joined once in
+  LATER: 'later', // admin parked it to keep New fresh
   JOINED: 'joined', // a bot session is in the group (set by the bot)
   AVOIDED: 'avoided', // admin said no; never shown as new again
   INVALID: 'invalid', // WhatsApp says the link is revoked / gone
