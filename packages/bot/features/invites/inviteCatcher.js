@@ -41,8 +41,9 @@ function createInviteCatcher({ prisma, logger, isKnownGroup }) {
         },
       });
     } catch (err) {
-      const status = err?.output?.statusCode ?? err?.data;
-      if (!GONE_CODES.has(Number(status))) return logger.warn({ err: err.message }, 'invite preview failed; left unresolved');
+      // Baileys puts WhatsApp's IQ error code in err.data; Boom's output.statusCode is then a default 500.
+      const code = Number(err?.data ?? err?.output?.statusCode);
+      if (!GONE_CODES.has(code)) return logger.warn({ err: err.message, code }, 'invite preview failed; left unresolved');
       await prisma.waInviteLink.updateMany({ where: { code }, data: { status: WA_INVITE_STATUS.INVALID, resolvedAt: new Date() } })
         .catch((e) => logger.warn({ err: e.message }, 'could not mark invite invalid'));
     }
@@ -62,16 +63,17 @@ function createInviteCatcher({ prisma, logger, isKnownGroup }) {
     }
   }
 
-  /** Upsert one code; queue a preview when the row is brand new. */
+  /** Upsert one code; queue a preview while it is still unresolved (new row, or an earlier preview failed). */
   async function record(code, groupId, sock, now) {
     const at = new Date(now);
     const row = await prisma.waInviteLink.upsert({
       where: { code },
       create: { code, sourceGroupJid: groupId, firstSeenAt: at, lastSeenAt: at },
       update: { seenCount: { increment: 1 }, lastSeenAt: at },
-      select: { seenCount: true },
+      select: { status: true, resolvedAt: true },
     });
-    if (row.seenCount === 1 && sock && queue.length < WA_INVITES.RESOLVE_QUEUE_MAX) {
+    // ponytail: retry rides on re-sightings (≤ once per RESEEN_WINDOW_MS per code), no retry timer
+    if (!row.resolvedAt && row.status === WA_INVITE_STATUS.NEW && sock && queue.length < WA_INVITES.RESOLVE_QUEUE_MAX) {
       queue.push({ code, sock });
       drain().catch((err) => logger.warn({ err: err.message }, 'invite preview queue failed'));
     }

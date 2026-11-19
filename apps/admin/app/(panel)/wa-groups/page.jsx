@@ -84,14 +84,14 @@ export default function WaGroupsPage() {
         >
           <ul className="divide-y divide-ec-line overflow-hidden rounded-ec-card border border-ec-line bg-white shadow-ec-card">
             {g.items.map((row) => (
-              <li key={row.id} className={cn('flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-ec-sky/50', !row.enabled && 'bg-slate-50/80')}>
-                <div className="flex min-w-0 items-center gap-3">
+              <li key={row.id} className={cn('flex flex-col gap-2 px-4 py-3 text-sm transition-colors hover:bg-ec-sky/50 sm:flex-row sm:items-center sm:justify-between sm:gap-3', !row.enabled && 'bg-slate-50/80')}>
+                <div className="flex min-w-0 items-start gap-3 sm:items-center">
                   <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full', row.enabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500')}>
                     <Users size={16} />
                   </span>
                   <div className="min-w-0">
-                    <p className={cn('truncate font-medium', row.enabled ? 'text-ec-ink' : 'text-ec-ink60')}>{row.name || 'Unnamed group'}</p>
-                    <p className="truncate text-xs text-ec-ink60">
+                    <p className={cn('break-words font-medium sm:truncate', row.enabled ? 'text-ec-ink' : 'text-ec-ink60')}>{row.name || 'Unnamed group'}</p>
+                    <p className="break-all text-xs text-ec-ink60 sm:truncate">
                       {row.participants ?? '?'} members · seen {lastSeen(row.lastSeenAt)} · {row.jid}
                     </p>
                     {row.sessions?.length > 0 && (
@@ -103,7 +103,7 @@ export default function WaGroupsPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center justify-between gap-2 pl-12 sm:justify-start sm:pl-0">
                 <button
                   type="button"
                   aria-pressed={row.directDuty}

@@ -17,7 +17,7 @@ function fakePrisma() {
       upsert: async ({ where, create }) => {
         const r = rows.get(where.code);
         if (r) { r.seenCount += 1; return r; }
-        const n = { ...create, seenCount: 1 };
+        const n = { status: 'new', resolvedAt: null, ...create, seenCount: 1 };
         rows.set(where.code, n);
         return n;
       },
@@ -62,7 +62,8 @@ test('see: new code is previewed → name/size/jid saved; a group we are in → 
 test('see: revoked link → invalid; a network error leaves it unresolved', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const prisma = fakePrisma();
-  const gone = Object.assign(new Error('not-authorized'), { output: { statusCode: 401 } });
+  // Real Baileys shape: code in data, Boom's default 500 in output.statusCode.
+  const gone = Object.assign(new Error('not-authorized'), { data: 401, output: { statusCode: 500 } });
   const sock = { user: {}, groupGetInviteInfo: async () => { throw gone; } };
   const c = createInviteCatcher({ prisma, logger, isKnownGroup: () => false });
   await c.see(`chat.whatsapp.com/${CODE}`, 'a@g.us', sock);
@@ -75,6 +76,27 @@ test('see: revoked link → invalid; a network error leaves it unresolved', asyn
   await createInviteCatcher({ prisma: prisma2, logger, isKnownGroup: () => false }).see(`chat.whatsapp.com/${CODE}`, 'a@g.us', sock2);
   await new Promise(setImmediate);
   assert.strictEqual(prisma2.updates.length, 0);
+  t.mock.timers.tick(WA_INVITES.RESOLVE_GAP_MS);
+});
+
+test('see: a failed preview is retried on a later sighting; avoided links are not', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const prisma = fakePrisma();
+  let calls = 0;
+  const sock = { user: {}, groupGetInviteInfo: async () => { calls += 1; throw new Error('timed out'); } };
+  const c = createInviteCatcher({ prisma, logger, isKnownGroup: () => false });
+  await c.see(`chat.whatsapp.com/${CODE}`, 'a@g.us', sock);
+  await new Promise(setImmediate);
+  t.mock.timers.tick(WA_INVITES.RESEEN_WINDOW_MS);
+  await c.see(`chat.whatsapp.com/${CODE}`, 'a@g.us', sock);
+  await new Promise(setImmediate);
+  assert.strictEqual(calls, 2);
+
+  prisma.rows.get(CODE).status = 'avoided';
+  t.mock.timers.tick(WA_INVITES.RESEEN_WINDOW_MS);
+  await c.see(`chat.whatsapp.com/${CODE}`, 'a@g.us', sock);
+  await new Promise(setImmediate);
+  assert.strictEqual(calls, 2);
   t.mock.timers.tick(WA_INVITES.RESOLVE_GAP_MS);
 });
 
