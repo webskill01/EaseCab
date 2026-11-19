@@ -185,6 +185,8 @@
       "download": "Download receipt",
       "gettingReceipt": "Paid. Getting your receipt from the govt site…",
       "expired": "QR time is over. Checking if a payment came through…",
+      "verifying": "If you've paid, please wait a little — your receipt is being fetched from the govt portal. This can take a few minutes.",
+      "noRepay": "Don't pay again. Keep this screen open, or check Border Tax history for the receipt later.",
       "scanCaps": "Scan & pay with any UPI app",
       "complete": "Complete your payment",
       "windowEnds": "Payment window ends in",

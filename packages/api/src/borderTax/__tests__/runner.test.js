@@ -158,7 +158,7 @@ test('an attempt that reached the bank step and went unpaid schedules its lock c
 });
 
 /** unlock() harness: filing b1 failed, clearPending scripted. */
-function unlockSetup(rowFields, verdict) {
+function unlockSetup(rowFields, verdict, lookup = async () => null) {
   const t = setup();
   Object.assign(t.rows.b1, { status: 'expired', failureCode: 'payment_timeout', taxPaise: 10000 }, rowFields);
   const puts = [];
@@ -166,7 +166,7 @@ function unlockSetup(rowFields, verdict) {
   const r2 = { async putObject(o) { puts.push(o.key); } };
   const clearLocks = async () => { if (verdict instanceof Error) throw verdict; return verdict; };
   const pushed = [];
-  const runner = createRunner({ ...t, logger, r2, alert: (m) => alerts.push(m), clearLocks, onLatePaid: async (req) => { pushed.push(req.id); } });
+  const runner = createRunner({ ...t, logger, r2, alert: (m) => alerts.push(m), clearLocks, lookup, onLatePaid: async (req) => { pushed.push(req.id); } });
   return { ...t, puts, alerts, pushed, unlock: () => runner.unlock('b1') };
 }
 
@@ -203,6 +203,22 @@ test('unlock: our own attempt was paid after all → filing PAID with the receip
   assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.unlocks.b1.status, u.puts.length], ['paid', 'HRR7', 'paid', 1]);
   assert.match(u.alerts.join(), /PAID \(HRR7, this filing → marked paid\)/);
   assert.deepStrictEqual(u.pushed, ['b1'], 'driver pushed');
+});
+
+test('unlock: QR timed out and nothing pending → receipt looked up by vehicle → PAID, driver pushed (HP 513710ed)', async () => {
+  let asked;
+  const lookup = async (_ctx, want) => { asked = want; return { receiptNo: 'HPR9', pdf: Buffer.from('%PDF') }; };
+  const u = unlockSetup({ createdAt: new Date('2026-11-19T11:12:30Z') }, { rows: [], retryAt: null }, lookup);
+  await u.unlock();
+  assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.unlocks.b1.status, u.puts.length, u.pushed], ['paid', 'HPR9', 'paid', 1, ['b1']]);
+  assert.deepStrictEqual([asked.amountPaise, asked.since.toISOString()], [10000, '2026-11-19T11:12:30.000Z']);
+});
+
+test('unlock: nothing pending but a young attempt still waits (retryAt) → no receipt lookup', async () => {
+  let called = false;
+  const u = unlockSetup({}, { rows: [], retryAt: new Date(Date.now() + 900_000) }, async () => { called = true; return null; });
+  await u.unlock();
+  assert.deepStrictEqual([called, u.unlocks.b1.status], [false, 'waiting']);
 });
 
 test('unlock: a paid attempt of a different amount is not this filing (vehicle_pending case) — receipt shown only', async () => {

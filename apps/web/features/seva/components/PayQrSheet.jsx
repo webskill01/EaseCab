@@ -31,7 +31,8 @@ export function PayQrSheet({ f, onClose }) {
         {expired ? (
           <div className="flex flex-col items-center gap-3 rounded-ec-card bg-ec-bg px-4 py-8" role="status">
             <Spinner size={28} />
-            <p className="text-[14px] font-bold text-ec-ink">{t('bt.qr.expired')}</p>
+            <p className="text-[14px] font-bold text-ec-ink">{t(f.live?.step === 'verifying' ? 'bt.qr.verifying' : 'bt.qr.expired')}</p>
+            <p className="text-[12.5px] font-semibold leading-snug text-ec-ink60">{t('bt.qr.noRepay')}</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3 rounded-ec-card border border-ec-line bg-white p-4 shadow-ec-card">

@@ -185,6 +185,8 @@
       "download": "Receipt download karein",
       "gettingReceipt": "Payment ho gaya. Govt site se aapki receipt la rahe hain…",
       "expired": "QR ka time khatam. Check kar rahe hain ki payment aaya ya nahi…",
+      "verifying": "Agar aapne pay kar diya hai, toh thoda intezaar karein — aapki receipt govt portal se nikaali ja rahi hai. Isme kuch minute lag sakte hain.",
+      "noRepay": "Dobara pay mat karein. Ye screen khuli rakhein ya baad mein Border Tax history mein receipt dekhein.",
       "scanCaps": "Kisi bhi UPI app se scan karke pay karein",
       "complete": "Apni payment poori karein",
       "windowEnds": "Payment ka samay khatam hoga",

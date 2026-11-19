@@ -18,6 +18,7 @@ const { portalError } = require('./portal');
  * the newer one needs a "Generate QR" click first.
  */
 const QR_WAIT_MS = 25_000;
+const STATUS_POLL_MS = 3000; // receipt-tab check while waiting for PayU's result
 const IDLE_MS = 5000; // networkidle cap before looking for the QR
 const BLANK_MS = 8000; // nothing on the checkout this long → reload (normal QR shows in ~5s)
 const QR_CANDIDATES = 4; // square images tried per poll (logos, icons, the QR)
@@ -148,14 +149,31 @@ async function openQr(page, io) {
   return { qr: `data:image/png;base64,${shot.toString('base64')}`, upi };
 }
 
-/** PayU's result post back to the treasury (`back` host). @returns {Promise<string>} PayU status ('success' when paid) @throws PAYMENT_TIMEOUT */
+/**
+ * PayU's result post back to the treasury (`back` host), or the checkpost receipt showing up in any tab —
+ * HP's first real payment (513710ed, 2026-11-19) was paid but never matched the post-back, so it timed out.
+ * @returns {Promise<{ status: string, found?: object }>} PayU status ('success' when paid) @throws PAYMENT_TIMEOUT
+ */
 async function payStatus(context, back) {
-  const req = await context.waitForEvent('request', {
-    predicate: (r) => r.method() === 'POST' && back.test(r.url()) && new URLSearchParams(r.postData() || '').has('status'),
-    timeout: (BORDER_TAX.PAY_WAIT_SEC + BORDER_TAX.PAY_GRACE_SEC) * 1000,
-  }).catch(() => null);
-  if (!req) throw portalError(F.PAYMENT_TIMEOUT);
-  return (new URLSearchParams(req.postData() || '').get('status') || '').toLowerCase();
+  let status = null;
+  const onReq = (r) => {
+    if (r.method() !== 'POST' || !back.test(r.url())) return;
+    const form = new URLSearchParams(r.postData() || '');
+    if (form.has('status')) status = (form.get('status') || '').toLowerCase();
+  };
+  context.on('request', onReq);
+  try {
+    const end = Date.now() + (BORDER_TAX.PAY_WAIT_SEC + BORDER_TAX.PAY_GRACE_SEC) * 1000;
+    while (Date.now() < end) {
+      if (status !== null) return { status };
+      const found = await receiptOn(context);
+      if (found) return { status: 'success', found };
+      await new Promise((r) => setTimeout(r, STATUS_POLL_MS));
+    }
+    throw portalError(F.PAYMENT_TIMEOUT);
+  } finally {
+    context.off('request', onReq);
+  }
 }
 
 /** A context page showing the checkpost receipt (number + its QR drawn), or null. */
@@ -210,13 +228,13 @@ async function receiptPdf(page, log) {
  * @throws PAYMENT_TIMEOUT, PAYMENT_FAILED
  */
 async function awaitPaid(page, io, back) {
-  const status = await payStatus(page.context(), back);
-  io.log(`PayU status: ${status || 'none'}`);
+  const { status, found: early } = await payStatus(page.context(), back);
+  io.log(`PayU status: ${early ? 'receipt page seen' : status || 'none'}`);
   if (status !== 'success') throw portalError(F.PAYMENT_FAILED, `PayU status ${status || 'none'}`);
-  const found = await receiptPage(page.context());
+  const found = early || (await receiptPage(page.context()));
   if (!found) return { receiptNo: null, pdf: null };
   io.log(`receipt ${found.receiptNo}`);
   return { receiptNo: found.receiptNo, pdf: await receiptPdf(found.page, io.log) };
 }
 
-module.exports = { openQr, awaitPaid, receiptOn, receiptPdf, decodeQr, findQr, tagQr, describe, RECEIPT_RE };
+module.exports = { openQr, awaitPaid, payStatus, receiptOn, receiptPdf, decodeQr, findQr, tagQr, describe, RECEIPT_RE };

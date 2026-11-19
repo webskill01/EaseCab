@@ -63,8 +63,13 @@ async function bankHandoff(page, stateCd, io) {
   const atTreasury = new Promise((resolve) => { reachedTreasury = resolve; });
   // context, not page: eGRAS may open the bank in a new window (2026-11-06 live: 60s with no capture)
   const onRoute = (route) => {
-    if (staying) return route.continue();
     const req = route.request();
+    if (staying) {
+      // HP's PayU result path is unmapped (2026-11-19): log every top-level move after the QR — field names only, never values
+      const nav = req.isNavigationRequest() && req.frame() === req.frame().page().mainFrame();
+      if (nav) io?.log?.(`pay nav ${req.method()} ${new URL(req.url()).hostname}${new URL(req.url()).pathname} [${FORM_TYPE.test(req.headers()['content-type'] || '') ? [...new URLSearchParams(req.postData() || '').keys()].join(',') : ''}]`);
+      return route.continue();
+    }
     const host = new URL(req.url()).hostname;
     const frame = req.frame();
     const top = frame === frame.page().mainFrame();
