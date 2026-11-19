@@ -69,6 +69,7 @@ test('see: revoked link → invalid; a network error leaves it unresolved', asyn
   await c.see(`chat.whatsapp.com/${CODE}`, 'a@g.us', sock);
   await new Promise(setImmediate);
   assert.strictEqual(prisma.updates[0].data.status, 'invalid');
+  assert.strictEqual(prisma.updates[0].where.code, CODE);
 
   const prisma2 = fakePrisma();
   const sock2 = { user: {}, groupGetInviteInfo: async () => { throw new Error('timed out'); } };

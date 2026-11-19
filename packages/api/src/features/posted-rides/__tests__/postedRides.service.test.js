@@ -240,3 +240,24 @@ test('removePost: a moderator number deletes any post (no owner filter)', async 
   await createPostedRidesService({ repo: baseRepo(own) }).removePost({ userId: 'u1', postedRideId: 'p1' });
   assert.deepEqual(own.delArgs, ['p1', 'u1']);
 });
+
+test('listFeed: drivers first, then direct duties, cursor carries over between runs', async () => {
+  const row = (id) => ({ id, fromCity: null, toCity: null, status: 'active', isClosed: false, createdAt: new Date('2026-11-19T10:00:00Z'), expiresAt: new Date() });
+  const drivers = [row('a'), row('b')];
+  const direct = [row('x'), row('y'), row('z')];
+  const repo = baseRepo();
+  const calls = [];
+  repo.listActivePosts = async (args) => {
+    calls.push(args);
+    const list = args.direct ? direct : drivers;
+    const start = args.id ? list.findIndex((r) => r.id === args.id) + 1 : 0;
+    return list.slice(start, start + args.limit + 1);
+  };
+  const svc = createPostedRidesService({ repo });
+  const p1 = await svc.listFeed({ limit: 3 });
+  assert.deepEqual(p1.posts.map((p) => p.id), ['a', 'b', 'x']);
+  const p2 = await svc.listFeed({ limit: 3, cursor: p1.nextCursor });
+  assert.deepEqual(p2.posts.map((p) => p.id), ['y', 'z']);
+  assert.equal(p2.nextCursor, null);
+  assert.equal(calls.at(-1).direct, true); // page 2 skipped the drivers' run
+});

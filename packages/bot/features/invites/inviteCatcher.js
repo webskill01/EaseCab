@@ -44,8 +44,8 @@ function createInviteCatcher({ prisma, logger, isKnownGroup }) {
       });
     } catch (err) {
       // Baileys puts WhatsApp's IQ error code in err.data; Boom's output.statusCode is then a default 500.
-      const code = Number(err?.data ?? err?.output?.statusCode);
-      if (!GONE_CODES.has(code)) return logger.warn({ err: err.message, code }, 'invite preview failed; left unresolved');
+      const errCode = Number(err?.data ?? err?.output?.statusCode); // not `code`: that is the invite code below
+      if (!GONE_CODES.has(errCode)) return logger.warn({ err: err.message, errCode }, 'invite preview failed; left unresolved');
       await prisma.waInviteLink.updateMany({ where: { code }, data: { status: WA_INVITE_STATUS.INVALID, resolvedAt: new Date() } })
         .catch((e) => logger.warn({ err: e.message }, 'could not mark invite invalid'));
     }

@@ -6,6 +6,8 @@ const {
 } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
 
+const DIRECT_TAG = 'd:'; // cursor id prefix: paging is inside the direct-duty run
+
 const TTL_MS = POSTED_RIDES.TTL_HOURS * 3600_000;
 
 /**
@@ -94,14 +96,27 @@ function createPostedRidesService({ repo, logger, uploads, requireKyc = false })
       return toPublicPostedRide(row);
     },
 
-    /** One page of the public posted-rides feed, newest first. */
+    /**
+     * One page of the public posted-rides feed: drivers' own posts newest first, then
+     * the Punjab Taxi direct-group duties newest first. A cursor id tagged `d:` means
+     * the drivers' run is done and paging continues inside the direct run.
+     */
     async listFeed({ limit, cursor, cityIds }) {
       const key = cursor ? decodeCursor(cursor) : {};
-      const rows = await repo.listActivePosts({ createdAt: key.receivedAt, id: key.id, cityIds, limit });
+      const inDirect = Boolean(key.id?.startsWith(DIRECT_TAG));
+      const after = { createdAt: key.receivedAt, id: inDirect ? key.id.slice(DIRECT_TAG.length) : key.id };
+      let rows = inDirect ? [] : await repo.listActivePosts({ ...after, cityIds, limit });
+      const directIds = new Set();
+      if (rows.length <= limit) { // drivers exhausted on this page: top up with direct duties
+        const more = await repo.listActivePosts({ ...(inDirect ? after : {}), cityIds, limit: limit - rows.length, direct: true });
+        more.forEach((r) => directIds.add(r.id));
+        rows = rows.concat(more);
+      }
       const hasMore = rows.length > limit;
       const page = hasMore ? rows.slice(0, limit) : rows;
       const last = page[page.length - 1];
-      const nextCursor = hasMore ? encodeCursor({ receivedAt: last.createdAt, id: last.id }) : null;
+      const lastId = directIds.has(last?.id) ? DIRECT_TAG + last.id : last?.id;
+      const nextCursor = hasMore ? encodeCursor({ receivedAt: last.createdAt, id: lastId }) : null;
       return { posts: page.map(toPublicPostedRide), nextCursor };
     },
 

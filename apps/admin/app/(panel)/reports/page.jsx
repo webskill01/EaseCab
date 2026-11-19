@@ -14,7 +14,7 @@ const STATUSES = [
 ]
 
 export default function ReportsPage() {
-  const { items, total, limit, page, setPage, status, setStatus, isLoading, isError, review } = useReports()
+  const { items, total, limit, page, setPage, status, setStatus, isLoading, isError, review, blockNumber } = useReports()
 
   return (
     <div>
@@ -29,7 +29,7 @@ export default function ReportsPage() {
       <QueryState isLoading={isLoading} isError={isError} isEmpty={items.length === 0} errorMessage="Failed to load the queue." emptyMessage="No reports." emptyHint="Nothing flagged right now.">
         <div className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
-            <ReportCard key={item.id} item={item} onAction={(id, action) => review.mutate({ id, action })} />
+            <ReportCard key={item.id} item={item} onAction={(id, action) => review.mutate({ id, action })} onBlock={(phone) => blockNumber.mutate(phone)} blocking={blockNumber.isPending} />
           ))}
         </div>
       </QueryState>

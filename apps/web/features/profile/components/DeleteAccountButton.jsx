@@ -29,10 +29,10 @@ export function DeleteAccountButton() {
             <p className="text-[13.5px] font-medium leading-relaxed text-ec-ink60">{t('deleteAccount.body')}</p>
             {del.error && <p className="text-[12.5px] font-bold text-ec-danger">{t('deleteAccount.error')}</p>}
             <div className="mt-1 flex gap-2.5">
-              <button type="button" onClick={() => setOpen(false)} disabled={del.submitting} className="h-[52px] flex-1 rounded-xl border-[1.5px] border-ec-line bg-white text-[15px] font-extrabold text-ec-ink disabled:opacity-60">
+              <button type="button" onClick={() => setOpen(false)} disabled={del.submitting} className="min-h-[52px] min-w-0 flex-1 rounded-xl px-3 py-2 leading-tight border-[1.5px] border-ec-line bg-white text-[14px] font-extrabold text-ec-ink disabled:opacity-60">
                 {t('deleteAccount.cancel')}
               </button>
-              <button type="button" onClick={del.run} disabled={del.submitting} className="h-[52px] flex-1 rounded-xl bg-ec-danger text-[15px] font-extrabold text-white disabled:opacity-60">
+              <button type="button" onClick={del.run} disabled={del.submitting} className="min-h-[52px] min-w-0 flex-1 rounded-xl px-3 py-2 leading-tight bg-ec-danger text-[14px] font-extrabold text-white disabled:opacity-60">
                 {del.submitting ? t('deleteAccount.deleting') : t('deleteAccount.confirm')}
               </button>
             </div>

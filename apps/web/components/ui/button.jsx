@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
  * callers never re-add it. Layout (w-full / flex-1) stays a per-use `className`.
  */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-extrabold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue/40 disabled:pointer-events-none disabled:opacity-60 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 min-w-0 rounded-xl text-center leading-tight font-extrabold transition active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue/40 disabled:pointer-events-none disabled:opacity-60 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -22,9 +22,11 @@ const buttonVariants = cva(
         ghost: 'text-ec-ink hover:bg-ec-bg',
       },
       size: {
-        sm: 'h-9 px-4 text-[13px]',
-        md: 'h-11 px-5 text-[14px]',
-        lg: 'h-12 px-6 text-[15px]',
+        // min-h (not h) + wrap-friendly: a long Hinglish label grows a line instead of
+        // spilling past a flex-1 half-width sheet button (horizontal-scroll bug).
+        sm: 'min-h-9 px-3 py-1.5 text-[13px]',
+        md: 'min-h-11 px-4 py-2 text-[14px]',
+        lg: 'min-h-12 px-4 py-2 text-[14px] sm:text-[15px]',
         icon: 'h-9 w-9',
       },
     },

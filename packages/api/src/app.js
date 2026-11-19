@@ -398,7 +398,7 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
   // Posted rides (Step 13) — authed app-native posts (24h TTL); KYC-gated create,
   // subscription-gated contact. The free-text parser (Step 20) reuses the shared
   // CityResolver + extractors to turn a pasted message into a draft preview.
-  const postedRidesRepo = createPostedRidesRepository({ prisma, redis });
+  const postedRidesRepo = createPostedRidesRepository({ prisma, redis, directDutyPosterPhone: config.directDutyPosterPhone });
   const postedRidesService = createPostedRidesService({ repo: postedRidesRepo, logger, uploads: uploadsService, requireKyc: config.verificationEnabled });
   const postParser = createPostParser({
     repo: postedRidesRepo,

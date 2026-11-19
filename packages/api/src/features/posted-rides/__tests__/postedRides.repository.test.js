@@ -85,3 +85,12 @@ test('findContactTarget: returns only active, unexpired posts (delegates the WHE
   const repo = createPostedRidesRepository({ prisma: fakePrisma({ findFirst: () => target }), redis: fakeRedis() });
   assert.deepEqual(await repo.findContactTarget('p1'), target);
 });
+
+test('listActivePosts: splits drivers vs direct-duty poster', async () => {
+  let seen;
+  const repo = createPostedRidesRepository({ prisma: fakePrisma({ findMany: (a) => { seen = a; return []; } }), redis: fakeRedis(), directDutyPosterPhone: '+916283380110' });
+  await repo.listActivePosts({ limit: 5 });
+  assert.deepEqual(seen.where.poster.phone, { not: '+916283380110' });
+  await repo.listActivePosts({ limit: 5, direct: true });
+  assert.equal(seen.where.poster.phone, '+916283380110');
+});

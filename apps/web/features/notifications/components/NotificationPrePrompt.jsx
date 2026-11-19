@@ -20,8 +20,8 @@ export function NotificationPrePrompt({ onEnable, onDismiss, enabling }) {
         </div>
       </div>
       <div className="mt-3 flex gap-2">
-        <button type="button" onClick={onDismiss} className="h-11 flex-1 rounded-xl border-[1.5px] border-ec-line text-[14px] font-bold text-ec-ink60">{t('prePrompt.notNow')}</button>
-        <button type="button" onClick={onEnable} disabled={enabling} className="h-11 flex-1 rounded-xl bg-ec-blue text-[14px] font-extrabold text-white shadow-ec-blue disabled:opacity-60">{t('prePrompt.enable')}</button>
+        <button type="button" onClick={onDismiss} className="min-h-11 min-w-0 flex-1 rounded-xl px-3 py-2 leading-tight border-[1.5px] border-ec-line text-[14px] font-bold text-ec-ink60">{t('prePrompt.notNow')}</button>
+        <button type="button" onClick={onEnable} disabled={enabling} className="min-h-11 min-w-0 flex-1 rounded-xl px-3 py-2 leading-tight bg-ec-blue text-[14px] font-extrabold text-white shadow-ec-blue disabled:opacity-60">{t('prePrompt.enable')}</button>
       </div>
     </div>
   )

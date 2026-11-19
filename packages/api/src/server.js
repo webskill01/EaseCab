@@ -70,6 +70,7 @@ async function main() {
     },
     // Phase 19: KYC off in v1 (routes unmounted, posting gated on profile only).
     verificationEnabled: serverEnv.VERIFICATION_ENABLED,
+    directDutyPosterPhone: serverEnv.DIRECT_DUTY_POSTER_PHONE,
     // Who sees the referral program (Phase 22): { all, phones }.
     referrals: serverEnv.REFERRAL_TESTERS,
     // Fleet control-panel peer sync (Phase 17.5).

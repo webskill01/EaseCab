@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, ImageIcon, X, Trash2 } from 'lucide-react'
+import { ArrowRight, ImageIcon, X, Trash2, Ban } from 'lucide-react'
 import { button, pill, card, REASONS } from '@/lib/ui'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { UserLink } from '@/features/shell/components/UserLink'
@@ -8,7 +8,7 @@ import { UserLink } from '@/features/shell/components/UserLink'
 const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
 const VERDICT = { dismiss: 'Dismissed', remove: 'Ride removed' }
 
-export function ReportCard({ item, onAction }) {
+export function ReportCard({ item, onAction, onBlock, blocking }) {
   const { reporter, target } = item
   const reason = REASONS[item.reason] ?? { label: item.reason, tone: 'slate' }
   return (
@@ -32,6 +32,17 @@ export function ReportCard({ item, onAction }) {
           <p className="text-sm italic text-ec-ink60">target gone</p>
         )}
         {target?.displayText && <p className="mt-2 break-words text-sm text-ec-ink60">{target.displayText}</p>}
+        {target?.phone && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-ec-ink60">Ride number</span>
+            <PhoneLink phone={target.phone} className="font-semibold text-ec-ink" />
+            {target.kind === 'bot' && onBlock && (
+              <button type="button" disabled={blocking} onClick={() => onBlock(target.phone)} className={button({ variant: 'dangerOutline', size: 'sm' })}>
+                <Ban size={14} /> Block in bot
+              </button>
+            )}
+          </div>
+        )}
         {(target?.postedAt || target?.posterName) && (
           <p className="mt-1 text-xs text-ec-ink60">
             {target.postedAt && <>Posted {when(target.postedAt)}</>}

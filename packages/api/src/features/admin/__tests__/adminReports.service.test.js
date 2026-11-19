@@ -7,7 +7,7 @@ const { createAdminReportsService } = require('../adminReports.service');
 const BOT_ROW = {
   id: 'r1', reason: 'spam', remarks: 'junk', screenshotKey: null, createdAt: new Date(), reviewedAt: null,
   reporter: { id: 'u1', name: 'Reporter', phone: '+919876543210' },
-  ride: { id: 'ride1', displayText: 'Amritsar to Delhi', status: 'fresh', pickupRaw: 'asr', dropRaw: 'del', pickupCity: { canonicalName: 'Amritsar' }, dropCity: { canonicalName: 'Delhi' } },
+  ride: { id: 'ride1', displayText: 'Amritsar to Delhi', status: 'fresh', pickupRaw: 'asr', dropRaw: 'del', pickupCity: { canonicalName: 'Amritsar' }, dropCity: { canonicalName: 'Delhi' }, phoneNumber: '9812345678' },
   postedRide: null,
 };
 
@@ -29,6 +29,7 @@ test('list returns the reporter phone and exposes a bot-ride target summary', as
   assert.strictEqual(item.target.fromCity, 'Amritsar');
   assert.strictEqual(item.target.toCity, 'Delhi');
   assert.strictEqual(item.target.status, 'fresh');
+  assert.strictEqual(item.target.phone, '9812345678');
   assert.deepStrictEqual({ page: out.page, limit: out.limit, total: out.total }, { page: 1, limit: 20, total: 1 });
 });
 

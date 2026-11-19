@@ -51,8 +51,8 @@ export function BottomSheet({ onClose, label, centered = false, closeLabel, chil
         onAnimationEnd={onPanelAnimEnd}
         className={
           centered
-            ? `relative max-h-[88%] w-full max-w-sm overflow-y-auto rounded-[22px] bg-white p-[18px] shadow-[0_20px_60px_rgba(15,23,42,0.3)] motion-reduce:animate-none ${closing ? 'animate-ec-dialog-out' : 'animate-ec-dialog-in'}`
-            : `relative max-h-[88%] overflow-y-auto rounded-t-[22px] bg-white px-[18px] pb-5 pt-2.5 shadow-[0_-10px_40px_rgba(15,23,42,0.2)] motion-reduce:animate-none ${closing ? 'animate-ec-sheet-down' : 'animate-ec-sheet-up'}`
+            ? `relative max-h-[88%] w-full max-w-sm overflow-y-auto overflow-x-hidden rounded-[22px] bg-white p-[18px] shadow-[0_20px_60px_rgba(15,23,42,0.3)] motion-reduce:animate-none ${closing ? 'animate-ec-dialog-out' : 'animate-ec-dialog-in'}`
+            : `relative max-h-[88%] overflow-y-auto overflow-x-hidden rounded-t-[22px] bg-white px-[18px] pb-5 pt-2.5 shadow-[0_-10px_40px_rgba(15,23,42,0.2)] motion-reduce:animate-none ${closing ? 'animate-ec-sheet-down' : 'animate-ec-sheet-up'}`
         }
       >
         {!centered && <div className="mx-auto mb-4 h-1 w-10 rounded-[3px] bg-ec-line" />}

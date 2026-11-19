@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchReports, reviewReport } from '../services/reportsApi'
+import { addBotFilter } from '@/features/bot-filters/services/botFiltersApi'
 import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
 /**
@@ -22,6 +23,13 @@ export function useReports() {
     meta: { success: ({ action }) => (action === 'remove' ? 'Ride removed' : 'Report dismissed') },
   })
 
+  // Reported bot ride's number → the bot's blocked-numbers list (Bot Filters), one tap.
+  const blockNumber = useMutation({
+    mutationFn: (phone) => addBotFilter('blocked_phone', phone),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['botFilters'] }),
+    meta: { success: 'Number blocked in the bot' },
+  })
+
   return {
     items: query.data?.reports ?? [],
     total: query.data?.meta?.total ?? 0,
@@ -33,5 +41,6 @@ export function useReports() {
     isLoading: query.isLoading,
     isError: query.isError,
     review,
+    blockNumber,
   }
 }
