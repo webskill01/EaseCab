@@ -88,14 +88,13 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
   /** In-app QR: show the bank's QR (HR/HP PayU, UP SBIePay), wait for the driver's payment, fetch the receipt. */
   async function collect(id, req, { payPage, ref, pay, ...quote }, io) {
     const { qr, upi, secLeft } = pay.sbi ? await openSbiQr(payPage, io) : await openQr(payPage, io);
-    const shownAt = new Date(Date.now() - 60_000); // portal payment date is to the minute
     if (!(await service.awaitPayment(id, { ...quote, qr, upi, deadline: until(secLeft ?? BORDER_TAX.PAY_WAIT_SEC) }))) return false;
     const { receiptNo, pdf } = pay.sbi ? await awaitSbiPaid(payPage, io, secLeft) : await awaitPaid(payPage, io, pay.back).catch(async (err) => {
       // PayU's result never came (HP 513710ed, 2026-11-19: driver paid, filing expired): the receipt list says if it was paid
       if (err.failureCode !== F.PAYMENT_TIMEOUT) throw err;
       io.log('no PayU result — looking the receipt up by vehicle');
       await repo.setJob(id, { step: 'verifying' }); // app: "receipt is being fetched from the govt portal, don't pay again"
-      const late = await lookupReceipt(payPage.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, since: shownAt, amountPaise: quote.taxPaise }, io.log, sleep);
+      const late = await lookupReceipt(payPage.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, taxFrom: quote.from, amountPaise: quote.taxPaise }, io.log, sleep);
       if (!late) throw err;
       io.log(`receipt ${late.receiptNo} (lookup after timeout)`);
       return late;
@@ -180,9 +179,9 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
         // not own = paid outside this filing (HR 94275939 2026-11-15: no EaseCab filing made that attempt) — FYI only
         alert(`${req.stateCd} unlock ${id.slice(0, 8)}: pending attempt was PAID (${paidRow.receiptNo}${own ? ', this filing → marked paid' : ', not this filing — FYI, vehicle free'})`);
       }
-      // nothing pending after a QR timeout = the attempt went through: find its receipt (paid since the filing, same amount)
+      // nothing pending after a QR timeout = the attempt went through: find its receipt (same Tax From + amount)
       if (!rows.length && !retryAt && MAYBE_PAID.has(req.failureCode) && req.status !== S.PAID && req.taxPaise) {
-        const late = await lookup(page.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, since: req.createdAt, amountPaise: req.taxPaise }, log, sleep);
+        const late = await lookup(page.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, taxFrom: req.taxFrom, amountPaise: req.taxPaise }, log, sleep);
         if (late && (await service.latePaid(id, { receiptNo: late.receiptNo, receiptKey: await storeReceipt(id, late.pdf) }))) {
           log(`late payment found by receipt lookup → paid (${late.receiptNo})`);
           await onLatePaid(req).catch((err) => logger.warn({ id, err: err.message }, 'late-paid push failed'));

@@ -208,10 +208,10 @@ test('unlock: our own attempt was paid after all → filing PAID with the receip
 test('unlock: QR timed out and nothing pending → receipt looked up by vehicle → PAID, driver pushed (HP 513710ed)', async () => {
   let asked;
   const lookup = async (_ctx, want) => { asked = want; return { receiptNo: 'HPR9', pdf: Buffer.from('%PDF') }; };
-  const u = unlockSetup({ createdAt: new Date('2026-11-19T11:12:30Z') }, { rows: [], retryAt: null }, lookup);
+  const u = unlockSetup({}, { rows: [], retryAt: null }, lookup);
   await u.unlock();
   assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.unlocks.b1.status, u.puts.length, u.pushed], ['paid', 'HPR9', 'paid', 1, ['b1']]);
-  assert.deepStrictEqual([asked.amountPaise, asked.since.toISOString()], [10000, '2026-11-19T11:12:30.000Z']);
+  assert.deepStrictEqual([asked.amountPaise, asked.taxFrom], [10000, FROM]);
 });
 
 test('unlock: nothing pending but a young attempt still waits (retryAt) → no receipt lookup', async () => {
