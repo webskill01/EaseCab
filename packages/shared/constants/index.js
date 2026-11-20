@@ -30,4 +30,5 @@ module.exports = {
   ...require('./referrals'),
   ...require('./borderTax'),
   ...require('./groupMode'),
+  ...require('./support'),
 };

@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
-import { supportHref } from '@/features/shell/components/SupportButton'
+import { supportHref, guardSupport } from '@/features/shell/components/SupportButton'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Bank, External, CircleX, Ban, Car, Headset, Receipt, CalendarCheck } from '@/components/ui/icons'
@@ -113,7 +113,7 @@ function ResultSheet({ f, onClose, onRetry }) {
             {failed && !BT_FAIL_NO_RETRY.includes(f.failureCode) && (!f.unlock || f.unlock.status === BT_UNLOCK.CLEARED) && (
               <Button type="button" size="lg" className="w-full" onClick={() => onRetry(f)}>{t(alreadyPaid ? 'bt.live.changeDate' : 'bt.live.retry')}</Button>
             )}
-            <a href={supportHref()} target="_blank" rel="noopener noreferrer" className={`${buttonVariants({ variant: 'outline', size: 'lg' })} w-full gap-2`}>
+            <a href={supportHref()} onClick={guardSupport} target="_blank" rel="noopener noreferrer" className={`${buttonVariants({ variant: 'outline', size: 'lg' })} w-full gap-2`}>
               <Headset size={18} /> {t('bt.live.support')}
             </a>
           </>

@@ -22,5 +22,10 @@
   },
   "form": {
     "fixTitle": "Aage badhne ke liye ye poora karein"
+  },
+  "supportHours": {
+    "title": "Support timing",
+    "body": "Support roz subah 9 se shaam 5 baje tak available hai. Please isi time mein message karein.",
+    "ok": "Theek hai"
   }
 }

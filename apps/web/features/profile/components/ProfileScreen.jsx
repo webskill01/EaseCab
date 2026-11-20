@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Shield, Crown, BellEdit, ChevR, Pin, Plus, Pencil, Headset, VehicleIcon, Info, List, Globe, Lock, Ban, Bolt, Gift } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { env } from '@/config/env'
+import { guardSupport } from '@/features/shell/components/SupportButton'
 import { LOCALE_NAMES } from '@/i18n/config'
 import { useMembership } from '@/features/subscription/hooks/useMembership'
 import { useReferrals } from '@/features/referrals/hooks/useReferrals'
@@ -186,7 +187,7 @@ export function ProfileScreen() {
 
       {/* ⑦ Support */}
       <Button asChild variant="outline" size="lg" className="w-full text-[14.5px] text-ec-blueInk shadow-ec-card">
-        <a href={supportHref()} target="_blank" rel="noopener noreferrer"><Headset size={18} />{t('support')}</a>
+        <a href={supportHref()} onClick={guardSupport} target="_blank" rel="noopener noreferrer"><Headset size={18} />{t('support')}</a>
       </Button>
 
       {/* ⑧ Account actions — one two-row danger card (logout + delete) */}

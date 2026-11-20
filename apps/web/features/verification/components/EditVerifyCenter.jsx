@@ -6,6 +6,7 @@ import { OverlayHeader } from '@/components/ui/Overlay'
 import { Button } from '@/components/ui/button'
 import { Shield, List, Car, User, Globe, Pin, Check, ChevR, Headset } from '@/components/ui/icons'
 import { env } from '@/config/env'
+import { guardSupport } from '@/features/shell/components/SupportButton'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { ScreenSkeleton } from '@/components/ui/Skeleton'
 
@@ -145,7 +146,7 @@ export function EditVerifyCenter() {
         )}
 
         <Button asChild variant="outline" size="lg" className="mt-4 w-full text-ec-blueInk shadow-ec-card">
-          <a href={supportHref()} target="_blank" rel="noopener noreferrer"><Headset size={19} />{t('center.help')}</a>
+          <a href={supportHref()} onClick={guardSupport} target="_blank" rel="noopener noreferrer"><Headset size={19} />{t('center.help')}</a>
         </Button>
       </div>
     </div>

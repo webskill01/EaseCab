@@ -22,5 +22,10 @@
   },
   "form": {
     "fixTitle": "Please complete these to continue"
+  },
+  "supportHours": {
+    "title": "Support hours",
+    "body": "Support is available every day, 9 AM to 5 PM. Please message us in that time.",
+    "ok": "OK"
   }
 }
