@@ -57,9 +57,8 @@ function activeFeedWhere(cityIds, { withDone = false } = {}) {
  * @param {object} deps
  * @param {import('@prisma/client').PrismaClient} deps.prisma
  * @param {import('ioredis').Redis} deps.redis
- * @param {string} [deps.directDutyPosterPhone] - house profile whose posts are the Punjab Taxi direct-group duties
  */
-function createPostedRidesRepository({ prisma, redis, directDutyPosterPhone }) {
+function createPostedRidesRepository({ prisma, redis }) {
   const contactCountKey = (userId) => redisKey('contact', userId);
 
   return {
@@ -137,11 +136,8 @@ function createPostedRidesRepository({ prisma, redis, directDutyPosterPhone }) {
      * the service can detect a further page. Cursor excludes everything at/before
      * (createdAt, id) in (createdAt DESC, id DESC) order.
      */
-    async listActivePosts({ createdAt, id, cityIds, limit, direct = false }) {
-      if (direct && !directDutyPosterPhone) return [];
+    async listActivePosts({ createdAt, id, cityIds, limit }) {
       const where = activeFeedWhere(cityIds, { withDone: true });
-      // Drivers' own posts and the direct-group duties are paged as two separate runs.
-      if (directDutyPosterPhone) where.poster.phone = direct ? directDutyPosterPhone : { not: directDutyPosterPhone };
       if (createdAt && id) {
         where.OR = [{ createdAt: { lt: createdAt } }, { createdAt, id: { lt: id } }];
       }
