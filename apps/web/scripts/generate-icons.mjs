@@ -7,7 +7,10 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const MASTER = path.join(ROOT, 'public', 'logo.jpeg')
+// Current brand mark (EC wheel, blue tile). The old car logo (logo.jpeg) is retired - never
+// regenerate from it. ponytail: trim/pad below were tuned for the old white-background master;
+// check the output by eye before shipping new icons.
+const MASTER = path.join(ROOT, 'public', 'Easecab Logo.jpeg')
 const OUT = path.join(ROOT, 'public', 'icons')
 const SIZES = [72, 96, 128, 144, 152, 192, 384, 512]
 const WHITE = { r: 255, g: 255, b: 255, alpha: 1 }
