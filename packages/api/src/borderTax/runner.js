@@ -1,6 +1,6 @@
 'use strict';
 
-const { BORDER_TAX, BORDER_TAX_STATUS: S, BORDER_TAX_FAILURE: F } = require('@easecab/shared');
+const { BORDER_TAX, BORDER_TAX_STATUS: S, BORDER_TAX_FAILURE: F, BORDER_TAX_UNLOCK: U } = require('@easecab/shared');
 const { portalError } = require('./flows/portal');
 const { fileCheckpost } = require('./flows/checkpostv4');
 const { openQr, awaitPaid } = require('./flows/payuQr');
@@ -101,14 +101,24 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
     });
     const receiptKey = await storeReceipt(id, pdf);
     const grn = ref?.grn || null;
-    const fetching = !receiptKey && Boolean(receiptNo || grn);
+    const fetching = !receiptKey; // HP has no GRN; with no receipt number either it's found by Tax From + fee
     await service.paid(id, { receiptNo, receiptKey, paidAt: new Date(), fetching });
-    if (!fetching) return true;
+    if (!fetching) {
+      await notify(req);
+      return true;
+    }
     // paid is already recorded; a late lookup only adds the receipt (Print Payment Receipt, never Check Status)
-    const late = await lookupReceipt(payPage.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, receiptNo, grn }, io.log, sleep);
+    const late = await lookupReceipt(payPage.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, receiptNo, grn, taxFrom: quote.from, amountPaise: quote.taxPaise }, io.log, sleep);
     if (late) io.log(`receipt ${late.receiptNo} (lookup)`);
-    await service.attachReceipt(id, { receiptNo: late?.receiptNo, receiptKey: await storeReceipt(id, late?.pdf) });
+    const lateKey = await storeReceipt(id, late?.pdf);
+    await service.attachReceipt(id, { receiptNo: late?.receiptNo, receiptKey: lateKey });
+    if (lateKey) await notify(req);
     return true;
+  }
+
+  /** Receipt stored → "payment mil gayi, receipt download kar lo" push, every path (the driver may have left the app). */
+  async function notify(req) {
+    await onLatePaid(req).catch((err) => logger.warn({ id: req.id, err: err.message }, 'paid push failed'));
   }
 
   /** @param {string} id @param {import('ioredis').Redis} conn */
@@ -142,10 +152,24 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
       logger.warn({ id, failureCode, err: err.message }, 'border tax filing stopped');
       if (ALERT_ON.has(failureCode) && err.message !== STOPPED) alert(`${req.stateCd} filing ${id.slice(0, 8)} failed: ${failureCode} (${err.message.slice(0, 200)})`);
       await service.fail(id, failureCode);
+      if (failureCode === F.VEHICLE_PENDING) await followUnlock(id, req).catch((e) => logger.warn({ id, err: e.message }, 'follow unlock failed'));
       atBank ||= BANK_STEP.has(failureCode) || Boolean(err.atBank);
     } finally {
       if (atBank && !paid && !interrupted) await service.scheduleUnlock(id).catch((e) => logger.warn({ id, err: e.message }, 'unlock schedule failed'));
       await page?.context().close().catch((e) => logger.warn({ id, err: e.message }, 'context close failed'));
+    }
+  }
+
+  /**
+   * vehicle_pending behind our own earlier attempt whose clear is already scheduled: this filing clears just
+   * after it, so the app shows the real time ("free at 6:57") instead of "about 30 min" — the 2026-11-20 HP
+   * driver retried 3x in 13 min. Same as the driver tapping "Clear lock" at the right moment.
+   */
+  async function followUnlock(id, req) {
+    const since = new Date(Date.now() - 2 * BORDER_TAX.UNLOCK_AFTER_SEC * 1000);
+    for (const other of await repo.recentForVehicle(req.vehicleNo, req.stateCd, since)) {
+      const u = other !== id && (await repo.getUnlock(other));
+      if (u && [U.WAITING, U.QUEUED].includes(u.status)) return service.scheduleUnlock(id, Math.max(Number(u.at), Date.now()) + 60_000);
     }
   }
 

@@ -146,6 +146,12 @@ test('treasury never loads, even re-posted → treasury_down (driver told the go
     (e) => e.failureCode === 'treasury_down');
 });
 
+test('HP PayU result: status is read off PayU\'s own post, not the himkosh encdata hop (2026-11-20 log)', () => {
+  assert.ok(TREASURY.HP.back.test('https://securepayments.payu.in/Himkosh/response'));
+  assert.ok(!TREASURY.HP.back.test('https://himkosh.hp.nic.in/echallan/WebPages/wrfSuccessAfterBankTransaction.aspx'));
+  assert.ok(!TREASURY.HP.back.test('https://securepayments.payu.in/Himkosh/request'));
+});
+
 test('treasuryUp: listening port → true, closed port → false', async () => {
   const net = require('node:net');
   const { treasuryUp } = require('../treasury');

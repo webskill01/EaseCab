@@ -74,6 +74,14 @@ function createBorderTaxRepository({ prisma, redis }) {
       });
     },
 
+    /** Ids of this vehicle's filings in a state since `since`, newest first. @returns {Promise<string[]>} */
+    async recentForVehicle(vehicleNo, stateCd, since) {
+      const rows = await prisma.borderTaxRequest.findMany({
+        where: { vehicleNo, stateCd, createdAt: { gte: since } }, orderBy: { createdAt: 'desc' }, take: 5, select: { id: true },
+      });
+      return rows.map((r) => r.id);
+    },
+
     /**
      * Newest-first page of a driver's filings, cursor = (createdAt, id) of the last row seen.
      * @param {{ userId: string, limit: number, cursor?: { createdAt: Date, id: string } }} args

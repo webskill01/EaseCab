@@ -21,7 +21,7 @@ const TREASURY = Object.freeze({
   // qr: bank host the worker stays on (in-app UPI QR); back: host PayU posts its result to (status field).
   // ping: host TCP-checked before filing + watched for down/up alerts. HR has none: eGRAS refuses TCP from the VPS.
   HR: Object.freeze({ host: 'egrashry.nic.in', qr: /(^|\.)payu\.in$/, back: /egrashry\.nic\.in/i }),
-  HP: Object.freeze({ host: 'himkosh.hp.nic.in', ping: 'himkosh.hp.nic.in', mode: /e-?\s?banking/i, bank: /payu/i, qr: /(^|\.)payu\.in$/, back: /himkosh\.hp\.nic\.in/i }),
+  HP: Object.freeze({ host: 'himkosh.hp.nic.in', ping: 'himkosh.hp.nic.in', mode: /e-?\s?banking/i, bank: /payu/i, qr: /(^|\.)payu\.in$/, back: /securepayments\.payu\.in\/himkosh\/response/i }), // status rides PayU's own post; himkosh only gets encdata (2026-11-20 log)
   // UP: Vahan → SBIePay Lite directly; sbi = its own QR + result flow (sbiQr.js, 2026-11-12)
   UP: Object.freeze({ qr: /(^|\.)sbi\.bank\.in$/, sbi: true, ping: 'merchant.sbi.bank.in' }),
   // PB: Vahan → IFMS ProcessChallan (bank pick + Continue, no captcha) → SBIePay Lite on onlinesbi.sbi (live 2026-11-15)

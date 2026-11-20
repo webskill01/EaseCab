@@ -84,6 +84,21 @@ test('portal error (e.g. no bank page) → FAILED with its code, nothing handed 
   assert.deepStrictEqual(t.handoffs, {});
 });
 
+test('vehicle_pending behind our own waiting clear → follows it (app shows the real free time); none → nothing scheduled', async () => {
+  const pending = async () => { throw Object.assign(new Error('pending'), { failureCode: 'vehicle_pending' }); };
+  const at = Date.now() + 20 * 60_000;
+  const t = setup();
+  t.repo.recentForVehicle = async () => ['b1', 'a0'];
+  t.unlocks.a0 = { status: 'waiting', at: String(at) };
+  await createRunner({ ...t, logger, flows: { HR: pending } }).run('b1', {});
+  assert.deepStrictEqual([t.rows.b1.failureCode, t.due.b1, t.unlocks.b1.status], ['vehicle_pending', at + 60_000, 'waiting']);
+
+  const n = setup();
+  n.repo.recentForVehicle = async () => ['b1'];
+  await createRunner({ ...n, logger, flows: { HR: pending } }).run('b1', {});
+  assert.strictEqual(n.due.b1, undefined, 'no earlier attempt of ours → driver uses Clear lock');
+});
+
 test('cancelled while queued → nothing runs; unsupported state → FAILED', async () => {
   const t = setup();
   t.rows.b1.status = 'cancelled';
