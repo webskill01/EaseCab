@@ -3,6 +3,8 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 
 const replace = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }))
+const clear = vi.fn()
+vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ clear }) }))
 vi.mock('../../services/authApi', () => ({ requestOtp: vi.fn(), verifyOtp: vi.fn() }))
 vi.mock('../../services/otpClient', () => ({ sendOtp: vi.fn(), confirm: vi.fn() }))
 
@@ -45,6 +47,7 @@ describe('useOtpLogin', () => {
     expect(confirm).toHaveBeenCalledWith(cr, '123456')
     expect(verifyOtp).toHaveBeenCalledWith({ idToken: 'id-token' })
     expect(result.current.phase).toBe('perms')
+    expect(clear).toHaveBeenCalledTimes(1) // previous account's cached profile is dropped
     expect(replace).not.toHaveBeenCalled()
     act(() => { result.current.finishPermissions() })
     expect(result.current.phase).toBe('done')

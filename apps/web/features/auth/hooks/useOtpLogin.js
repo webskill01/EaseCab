@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { requestOtp, verifyOtp } from '../services/authApi'
 import { sendOtp, confirm } from '../services/otpClient'
 import { errorKey } from '../lib/errorKey'
@@ -16,6 +17,7 @@ import { errorKey } from '../lib/errorKey'
  */
 export function useOtpLogin() {
   const router = useRouter()
+  const qc = useQueryClient()
   const [phase, setPhase] = useState('phone')
   const [phone, setPhone] = useState('')
   const [error, setError] = useState(null)
@@ -48,6 +50,9 @@ export function useOtpLogin() {
         ? { phone, otp: code }
         : { idToken: await confirm(confirmationRef.current, code) }
       const { isNewUser } = await verifyOtp(proof)
+      // New session = new user: drop every cached query (profile, membership, rides…) so a
+      // number switch on the same device never shows the previous account's data.
+      qc.clear()
       if (isNewUser) setPhase('perms')
       else router.replace('/feed')
     } catch (err) {
@@ -55,7 +60,7 @@ export function useOtpLogin() {
     } finally {
       setLoading(false)
     }
-  }, [router, phone])
+  }, [router, phone, qc])
 
   const changeNumber = useCallback(() => {
     confirmationRef.current = null
