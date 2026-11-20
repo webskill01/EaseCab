@@ -123,6 +123,10 @@ test('analytics by period (bad period → 422), reset, and the group list', asyn
   assert.strictEqual(res.body.data.total, 0);
   assert.strictEqual((await agent.get(`${BASE}/${SESSION_ID}/analytics?period=year`)).status, 422);
   assert.strictEqual((await agent.post(`${BASE}/${SESSION_ID}/analytics/reset`)).status, 200);
+  const combined = await agent.get(`${BASE}/analytics?period=day`);
+  assert.strictEqual(combined.status, 200);
+  assert.strictEqual(combined.body.data.total, 0);
+  assert.strictEqual((await agent.get(`${BASE}/analytics?period=year`)).status, 422);
   const groups = await agent.get(`${BASE}/${SESSION_ID}/groups`);
   assert.deepStrictEqual(groups.body.data.groups.map((g) => g.name), ['Taxi Ambala']);
 });

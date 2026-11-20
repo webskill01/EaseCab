@@ -110,6 +110,23 @@ function createAdminWaSessionsService({ repo, redis, logger }) {
     return { total, byCity };
   }
 
+  /** Rides per pickup city over `period`, summed over `slots`. */
+  async function cityReport(slots, period) {
+    const hours = RIDE_STATS_PERIOD_HOURS[period];
+    const byCity = {};
+    let total = 0;
+    for (const r of await Promise.all(slots.map((sl) => sumRides(sl, hours)))) {
+      total += r.total;
+      for (const [c, n] of Object.entries(r.byCity)) byCity[c] = (byCity[c] || 0) + n;
+    }
+    const names = await repo.cityNames(Object.keys(byCity).filter((c) => c !== WA_SESSIONS.RIDE_STATS_UNKNOWN_CITY));
+    const cities = Object.entries(byCity)
+      .map(([c, count]) => ({ city: names[c] || null, count }))
+      .sort((a, b) => b.count - a.count);
+    const until = Date.now();
+    return { period, total, cities, from: hours === null ? null : until - hours * WA_SESSIONS.HOUR_MS, until };
+  }
+
   /** Start pairing a session; `phone` → pairing code instead of a QR. */
   async function startPairing(slot, phone) {
     await redis.set(botPairKey(slot), JSON.stringify({ status: PAIR_STATUS.STARTING, updatedAt: Date.now() }),
@@ -186,14 +203,12 @@ function createAdminWaSessionsService({ repo, redis, logger }) {
     /** Rides per pickup city over a rolling window (oracle-panel style). */
     async analytics(id, period) {
       const { slot } = await mustFind(id);
-      const hours = RIDE_STATS_PERIOD_HOURS[period];
-      const { total, byCity } = await sumRides(slot, hours);
-      const names = await repo.cityNames(Object.keys(byCity).filter((c) => c !== WA_SESSIONS.RIDE_STATS_UNKNOWN_CITY));
-      const cities = Object.entries(byCity)
-        .map(([c, count]) => ({ city: names[c] || null, count }))
-        .sort((a, b) => b.count - a.count);
-      const until = Date.now();
-      return { period, total, cities, from: hours === null ? null : until - hours * WA_SESSIONS.HOUR_MS, until };
+      return cityReport([slot], period);
+    },
+
+    /** Same report summed over every session (slots never double-count: a ride is saved by one number only). */
+    async analyticsAll(period) {
+      return cityReport((await repo.list()).map((r) => r.slot), period);
     },
 
     /** Clear a session's ride counts (hourly + all-time + the all-time column). */

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Trash2 } from 'lucide-react'
-import { fetchSessionAnalytics, resetSessionAnalytics, fetchSessionGroups } from '../services/waSessionsApi'
+import { fetchSessionAnalytics, fetchAllSessionsAnalytics, resetSessionAnalytics, fetchSessionGroups } from '../services/waSessionsApi'
 import { button, pill } from '@/lib/ui'
 import { ago } from './SessionCard'
 
@@ -37,15 +37,15 @@ function Grid({ title, rows }) {
   )
 }
 
-/** Rides per pickup city over a rolling window, resettable. */
+/** Rides per pickup city over a rolling window, resettable. No `id` = every session combined (no reset). */
 function RideAnalytics({ id }) {
   const qc = useQueryClient()
   const [period, setPeriod] = useState('day')
-  const q = useQuery({ queryKey: ['waSessionAnalytics', id, period], queryFn: () => fetchSessionAnalytics(id, period) })
+  const q = useQuery({ queryKey: ['waSessionAnalytics', id ?? 'all', period], queryFn: () => (id ? fetchSessionAnalytics(id, period) : fetchAllSessionsAnalytics(period)) })
   const reset = useMutation({
     mutationFn: () => resetSessionAnalytics(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['waSessionAnalytics', id] })
+      qc.invalidateQueries({ queryKey: ['waSessionAnalytics'] }) // this session + the combined total
       qc.invalidateQueries({ queryKey: ['waSessions'] })
     },
   })
@@ -67,14 +67,14 @@ function RideAnalytics({ id }) {
             : <Grid title="Rides by pickup city" rows={d.cities.map((c) => [c.city || 'Unknown city', c.count])} />}
         </>
       )}
-      <button
+      {id && <button
         type="button"
         disabled={reset.isPending}
         onClick={() => window.confirm('Clear all ride counts for this session? This cannot be undone.') && reset.mutate()}
         className={button({ size: 'sm', variant: 'dangerOutline' })}
       >
         <Trash2 size={14} /> Reset counts
-      </button>
+      </button>}
     </div>
   )
 }
@@ -108,6 +108,24 @@ export function SessionStats({ s }) {
         />
       </div>
     </div>
+  )
+}
+
+/** Every session added up: rides by city (server-summed) + message outcomes (summed here). */
+export function CombinedStats({ sessions }) {
+  const o = {}
+  for (const s of sessions) for (const [k, n] of Object.entries(s.outcomes || {})) o[k] = (o[k] || 0) + n
+  const seen = Object.values(o).reduce((a, b) => a + b, 0)
+  return (
+    <details className="mb-4 rounded-xl border border-ec-line bg-white p-4">
+      <summary className="cursor-pointer text-sm font-bold text-ec-ink">
+        All sessions combined · {sessions.reduce((a, s) => a + (s.rides24h || 0), 0)} rides in 24h
+      </summary>
+      <div className="mt-3 grid gap-4 md:grid-cols-2">
+        <RideAnalytics />
+        <Grid title="Messages (all numbers)" rows={[['Processed', seen], ...OUTCOMES.filter(([k]) => o[k]).map(([k, label]) => [label, o[k]])]} />
+      </div>
+    </details>
   )
 }
 

@@ -27,6 +27,9 @@ function createAdminWaSessionsRouter({ service, requireAdmin }) {
   router.get('/', async (_req, res) => {
     sendSuccess(res, { data: await service.list() });
   });
+  router.get('/analytics', validate(adminWaSessionAnalyticsQuerySchema, 'query'), async (req, res) => {
+    sendSuccess(res, { data: await service.analyticsAll(req.valid.query.period) });
+  });
   router.post('/', validate(adminWaSessionCreateSchema), async (req, res) => {
     sendSuccess(res, { status: HTTP_STATUS.CREATED, data: { session: await service.create(req.valid.body) } });
   });

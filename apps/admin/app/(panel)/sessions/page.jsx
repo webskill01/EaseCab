@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Smartphone, Plus } from 'lucide-react'
 import { useWaSessions } from '@/features/wa-sessions/hooks/useWaSessions'
 import { SessionCard } from '@/features/wa-sessions/components/SessionCard'
+import { CombinedStats } from '@/features/wa-sessions/components/SessionStats'
 import { PageHeader } from '@/features/shell/components/PageHeader'
 import { QueryState } from '@/features/shell/components/QueryState'
 import { button, pill, input } from '@/lib/ui'
@@ -61,6 +62,7 @@ export default function SessionsPage() {
           emptyMessage="No sessions yet"
           emptyHint="Add one above, then link a WhatsApp number to it."
         >
+          <CombinedStats sessions={w.sessions} />
           <ul className="space-y-3">
             {w.sessions.map((s) => <SessionCard key={s.id} s={s} update={w.update} remove={w.remove} />)}
           </ul>

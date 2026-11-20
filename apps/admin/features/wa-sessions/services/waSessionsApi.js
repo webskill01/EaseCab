@@ -62,3 +62,8 @@ export async function resetSessionAnalytics(id) {
 export async function fetchSessionGroups(id) {
   return (await apiFetch(`${BASE}/${id}/groups`)).data.groups
 }
+
+/** GET /admin/wa-sessions/analytics?period= — rides per city summed over every session. */
+export async function fetchAllSessionsAnalytics(period) {
+  return (await apiFetch(`${BASE}/analytics?period=${period}`)).data
+}

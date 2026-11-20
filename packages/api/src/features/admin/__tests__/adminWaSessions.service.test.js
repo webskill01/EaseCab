@@ -171,6 +171,16 @@ test('analytics sums rolling hourly buckets per city; reset clears them and the 
   assert.equal(repo.data[0].ridesSaved, 0);
 });
 
+test('analyticsAll sums every session per city', async () => {
+  const { svc, redis } = make();
+  const hour = Math.floor(Date.now() / WA_SESSIONS.HOUR_MS);
+  redis.hashes.set(botSlotRidesKey('wa-1', hour), new Map([['c-amb', '2']]));
+  redis.hashes.set(botSlotRidesKey('wa-2', hour - 1), new Map([['c-amb', '3'], ['unknown', '1']]));
+  const day = await svc.analyticsAll('day');
+  assert.equal(day.total, 6);
+  assert.deepEqual(day.cities, [{ city: 'Ambala', count: 5 }, { city: null, count: 1 }]);
+});
+
 test('groups lists the number groups with known names first', async () => {
   const { svc, redis } = make();
   redis.sets.set(botSlotGroupsKey('wa-1'), new Set(['g2', 'g1']));
