@@ -32,6 +32,9 @@ const { createPostedRidesRepository } = require('./features/posted-rides/postedR
 const { createPostedRidesService } = require('./features/posted-rides/postedRides.service');
 const { createPostParser } = require('./features/posted-rides/postedRides.parse');
 const { createPostedRidesRouter } = require('./features/posted-rides/postedRides.route');
+const { createGroupModeRepository } = require('./features/groupMode/groupMode.repository');
+const { createGroupModeService } = require('./features/groupMode/groupMode.service');
+const { createGroupModeRouter } = require('./features/groupMode/groupMode.route');
 const { createCityResolver } = require('@easecab/shared');
 const { createMeRepository } = require('./features/me/me.repository');
 const { createMeService } = require('./features/me/me.service');
@@ -406,6 +409,9 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
     logger,
   });
   v1.use('/posted-rides', createPostedRidesRouter({ service: postedRidesService, parser: postParser, requireAuth }));
+
+  // Group Mode (Phase 31) — paid WhatsApp-style rides view: settings + open feeds + chat-list summary.
+  v1.use('/group-mode', createGroupModeRouter({ service: createGroupModeService({ repo: createGroupModeRepository({ prisma, redis }) }), requireAuth }));
 
   // Uploads (Step 21a) — authed presigned-POST issuance for DP/car/KYC/report images.
   // Service built above (consumed by the report + me paths); just mount the router here.

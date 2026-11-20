@@ -48,10 +48,13 @@
     "delete": "Delete"
   },
   "filter": {
-    "alert": {"blocked": "Alerts band", "sound": "Awaaz band"},
+    "alert": {
+      "blocked": "Alerts band",
+      "sound": "Awaaz band"
+    },
     "notifications": "Alerts",
     "allCities": "Saare shehar",
-    "filterByCity": "Shehar filter",
+    "filterByCity": "Filter",
     "allLocations": "Saare shehar",
     "searchCity": "Shehar dhoondo…",
     "noResults": "Koi shehar nahi mila",
@@ -146,5 +149,72 @@
     "Bolero": "Bolero",
     "Bus": "Bus",
     "Auto": "Auto"
+  },
+  "group": {
+    "toggle": "Group",
+    "title": "Groups",
+    "edit": "Edit",
+    "done": "Ho gaya",
+    "add": "Group jodo",
+    "remove": "Group hatao",
+    "addTitle": "City group jodo",
+    "addLabel": "City",
+    "cityGroup": "{city} Only Duty",
+    "allGroup": "All Mix Duty",
+    "dutiesGroup": "Driver Duties",
+    "noMessages": "Abhi koi ride nahi",
+    "dutyTag": "Driver Duty",
+    "booked": "Booked",
+    "back": "Wapas",
+    "readOnly": "Pichle 24 ghante ki rides",
+    "loadOlder": "Purani rides dekho",
+    "today": "Aaj",
+    "yesterday": "Kal",
+    "empty": "Nayi rides aate hi yahan live dikhengi.",
+    "loadError": "Rides load nahi hui. Wapas jaake dobara try karo.",
+    "chips": {
+      "all": "Sab",
+      "unread": "Unread",
+      "duties": "Driver Duty"
+    },
+    "preview": {
+      "title": "Group Mode: WhatsApp groups jaisi rides",
+      "sub": "Har city ka apna group, poore number khule. Sirf members ke liye.",
+      "cta": "Membership lo ₹149",
+      "notNow": "Abhi nahi",
+      "previewDuties": "Driver Duties",
+      "previewDutiesMsg": "Driver Duty: Patiala → Delhi · Sedan",
+      "previewCity1": "Chandigarh Only Duty",
+      "previewMsg1": "Chandigarh to Delhi airport sedan 98xxx xxxxx",
+      "previewCity2": "Delhi Only Duty",
+      "previewMsg2": "Delhi to Amritsar Innova urgent 97xxx xxxxx",
+      "previewCity3": "Ambala Only Duty",
+      "previewMsg3": "Ambala to Shimla 2 din tour 99xxx xxxxx"
+    },
+    "newRides": "nayi rides",
+    "new": "Naya",
+    "toApp": "App",
+    "addShort": "Groups",
+    "alertsOn": "Is group ke alerts on karein",
+    "alertsOff": "Is group ke alerts off karein",
+    "addHelp": "Apni city ka group jodiye — sirf apne kaam ki rides, live.",
+    "live": "Live",
+    "reconnecting": "Jud raha hai…",
+    "unreadDivider": "{n} unread rides",
+    "emptyTitle": "Abhi yahan koi ride nahi",
+    "actions": {
+      "title": "Ride options",
+      "call": "Call karein",
+      "copy": "Text copy karein",
+      "copied": "Copy ho gaya",
+      "share": "WhatsApp par bhejein",
+      "report": "Ride report karein"
+    },
+    "pin": "Pin karo",
+    "unpin": "Unpin karo",
+    "pinned": "Pinned",
+    "addedTitle": "{group} add ho gaya",
+    "addedBody": "Group aapki list mein aa gaya hai. Iski rides live dikhengi.",
+    "addedOk": "Theek hai"
   }
 }

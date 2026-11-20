@@ -442,6 +442,7 @@ model User {
   // CREATE INDEX here (MVP table is tiny, near-zero lock); switch to CONCURRENTLY in
   // a standalone migration if this is ever re-created on a large live table.
   @@index([notificationCities], type: Gin)
+  groupMode          Json?              @map("group_mode") // Phase 31: { enabled, cityIds[], pinned[] }; null = defaults, off
   @@map("users")
 }
 

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none" stroke="#5b5348" stroke-opacity="0.09" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  <!-- car -->
+  <path d="M14 34l5-10h20l5 10M12 34h34v9H12zM18 43v4M40 43v4"/><circle cx="19" cy="38" r="1.5"/><circle cx="39" cy="38" r="1.5"/>
+  <!-- map pin -->
+  <path d="M110 14c-6 0-10 4-10 10 0 8 10 16 10 16s10-8 10-16c0-6-4-10-10-10z"/><circle cx="110" cy="24" r="3"/>
+  <!-- phone -->
+  <path d="M64 70c2 6 8 12 14 14l4-4 6 3-2 7c-12 0-26-14-26-26l7-2 3 6z"/>
+  <!-- steering wheel -->
+  <circle cx="130" cy="92" r="11"/><circle cx="130" cy="92" r="3"/><path d="M119 92h8M133 92h8M130 95v8"/>
+  <!-- road -->
+  <path d="M20 112l-6 30M40 112l6 30M30 116v5M30 128v5"/>
+  <!-- clock -->
+  <circle cx="92" cy="134" r="9"/><path d="M92 129v5l3 2"/>
+  <!-- dots -->
+  <circle cx="60" cy="20" r="1.2"/><circle cx="140" cy="50" r="1.2"/><circle cx="12" cy="80" r="1.2"/><circle cx="64" cy="150" r="1.2"/><circle cx="150" cy="140" r="1.2"/>
+</svg>

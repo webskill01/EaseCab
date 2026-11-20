@@ -29,4 +29,5 @@ module.exports = {
   ...require('./memberSync'),
   ...require('./referrals'),
   ...require('./borderTax'),
+  ...require('./groupMode'),
 };

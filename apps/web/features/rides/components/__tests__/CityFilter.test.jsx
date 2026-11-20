@@ -38,7 +38,7 @@ describe('CityFilter', () => {
     const user = userEvent.setup()
     renderWithIntl(<CityFilter selected={[]} onToggle={onToggle} onClear={vi.fn()} />)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /filter by city/i }))
+    await user.click(screen.getByRole('button', { name: /^filter$/i }))
     await user.click(screen.getByText('toggle-mohali'))
     expect(onToggle).toHaveBeenCalledWith({ id: 'c9', name: 'Mohali' })
   })

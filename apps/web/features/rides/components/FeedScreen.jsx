@@ -27,6 +27,10 @@ import { ConfirmSheet } from './ConfirmSheet'
 import { useOwnPostActions } from '../hooks/useOwnPostActions'
 import { useModeratorDelete } from '../hooks/useModeratorDelete'
 import { useProfile } from '@/features/profile/hooks/useProfile'
+import { useGroupMode } from '@/features/groupMode/hooks/useGroupMode'
+import { GroupModeToggle } from '@/features/groupMode/components/GroupModeToggle'
+import { GROUP_KEY } from '@/features/groupMode/lib/groupView'
+import { GroupListScreen } from '@/features/groupMode/components/GroupListScreen'
 import { useRideViewTracker } from '@/features/notifications/hooks/useRideViewTracker'
 import { useEnableAlerts } from '@/features/notifications/hooks/useEnableAlerts'
 import { useSyncPushToken } from '@/features/notifications/hooks/useSyncPushToken'
@@ -46,7 +50,43 @@ const HEADER_SCROLLS_AWAY = true
  * states, the new-rides pill, and the contact soft-gate sheet. The TopBar + bottom
  * nav are app chrome (rendered by the layout / future steps).
  */
+/** An alert tap lands on /feed?g=<group>: in Group Mode, open that group's chat. */
+function useOpenAlertGroup(gm) {
+  const router = useRouter()
+  useEffect(() => {
+    if (!gm.ready) return
+    const g = new URLSearchParams(window.location.search).get('g')
+    if (!g || !gm.on) return
+    // A city the driver never added as a group (alerts can cover more cities) → All Mix Duty.
+    const known = g === GROUP_KEY.DUTIES || gm.groups.some((x) => x.cityId === g)
+    // Drop ?g from the feed entry, then push the chat: Back returns to the group list, not a loop.
+    window.history.replaceState(window.history.state, '', '/feed')
+    router.push(`/feed/g/${encodeURIComponent(known ? g : GROUP_KEY.ALL)}`)
+  }, [gm.ready, gm.on, gm.groups, router])
+}
+
+// Mode shown last (module scope outlives the route): the fade plays on first load and on a
+// mode switch only — coming back from a group chat must not look like a reload.
+let shownMode = null
+function ModeView({ mode, children }) {
+  const [fade] = useState(() => shownMode !== mode)
+  useEffect(() => { shownMode = mode }, [mode])
+  return <div className={`flex min-h-0 flex-1 flex-col ${fade ? 'animate-ec-fade' : ''}`}>{children}</div>
+}
+
 export function FeedScreen() {
+  // Group Mode (Phase 31, paid): the WhatsApp-style chat list replaces the feed.
+  const gm = useGroupMode()
+  useOpenAlertGroup(gm)
+  if (!gm.ready) return <div className="flex-1 bg-white" />
+  return (
+    <ModeView key={gm.on ? 'groups' : 'feed'} mode={gm.on ? 'groups' : 'feed'}>
+      {gm.on ? <GroupListScreen /> : <ClassicFeed />}
+    </ModeView>
+  )
+}
+
+function ClassicFeed() {
   const router = useRouter()
   const [sub, setSub] = useState(FEED_SUB.RIDES)
   const headerRef = useRef(null)
@@ -109,9 +149,10 @@ export function FeedScreen() {
     <div ref={headerRef} className={HEADER_SCROLLS_AWAY ? '-mx-4 shrink-0' : undefined}>
       <div className="flex gap-2 bg-ec-bg px-4 pt-2">
         <NotificationsButton onClick={() => router.push('/notifications')} />
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <CityFilter selected={selectedCities} onToggle={toggleCity} onClear={clearCities} />
         </div>
+        <GroupModeToggle />
       </div>
       <SevaStrip />
       <SubTabs sub={sub} onChange={setSub} dutiesCount={dutiesCountQuery.data ?? 0} />

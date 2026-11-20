@@ -134,7 +134,7 @@ test('dispatchForRide: sends source-specific copy + data, dedupes cities', async
     // first variant (random → 0); pickup === drop (same CITY) → single-city route
     title: '✅ City-1111',
     body: 'Verified driver ne abhi post ki — tap karke dekho',
-    url: '/feed',
+    url: '/feed?g=duties', // posted ride → Group Mode's Driver Duties chat
     pickup: 'City-1111',
     drop: 'City-1111',
   });

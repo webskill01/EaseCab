@@ -88,6 +88,8 @@ module.exports = {
       },
       keyframes: {
         // Success badge: circle pops in with a slight overshoot, then the tick draws.
+        'ec-shimmer': { '0%': { backgroundPosition: '200% 0' }, '100%': { backgroundPosition: '-200% 0' } },
+        'ec-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
         'ec-pop': {
           '0%': { transform: 'scale(0)', opacity: '0' },
           '60%': { transform: 'scale(1.1)' },
@@ -142,6 +144,8 @@ module.exports = {
         },
       },
       animation: {
+        'ec-shimmer': 'ec-shimmer 1.4s linear infinite',
+        'ec-fade': 'ec-fade 0.22s ease-out backwards',
         'ec-pop': 'ec-pop 0.45s cubic-bezier(0.16,1,0.3,1) both',
         'ec-draw': 'ec-draw 0.4s ease-out 0.28s both',
         'ec-ring': 'ec-ring 0.7s ease-out 0.3s both',

@@ -157,7 +157,8 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
     )
   }
 
-  const phone = reveal.data?.phoneNumber
+  // Group Mode taps a specific number in the text (`dialPhone`); still shown only after the gated reveal.
+  const phone = reveal.data?.phoneNumber ? (ride.dialPhone || reveal.data.phoneNumber) : null
   return (
     <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('reveal.title')}>
       <h2 className="pr-9 text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{t('reveal.title')}</h2>

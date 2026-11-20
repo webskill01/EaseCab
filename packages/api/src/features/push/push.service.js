@@ -1,6 +1,6 @@
 'use strict';
 
-const { AppError, ERROR_CODES, PUSH, PUSH_SOURCE } = require('@easecab/shared');
+const { AppError, ERROR_CODES, PUSH, PUSH_SOURCE, GROUP_MODE } = require('@easecab/shared');
 
 /** Client-safe view of a registered subscription — never echoes the raw token back. */
 function toPublicSubscription(s) {
@@ -30,6 +30,15 @@ function rideCopy(source, from, to, random) {
   const route = to && to !== from ? `${from} → ${to}` : from;
   const variants = PUSH.NOTIFICATION[source];
   return fillCopy(variants[Math.floor(random() * variants.length)], { from, to: to || from, route });
+}
+
+/**
+ * Tap target: the feed, carrying which Group Mode chat the ride lives in (`?g=`) — the app
+ * opens that chat when Group Mode is on and ignores it in the normal feed.
+ */
+function clickUrl(source, pickupId) {
+  const g = source === PUSH_SOURCE.BOT ? pickupId : GROUP_MODE.SPECIAL.DUTIES;
+  return `${PUSH.CLICK_PATH}?g=${encodeURIComponent(g)}`;
 }
 
 function createPushService({ repo, pushSender, random = Math.random }) {
@@ -100,7 +109,7 @@ function createPushService({ repo, pushSender, random = Math.random }) {
       const [from = '', to = ''] = (cityIds || []).map((id) => nameById.get(id) || '');
       // Data-only payload: title/body travel in `data` so FCM does NOT auto-display
       // a second (icon-less) notification — the service worker / native app renders it.
-      const data = { type: PUSH.TYPE, source, rideId, ...rideCopy(source, from, to, random), url: PUSH.CLICK_PATH, pickup: from, drop: to };
+      const data = { type: PUSH.TYPE, source, rideId, ...rideCopy(source, from, to, random), url: clickUrl(source, pickupId), pickup: from, drop: to };
       // ponytail: never `from` — FCM reserves it and rejects the WHOLE message (invalid-argument).
       // Paid members on the native app get the poster's number for one-tap Call/WhatsApp
       // (bot rides only — verified rides keep their in-app verification gate).

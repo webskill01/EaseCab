@@ -18,10 +18,12 @@ const DEBOUNCE_MS = 250
  * @param {string} props.label - field label (already translated)
  * @param {?{id: ?string, name: string}} props.value - the picked city, or null
  * @param {(city: {id: string, name: string}) => void} props.onPick
+ * @param {boolean} [props.inline] - search box + results always open, in the page flow
+ *   (inside a dialog: an absolute dropdown would be clipped by the dialog's scroll box)
  */
-export function CityPicker({ label, value, onPick }) {
+export function CityPicker({ label, value, onPick, inline = false }) {
   const t = useTranslations('post')
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(inline)
   const [q, setQ] = useState('')
   const [results, setResults] = useState([])
   const show = useLocalCityName()
@@ -40,11 +42,11 @@ export function CityPicker({ label, value, onPick }) {
     return () => { clearTimeout(id); ctrl.abort() }
   }, [q, open])
 
-  const choose = (city) => { onPick(city); setOpen(false); setQ('') }
+  const choose = (city) => { onPick(city); setOpen(inline); setQ('') }
 
   return (
     <div className="relative">
-      <button
+      {!inline && <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
@@ -57,12 +59,12 @@ export function CityPicker({ label, value, onPick }) {
           {value ? show(value.name) : label}
         </span>
         <span className={`inline-flex text-ec-ink40 transition-transform ${open ? 'rotate-180' : ''}`}><ChevR size={15} /></span>
-      </button>
+      </button>}
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
-          <div className="absolute left-0 right-0 top-[108%] z-50 rounded-2xl border border-ec-line bg-white p-1.5 shadow-ec-float" role="listbox">
+          {!inline && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />}
+          <div className={inline ? '' : 'absolute left-0 right-0 top-[108%] z-50 rounded-2xl border border-ec-line bg-white p-1.5 shadow-ec-float'} role="listbox">
             <div className="my-1 flex h-11 items-center gap-2.5 rounded-xl border border-ec-line px-3">
               <span className="inline-flex text-ec-ink40"><Search size={16} /></span>
               <input
@@ -70,6 +72,7 @@ export function CityPicker({ label, value, onPick }) {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 aria-label={t('post.searchCity')}
+                placeholder={inline ? label : undefined}
                 className="min-w-0 flex-1 bg-transparent text-[14px] font-semibold text-ec-ink outline-none"
               />
             </div>

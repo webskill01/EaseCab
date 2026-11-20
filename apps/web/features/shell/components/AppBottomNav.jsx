@@ -27,7 +27,7 @@ export function AppBottomNav() {
         if (isPost) {
           return (
             <button key={href} type="button" onClick={() => router.push(href)} className="flex flex-1 flex-col items-center gap-0.5" aria-current={active ? 'page' : undefined}>
-              <span className="-mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-ec-blue text-white shadow-ec-blue ring-4 ring-white transition-transform active:scale-95"><Icon size={28} /></span>
+              <span className="-mt-4 flex h-12 w-12 items-center justify-center rounded-full bg-ec-blue text-white shadow-ec-blue ring-4 ring-white transition-transform active:scale-95"><Icon size={24} /></span>
               <span className={`text-[10.5px] ${active ? 'font-extrabold text-ec-blue' : 'font-bold text-ec-ink60'}`}>{t(key)}</span>
             </button>
           )

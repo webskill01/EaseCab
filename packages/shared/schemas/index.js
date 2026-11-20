@@ -22,4 +22,5 @@ module.exports = {
   ...require('./referrals.schema'),
   ...require('./waSessions.schema'),
   ...require('./borderTax.schema'),
+  ...require('./groupMode.schema'),
 };
