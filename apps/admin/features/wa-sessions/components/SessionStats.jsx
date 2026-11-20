@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Trash2 } from 'lucide-react'
+import { Loader2, Trash2, BarChart3 } from 'lucide-react'
 import { fetchSessionAnalytics, fetchAllSessionsAnalytics, resetSessionAnalytics, fetchSessionGroups } from '../services/waSessionsApi'
-import { button, pill } from '@/lib/ui'
-import { ago } from './SessionCard'
+import { button, pill, card } from '@/lib/ui'
+import { ago, Stat, Modal } from './SessionCard'
 
 const PERIODS = [['day', 'Last 24h'], ['week', '7 days'], ['month', '30 days'], ['all', 'All time']]
 // What each ingest outcome means, in the order the oracle panel showed them.
@@ -111,21 +111,34 @@ export function SessionStats({ s }) {
   )
 }
 
-/** Every session added up: rides by city (server-summed) + message outcomes (summed here). */
-export function CombinedStats({ sessions }) {
+/** Every session added up: headline cards on the page, per-city rides + message outcomes in a popup. */
+export function CombinedStats({ sessions, groups }) {
+  const [open, setOpen] = useState(false)
   const o = {}
   for (const s of sessions) for (const [k, n] of Object.entries(s.outcomes || {})) o[k] = (o[k] || 0) + n
   const seen = Object.values(o).reduce((a, b) => a + b, 0)
+  const sum = (k) => sessions.reduce((a, s) => a + (s[k] || 0), 0)
   return (
-    <details className="mb-4 rounded-xl border border-ec-line bg-white p-4">
-      <summary className="cursor-pointer text-sm font-bold text-ec-ink">
-        All sessions combined · {sessions.reduce((a, s) => a + (s.rides24h || 0), 0)} rides in 24h
-      </summary>
-      <div className="mt-3 grid gap-4 md:grid-cols-2">
-        <RideAnalytics />
-        <Grid title="Messages (all numbers)" rows={[['Processed', seen], ...OUTCOMES.filter(([k]) => o[k]).map(([k, label]) => [label, o[k]])]} />
+    <div className={`${card} mb-4 space-y-3`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-base font-bold text-ec-ink">All sessions combined</p>
+        <button type="button" onClick={() => setOpen(true)} className={button({ size: 'sm' })}><BarChart3 size={14} /> Stats</button>
       </div>
-    </details>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Stat label="Rides (24h)" value={sum('rides24h')} />
+        <Stat label="Rides (all time)" value={sum('ridesSaved')} />
+        <Stat label="Groups" value={groups} hint="unique, across all numbers" />
+        <Stat label="Messages" value={seen} />
+      </div>
+      {open && (
+        <Modal title="Stats · All sessions" onClose={() => setOpen(false)} wide>
+          <div className="grid gap-4 md:grid-cols-2">
+            <RideAnalytics />
+            <Grid title="Messages (all numbers)" rows={[['Processed', seen], ...OUTCOMES.filter(([k]) => o[k]).map(([k, label]) => [label, o[k]])]} />
+          </div>
+        </Modal>
+      )}
+    </div>
   )
 }
 

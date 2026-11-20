@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { splitPhones, mergeThread, istDayKey } from '../groupView'
+import { splitPhones, mergeThread, istDayKey, groupNumber } from '../groupView'
 
 describe('groupView', () => {
   it('splitPhones finds Indian numbers in the common written forms', () => {
@@ -17,5 +17,18 @@ describe('groupView', () => {
   it('istDayKey rolls over at IST midnight', () => {
     expect(istDayKey('2026-11-20T18:31:00Z')).toBe('2026-11-21')
     expect(istDayKey('2026-11-20T18:29:00Z')).toBe('2026-11-20')
+  })
+})
+
+describe('groupNumber', () => {
+  const groups = [{ cityId: 'c1' }, { cityId: 'c2' }]
+  it('numbers Mix Duty 1, then cities in saved order', () => {
+    expect(groupNumber('all', groups)).toBe(1)
+    expect(groupNumber('c1', groups)).toBe(2)
+    expect(groupNumber('c2', groups)).toBe(3)
+  })
+  it('gives Driver Duties and unknown keys no number', () => {
+    expect(groupNumber('duties', groups)).toBeNull()
+    expect(groupNumber('zz', groups)).toBeNull()
   })
 })

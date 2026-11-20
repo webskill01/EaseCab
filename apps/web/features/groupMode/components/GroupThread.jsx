@@ -14,7 +14,7 @@ import { env } from '@/config/env'
 import { useGroupMode, useGroupThread } from '../hooks/useGroupMode'
 import { useThreadFollow, msgKey } from '../hooks/useThreadFollow'
 import { useSwipeBack } from '../hooks/useGestures'
-import { GROUP_KEY, istDayKey } from '../lib/groupView'
+import { GROUP_KEY, istDayKey, groupNumber } from '../lib/groupView'
 import { GroupAvatar } from './GroupListScreen'
 import { RideBubble, DutyBubble } from './ThreadBubbles'
 import { BubbleActions } from './BubbleActions'
@@ -98,6 +98,7 @@ export function GroupThread({ groupKey }) {
   const t = useTranslations('rides.group')
   const router = useRouter()
   const title = useTitle(groupKey)
+  const { groups } = useGroupMode()
   const thread = useGroupThread(groupKey)
   const msgs = thread.messages
   const follow = useThreadFollow(groupKey, msgs)
@@ -113,7 +114,7 @@ export function GroupThread({ groupKey }) {
     <div {...swipe} className={`flex min-h-0 flex-1 animate-ec-fade flex-col overflow-x-hidden ${WALLPAPER}`}>
       <div className="flex items-center gap-2.5 bg-white px-2 py-2 shadow-ec-card">
         <button type="button" onClick={() => router.back()} aria-label={t('back')} className="flex h-10 w-8 items-center justify-center text-ec-ink"><ChevL size={22} /></button>
-        <GroupAvatar groupKey={groupKey} title={title} size={38} />
+        <GroupAvatar groupKey={groupKey} num={groupNumber(groupKey, groups)} size={38} />
         <div className="min-w-0">
           <p className="truncate text-[16px] font-extrabold text-ec-ink">{title}</p>
           <LiveLine stream={thread.stream} />

@@ -62,7 +62,7 @@ export default function SessionsPage() {
           emptyMessage="No sessions yet"
           emptyHint="Add one above, then link a WhatsApp number to it."
         >
-          <CombinedStats sessions={w.sessions} />
+          <CombinedStats sessions={w.sessions} groups={w.totals.groups} />
           <ul className="space-y-3">
             {w.sessions.map((s) => <SessionCard key={s.id} s={s} update={w.update} remove={w.remove} />)}
           </ul>

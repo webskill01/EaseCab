@@ -215,6 +215,10 @@
     "pinned": "Pinned",
     "addedTitle": "{group} added",
     "addedBody": "The group is now in your list. Its rides show up live.",
-    "addedOk": "OK"
+    "addedOk": "OK",
+    "removeTitle": "Remove {group}?",
+    "removeBody": "Its rides will no longer show in your list. You can add it back anytime.",
+    "removeOk": "Remove",
+    "removeCancel": "Cancel"
   }
 }

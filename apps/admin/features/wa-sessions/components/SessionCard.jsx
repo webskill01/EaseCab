@@ -28,7 +28,7 @@ export function ago(ms) {
   return `${Math.round(s / 86400)}d ago`
 }
 
-function Stat({ label, value, hint }) {
+export function Stat({ label, value, hint }) {
   return (
     <div className="rounded-lg bg-slate-50 px-3 py-2">
       <p className="text-[11px] font-medium uppercase tracking-wide text-ec-ink40">{label}</p>
@@ -71,7 +71,7 @@ function ShareBox({ id }) {
 }
 
 /** Popup over the page (closes on backdrop click, X or Escape) so panels don't stretch the list. */
-function Modal({ title, onClose, wide, children }) {
+export function Modal({ title, onClose, wide, children }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)

@@ -84,6 +84,7 @@ export default function WaInvitesPage() {
         icon={Link2}
         title="Group Links"
         description="WhatsApp group links shared in any group the bot's sessions are in, each listed once however often it is shared. Join opens WhatsApp and moves the link to Request sent; once any session is in the group it moves to Joined by itself. Later parks a link to keep New fresh. Avoid hides it for good."
+        actions={<span className={pill({ tone: 'blue' })}>{Object.values(g.counts).reduce((a, n) => a + n, 0)} links fetched</span>}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

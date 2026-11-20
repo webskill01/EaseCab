@@ -47,6 +47,9 @@ export function useGroupSummary(groups) {
     queryKey: ['groupSummary', keys.join(',')],
     queryFn: () => { const seen = readSeen(); return getGroupSummary(keys.map((key) => ({ key, since: seen[key] || 0 }))) },
     refetchInterval: POLL_MS,
+    // App default staleTime is 5min: Back from a chat would replay the old preview text until
+    // the next 20s poll (the list's live stream is off while a chat is open). Refetch on return.
+    staleTime: 0,
   })
 }
 

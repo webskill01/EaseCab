@@ -215,6 +215,10 @@
     "pinned": "Pinned",
     "addedTitle": "{group} add ho gaya",
     "addedBody": "Group aapki list mein aa gaya hai. Iski rides live dikhengi.",
-    "addedOk": "Theek hai"
+    "addedOk": "Theek hai",
+    "removeTitle": "{group} hatana hai?",
+    "removeBody": "Iski rides aapki list mein nahi dikhengi. Aap ise kabhi bhi wapas add kar sakte hain.",
+    "removeOk": "Hatao",
+    "removeCancel": "Rehne do"
   }
 }

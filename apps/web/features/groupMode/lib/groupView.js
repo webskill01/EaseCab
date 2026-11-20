@@ -50,3 +50,16 @@ export function mergeThread(rides, duties) {
 export function istDayKey(at) {
   return new Date(new Date(at).getTime() + 330 * 60000).toISOString().slice(0, 10)
 }
+
+/**
+ * Group's badge number, so a driver can remember it: All Mix Duty = 1, then the city
+ * groups 2, 3, … in the order they were added. Driver Duties has none (it keeps the logo).
+ * @param {string} key
+ * @param {{ cityId: string }[]} groups - saved city groups, in saved order
+ * @returns {number|null}
+ */
+export function groupNumber(key, groups) {
+  if (key === GROUP_KEY.ALL) return 1
+  const i = groups.findIndex((g) => g.cityId === key)
+  return i === -1 ? null : i + 2
+}

@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
-import { Plus, Trash, Shuffle, Bell, BellOff, PinOutline, PinFilled, Check } from '@/components/ui/icons'
+import { Plus, Trash, Bell, BellOff, PinOutline, PinFilled, Check } from '@/components/ui/icons'
 import { CityPicker } from '@/features/rides/components/CityPicker'
 import { NotificationsButton } from '@/features/rides/components/NotificationsButton'
 import { useSyncPushToken } from '@/features/notifications/hooks/useSyncPushToken'
@@ -18,7 +18,7 @@ import { useGroupMode, useGroupSummary, useLiveSummary } from '../hooks/useGroup
 import { useGroupAlerts } from '../hooks/useGroupAlerts'
 import { SevaStrip } from '@/features/seva/components/SevaStrip'
 import { GroupModeToggle } from './GroupModeToggle'
-import { GROUP_KEY } from '../lib/groupView'
+import { GROUP_KEY, groupNumber } from '../lib/groupView'
 
 const CHIPS = ['all', 'unread', 'duties']
 const BADGE_MAX = 99
@@ -34,12 +34,12 @@ function rowTime(at, locale) {
   }).format(d)
 }
 
-/** Group DP: EaseCab logo for the app's own Driver Duties, shuffle arrows for All Mix Duty, else the city initial. */
-export function GroupAvatar({ groupKey, title, i = 0, size = 48 }) {
+/** Group DP: EaseCab logo for the app's own Driver Duties, else the group's number (groupNumber). */
+export function GroupAvatar({ groupKey, num, size = 48 }) {
   const box = { width: size, height: size }
   if (groupKey === GROUP_KEY.DUTIES) return <Image src="/icons/icon-192.png" alt="" width={size} height={size} className="shrink-0 rounded-full border border-ec-line object-cover" style={box} />
-  if (groupKey === GROUP_KEY.ALL) return <span style={box} className="flex shrink-0 items-center justify-center rounded-full bg-ec-successBg text-ec-successTx"><Shuffle size={size * 0.48} /></span>
-  return <span style={{ ...box, fontSize: size * 0.38 }} className={`flex shrink-0 items-center justify-center rounded-full font-extrabold ${AVATAR_TONES[i % AVATAR_TONES.length]}`}>{title.charAt(0)}</span>
+  const tone = groupKey === GROUP_KEY.ALL ? 'bg-ec-successBg text-ec-successTx' : AVATAR_TONES[(num ?? 0) % AVATAR_TONES.length]
+  return <span style={{ ...box, fontSize: size * 0.4 }} className={`flex shrink-0 items-center justify-center rounded-full font-extrabold tabular-nums ${tone}`}>{num}</span>
 }
 
 function GroupRow({ row, editing, onRemove, onPin, alerts }) {
@@ -49,7 +49,7 @@ function GroupRow({ row, editing, onRemove, onPin, alerts }) {
   return (
     <li className="flex items-center border-b border-ec-line last:border-0">
       <Link href={`/feed/g/${row.key}`} className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 active:bg-ec-bg">
-        <GroupAvatar groupKey={row.key} title={row.title} i={row.tone} />
+        <GroupAvatar groupKey={row.key} num={row.num} />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-2">
             <p className="min-w-0 flex-1 truncate text-[15.5px] font-bold text-ec-ink">{row.title}</p>
@@ -83,7 +83,7 @@ function GroupRow({ row, editing, onRemove, onPin, alerts }) {
         </button>
       )}
       {editing && row.cityId && (
-        <button type="button" onClick={() => onRemove(row.cityId)} aria-label={t('remove')} className="mr-3 flex h-9 w-9 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger">
+        <button type="button" onClick={() => onRemove(row)} aria-label={t('remove')} className="mr-3 flex h-9 w-9 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger">
           <Trash size={17} />
         </button>
       )}
@@ -121,6 +121,25 @@ function AddedSheet({ name, onClose }) {
   )
 }
 
+/** "Remove <group>?" confirmation before a city group is deleted. */
+function RemoveSheet({ title, onConfirm, onClose }) {
+  const t = useTranslations('rides.group')
+  const tc = useTranslations('common')
+  return (
+    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('removeTitle', { group: title })}>
+      <div className="flex flex-col items-center pt-1 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger"><Trash size={22} /></span>
+        <h2 className="mt-2.5 text-[18px] font-extrabold text-ec-ink">{t('removeTitle', { group: title })}</h2>
+        <p className="mt-1 text-[13.5px] font-semibold leading-snug text-ec-ink60">{t('removeBody')}</p>
+        <div className="mt-4 flex w-full gap-2">
+          <Button type="button" size="lg" variant="outline" className="flex-1" onClick={onClose}>{t('removeCancel')}</Button>
+          <Button type="button" size="lg" variant="danger" className="flex-1" onClick={onConfirm}>{t('removeOk')}</Button>
+        </div>
+      </div>
+    </BottomSheet>
+  )
+}
+
 const byRecent = (a, b) => new Date(b.summary?.lastAt || 0) - new Date(a.summary?.lastAt || 0)
 
 /**
@@ -133,9 +152,9 @@ function useRows(groups, pinned) {
   const summary = useGroupSummary(groups)
   const by = new Map((summary.data ?? []).map((s) => [s.key, s]))
   const rest = [
-    { key: GROUP_KEY.ALL, title: t('allGroup'), summary: by.get(GROUP_KEY.ALL) },
-    ...groups.map((g, i) => ({
-      key: g.cityId, cityId: g.cityId, summary: by.get(g.cityId), tone: i, // tone by saved slot: colours don't jump on re-sort
+    { key: GROUP_KEY.ALL, title: t('allGroup'), summary: by.get(GROUP_KEY.ALL), num: 1 },
+    ...groups.map((g) => ({
+      key: g.cityId, cityId: g.cityId, summary: by.get(g.cityId), num: groupNumber(g.cityId, groups), // by saved slot: numbers don't jump on re-sort
       title: t('cityGroup', { city: pickCityName(g.name, { pa: g.namePa, hi: g.nameHi }, locale) }),
     })),
   ].map((r) => ({ ...r, pinned: pinned.includes(r.key) }))
@@ -163,6 +182,7 @@ export function GroupListScreen() {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(null) // city name just added → confirmation popup
+  const [removing, setRemoving] = useState(null) // row awaiting delete confirmation
   const scrollRef = useRef(null)
   useLayoutEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = savedScroll }, [])
   const rows = useRows(gm.groups, gm.pinned).filter((r) => {
@@ -178,7 +198,7 @@ export function GroupListScreen() {
     gm.put({ cityIds: [...ids, c.id] })
     setAdded(c.name)
   }
-  const remove = (id) => gm.put({ cityIds: ids.filter((x) => x !== id) })
+  const remove = () => { gm.put({ cityIds: ids.filter((x) => x !== removing.cityId) }); setRemoving(null) }
   const pin = (key) => gm.put({ pinned: gm.pinned.includes(key) ? gm.pinned.filter((k) => k !== key) : [...gm.pinned, key] })
 
   return (
@@ -205,9 +225,10 @@ export function GroupListScreen() {
         <button type="button" onClick={() => setEditing((e) => !e)} className="h-8 shrink-0 px-2 text-[13px] font-bold text-ec-blueInk">{editing ? t('done') : t('edit')}</button>
       </div>
       <ul className="pb-4">
-        {rows.map((row) => <GroupRow key={row.key} row={row} editing={editing} onRemove={remove} onPin={pin} alerts={alerts} />)}
+        {rows.map((row) => <GroupRow key={row.key} row={row} editing={editing} onRemove={setRemoving} onPin={pin} alerts={alerts} />)}
       </ul>
       {adding && <AddGroupSheet onPick={add} onClose={() => setAdding(false)} />}
+      {removing && <RemoveSheet title={removing.title} onConfirm={remove} onClose={() => setRemoving(null)} />}
       {added && <AddedSheet name={added} onClose={() => setAdded(null)} />}
     </div>
   )
