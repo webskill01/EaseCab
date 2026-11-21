@@ -101,31 +101,31 @@
       }
     },
     "fail": {
-      "captcha_timeout": "You didn't type the code in time. Please file again.",
+      "captcha_timeout": "The code wasn't typed in time. Please file again.",
       "captcha_wrong": "The code was wrong too many times. Please file again.",
       "portal_error": "The govt portal had a problem. Try again in a few minutes.",
       "worker_restart": "The govt portal had a problem. Try again in a few minutes.",
       "state_unsupported": "This state isn't supported yet.",
-      "vehicle_pending": "This vehicle has an unfinished payment on the govt portal. Wait about 30 minutes, then file again.",
+      "vehicle_pending": "A payment for this vehicle is unfinished on the govt site. File again once the lock clears.",
       "already_paid": "Tax is already paid for these dates. Pick another start date.",
-      "road_tax_expired": "Your vehicle's road tax has expired. Renew it first.",
-      "same_state": "This vehicle is registered in this state, so no border tax is needed here. Nothing was charged.",
-      "no_tax_mode": "The portal has no tax option for this vehicle at this border. Check on your RC that the vehicle is registered as a taxi (MOTOR CAB / MAXI CAB). Nothing was charged.",
-      "bank_down": "The state govt payment site is down right now. Nothing was charged and your vehicle isn't blocked. Please try again later.",
-      "portal_down": "The govt border tax portal is very slow or down right now. Nothing was charged and your vehicle isn't blocked. Please try again later.",
-      "no_handoff": "The portal didn't open the bank page. Please try again.",
-      "pucc_expired": "Your vehicle's pollution certificate (PUC) has expired. Renew it, then file again.",
-      "fitness_expired": "Your vehicle's fitness certificate has expired. Renew it, then file again.",
-      "seat_class_mismatch": "Your RC on Vahan doesn't match the vehicle type (e.g. MAXI CAB with fewer than 7 seats), so the portal won't take online tax. Get the RC corrected at the RTO, or pay at the border. Nothing was charged.",
-      "vehicle_not_found": "The govt Vahan site has no record for this vehicle number. Check the number on your RC and file again. Nothing was charged.",
-      "no_qr": "The govt payment page didn't show the UPI QR, so no payment started — no money was taken. The portal hold is being cleared; please try again in a while.",
-      "treasury_down": "The govt payment site is down right now, so the payment page didn't open — no money was taken. Please try again in a while.",
-      "payment_failed": "The payment didn't go through. If money was debited, contact support.",
-      "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",
-      "payment_unknown": "The govt payment page closed. If you paid, contact support — don't pay again.",
+      "road_tax_expired": "Your road tax has expired. Renew it, then file again.",
+      "same_state": "This vehicle is registered in this state — no border tax here.",
+      "no_tax_mode": "The govt site has no tax option for this vehicle at this border. Check that your RC says taxi (MOTOR CAB / MAXI CAB).",
+      "bank_down": "The state's payment site is down. Try again in a while.",
+      "portal_down": "The govt border tax site is down or very slow. Try again in a while.",
+      "no_handoff": "The govt site didn't open the payment page. Try again.",
+      "pucc_expired": "Your pollution certificate (PUC) has expired. Renew it, then file again.",
+      "fitness_expired": "Your fitness certificate has expired. Renew it, then file again.",
+      "seat_class_mismatch": "Your RC's vehicle class and seats don't match, so tax can't be paid online. Get the RC fixed at the RTO, or pay at the border.",
+      "vehicle_not_found": "The govt Vahan site has no record of this number. Check it on your RC.",
+      "no_qr": "The govt payment page showed no QR. Try again in a while.",
+      "treasury_down": "The govt payment site is down. Try again in a while.",
+      "payment_failed": "The payment failed. If money was debited, contact support.",
+      "payment_timeout": "No payment arrived in time. Already paid? Don't pay again — contact support.",
+      "payment_unknown": "The payment couldn't be confirmed. Already paid? Don't pay again — contact support.",
       "alreadyPaidT": "Tax already paid",
-      "alreadyPaidS": "Border tax is already paid for {from} – {to}. Pick a start date after that and file again.",
-      "fare_declined": "Stopped at the amount — no money was cut and the vehicle isn't blocked. File again whenever you're ready."
+      "alreadyPaidS": "Tax for {from} – {to} is already paid. Pick a later start date.",
+      "fare_declined": "You stopped at the amount. File again whenever you like."
     },
     "live": {
       "captchaTitle": "Type the code",
@@ -177,9 +177,9 @@
       "mine": "This cab's last fee in this state: {amount} for {n, plural, one {# day} other {# days}}"
     },
     "fare": {
-      "title": "The govt site shows {amount}",
-      "sub": "Continue opens the payment page. After that the govt site holds this vehicle for about 30 minutes.",
-      "continue": "Continue to pay",
+      "label": "Govt fee",
+      "sub": "If you continue and don't pay, the govt site locks this vehicle for about 30 minutes.",
+      "continue": "Continue",
       "cancel": "Cancel"
     },
     "qr": {
@@ -239,10 +239,22 @@
       "continue": "Continue"
     },
     "late": {
-      "title": "Border tax paid ✅",
-      "sub": "We found your payment for {vehicle} ({state}). Your receipt is ready.",
+      "title": "Border tax paid",
+      "sub": "Payment received for {vehicle} ({state}). Your receipt is ready.",
       "cta": "View receipt"
     },
-    "siteDown": "The govt border tax site is down right now. Filing won't go through until it's back."
+    "siteDown": "The govt border tax site is down right now. Filing won't go through until it's back.",
+    "result": {
+      "noCharge": "No money charged",
+      "paid": "Border tax paid",
+      "cancelled": "Filing cancelled",
+      "declined": "Filing stopped",
+      "siteDown": "Govt site problem",
+      "vehicle": "Vehicle record problem",
+      "code": "Captcha code problem",
+      "locked": "Vehicle locked for now",
+      "payment": "Payment not received",
+      "error": "Filing didn't finish"
+    }
   }
 }

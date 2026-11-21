@@ -29,7 +29,7 @@ export const BT_FAIL_ALREADY_PAID = 'already_paid' // mirrors BORDER_TAX_FAILURE
 /** Failures about the vehicle's own papers: the driver renews first, so no Try again (mirror BORDER_TAX_FAILURE). */
 export const BT_FAIL_FIX_FIRST = Object.freeze(['pucc_expired', 'fitness_expired', 'road_tax_expired', 'same_state', 'seat_class_mismatch', 'vehicle_not_found'])
 /** No Try again either: the driver may already have paid — support checks first (mirror PAYMENT_UNKNOWN). */
-export const BT_FAIL_NO_RETRY = Object.freeze([...BT_FAIL_FIX_FIRST, 'payment_unknown'])
+export const BT_FAIL_NO_RETRY = Object.freeze([...BT_FAIL_FIX_FIRST, 'payment_unknown', 'payment_timeout']) // paid late = paying twice on retry
 
 
 const DAY_MS = 86_400_000

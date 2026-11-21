@@ -101,31 +101,31 @@
       }
     },
     "fail": {
-      "captcha_timeout": "Aapne time par code nahi likha. Dobara file karein.",
-      "captcha_wrong": "Code kai baar galat raha. Dobara file karein.",
+      "captcha_timeout": "Code time par nahi likha gaya. Dobara file karein.",
+      "captcha_wrong": "Code kai baar galat hua. Dobara file karein.",
       "portal_error": "Sarkari portal mein dikkat hai. Kuch minute baad try karein.",
       "worker_restart": "Sarkari portal mein dikkat hai. Kuch minute baad try karein.",
       "state_unsupported": "Yeh state abhi available nahi hai.",
-      "vehicle_pending": "Is gaadi ka ek payment govt portal pe adhoora hai. Lagbhag 30 minute rukein, phir dobara bharein.",
-      "already_paid": "In dates ka tax pehle se bhara hai. Doosri start date chunein.",
-      "road_tax_expired": "Aapki gaadi ka road tax khatam ho gaya hai. Pehle renew karein.",
-      "same_state": "Yeh gaadi isi state mein registered hai, isliye yahan border tax nahi lagta. Koi paisa nahi kata.",
-      "no_tax_mode": "Is border par is gaadi ke liye portal mein tax option nahi hai. Vahan par aapki gaadi taxi (MOTOR CAB / MAXI CAB) mein registered hai ya nahi, RC check karein. Koi paisa nahi kata.",
-      "bank_down": "State govt ki payment site abhi down hai. Koi paisa nahi kata aur aapki gaadi block nahi hui. Thodi der baad dobara try karein.",
-      "portal_down": "Govt border tax portal abhi bahut slow ya down chal raha hai. Koi paisa nahi kata aur aapki gaadi block nahi hui. Thodi der baad dobara try karein.",
-      "no_handoff": "Portal ne bank page nahi khola. Dobara try karein.",
-      "pucc_expired": "Aapki gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
-      "fitness_expired": "Aapki gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
-      "seat_class_mismatch": "Vahan par aapki RC mein gaadi ki class aur seats match nahi karti (jaise MAXI CAB par 7 se kam seats), isliye portal online tax nahi le raha. RTO se RC theek karwayein, ya border par tax bharein. Koi paisa nahi kata.",
-      "vehicle_not_found": "Govt Vahan site par is gaadi number ka koi record nahi mila. RC par number check karke dobara bharein. Koi paisa nahi kata.",
-      "no_qr": "Govt payment page pe UPI QR nahi aaya, isliye payment shuru nahi hua — koi paisa nahi kata. Portal ka hold hat raha hai; thodi der baad dobara try karein.",
-      "treasury_down": "Govt payment site abhi down hai, isliye payment page nahi khula — koi paisa nahi kata. Thodi der baad dobara try karein.",
-      "payment_failed": "Payment nahi hua. Agar paise kate hain to support se baat karein.",
-      "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
-      "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
+      "vehicle_pending": "Is gaadi ka ek payment sarkari site par adhoora hai. Lock hatne ke baad dobara bharein.",
+      "already_paid": "In dates ka tax pehle se bhara hai. Doosri date chunein.",
+      "road_tax_expired": "Gaadi ka road tax khatam ho gaya hai. Renew karke dobara bharein.",
+      "same_state": "Yeh gaadi isi state ki hai — yahan border tax nahi lagta.",
+      "no_tax_mode": "Is border par is gaadi ka tax option nahi hai. RC mein gaadi taxi (MOTOR CAB / MAXI CAB) hai ya nahi, check karein.",
+      "bank_down": "State ki payment site abhi down hai. Thodi der baad try karein.",
+      "portal_down": "Sarkari border tax site abhi down ya bahut slow hai. Thodi der baad try karein.",
+      "no_handoff": "Sarkari site ne payment page nahi khola. Dobara try karein.",
+      "pucc_expired": "Gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
+      "fitness_expired": "Gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
+      "seat_class_mismatch": "RC mein gaadi ki class aur seats match nahi karti, isliye online tax nahi bhara ja sakta. RTO se RC theek karwayein ya border par tax bharein.",
+      "vehicle_not_found": "Sarkari Vahan site par yeh gaadi number nahi mila. RC se number check karein.",
+      "no_qr": "Sarkari payment page par QR nahi aaya. Thodi der baad try karein.",
+      "treasury_down": "Sarkari payment site abhi down hai. Thodi der baad try karein.",
+      "payment_failed": "Payment fail hua. Paise kate hain to support se baat karein.",
+      "payment_timeout": "Time par payment nahi mila. Pay kar diya hai to dobara na karein — support se baat karein.",
+      "payment_unknown": "Payment confirm nahi hua. Pay kar diya hai to dobara na karein — support se baat karein.",
       "alreadyPaidT": "Tax pehle se bhara hai",
-      "alreadyPaidS": "{from} – {to} ka border tax pehle se bhara hua hai. Iske baad ki start date chunein aur dobara file karein.",
-      "fare_declined": "Fee par filing roki gayi — koi paisa nahi kata aur gaadi block nahi hui. Jab chahein dobara file karein."
+      "alreadyPaidS": "{from} – {to} ka tax pehle se bhara hai. Iske baad ki date chunein.",
+      "fare_declined": "Aapne fee dekh kar filing rok di. Jab chahein dobara file karein."
     },
     "live": {
       "captchaTitle": "Code likhein",
@@ -177,9 +177,9 @@
       "mine": "Is cab ki pichli fee is state mein: {amount}, {n} din"
     },
     "fare": {
-      "title": "Sarkari site par fee: {amount}",
-      "sub": "Aage badhne par payment page khulega. Uske baad sarkari site ye gaadi lagbhag 30 minute ke liye rok deti hai.",
-      "continue": "Pay karne ke liye aage badhein",
+      "label": "Sarkari fee",
+      "sub": "Aage badhke payment na milne par sarkari site gaadi ko lagbhag 30 minute lock kar deti hai.",
+      "continue": "Aage badhein",
       "cancel": "Cancel karein"
     },
     "qr": {
@@ -239,10 +239,22 @@
       "continue": "Aage badhein"
     },
     "late": {
-      "title": "Border tax bhar gaya ✅",
-      "sub": "{vehicle} ({state}) ki aapki payment mil gayi. Receipt tayyar hai.",
+      "title": "Border tax bhar gaya",
+      "sub": "{vehicle} ({state}) ki payment mil gayi. Receipt tayyar hai.",
       "cta": "Receipt dekhein"
     },
-    "siteDown": "Sarkari border tax site abhi band hai. Chalu hone tak filing nahi hogi."
+    "siteDown": "Sarkari border tax site abhi band hai. Chalu hone tak filing nahi hogi.",
+    "result": {
+      "noCharge": "Koi paisa nahi kata",
+      "paid": "Border tax bhar gaya",
+      "cancelled": "Filing cancel ho gayi",
+      "declined": "Filing roki gayi",
+      "siteDown": "Sarkari site mein dikkat",
+      "vehicle": "Gaadi ke record mein dikkat",
+      "code": "Captcha code mein dikkat",
+      "locked": "Gaadi abhi locked hai",
+      "payment": "Payment nahi mila",
+      "error": "Filing poori nahi hui"
+    }
   }
 }

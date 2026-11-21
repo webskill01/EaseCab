@@ -4,13 +4,14 @@ import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { supportHref, guardSupport } from '@/features/shell/components/SupportButton'
-import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Bank, External, CircleX, Ban, Car, Headset, Receipt, CalendarCheck } from '@/components/ui/icons'
+import { External, Car, Headset, Receipt } from '@/components/ui/icons'
 import { useFiling, useReceiptUrl, useBorderTaxActions } from '../hooks/useBorderTax'
 import { BT_STATUS as S, BT_STATES, markPayOpened, BT_FAIL_NO_RETRY, BT_FAIL_ALREADY_PAID, markLateSeen, isFinal, daysOf, isDaysMode, fmtWhen, rupees, submitHandoff, gettingReceipt, receiptGoneAt, receiptGone, canUnlock, BT_UNLOCK, failKey } from '../lib/borderTax'
 import { PreparingScreen } from './PreparingScreen'
 import { PayQrSheet } from './PayQrSheet'
+import { ResultHero } from './ResultHero'
+import { resultOf } from '../lib/btResult'
 
 /** "Payment Details" (CabsWale): vehicle, state • days, validity, tax, amount payable → pay in a new tab. */
 function PaymentSheet({ f, onClose }) {
@@ -49,16 +50,27 @@ function PaymentSheet({ f, onClose }) {
   )
 }
 
-/** Header (icon, tone, title, sub) for a finished filing. */
-function head(f, t) {
-  if (f.status === S.HANDED_OFF) return [<Bank key="i" size={22} />, 'sky', t('bt.live.closedTitle'), t('bt.live.closedSub')]
-  if (f.status === S.PAID) return [<Receipt key="i" size={22} />, 'success', t('bt.status.paid.t'), f.receiptNo ? t('bt.qr.receiptNo', { no: f.receiptNo }) : gettingReceipt(f) ? t('bt.qr.gettingReceipt') : t('bt.qr.noReceipt')]
-  if (f.status === S.CANCELLED) return [<Ban key="i" size={22} />, 'sky', t('bt.status.cancelled.t'), t('bt.status.cancelled.s')]
-  if (f.failureCode === BT_FAIL_ALREADY_PAID) {
+/** Title + one-line reason for a finished filing. */
+function words(f, kind, t) {
+  if (kind === 'linkEnded') return [t('bt.live.closedTitle'), t('bt.live.closedSub')]
+  if (kind === 'paid') return [t('bt.result.paid'), f.receiptNo ? t('bt.qr.receiptNo', { no: f.receiptNo }) : gettingReceipt(f) ? t('bt.qr.gettingReceipt') : t('bt.qr.noReceipt')]
+  if (kind === 'cancelled') return [t('bt.result.cancelled'), null]
+  if (kind === 'alreadyPaid') {
     const [a, b] = [fmtWhen(f.taxFrom), fmtWhen(f.taxUpto)]
-    return [<CalendarCheck key="i" size={22} />, 'sky', t('bt.fail.alreadyPaidT'), t('bt.fail.alreadyPaidS', { from: `${a.date}, ${a.time}`, to: `${b.date}, ${b.time}` })]
+    return [t('bt.fail.alreadyPaidT'), t('bt.fail.alreadyPaidS', { from: `${a.date}, ${a.time}`, to: `${b.date}, ${b.time}` })]
   }
-  return [<CircleX key="i" size={22} />, 'danger', t(`bt.status.${f.status}.t`), t(failKey(t, f.failureCode))]
+  return [t(`bt.result.${kind}`), t(failKey(t, f.failureCode))]
+}
+
+/** Vehicle · state · amount — which filing this result is about. */
+function FilingLine({ f }) {
+  return (
+    <div className="mb-4 flex items-center justify-center gap-2 rounded-xl bg-ec-bg px-3 py-2.5 text-[13.5px] font-bold text-ec-ink">
+      <Car size={16} /> <span>{f.vehicleNo}</span>
+      <span className="text-ec-ink60">· {BT_STATES[f.stateCd]?.name || f.stateCd}</span>
+      {f.taxPaise !== null && <span className="text-ec-blueInk">· {rupees(f.taxPaise)}</span>}
+    </div>
+  )
 }
 
 /** Pending-lock clear: status line + "Clear lock" (vehicle_pending only). */
@@ -85,7 +97,8 @@ function UnlockBox({ f }) {
 function ResultSheet({ f, onClose, onRetry }) {
   const t = useTranslations('seva')
   const tc = useTranslations('common')
-  const [icon, tone, title, sub] = head(f, t)
+  const { kind, noCharge } = resultOf(f)
+  const [title, message] = words(f, kind, t)
   const failed = f.status === S.FAILED || f.status === S.EXPIRED
   const paid = f.status === S.PAID
   const alreadyPaid = f.failureCode === BT_FAIL_ALREADY_PAID // driver picks new dates (bot no longer shifts them)
@@ -98,7 +111,8 @@ function ResultSheet({ f, onClose, onRetry }) {
   useEffect(() => { if (paid) markLateSeen(f.id) }, [paid, f.id]) // seen here → no feed popup for it
   return (
     <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={title}>
-      <SheetTitle icon={icon} tone={tone} title={title} sub={sub} />
+      <ResultHero kind={kind} title={title} message={message} noCharge={noCharge} />
+      <FilingLine f={f} />
       <div className="flex flex-col gap-3 pb-2">
         {receiptUrl && (
           <a href={receiptUrl} download className={`${buttonVariants({ size: 'lg' })} w-full gap-2`}>
@@ -118,7 +132,7 @@ function ResultSheet({ f, onClose, onRetry }) {
             </a>
           </>
         )}
-        <Button type="button" variant={failed ? 'ghost' : 'outline'} size="lg" className="w-full" onClick={onClose}>{tc('actions.close')}</Button>
+        <Button type="button" variant="ghost" size="lg" className="w-full bg-white font-bold text-ec-danger hover:bg-ec-dangerBg" onClick={onClose}>{tc('actions.close')}</Button>
       </div>
     </BottomSheet>
   )
