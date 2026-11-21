@@ -14,7 +14,7 @@ test('treasury watch: one DOWN after 3 bad readings, one UP after 2 good', async
   const alerts = [];
   let hpUp = true;
   const store = memStore();
-  const tick = createTreasuryWatch({ alert: (m) => alerts.push(m), ...store, check: async (h) => (h.includes('himkosh') ? hpUp : true) });
+  const tick = createTreasuryWatch({ alert: (m) => alerts.push(m), ...store, check: async (h) => (h.includes('himkosh') ? hpUp : true), portal: async () => true });
   await ticks(tick, 2);
   assert.deepStrictEqual(alerts, []);
   hpUp = false;
@@ -35,11 +35,26 @@ test('treasury watch: a restart while down does not repeat DOWN, still sends UP'
   const alerts = [];
   let hpUp = false;
   const store = memStore({ HP: false }); // already alerted DOWN before the restart
-  const tick = createTreasuryWatch({ alert: (m) => alerts.push(m), ...store, check: async (h) => (h.includes('himkosh') ? hpUp : true) });
+  const tick = createTreasuryWatch({ alert: (m) => alerts.push(m), ...store, check: async (h) => (h.includes('himkosh') ? hpUp : true), portal: async () => true });
   await ticks(tick, 6);
   assert.deepStrictEqual(alerts, []);
   hpUp = true;
   await ticks(tick, 2);
   assert.strictEqual(alerts.length, 1);
   assert.match(alerts[0], /^HP .*back UP/);
+});
+
+test('checkpost portal watch: DOWN after 3 bad readings, back UP after 2 (2026-11-21 outage)', async () => {
+  const alerts = [];
+  let portalUp = false;
+  const store = memStore();
+  const tick = createTreasuryWatch({ alert: (m) => alerts.push(m), ...store, check: async () => true, portal: async () => portalUp });
+  await ticks(tick, 3);
+  assert.strictEqual(alerts.length, 1);
+  assert.match(alerts[0], /^Checkpost portal .*DOWN/);
+  assert.strictEqual(store.data.CHECKPOST, false);
+  portalUp = true;
+  await ticks(tick, 2);
+  assert.strictEqual(alerts.length, 2);
+  assert.match(alerts[1], /^Checkpost portal .*back UP/);
 });

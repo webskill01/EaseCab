@@ -239,6 +239,7 @@ const BORDER_TAX = Object.freeze({
   UNLOCK_POLL_SEC: 60, // worker checks for due unlocks this often
   UNLOCK_TRIES: 3, // portal/captcha errors before giving up (operator alerted)
   UNLOCK_RETRY_SEC: 300,
+  CHECKPOST_UP_MS: 20_000, // checkpostv4 index + main bundle must download within this before a filing (2026-11-21 outage)
   TREASURY_WATCH_SEC: 180, // treasury/bank host down/up check → Telegram on change (2 readings in a row)
   UNLOCK_BANK_PENDING_SEC: 3600, // portal: "pending at the bank side" (treasury down) → ask again after this, counts as a try
   UNLOCK_TTL_SEC: 86_400, // unlock status kept for the app this long
@@ -286,6 +287,7 @@ const BORDER_TAX_FAILURE = Object.freeze({
   VEHICLE_NOT_FOUND: 'vehicle_not_found', // portal: Vahan has no record for this number (typo / not on Vahan) — driver checks it
   SAME_STATE: 'same_state', // portal: a vehicle registered in the filing state owes no border tax there
   NO_TAX_MODE: 'no_tax_mode', // portal offers no tax mode for this vehicle at this checkpost
+  PORTAL_DOWN: 'portal_down', // checkpostv4 itself not loading (main bundle hangs) — stopped before Vahan, so no lock
   BANK_DOWN: 'bank_down', // state treasury site unreachable — stopped before Vahan's Pay Online, so no lock
   NO_HANDOFF: 'no_handoff', // eTransPgi Submit never left Vahan for a bank page
   NO_QR: 'no_qr', // in-app QR: PayU opened but its UPI QR could not be read

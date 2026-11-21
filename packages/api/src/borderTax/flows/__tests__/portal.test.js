@@ -74,3 +74,25 @@ test('entryUrl: statecd decodes the way checkpostv4 reads it (parivahandecryptEn
   for (const st of ['HR', 'HP', 'UP', 'PB']) assert.strictEqual(decode(entryUrl(st)), st);
   assert.match(entryUrl('HR'), /^https:\/\/services\.parivahan\.gov\.in\/checkpostv4\/#\/admin\/taxHome\?statecd=/);
 });
+
+test('checkpostUp: index + main bundle served → up; main bundle hangs → down (2026-11-21 outage); no main.js → up', async (t) => {
+  const http = require('node:http');
+  const { checkpostUp } = require('../checkpostv4');
+  let mode = 'ok';
+  const srv = http.createServer((req, res) => {
+    if (req.url === '/') return res.end(mode === 'odd' ? '<p>new layout</p>' : '<script src="runtime.a1.js"></script><script src="main.94a07c50a31c00f0.js" type="module"></script>');
+    if (req.url.startsWith('/main.') && mode !== 'hang') return res.end('console.log(1)');
+    if (mode === 'hang') res.write('partial'); // never ends, like the live bundle
+  }).listen(0, '127.0.0.1');
+  await new Promise((r) => srv.once('listening', r));
+  t.after(() => { srv.closeAllConnections(); srv.close(); });
+  const base = `http://127.0.0.1:${srv.address().port}/`;
+  assert.strictEqual(await checkpostUp(2000, base), true);
+  mode = 'hang';
+  assert.strictEqual(await checkpostUp(500, base), false);
+  mode = 'odd';
+  assert.strictEqual(await checkpostUp(2000, base), true);
+  srv.closeAllConnections();
+  srv.close();
+  assert.strictEqual(await checkpostUp(1000, base), false); // nothing listening
+});

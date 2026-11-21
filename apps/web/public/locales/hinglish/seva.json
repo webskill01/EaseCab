@@ -112,6 +112,7 @@
       "same_state": "Yeh gaadi isi state mein registered hai, isliye yahan border tax nahi lagta. Koi paisa nahi kata.",
       "no_tax_mode": "Is border par is gaadi ke liye portal mein tax option nahi hai. Vahan par aapki gaadi taxi (MOTOR CAB / MAXI CAB) mein registered hai ya nahi, RC check karein. Koi paisa nahi kata.",
       "bank_down": "State govt ki payment site abhi down hai. Koi paisa nahi kata aur aapki gaadi block nahi hui. Thodi der baad dobara try karein.",
+      "portal_down": "Govt border tax portal abhi bahut slow ya down chal raha hai. Koi paisa nahi kata aur aapki gaadi block nahi hui. Thodi der baad dobara try karein.",
       "no_handoff": "Portal ne bank page nahi khola. Dobara try karein.",
       "pucc_expired": "Aapki gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
       "fitness_expired": "Aapki gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",

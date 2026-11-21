@@ -15,12 +15,13 @@
  * BORDER_TAX_STATES (UP/UK have no '0'), distanceKm (HR only), date-only tax inputs (UP/RJ/UK),
  * district → checkpost codes (RJ/UK).
  */
-const { borderTaxWindow, BORDER_TAX_FAILURE, BORDER_TAX_STATES, TAX_MODE } = require('@easecab/shared');
+const { BORDER_TAX, borderTaxWindow, BORDER_TAX_FAILURE, BORDER_TAX_STATES, TAX_MODE } = require('@easecab/shared');
 const { portalError, visibleBtn, alertText, solveCaptcha, VERDICT_MS } = require('./portal');
 const { bankHandoff } = require('./bank');
 const { TREASURY, treasuryUp } = require('./treasury');
 
-const ENTRY_URL = 'https://services.parivahan.gov.in/checkpostv4/#/admin/taxHome?statecd=';
+const CHECKPOST = 'https://services.parivahan.gov.in/checkpostv4/';
+const ENTRY_URL = `${CHECKPOST}#/admin/taxHome?statecd=`;
 const ENTRY_SALT = '7c606d287b6d6b7'; // checkpostv4 main.js parivahandecryptEncData prefix
 const SERVICE_TAX = '/public/payment/taxCollectionOnline';
 const ALREADY_PAID = /already paid/i;
@@ -58,6 +59,25 @@ async function setDateTime(page, sel, value) {
 function entryUrl(stateCd) {
   const code = Buffer.from(Buffer.from(`${ENTRY_SALT}${stateCd}`).toString('hex')).toString('base64');
   return `${ENTRY_URL}${encodeURIComponent(code)}`;
+}
+
+/**
+ * checkpostv4 really loads: index answers AND its app bundle (main.<hash>.js) downloads in time. During the
+ * 2026-11-21 outage TCP + index were fine (0.6s) while main.js hung → filings burned 2–4 min on "form never loaded".
+ * A TLS-chain quirk on Node's side counts as up (Chromium decides); an index without main.js too (layout changed).
+ * @returns {Promise<boolean>}
+ */
+async function checkpostUp(ms = BORDER_TAX.CHECKPOST_UP_MS, base = CHECKPOST) {
+  try {
+    const signal = AbortSignal.timeout(ms);
+    const main = (await (await fetch(base, { signal })).text()).match(/src="(main\.\w+\.js)"/)?.[1];
+    if (!main) return true;
+    const r = await fetch(new URL(main, base), { signal });
+    await r.arrayBuffer();
+    return r.ok;
+  } catch (e) {
+    return /CERT|SELF_SIGNED|UNABLE_TO_/.test(e.cause?.code || '');
+  }
 }
 
 /** Opens the tax form for the state; retries a page that loads without its service list. */
@@ -250,6 +270,7 @@ async function fileCheckpost(page, job, io) {
   if (host && !(await treasuryUp(host))) {
     throw portalError(BORDER_TAX_FAILURE.BANK_DOWN, `${host} unreachable`);
   }
+  if (!(await checkpostUp())) throw portalError(BORDER_TAX_FAILURE.PORTAL_DOWN, 'checkpost portal not loading (main bundle)');
   await openForm(page, job.stateCd);
   // io.progress(n) = steps done, the app's checklist ticks on these (real progress, not a timer)
   await ownerStep(page, job, io);
@@ -269,4 +290,4 @@ async function fileCheckpost(page, job, io) {
   throw portalError(BORDER_TAX_FAILURE.NO_QR, `no in-app QR page (bank ${new URL(handoff.action).hostname})`);
 }
 
-module.exports = { fileCheckpost, istInput, portalWindow, fromPortal, vahanRefusal, entryUrl };
+module.exports = { fileCheckpost, istInput, portalWindow, fromPortal, vahanRefusal, entryUrl, checkpostUp };
