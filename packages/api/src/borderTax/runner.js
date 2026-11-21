@@ -3,7 +3,7 @@
 const { BORDER_TAX, BORDER_TAX_STATUS: S, BORDER_TAX_FAILURE: F, BORDER_TAX_UNLOCK: U, BORDER_TAX_PAY_EVENTS } = require('@easecab/shared');
 const { portalError } = require('./flows/portal');
 const { fileCheckpost } = require('./flows/checkpostv4');
-const { openQr, awaitPaid } = require('./flows/payuQr');
+const { openQr, awaitPaid, watchStatus } = require('./flows/payuQr');
 const { openSbiQr, awaitSbiPaid } = require('./flows/sbiQr');
 const { lookupReceipt } = require('./flows/receiptLookup');
 const { clearPending } = require('./flows/clearPending');
@@ -95,19 +95,36 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
     }
   }
 
+  /**
+   * PayU's result never came in time (HP 513710ed, 2026-11-19: driver paid, filing expired): the receipt list
+   * says if it was paid. PayU's post-back is still watched meanwhile — a success then counts as paid with the
+   * receipt fetched after (collect's `fetching` path). @throws err when neither shows up
+   */
+  async function lookupAfterTimeout(id, req, { payPage, pay, quote }, io, err) {
+    const watch = watchStatus(payPage.context(), pay.back);
+    try {
+      io.log('no PayU result — looking the receipt up by vehicle');
+      await repo.setJob(id, { step: 'verifying' }); // app: "receipt is being fetched from the govt portal, don't pay again"
+      const late = await lookupReceipt(payPage.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, taxFrom: quote.from, amountPaise: quote.taxPaise }, io.log, sleep);
+      if (late) {
+        io.log(`receipt ${late.receiptNo} (lookup after timeout)`);
+        return late;
+      }
+      if (watch.status() !== 'success') throw err;
+      io.log('PayU success came during the lookup → paid, receipt fetched next');
+      return { receiptNo: null, pdf: null };
+    } finally {
+      watch.stop();
+    }
+  }
+
   /** In-app QR: show the bank's QR (HR/HP PayU, UP SBIePay), wait for the driver's payment, fetch the receipt. */
   async function collect(id, req, { payPage, ref, pay, ...quote }, io) {
     const { qr, upi, secLeft } = pay.sbi ? await openSbiQr(payPage, io) : await openQr(payPage, io);
     if (!(await service.awaitPayment(id, { ...quote, qr, upi, deadline: until(secLeft ?? BORDER_TAX.PAY_WAIT_SEC) }))) return false;
     const { receiptNo, pdf } = pay.sbi ? await awaitSbiPaid(payPage, io, secLeft) : await awaitPaid(payPage, io, pay.back).catch(async (err) => {
-      // PayU's result never came (HP 513710ed, 2026-11-19: driver paid, filing expired): the receipt list says if it was paid
       if (err.failureCode !== F.PAYMENT_TIMEOUT) throw err;
-      io.log('no PayU result — looking the receipt up by vehicle');
-      await repo.setJob(id, { step: 'verifying' }); // app: "receipt is being fetched from the govt portal, don't pay again"
-      const late = await lookupReceipt(payPage.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, taxFrom: quote.from, amountPaise: quote.taxPaise }, io.log, sleep);
-      if (!late) throw err;
-      io.log(`receipt ${late.receiptNo} (lookup after timeout)`);
-      return late;
+      return lookupAfterTimeout(id, req, { payPage, pay, quote }, io, err);
     });
     const receiptKey = await storeReceipt(id, pdf);
     const grn = ref?.grn || null;

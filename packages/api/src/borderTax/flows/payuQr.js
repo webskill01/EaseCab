@@ -155,6 +155,27 @@ async function openQr(page, io) {
  * @returns {Promise<{ status: string, found?: object }>} PayU status ('success' when paid) @throws PAYMENT_TIMEOUT
  */
 async function payStatus(context, back) {
+  const watch = watchStatus(context, back);
+  try {
+    const end = Date.now() + (BORDER_TAX.PAY_WAIT_SEC + BORDER_TAX.PAY_GRACE_SEC) * 1000;
+    while (Date.now() < end) {
+      if (watch.status() !== null) return { status: watch.status() };
+      const found = await receiptOn(context);
+      if (found) return { status: 'success', found };
+      await new Promise((r) => setTimeout(r, STATUS_POLL_MS));
+    }
+    throw portalError(F.PAYMENT_TIMEOUT);
+  } finally {
+    watch.stop();
+  }
+}
+
+/**
+ * Listens for PayU's post-back to the treasury (`back` host). Also kept on through the after-timeout receipt
+ * lookups: HR 7424aa51 (2026-11-21) got PayU's success ~8 min after the scan, 22s before we gave up.
+ * @returns {{ status: () => ?string, stop: () => void }} status = PayU's (lower-case; 'success' when paid) or null
+ */
+function watchStatus(context, back) {
   let status = null;
   const onReq = (r) => {
     if (r.method() !== 'POST' || !back.test(r.url())) return;
@@ -162,18 +183,7 @@ async function payStatus(context, back) {
     if (form.has('status')) status = (form.get('status') || '').toLowerCase();
   };
   context.on('request', onReq);
-  try {
-    const end = Date.now() + (BORDER_TAX.PAY_WAIT_SEC + BORDER_TAX.PAY_GRACE_SEC) * 1000;
-    while (Date.now() < end) {
-      if (status !== null) return { status };
-      const found = await receiptOn(context);
-      if (found) return { status: 'success', found };
-      await new Promise((r) => setTimeout(r, STATUS_POLL_MS));
-    }
-    throw portalError(F.PAYMENT_TIMEOUT);
-  } finally {
-    context.off('request', onReq);
-  }
+  return { status: () => status, stop: () => context.off('request', onReq) };
 }
 
 /** A context page showing the checkpost receipt (number + its QR drawn), or null. */
@@ -237,4 +247,4 @@ async function awaitPaid(page, io, back) {
   return { receiptNo: found.receiptNo, pdf: await receiptPdf(found.page, io.log) };
 }
 
-module.exports = { openQr, awaitPaid, payStatus, receiptOn, receiptPdf, decodeQr, findQr, tagQr, describe, RECEIPT_RE };
+module.exports = { openQr, awaitPaid, payStatus, watchStatus, receiptOn, receiptPdf, decodeQr, findQr, tagQr, describe, RECEIPT_RE };

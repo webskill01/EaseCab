@@ -72,3 +72,17 @@ test('openQr: HP webcheckoutpro — dummy QR until "Generate QR" is pressed', as
   const { upi } = await openQr(page, { log: () => {} });
   assert.strictEqual(upi, 'upi://pay?pa=test@payu&am=100.00&tr=TEST1&mode=04');
 });
+
+test('watchStatus: reads PayU status off the post-back to the treasury only, until stopped', () => {
+  const { watchStatus } = require('../payuQr');
+  const { EventEmitter } = require('events');
+  const ctx = new EventEmitter();
+  const post = (url, body) => ctx.emit('request', { method: () => 'POST', url: () => url, postData: () => body });
+  const w = watchStatus(ctx, /egrashry\.nic\.in/i);
+  post('https://secure.payu.in/_payment', 'status=success');
+  assert.strictEqual(w.status(), null, 'other hosts ignored');
+  post('https://egrashry.nic.in/WebPages/BankResponseHandling.aspx', 'mihpayid=1&status=SUCCESS');
+  assert.strictEqual(w.status(), 'success');
+  w.stop();
+  assert.strictEqual(ctx.listenerCount('request'), 0);
+});
