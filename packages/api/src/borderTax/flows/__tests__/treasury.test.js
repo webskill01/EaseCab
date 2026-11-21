@@ -128,6 +128,34 @@ test('treasury dead on the first IP → re-posted on a fresh proxy session, then
   assert.ok(logs.some((m) => /fresh proxy session/.test(m)));
 });
 
+test('treasury tab hangs mid-load → treated as not loaded: re-posted on a fresh session (was a bare timeout → portal_error, lock left)', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  t.after(stopOcr);
+  if (!(await ocrReady())) return t.skip('ddddocr not installed');
+  const browser = await chromium.launch();
+  t.after(() => browser.close());
+  const hung = await browser.newContext(); // HR d354b3da 2026-11-21: eGRAS tab open, never reached domcontentloaded
+  hung.setDefaultTimeout(1500);
+  await hung.route(`https://${HOST}/slow.js`, () => {}); // never answered: the page sits on eGRAS before domcontentloaded
+  await hung.route(`https://${HOST}/echallan`, (route) => route.fulfill({ contentType: 'text/html', body: `<script src="https://${HOST}/slow.js"></script>` }));
+  const stuck = await hung.newPage();
+  stuck.goto(`https://${HOST}/echallan`, { timeout: 0 }).catch(() => {});
+  await new Promise((r) => setTimeout(r, 500));
+  let found;
+  const captured = new Promise((r) => { found = r; });
+  const respawn = async () => {
+    const c = await browser.newContext();
+    await c.route(`${BANK}*`, (route) => { found(route.request().postData()); return route.abort(); });
+    await c.route(`https://${HOST}/**`, (route) => route.fulfill({ contentType: 'text/html', body: HIMKOSH() }));
+    c.on('page', (p) => p.on('dialog', (d) => d.accept()));
+    return c;
+  };
+  const again = { method: 'POST', action: `https://${HOST}/echallan`, fields: [['grn', '1']] };
+  const bank = await passTreasury(hung, { ...TREASURY.HP, findMs: 1500 }, captured, { log: () => {} }, again, respawn);
+  assert.match(bank, /code=4bpd6c/);
+});
+
 test('treasury never loads, even re-posted → treasury_down (driver told the govt site is down)', async (t) => {
   let chromium;
   try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }

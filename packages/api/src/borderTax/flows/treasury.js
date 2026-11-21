@@ -115,7 +115,8 @@ async function attempt(page, cfg, captured, io) {
 async function treasuryPage(context, host, findMs = FIND_MS) {
   for (let waited = 0; waited < findMs; waited += 500) {
     const p = context.pages().find((x) => { try { return new URL(x.url()).hostname === host; } catch { return false; } });
-    if (p) { await p.waitForLoadState('domcontentloaded'); return p; }
+    // hung tab = not loaded → re-post on a fresh IP / treasury_down (clears the lock); a throw here was portal_error, lock left (HR d354b3da 2026-11-21)
+    if (p) return (await p.waitForLoadState('domcontentloaded').then(() => true, () => false)) ? p : null;
     await new Promise((r) => setTimeout(r, 500));
   }
   return null;
