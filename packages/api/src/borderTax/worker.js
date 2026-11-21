@@ -18,6 +18,7 @@ const { r2FromEnv } = require('../lib/r2.js');
 const { ocrReady, stopOcr } = require('./ocr');
 const { proxyFor } = require('./proxy');
 const { canvasCodeHook } = require('./flows/portal');
+const { serveBundles } = require('./flows/bundleCache');
 const { createTreasuryWatch } = require('./treasuryWatch');
 const { createPushRepository } = require('../features/push/push.repository');
 const { createPushSender } = require('../lib/fcm');
@@ -58,6 +59,7 @@ async function main() {
     // IST clock: the VPS runs Europe/Berlin, and the portal read our IST tax_from as browser-local → receipts 4h30 late (2026-11-14)
     const context = await (await browser()).newContext({ viewport: VIEWPORT, timezoneId: 'Asia/Kolkata', proxy: proxyFor(env.BORDER_TAX_PROXY_URL, job) });
     await context.addInitScript(canvasCodeHook); // declaration captcha typed exactly as drawn (portal.js)
+    await serveBundles(context); // checkpostv4's 4.9 MB main bundle from disk — the portal serves it at ~20 KB/s (bundleCache.js)
     return context;
   };
   const newPage = async (job) => {

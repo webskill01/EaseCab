@@ -1,7 +1,7 @@
 'use strict';
 
 const { TREASURY, treasuryUp } = require('./flows/treasury');
-const { checkpostUp } = require('./flows/checkpostv4');
+const { checkpostUp } = require('./flows/bundleCache');
 
 // readings in a row before a change is believed: DOWN slower (3 × 3 min) so a flaky site doesn't alert twice
 const CONFIRM = Object.freeze({ down: 3, up: 2 });
@@ -24,7 +24,7 @@ function createTreasuryWatch({ alert, load, save, check = treasuryUp, portal = c
     })),
     { st: CHECKPOST, read: portal,
       up: 'Checkpost portal services.parivahan.gov.in/checkpostv4 is back UP — border tax filings work again.',
-      down: 'Checkpost portal services.parivahan.gov.in/checkpostv4 is DOWN (app not loading) — new filings in every state stop with portal_down.' },
+      down: 'Checkpost portal services.parivahan.gov.in/checkpostv4 is DOWN (app bundle not loading, none cached) — new filings in every state stop with portal_down.' },
   ];
   let state = null; // key → { up: boolean, streak: number }; unknown = assumed up
   return async function tick() {
