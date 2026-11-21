@@ -2,7 +2,7 @@
 
 const express = require('express');
 const {
-  HTTP_STATUS, borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxIdParamSchema, borderTaxListQuerySchema,
+  HTTP_STATUS, borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxFareSchema, borderTaxEventSchema, borderTaxIdParamSchema, borderTaxListQuerySchema,
 } = require('@easecab/shared');
 const { validate } = require('../../middleware/validate');
 const { sendSuccess } = require('../../http/respond');
@@ -13,10 +13,11 @@ const { sendSuccess } = require('../../http/respond');
  *   POST /api/v1/border-tax              — new filing (queued)
  *   GET  /api/v1/border-tax              — caller's filings, cursor-paginated
  *   GET  /api/v1/border-tax/states       — { live } states open for new filings (admin can pause one)
- *   GET  /api/v1/border-tax/rates        — latest real fee per (state, border, seats)
  *   GET  /api/v1/border-tax/:id          — one filing + live { step, captcha, deadline, handoff }
  *   POST /api/v1/border-tax/:id/captcha  — driver's captcha answer
  *   POST /api/v1/border-tax/:id/captcha/refresh — driver wants a new captcha image
+ *   POST /api/v1/border-tax/:id/fare     — { confirm } the real amount before Pay Online (lock)
+ *   POST /api/v1/border-tax/:id/event    — { type } QR-screen step (qr_shown, pay_tapped, left_app, returned)
  *   POST /api/v1/border-tax/:id/cancel   — cancel while filling
  *   POST /api/v1/border-tax/:id/unlock   — clear the vehicle's pending-payment lock (vehicle_pending failures)
  *   GET  /api/v1/border-tax/:id/receipt  — { url } presigned link to the receipt PDF (in-app QR filings)
@@ -42,11 +43,7 @@ function createBorderTaxRouter({ service, requireAuth }) {
   });
 
   router.get('/states', async (req, res) => {
-    sendSuccess(res, { data: { live: await service.liveStates() } });
-  });
-
-  router.get('/rates', async (req, res) => {
-    sendSuccess(res, { data: { rates: await service.rates() } });
+    sendSuccess(res, { data: { live: await service.liveStates(), down: await service.downSites() } });
   });
 
   router.get('/:id', idParam, async (req, res) => {
@@ -60,6 +57,16 @@ function createBorderTaxRouter({ service, requireAuth }) {
 
   router.post('/:id/captcha/refresh', idParam, async (req, res) => {
     await service.refreshCaptcha(req.user.id, req.valid.params.id);
+    sendSuccess(res, { data: { id: req.valid.params.id } });
+  });
+
+  router.post('/:id/fare', idParam, validate(borderTaxFareSchema), async (req, res) => {
+    await service.answerFare(req.user.id, req.valid.params.id, req.valid.body.confirm);
+    sendSuccess(res, { data: { id: req.valid.params.id } });
+  });
+
+  router.post('/:id/event', idParam, validate(borderTaxEventSchema), async (req, res) => {
+    await service.payEvent(req.user.id, req.valid.params.id, req.valid.body.type);
     sendSuccess(res, { data: { id: req.valid.params.id } });
   });
 

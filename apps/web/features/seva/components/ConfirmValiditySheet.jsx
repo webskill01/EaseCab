@@ -4,12 +4,12 @@ import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Button } from '@/components/ui/button'
 import { CalendarCheck, ArrowR } from '@/components/ui/icons'
-import { BT_STATES, isDaysMode, validUpto, fmtWhen, rateFor, rupees } from '../lib/borderTax'
-import { useRates } from '../hooks/useBorderTax'
+import { BT_STATES, isDaysMode, validUpto, fmtWhen, ownFee, rupees } from '../lib/borderTax'
+import { useFilings } from '../hooks/useBorderTax'
 
 /**
  * "Confirm your pass validity" (CabsWale): start → valid upto, plan, amount; Change date / Continue.
- * Amount is the latest real quote at this border for the same days; otherwise the govt site shows it.
+ * Amount is this cab's own last fee for the same days (ownFee); otherwise the govt site shows it.
  * @param {{ form: object, onChange: () => void, onContinue: () => void }} props
  */
 export function ConfirmValiditySheet({ form, onChange, onContinue }) {
@@ -18,8 +18,9 @@ export function ConfirmValiditySheet({ form, onChange, onContinue }) {
   const daysMode = isDaysMode(form)
   const from = fmtWhen(new Date(form.startAt))
   const upto = fmtWhen(validUpto(form.startAt, form.days, BT_STATES[form.stateCd]?.calendarDays))
-  const rate = rateFor(useRates().data, form)
-  const amount = daysMode && rate?.days === form.days ? rupees(rate.taxPaise) : null
+  const filings = useFilings().data
+  const fee = daysMode ? ownFee(filings, form) : null
+  const amount = fee ? rupees(fee) : null
   return (
     <BottomSheet centered closeLabel={tc('actions.close')} onClose={onChange} label={t('bt.confirm.title')}>
       <div className="flex flex-col items-center gap-4 pb-2 text-center">

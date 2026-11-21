@@ -66,6 +66,7 @@ export const receiptGone = (f, now = Date.now()) => f?.status === BT_STATUS.PAID
 
 export const BT_PREP_SEC = 300
 export const BT_CAPTCHA_SEC = 240 // mirrors BORDER_TAX.CAPTCHA_TIMEOUT_SEC
+export const BT_FARE_SEC = 120 // mirrors BORDER_TAX.FARE_CONFIRM_SEC
 /** Coming back to Border Tax within this long reopens the latest filing (its live state or result). */
 const RESUME_MS = 15 * 60_000
 
@@ -97,9 +98,15 @@ export function lateUnseen(filings, now = Date.now(), seen = readLateSeen()) {
     && new Date(f.paidAt) - new Date(f.createdAt) > LATE_AFTER_MS && now - new Date(f.paidAt).getTime() < LATE_SHOW_MS) ?? null
 }
 
-/** The latest real fee for this form's state + border + seats, if any driver paid one recently. */
-export const rateFor = (rates, { stateCd, checkpost, seats }) =>
-  rates?.find((r) => r.stateCd === stateCd && (r.checkpost ?? '') === checkpost && r.seats === seats) ?? null
+/**
+ * This cab's own last fee (paise) in the state for the same days, else null — never other drivers' fees
+ * or estimates (user, 2026-11-21): the portal prices by the RC, never by checkpost, and the fare step
+ * shows the real amount before anything locks.
+ */
+export function ownFee(filings, { stateCd, days, vehicleNo }) {
+  const v = normVehicle(vehicleNo || '')
+  return filings?.find((f) => f.taxPaise > 0 && f.stateCd === stateCd && isDaysMode(f) && daysOf(f) === days && normVehicle(f.vehicleNo) === v)?.taxPaise ?? null
+}
 
 /** Each checklist step's share of a run: HP/HR take ~45–90s from worker pick-up to PayU (2026-11-07). */
 /**
@@ -112,9 +119,9 @@ export function prepStep(f) {
   return Math.min(3, Number(f.live.progress) || 0)
 }
 
-/** Ring deadline: the captcha's while one waits, else BT_PREP_SEC from pick-up; null while queued. */
+/** Ring deadline: the captcha's / amount's while one waits, else BT_PREP_SEC from pick-up; null while queued. */
 export function prepDeadline(f) {
-  if (f.status === BT_STATUS.AWAITING_CAPTCHA && f.live?.captcha) return f.live.deadline
+  if ((f.status === BT_STATUS.AWAITING_CAPTCHA && f.live?.captcha) || f.live?.fare) return f.live.deadline
   return f.live?.started ? new Date(new Date(f.live.started).getTime() + BT_PREP_SEC * 1000).toISOString() : null
 }
 
@@ -218,8 +225,17 @@ export function toCreateBody(f) {
   }
 }
 
+/** Watcher key for the checkpost portal itself — mirrors BORDER_TAX.PORTAL_KEY (down = every state). */
+export const BT_PORTAL_KEY = 'CHECKPOST'
+
+/** The govt site this filing needs is down: the chosen state's payment site or the checkpost portal. */
+export function siteDown(down, stateCd) {
+  return down.includes(BT_PORTAL_KEY) || Boolean(stateCd && down.includes(stateCd))
+}
+
 /** API error → seva.bt.errors key. */
 export function createErrorKey(err) {
+  if (err?.meta?.portalDown) return 'portalDown' // refused up front; the driver is pushed when it's back
   if (err?.meta?.retryAfter) return 'busy' // govt portal busy — the form counts down retryAfter
   if (err?.code === 'RATE_LIMITED') return 'rateLimited'
   if (err?.status === 409) return 'vehicleBusy'

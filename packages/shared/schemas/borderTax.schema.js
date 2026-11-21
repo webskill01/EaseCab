@@ -1,7 +1,7 @@
 'use strict';
 
 const { z } = require('zod');
-const { BORDER_TAX, BORDER_TAX_STATES, BORDER_TAX_SEATS, BORDER_TAX_STATUS, BORDER_TAX_LIVE_STATES, TAX_MODE } = require('../constants/borderTax');
+const { BORDER_TAX, BORDER_TAX_STATES, BORDER_TAX_SEATS, BORDER_TAX_STATUS, BORDER_TAX_LIVE_STATES, BORDER_TAX_PAY_EVENTS, TAX_MODE } = require('../constants/borderTax');
 const { ADMIN_BORDER_TAX } = require('../constants/admin');
 
 const DAY_MS = 86_400_000;
@@ -49,6 +49,9 @@ const borderTaxCaptchaSchema = z
   .object({ answer: z.string().trim().regex(/^[!-~]{3,10}$/) })
   .strict();
 
+const borderTaxFareSchema = z.object({ confirm: z.boolean() }).strict();
+const borderTaxEventSchema = z.object({ type: z.enum(BORDER_TAX_PAY_EVENTS) }).strict();
+
 const borderTaxIdParamSchema = z.object({ id: z.string().uuid() });
 /** Admin receipt link: ?view=1 opens the PDF in the browser instead of downloading it. */
 const borderTaxReceiptQuerySchema = z.object({ view: z.literal('1').optional() });
@@ -78,6 +81,6 @@ const adminBorderTaxStateParamSchema = z.object({ stateCd: z.enum(BORDER_TAX_LIV
 const adminBorderTaxStateSchema = z.object({ paused: z.boolean() });
 
 module.exports = {
-  borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxIdParamSchema, borderTaxReceiptQuerySchema, borderTaxListQuerySchema,
+  borderTaxCreateSchema, borderTaxCaptchaSchema, borderTaxFareSchema, borderTaxEventSchema, borderTaxIdParamSchema, borderTaxReceiptQuerySchema, borderTaxListQuerySchema,
   adminBorderTaxQuerySchema, adminBorderTaxStateParamSchema, adminBorderTaxStateSchema,
 };

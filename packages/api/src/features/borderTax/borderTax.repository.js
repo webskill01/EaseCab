@@ -1,6 +1,6 @@
 'use strict';
 
-const { redisKey, BORDER_TAX, BORDER_TAX_KEYS: K, BORDER_TAX_FINAL_STATUSES, TAX_MODE } = require('@easecab/shared');
+const { redisKey, BORDER_TAX, BORDER_TAX_KEYS: K, BORDER_TAX_FINAL_STATUSES } = require('@easecab/shared');
 const { fixedWindowIncr } = require('../../lib/rateLimit');
 const { getCachedSub, setCachedSub } = require('../../lib/subscriptionCache');
 
@@ -123,18 +123,20 @@ function createBorderTaxRepository({ prisma, redis }) {
       return prisma.borderTaxRequest.findMany({ where: { status: { in: statuses } }, select: { id: true, status: true } });
     },
 
-    /**
-     * Latest real portal quote per (state, border, seats) since `since` — the form shows it as the usual fee.
-     * ponytail: Prisma distinct dedupes in memory over the window's quoted rows; GROUP BY / a rates table if it grows.
-     * @returns {Promise<object[]>}
-     */
-    async latestQuotes(since) {
-      return prisma.borderTaxRequest.findMany({
-        where: { taxPaise: { not: null }, createdAt: { gte: since }, taxMode: TAX_MODE.DAYS }, // per-day fees only
-        distinct: ['stateCd', 'checkpost', 'seats'],
-        orderBy: { createdAt: 'desc' },
-        select: { stateCd: true, checkpost: true, seats: true, taxPaise: true, taxFrom: true, taxUpto: true, createdAt: true },
-      });
+    /** Watcher's last reading per payment site / the checkpost portal (BORDER_TAX.PORTAL_KEY): key → '1' up, '0' down. */
+    async siteState() {
+      return redis.hgetall(K.TREASURY_UP);
+    },
+
+    /** Remember a driver a down site stopped, to push once it's back (kept WAIT_UP_TTL_SEC). */
+    async waitForUp(site, userId) {
+      await redis.multi().sadd(K.waitUp(site), userId).expire(K.waitUp(site), BORDER_TAX.WAIT_UP_TTL_SEC).exec();
+    },
+
+    /** Drivers waiting for `site`, taken off the list. @returns {Promise<string[]>} */
+    async takeWaitingUp(site) {
+      const [[, users]] = await redis.multi().smembers(K.waitUp(site)).del(K.waitUp(site)).exec();
+      return users;
     },
 
     /** Queue a request for the worker. */
@@ -150,6 +152,12 @@ function createBorderTaxRepository({ prisma, redis }) {
     /** Live job fields, {} if none. @returns {Promise<Record<string, string>>} */
     async getJob(id) {
       return redis.hgetall(K.job(id));
+    },
+
+    /** First time the app saw this QR-screen event (qr_shown, pay_tapped…): kept, later repeats ignored. */
+    async markEvent(id, type) {
+      await redis.hsetnx(K.job(id), `ev_${type}`, String(Date.now()));
+      await redis.expire(K.job(id), BORDER_TAX.JOB_TTL_SEC); // an event after the hash expired must not leave a key forever
     },
 
     /** Drops answers left over from an earlier captcha (double taps) before showing a new one. */

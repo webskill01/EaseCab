@@ -12,9 +12,10 @@ const ticks = async (tick, n) => { for (let i = 0; i < n; i += 1) await tick(); 
 
 test('treasury watch: one DOWN after 3 bad readings, one UP after 2 good', async () => {
   const alerts = [];
+  const ups = [];
   let hpUp = true;
   const store = memStore();
-  const tick = createTreasuryWatch({ alert: (m) => alerts.push(m), ...store, check: async (h) => (h.includes('himkosh') ? hpUp : true), portal: async () => true });
+  const tick = createTreasuryWatch({ alert: (m) => alerts.push(m), ...store, onUp: async (st) => { ups.push(st); }, check: async (h) => (h.includes('himkosh') ? hpUp : true), portal: async () => true });
   await ticks(tick, 2);
   assert.deepStrictEqual(alerts, []);
   hpUp = false;
@@ -29,6 +30,7 @@ test('treasury watch: one DOWN after 3 bad readings, one UP after 2 good', async
   assert.strictEqual(alerts.length, 2);
   assert.match(alerts[1], /^HP .*back UP/);
   assert.strictEqual(store.data.HP, true);
+  assert.deepStrictEqual(ups, ['HP'], 'waiting drivers pushed once, on UP only');
 });
 
 test('treasury watch: a restart while down does not repeat DOWN, still sends UP', async () => {

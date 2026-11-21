@@ -23,16 +23,10 @@ export async function getFiling(id) {
   return data.filing
 }
 
-/** States open for new filings (BT_LIVE_STATES minus any the admin paused). */
+/** States open for new filings (BT_LIVE_STATES minus any the admin paused) + govt sites read as down (state codes / BT_PORTAL_KEY). */
 export async function listLiveStates() {
   const { data } = await apiFetch('/border-tax/states')
-  return data.live
-}
-
-/** Each border's latest real fee: [{ stateCd, checkpost, seats, days, taxPaise, at }]. */
-export async function listRates() {
-  const { data } = await apiFetch('/border-tax/rates')
-  return data.rates
+  return { live: data.live, down: data.down ?? [] }
 }
 
 /** Short-lived link to the receipt PDF (in-app QR filings). 404 when none was captured. */
@@ -45,3 +39,9 @@ export const sendCaptcha = (id, answer) => apiFetch(`/border-tax/${id}/captcha`,
 export const refreshCaptcha = (id) => apiFetch(`/border-tax/${id}/captcha/refresh`, json())
 export const cancelFiling = (id) => apiFetch(`/border-tax/${id}/cancel`, json())
 export const unlockFiling = (id) => apiFetch(`/border-tax/${id}/unlock`, json())
+export const confirmFare = (id, confirm) => apiFetch(`/border-tax/${id}/fare`, json({ confirm }))
+
+/** QR-screen step for the worker's log (who tapped Pay vs left); fire-and-forget, survives leaving the app. */
+export function sendPayEvent(id, type) {
+  apiFetch(`/border-tax/${id}/event`, { ...json({ type }), keepalive: true }).catch(() => {}) // ponytail: analytics only, a lost event is fine
+}

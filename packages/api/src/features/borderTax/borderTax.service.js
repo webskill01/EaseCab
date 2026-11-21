@@ -6,7 +6,6 @@ const {
   borderTaxWindow, isSubscriptionActive, TAX_MODE,
 } = require('@easecab/shared');
 const { encodeCursor, decodeCursor } = require('../../lib/cursor');
-const DAY_MS = 86_400_000;
 
 const IN_FLIGHT = Object.freeze([S.QUEUED, S.FILLING, S.AWAITING_CAPTCHA]);
 const TIMEOUTS = Object.freeze([F.CAPTCHA_TIMEOUT, F.PAYMENT_TIMEOUT]);
@@ -67,21 +66,30 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     return BORDER_TAX_LIVE_STATES.filter((s) => !paused.includes(s));
   }
 
+  /** Sites the watcher reads as down: state codes and/or BORDER_TAX.PORTAL_KEY (checkpost portal = every state). */
+  async function downSites() {
+    return Object.entries(await repo.siteState()).filter(([, v]) => v === '0').map(([k]) => k);
+  }
+
   return {
     move,
     busyFor,
     liveStates,
+    downSites,
 
     /**
      * New filing from a validated borderTaxCreateSchema body; queued for the worker.
      * Free for subscribed members — the gate fires before the rate limit so it costs nothing.
      * Govt portal busy (lanes full / lookup gap) → 429 with meta.retryAfter (sec): nothing is queued, so the
      * driver's timer never runs while the bot is not filing.
-     * @throws {AppError} SUBSCRIPTION_EXPIRED, 422 state not live yet, RATE_LIMITED (busy: meta.retryAfter), or 409 when the vehicle already has a live filing
+     * @throws {AppError} SUBSCRIPTION_EXPIRED, 422 state not live yet, 503 site down (meta.portalDown), RATE_LIMITED (busy: meta.retryAfter), or 409 when the vehicle already has a live filing
      */
     async create(userId, input) {
       if (!isSubscriptionActive(await repo.findSubscriptionByUserId(userId))) throw AppError.fromCode(ERROR_CODES.SUBSCRIPTION_EXPIRED);
       if (!(await liveStates()).includes(input.stateCd)) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'This state is not available yet', 422);
+      const down = (await downSites()).find((k) => k === input.stateCd || k === BORDER_TAX.PORTAL_KEY);
+      if (down) await repo.waitForUp(down, userId); // refused up front (would fail ~20s in), state left on; pushed when back (2026-11-21)
+      if (down) throw Object.assign(new AppError(ERROR_CODES.VALIDATION_ERROR, 'The govt site is down right now', 503), { meta: { portalDown: down } });
       if (await repo.findActiveForVehicle(input.vehicleNo)) {
         throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'A filing for this vehicle is already in progress', 409);
       }
@@ -121,13 +129,13 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     async get(userId, id) {
       const filing = await repo.findForUser(id, userId);
       if (!filing) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
-      const { step = null, captcha = '', refresh = '', deadline = '', started = '', qr = '', upi = '', progress = '' } = await repo.getJob(id);
+      const { step = null, captcha = '', refresh = '', deadline = '', started = '', qr = '', upi = '', progress = '', fare = '' } = await repo.getJob(id);
       const handoff = filing.status === S.HANDED_OFF ? await repo.getHandoff(id) : null;
       const paying = filing.status === S.AWAITING_PAYMENT;
       // queued behind the lookup gap: when the bot starts (null = any moment / waiting for a lane)
       const slotMs = filing.status === S.QUEUED ? await repo.lookupSlotMs() : 0;
       const unlock = toUnlock(await repo.getUnlock(id));
-      return { ...filing, unlock, live: { step, startsAt: slotMs ? new Date(Date.now() + slotMs) : null, captcha: captcha || null, canRefresh: Boolean(captcha && refresh), deadline: deadline ? new Date(Number(deadline)) : null, started: started ? new Date(Number(started)) : null, progress: Number(progress) || 0, handoff, qr: (paying && qr) || null, upi: (paying && upi) || null } };
+      return { ...filing, unlock, live: { step, startsAt: slotMs ? new Date(Date.now() + slotMs) : null, captcha: captcha || null, canRefresh: Boolean(captcha && refresh), deadline: deadline ? new Date(Number(deadline)) : null, started: started ? new Date(Number(started)) : null, progress: Number(progress) || 0, handoff, qr: (paying && qr) || null, upi: (paying && upi) || null, fare: (step === 'fare' && fare && JSON.parse(fare)) || null } };
     },
 
     /**
@@ -140,16 +148,17 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
       await repo.pushAnswer(id, answer);
     },
 
-    /**
-     * Each border's latest real fee (any driver's quote, no personal fields) for the form.
-     * @returns {Promise<{ stateCd: string, checkpost: ?string, seats: string, days: number, taxPaise: number, at: Date }[]>}
-     */
-    async rates(now = new Date()) {
-      const rows = await repo.latestQuotes(new Date(now.getTime() - BORDER_TAX.RATES_WINDOW_DAYS * DAY_MS));
-      return rows.map((r) => ({
-        stateCd: r.stateCd, checkpost: r.checkpost, seats: r.seats, taxPaise: r.taxPaise, at: r.createdAt,
-        days: Math.round((r.taxUpto.getTime() - r.taxFrom.getTime() + 60_000) / DAY_MS),
-      }));
+    /** Driver OKs (or cancels) the real amount the worker is holding on the portal's tax page. @throws {AppError} NOT_FOUND; 409 when none waits */
+    async answerFare(userId, id, confirm) {
+      if (!(await repo.findForUser(id, userId))) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      if ((await repo.getJob(id)).step !== 'fare') throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'No amount is waiting', 409);
+      await repo.pushAnswer(id, confirm ? 'yes' : 'no');
+    },
+
+    /** App-side QR-screen step (BORDER_TAX_PAY_EVENTS), first time only — the worker logs them with the outcome. */
+    async payEvent(userId, id, type) {
+      if (!(await repo.findForUser(id, userId))) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      await repo.markEvent(id, type);
     },
 
     /** Driver asks for a new captcha image (the worker refreshes it on the portal if refreshes are left). */

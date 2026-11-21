@@ -8,14 +8,17 @@ const logger = { info() {}, warn() {} };
 const MEMBER = { status: 'active', expiresAt: new Date(Date.now() + 86_400_000) };
 
 /** In-memory repo with the real compare-and-set semantics. */
-function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0, paused = [] } = {}) {
+function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0, paused = [], sites = {} } = {}) {
   const queue = [];
+  const waiting = [];
   const handoffs = {};
   const unlocks = {};
   const due = {};
   let attempts = 0;
   return {
-    rows, queue, handoffs, unlocks, due,
+    rows, queue, handoffs, unlocks, due, waiting,
+    async siteState() { return sites; },
+    async waitForUp(site, userId) { waiting.push([site, userId]); },
     async setUnlock(id, f) { unlocks[id] = { ...unlocks[id], ...f }; },
     async getUnlock(id) { return unlocks[id] || {}; },
     async scheduleUnlock(id, at) { due[id] = at; },
@@ -126,14 +129,33 @@ test('recoverAfterRestart: requeue QUEUED, fail in-flight as worker_restart (dri
   assert.deepStrictEqual([repo.rows.f.failureCode, repo.rows.c.failureCode], ['worker_restart', 'worker_restart']);
 });
 
-test('rates: latest real quote per border, whole days, recent window only, no personal fields', async () => {
-  const now = new Date('2026-11-07T12:00:00Z');
-  let since;
-  const repo = { async latestQuotes(s) { since = s; return [{ stateCd: 'HP', checkpost: 'PARWANOO', seats: '4+1', taxPaise: 23000,
-    taxFrom: new Date('2026-11-07T00:45:00Z'), taxUpto: new Date('2026-11-08T00:44:00Z'), createdAt: now, vehicleNo: 'X', userId: 'u' }]; } };
-  const rates = await createBorderTaxService({ repo, logger }).rates(now);
-  assert.deepStrictEqual(rates, [{ stateCd: 'HP', checkpost: 'PARWANOO', seats: '4+1', taxPaise: 23000, at: now, days: 1 }]);
-  assert.strictEqual(now - since, 60 * 86_400_000);
+test('create: a down govt site → 503 portalDown, nothing queued, driver kept for the back-up push', async () => {
+  for (const [sites, site] of [[{ HR: '0', HP: '1' }, 'HR'], [{ CHECKPOST: '0', HR: '1' }, 'CHECKPOST']]) {
+    const repo = fakeRepo({}, { sites });
+    await assert.rejects(createBorderTaxService({ repo, logger }).create('u1', input()), (e) => e.statusCode === 503 && e.meta.portalDown === site);
+    assert.deepStrictEqual([repo.queue.length, repo.waiting], [0, [[site, 'u1']]]);
+  }
+  const repo = fakeRepo({}, { sites: { HP: '0', HR: '1' } }); // another state down: HR still files
+  assert.ok(await createBorderTaxService({ repo, logger }).create('u1', input()));
+  assert.deepStrictEqual(await createBorderTaxService({ repo, logger }).downSites(), ['HP']);
+});
+
+test('fare: driver answer reaches the worker only while an amount waits; events only for own filing', async () => {
+  const answers = [];
+  const events = [];
+  let step = 'filling';
+  const repo = { ...fakeRepo({ b1: { id: 'b1', userId: 'u1', status: 'filling' } }),
+    async getJob() { return { step }; }, async pushAnswer(id, a) { answers.push(a); }, async markEvent(id, t) { events.push(t); } };
+  const svc = createBorderTaxService({ repo, logger });
+  await assert.rejects(svc.answerFare('u1', 'b1', true), (e) => e.statusCode === 409);
+  step = 'fare';
+  await assert.rejects(svc.answerFare('u2', 'b1', true), (e) => e.code === 'NOT_FOUND');
+  await svc.answerFare('u1', 'b1', true);
+  await svc.answerFare('u1', 'b1', false);
+  assert.deepStrictEqual(answers, ['yes', 'no']);
+  await assert.rejects(svc.payEvent('u2', 'b1', 'pay_tapped'), (e) => e.code === 'NOT_FOUND');
+  await svc.payEvent('u1', 'b1', 'pay_tapped');
+  assert.deepStrictEqual(events, ['pay_tapped']);
 });
 
 test('in-app QR: FILLING → AWAITING_PAYMENT (QR live, not cancellable) → PAID; receipt link presigned', async () => {

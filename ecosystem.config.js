@@ -77,16 +77,16 @@ module.exports = {
       // browsers, so Chromium runs headed inside a virtual display: needs `apt install xvfb`
       // + `npx playwright install --with-deps chromium` on the VPS before first start.
       name: 'easecab-bordertax',
-      script: 'xvfb-run',
-      args: '-a node --env-file-if-exists=.env src/borderTax/worker.js',
-      interpreter: 'none',
+      script: 'src/borderTax/worker.js', // starts its own Xvfb (display.js) — xvfb-run's tree died with every deploy
+      node_args: '--env-file-if-exists=.env',
       cwd: 'packages/api',
       exec_mode: 'fork',
       instances: 1,
       max_memory_restart: '700M', // 3 browser contexts (~150MB each) + Chromium
       autorestart: true,
       restart_delay: 5000,
-      kill_timeout: 5000, // worker closes the browser on SIGTERM; in-flight jobs swept on boot
+      treekill: false, // signal node only: Xvfb + Chromium must outlive the drain (node stops them)
+      kill_timeout: 540_000, // > DRAIN_MS (8 min, worker.js): running payments finish before a deploy restarts it
       env: { NODE_ENV: 'production' },
     },
   ],

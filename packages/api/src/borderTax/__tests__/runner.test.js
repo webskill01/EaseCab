@@ -181,8 +181,9 @@ function unlockSetup(rowFields, verdict, lookup = async () => null) {
   const r2 = { async putObject(o) { puts.push(o.key); } };
   const clearLocks = async () => { if (verdict instanceof Error) throw verdict; return verdict; };
   const pushed = [];
-  const runner = createRunner({ ...t, logger, r2, alert: (m) => alerts.push(m), clearLocks, lookup, onLatePaid: async (req) => { pushed.push(req.id); } });
-  return { ...t, puts, alerts, pushed, unlock: () => runner.unlock('b1') };
+  const freed = [];
+  const runner = createRunner({ ...t, logger, r2, alert: (m) => alerts.push(m), clearLocks, lookup, onLatePaid: async (req) => { pushed.push(req.id); }, onFreed: async (req) => { freed.push(req.id); } });
+  return { ...t, puts, alerts, pushed, freed, unlock: () => runner.unlock('b1') };
 }
 
 test('unlock: a filing is queued or the slot is busy → put off, no portal visit (filings go first)', async () => {
@@ -202,14 +203,14 @@ test('unlock: a filing is queued or the slot is busy → put off, no portal visi
 test('unlock: rows cleared → cleared, context closed', async () => {
   const u = unlockSetup({}, { rows: [{ paymentId: 'HRP1', amount: '100', result: 'cleared' }], retryAt: null });
   await u.unlock();
-  assert.deepStrictEqual([u.unlocks.b1.status, u.closed(), u.alerts], ['cleared', 1, []]);
+  assert.deepStrictEqual([u.unlocks.b1.status, u.closed(), u.alerts, u.freed], ['cleared', 1, [], ['b1']], 'driver told the vehicle is free');
 });
 
 test('unlock: a too-young attempt → waiting until retryAt', async () => {
   const at = new Date(Date.now() + 900_000);
   const u = unlockSetup({}, { rows: [], retryAt: at });
   await u.unlock();
-  assert.deepStrictEqual([u.unlocks.b1.status, u.due.b1], ['waiting', at.getTime()]);
+  assert.deepStrictEqual([u.unlocks.b1.status, u.due.b1, u.freed], ['waiting', at.getTime(), []]);
 });
 
 test('unlock: our own attempt was paid after all → filing PAID with the receipt stored; operator told', async () => {
@@ -217,7 +218,7 @@ test('unlock: our own attempt was paid after all → filing PAID with the receip
   await u.unlock();
   assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.unlocks.b1.status, u.puts.length], ['paid', 'HRR7', 'paid', 1]);
   assert.match(u.alerts.join(), /PAID \(HRR7, this filing → marked paid\)/);
-  assert.deepStrictEqual(u.pushed, ['b1'], 'driver pushed');
+  assert.deepStrictEqual([u.pushed, u.freed], [['b1'], []], 'driver pushed paid, not "free"');
 });
 
 test('unlock: QR timed out and nothing pending → receipt looked up by vehicle → PAID, driver pushed (HP 513710ed)', async () => {
@@ -264,4 +265,21 @@ test('worker shutting down: the filing the closed browser broke is left for the 
   await createRunner({ ...t, logger, flows: { HR: flow }, isStopping: () => true }).run('b1', {});
   assert.strictEqual(t.rows.b1.status, 'filling');
   assert.deepStrictEqual(t.due, {});
+});
+
+test('fare step: "yes" goes on to Pay Online; "no" or no answer stops before it (fare_declined, no lock to clear)', async () => {
+  const quote = { taxPaise: 54500, from: FROM, upto: new Date(FROM.getTime() + 86_340_000) };
+  let paidOnline = 0;
+  const flow = async (_page, _job, io) => { await io.confirmFare(quote); paidOnline += 1; throw portalError('no_qr'); };
+  const yes = setup({ answers: ['yes'] });
+  await createRunner({ ...yes, logger, flows: { HR: flow } }).run('b1', {});
+  assert.strictEqual(paidOnline, 1);
+  assert.ok(yes.jobs.some((j) => j.step === 'fare' && JSON.parse(j.fare).taxPaise === 54500));
+  for (const answers of [['no'], []]) {
+    const t = setup({ answers });
+    await createRunner({ ...t, logger, flows: { HR: flow } }).run('b1', {});
+    assert.strictEqual(t.rows.b1.failureCode, 'fare_declined');
+    assert.deepStrictEqual(t.unlocks, {});
+  }
+  assert.strictEqual(paidOnline, 1);
 });

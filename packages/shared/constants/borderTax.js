@@ -208,6 +208,7 @@ const BORDER_TAX_STATES = Object.freeze({
 const BORDER_TAX = Object.freeze({
   MAX_DAYS: 30,
   MAX_START_AHEAD_DAYS: 7, // portal takes near-future windows; widen if drivers ask
+  FARE_CONFIRM_SEC: 120, // driver OKs the real portal amount before Pay Online (which locks the vehicle)
   CAPTCHA_TIMEOUT_SEC: 240, // shorter than the portal's 10–15 min session
   HANDOFF_TTL_SEC: 300, // bank-page form kept for the app this long (SBIePay timer ~5 min, §15c)
   CAPTCHA_MAX_TRIES: 3, // portal locks the lookup for 15 min after ~8 tries — keep it low
@@ -223,7 +224,6 @@ const BORDER_TAX = Object.freeze({
   PROXY_BYPASS: '*parivahan.gov.in, *payu.in', // only eGRAS via proxy (data). '*x' = x + subdomains; '.x' did NOT match in Chromium (2026-11-13)
   UNLOCK_DEFER_SEC: 30, // lock clear put off (filing queued / slot busy) → tried again after this
   LOOKUP_GAP_SEC: 120, // min gap between filings' Vahan lookups: 7 in ~70s locked us out, 9 at 2-min gaps did not (2026-11-05)
-  RATES_WINDOW_DAYS: 60, // real portal quotes this recent are shown as each border's latest fee
   PAY_WAIT_SEC: 300, // in-app QR: the app's pay timer = PayU's QR life (5 min, seen live 2026-11-11)
   PAY_GRACE_SEC: 120, // the bot keeps listening this much longer: a scan at 4:59 still reports back
   RECEIPT_WAIT_SEC: 120, // PayU success → checkpost receipt page in the bot's own session
@@ -240,6 +240,8 @@ const BORDER_TAX = Object.freeze({
   UNLOCK_TRIES: 3, // portal/captcha errors before giving up (operator alerted)
   UNLOCK_RETRY_SEC: 300,
   CHECKPOST_UP_MS: 20_000, // checkpostv4 index + main bundle must download within this before a filing (2026-11-21 outage)
+  PORTAL_KEY: 'CHECKPOST', // watcher key for the checkpostv4 portal itself (down = every state), beside state codes
+  WAIT_UP_TTL_SEC: 86_400, // a driver stopped by a down site is pushed when it's back, within a day
   TREASURY_WATCH_SEC: 180, // treasury/bank host down/up check → Telegram on change (2 readings in a row)
   UNLOCK_BANK_PENDING_SEC: 3600, // portal: "pending at the bank side" (treasury down) → ask again after this, counts as a try
   UNLOCK_TTL_SEC: 86_400, // unlock status kept for the app this long
@@ -252,6 +254,7 @@ const BORDER_TAX = Object.freeze({
 /** Redis keys (namespaced). Lists, not pub/sub: an answer pushed before the worker waits is not lost. */
 const BORDER_TAX_KEYS = Object.freeze({
   QUEUE: redisKey('bordertax', 'queue'), // LPUSH request ids, worker BRPOPs
+  waitUp: (site) => redisKey('bordertax', 'waitup', site), // set: userIds to push when `site` is back up
   job: (id) => redisKey('bordertax', 'job', id), // hash: step, captcha (data URL), deadline
   answer: (id) => redisKey('bordertax', 'answer', id), // list: driver's captcha answers
   handoff: (id) => redisKey('bordertax', 'handoff', id), // string: JSON bank form for the driver — never logged
@@ -274,6 +277,7 @@ const BORDER_TAX_UNLOCK = Object.freeze({
 /** failure_code values. */
 const BORDER_TAX_FAILURE = Object.freeze({
   CAPTCHA_TIMEOUT: 'captcha_timeout',
+  FARE_DECLINED: 'fare_declined', // driver cancelled (or didn't answer) the amount step — before Pay Online, so no lock
   CAPTCHA_WRONG: 'captcha_wrong',
   PORTAL_ERROR: 'portal_error',
   WORKER_RESTART: 'worker_restart',
@@ -316,7 +320,11 @@ function borderTaxWindow(startAt, days) {
 // RJ (IFMS → NEFT) and UK (SBIePay, no QR) stay off.
 const BORDER_TAX_LIVE_STATES = Object.freeze(['HR', 'UP', 'HP', 'PB']);
 
+/** App-side steps on the QR screen, logged per filing to see who tapped Pay vs left (2026-11-21). */
+const BORDER_TAX_PAY_EVENTS = Object.freeze(['qr_shown', 'pay_tapped', 'left_app', 'returned']);
+
 module.exports = {
+  BORDER_TAX_PAY_EVENTS,
   BORDER_TAX_LIVE_STATES,
   BORDER_TAX_STATUS,
   BORDER_TAX_FINAL_STATUSES,

@@ -38,13 +38,15 @@ function makeApp() {
     const ops = [];
     const m = { hset: (k, f) => { ops.push(() => { hashes[k] = { ...hashes[k], ...f }; }); return m; },
       rpush: (k, v) => { ops.push(() => { (lists[k] ||= []).push(v); }); return m; }, expire: () => m,
-      exec: async () => ops.forEach((f) => f()) };
+      sadd: (k, v) => { ops.push(() => { (lists[k] ||= []).push(v); }); return m; },
+      exec: async () => ops.map((f) => [null, f()]) };
     return m;
   };
   const redis = {
     async eval() { return 1; }, async get(k) { return strings[k] ?? null; }, async set(k, v) { strings[k] = v; return 'OK'; }, async del() { return 1; }, async pttl() { return -2; }, async smembers() { return []; },
     async lpush(k, v) { (lists[k] ||= []).push(v); }, async hgetall(k) { return hashes[k] || {}; }, multi,
     async zadd(k, score, m) { strings[`${k}:${m}`] = score; },
+    async hsetnx(k, f, v) { hashes[k] ||= {}; if (!(f in hashes[k])) hashes[k][f] = v; }, async expire() {},
   };
   const app = buildApp({
     prisma, redis, logger: pino({ level: 'silent' }), config: CONFIG,
@@ -146,6 +148,16 @@ test("GET /border-tax → the caller's filings + nextCursor meta", async () => {
   assert.equal((await request(t.app).get('/api/v1/border-tax?cursor=garbage').set('Cookie', cookieFor('u1'))).status, 422);
 });
 
+test('POST /border-tax → 503 portalDown while the watcher reads the site down; GET /states lists it', async () => {
+  const t = makeApp();
+  t.hashes[K.TREASURY_UP] = { HR: '0', HP: '1' };
+  const res = await request(t.app).post('/api/v1/border-tax').set('Cookie', cookieFor('u1')).send(body());
+  assert.equal(res.status, 503);
+  assert.deepEqual([res.body.meta.portalDown, t.rows.length, t.lists[K.waitUp('HR')]], ['HR', 0, ['u1']]);
+  const st = await request(t.app).get('/api/v1/border-tax/states').set('Cookie', cookieFor('u1'));
+  assert.deepEqual(st.body.data.down, ['HR']);
+});
+
 test('POST /border-tax → 429 portal busy with meta.retryAfter while the lookup gap runs', async () => {
   const t = makeApp();
   t.rows.push({ id: 'other', userId: 'u2', vehicleNo: 'HR01A1', status: 'queued' });
@@ -167,4 +179,29 @@ test('POST /:id/unlock → 409 unless vehicle_pending; 200 queues the clear and 
   const get = await request(t.app).get(`/api/v1/border-tax/${ID}`).set('Cookie', cookieFor('u1'));
   assert.equal(get.body.data.filing.unlock.status, 'queued');
   assert.equal((await request(t.app).post(`/api/v1/border-tax/${ID}/unlock`).set('Cookie', cookieFor('u2'))).status, 404);
+});
+
+test('POST /:id/fare → 409 unless an amount waits; GET shows it; 200 passes the answer to the worker', async () => {
+  const t = makeApp();
+  await request(t.app).post('/api/v1/border-tax').set('Cookie', cookieFor('u1')).send(body());
+  const url = `/api/v1/border-tax/${ID}/fare`;
+  assert.equal((await request(t.app).post(url).set('Cookie', cookieFor('u1')).send({ confirm: true })).status, 409);
+  t.hashes[K.job(ID)] = { step: 'fare', fare: JSON.stringify({ taxPaise: 54500, from: 'a', upto: 'b' }) };
+  assert.equal((await request(t.app).get(`/api/v1/border-tax/${ID}`).set('Cookie', cookieFor('u1'))).body.data.filing.live.fare.taxPaise, 54500);
+  assert.equal((await request(t.app).post(url).set('Cookie', cookieFor('u1')).send({ confirm: 'yes' })).status, 422);
+  assert.equal((await request(t.app).post(url).set('Cookie', cookieFor('u3')).send({ confirm: true })).status, 404);
+  assert.equal((await request(t.app).post(url).set('Cookie', cookieFor('u1')).send({ confirm: true })).status, 200);
+  assert.deepEqual(t.lists[K.answer(ID)], ['yes']);
+});
+
+test('POST /:id/event → first time per type kept; unknown type 422', async () => {
+  const t = makeApp();
+  await request(t.app).post('/api/v1/border-tax').set('Cookie', cookieFor('u1')).send(body());
+  const url = `/api/v1/border-tax/${ID}/event`;
+  assert.equal((await request(t.app).post(url).set('Cookie', cookieFor('u1')).send({ type: 'pay_tapped' })).status, 200);
+  const first = t.hashes[K.job(ID)].ev_pay_tapped;
+  assert.ok(first);
+  await request(t.app).post(url).set('Cookie', cookieFor('u1')).send({ type: 'pay_tapped' });
+  assert.equal(t.hashes[K.job(ID)].ev_pay_tapped, first);
+  assert.equal((await request(t.app).post(url).set('Cookie', cookieFor('u1')).send({ type: 'hacked' })).status, 422);
 });

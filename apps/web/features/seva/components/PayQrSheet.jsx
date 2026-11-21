@@ -1,11 +1,13 @@
 'use client'
 
+import { useEffect } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { buttonVariants } from '@/components/ui/button'
 import { Spinner, Timer, Warning } from '@/components/ui/icons'
 import { useSecondsLeft } from '../hooks/useBorderTax'
+import { sendPayEvent } from '../services/borderTaxApi'
 import { BT_STATES, fmtClock, fmtWhen, rupees, isDaysMode, daysOf } from '../lib/borderTax'
 
 /**
@@ -24,6 +26,14 @@ export function PayQrSheet({ f, onClose }) {
   const from = fmtWhen(f.taxFrom)
   const upto = fmtWhen(f.taxUpto)
   const upi = /[?&]am=/.test(f.live?.upi || '') // a link without the amount (seen live 2026-11-11: pa only) won't match the govt order
+  const shown = Boolean(f.live?.qr)
+  useEffect(() => { // worker logs these with the outcome: tapped Pay vs left at the amount (server keeps the first of each)
+    if (!shown) return undefined
+    sendPayEvent(f.id, 'qr_shown')
+    const onVis = () => sendPayEvent(f.id, document.hidden ? 'left_app' : 'returned')
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [f.id, shown])
   return (
     <BottomSheet closeLabel={tc('actions.close')} onClose={onClose} label={t('bt.qr.title')}>
       <div className="flex flex-col gap-4 pb-2 text-center">
@@ -38,7 +48,7 @@ export function PayQrSheet({ f, onClose }) {
           <div className="flex flex-col items-center gap-3 rounded-ec-card border border-ec-line bg-white p-4 shadow-ec-card">
             {f.live?.qr && <Image src={f.live.qr} alt={t('bt.qr.alt')} width={220} height={220} unoptimized className="block" />}
             <p className="text-[12px] font-bold uppercase tracking-wide text-ec-blueInk">{t('bt.qr.scanCaps')}</p>
-            {upi && <a href={f.live.upi} className={`${buttonVariants({ size: 'lg' })} w-full text-[16px]`}>{t('bt.qr.upiCta', { amount })}</a>}
+            {upi && <a href={f.live.upi} onClick={() => sendPayEvent(f.id, 'pay_tapped')} className={`${buttonVariants({ size: 'lg' })} w-full text-[16px]`}>{t('bt.qr.upiCta', { amount })}</a>}
           </div>
         )}
         {!expired && (

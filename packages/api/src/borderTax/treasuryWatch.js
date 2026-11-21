@@ -2,10 +2,11 @@
 
 const { TREASURY, treasuryUp } = require('./flows/treasury');
 const { checkpostUp } = require('./flows/bundleCache');
+const { BORDER_TAX } = require('@easecab/shared');
 
 // readings in a row before a change is believed: DOWN slower (3 × 3 min) so a flaky site doesn't alert twice
 const CONFIRM = Object.freeze({ down: 3, up: 2 });
-const CHECKPOST = 'CHECKPOST'; // pseudo-state: the checkpostv4 portal every state files through
+const CHECKPOST = BORDER_TAX.PORTAL_KEY; // pseudo-state: the checkpostv4 portal every state files through
 
 /**
  * Watches each state's treasury/bank host (TREASURY[*].ping) plus the checkpost portal itself, and alerts once
@@ -15,16 +16,16 @@ const CHECKPOST = 'CHECKPOST'; // pseudo-state: the checkpostv4 portal every sta
  *   check?: (host: string) => Promise<boolean>, portal?: () => Promise<boolean> }} deps
  * @returns {() => Promise<void>} one check round
  */
-function createTreasuryWatch({ alert, load, save, check = treasuryUp, portal = checkpostUp }) {
+function createTreasuryWatch({ alert, load, save, onUp = async () => {}, check = treasuryUp, portal = checkpostUp }) {
   const watched = [
     ...Object.entries(TREASURY).filter(([, cfg]) => cfg.ping).map(([st, cfg]) => ({
       st, read: () => check(cfg.ping),
-      up: `${st} payment site ${cfg.ping} is back UP — switch ${st} on in admin and re-run any failed lock clears.`,
-      down: `${st} payment site ${cfg.ping} is DOWN — new ${st} filings stop with bank_down. Switch ${st} off in admin until it's back.`,
+      up: `${st} payment site ${cfg.ping} is back UP — ${st} filings open again, drivers who tried are pushed. Re-run any failed lock clears.`,
+      down: `${st} payment site ${cfg.ping} is DOWN — new ${st} filings are refused with a "site down" note until it's back.`,
     })),
     { st: CHECKPOST, read: portal,
-      up: 'Checkpost portal services.parivahan.gov.in/checkpostv4 is back UP — border tax filings work again.',
-      down: 'Checkpost portal services.parivahan.gov.in/checkpostv4 is DOWN (app bundle not loading, none cached) — new filings in every state stop with portal_down.' },
+      up: 'Checkpost portal services.parivahan.gov.in/checkpostv4 is back UP — border tax filings work again, drivers who tried are pushed.',
+      down: 'Checkpost portal services.parivahan.gov.in/checkpostv4 is DOWN (app bundle not loading, none cached) — new filings in every state are refused with a "site down" note.' },
   ];
   let state = null; // key → { up: boolean, streak: number }; unknown = assumed up
   return async function tick() {
@@ -39,6 +40,7 @@ function createTreasuryWatch({ alert, load, save, check = treasuryUp, portal = c
       Object.assign(s, { up, streak: 0 });
       await save(w.st, up);
       alert(up ? w.up : w.down);
+      if (up) await onUp(w.st);
     }
   };
 }

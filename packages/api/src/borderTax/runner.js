@@ -1,6 +1,6 @@
 'use strict';
 
-const { BORDER_TAX, BORDER_TAX_STATUS: S, BORDER_TAX_FAILURE: F, BORDER_TAX_UNLOCK: U } = require('@easecab/shared');
+const { BORDER_TAX, BORDER_TAX_STATUS: S, BORDER_TAX_FAILURE: F, BORDER_TAX_UNLOCK: U, BORDER_TAX_PAY_EVENTS } = require('@easecab/shared');
 const { portalError } = require('./flows/portal');
 const { fileCheckpost } = require('./flows/checkpostv4');
 const { openQr, awaitPaid } = require('./flows/payuQr');
@@ -43,7 +43,7 @@ function toJob(req) {
  * @param {Record<string, Function>} [deps.flows]
  * @param {(ms: number) => Promise<void>} [deps.sleep]
  */
-function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, onLatePaid = async () => {}, isStopping = () => false, clearLocks = clearPending, lookup = lookupReceipt, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, onLatePaid = async () => {}, onFreed = async () => {}, isStopping = () => false, clearLocks = clearPending, lookup = lookupReceipt, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
   const until = (sec) => String(Date.now() + sec * 1000);
 
   function makeIo(id, conn) {
@@ -62,6 +62,16 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
         if (answer === null) throw portalError(F.CAPTCHA_TIMEOUT);
         await moveOrStop(S.FILLING);
         return answer;
+      },
+      // portal's real amount, held on the tax page: Pay Online (= the 30-min vehicle lock) only after the driver's OK
+      async confirmFare({ taxPaise, from, upto }) {
+        await repo.clearAnswers(id);
+        const t0 = Date.now();
+        await repo.setJob(id, { step: 'fare', fare: JSON.stringify({ taxPaise, from, upto }), deadline: until(BORDER_TAX.FARE_CONFIRM_SEC) });
+        const answer = await repo.popAnswer(conn, id, BORDER_TAX.FARE_CONFIRM_SEC);
+        await repo.setJob(id, { step: 'filling', fare: '', deadline: '' });
+        logger.info({ id }, `fare ${answer ?? 'no answer'} after ${Math.round((Date.now() - t0) / 1000)}s`);
+        if (answer !== 'yes') throw portalError(F.FARE_DECLINED, answer ? 'driver cancelled at the amount' : 'no answer at the amount');
       },
     };
   }
@@ -121,6 +131,14 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
     await onLatePaid(req).catch((err) => logger.warn({ id: req.id, err: err.message }, 'paid push failed'));
   }
 
+  /** What the driver did on the QR screen (app events, first time each, seconds after the QR showed) — paid or not. */
+  async function logPayEvents(id, paid) {
+    const job = await repo.getJob(id);
+    const t0 = Number(job.ev_qr_shown);
+    const seen = BORDER_TAX_PAY_EVENTS.filter((e) => job[`ev_${e}`]).map((e) => (t0 ? `${e} +${Math.round((job[`ev_${e}`] - t0) / 1000)}s` : e));
+    logger.info({ id, paid, app: seen.join(', ') || 'none' }, 'QR screen events');
+  }
+
   /** @param {string} id @param {import('ioredis').Redis} conn */
   async function run(id, conn) {
     const req = await repo.findById(id);
@@ -153,8 +171,11 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
       if (ALERT_ON.has(failureCode) && err.message !== STOPPED) alert(`${req.stateCd} filing ${id.slice(0, 8)} failed: ${failureCode} (${err.message.slice(0, 200)})`);
       await service.fail(id, failureCode);
       if (failureCode === F.VEHICLE_PENDING) await followUnlock(id, req).catch((e) => logger.warn({ id, err: e.message }, 'follow unlock failed'));
+      const downSite = { [F.PORTAL_DOWN]: BORDER_TAX.PORTAL_KEY, [F.BANK_DOWN]: req.stateCd }[failureCode]; // pushed when the watcher sees it back
+      if (downSite) await repo.waitForUp(downSite, req.userId).catch((e) => logger.warn({ id, err: e.message }, 'wait-for-up failed'));
       atBank ||= BANK_STEP.has(failureCode) || Boolean(err.atBank);
     } finally {
+      if (atBank && !interrupted) await logPayEvents(id, paid).catch((e) => logger.warn({ id, err: e.message }, 'pay events log failed'));
       if (atBank && !paid && !interrupted) await service.scheduleUnlock(id).catch((e) => logger.warn({ id, err: e.message }, 'unlock schedule failed'));
       await page?.context().close().catch((e) => logger.warn({ id, err: e.message }, 'context close failed'));
     }
@@ -220,6 +241,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
       }
       // unknown: never re-tapped (it may be a paid row whose receipt didn't load) — ops checks it
       await service.unlockDone(id, { retryAt, receiptNo: paidRow?.receiptNo, failed: Boolean(unknown) });
+      if (!retryAt && !unknown && !paidRow) await onFreed(req).catch((err) => logger.warn({ id, err: err.message }, 'freed push failed'));
     } catch (err) {
       logger.warn({ id, err: err.message }, 'border tax unlock failed');
       if (!(await service.unlockFailed(id))) alert(`${req.stateCd} unlock ${id.slice(0, 8)} gave up: ${err.message.slice(0, 200)}`);

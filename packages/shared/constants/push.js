@@ -75,4 +75,26 @@ const BORDER_TAX_PAID_PUSH = Object.freeze({
   BODY: '{vehicle} ka {state} border tax bhar gaya hai. Receipt download kar lo.',
 });
 
-module.exports = { PUSH, PUSH_SOURCE, RENEWAL_REMINDER, BORDER_TAX_PAID_PUSH };
+/** Pending-payment lock on the govt portal cleared → the driver can file this vehicle again. */
+const BORDER_TAX_FREE_PUSH = Object.freeze({
+  TYPE: 'border_tax_free',
+  SOURCE: 'border_tax',
+  CLICK_PATH: '/seva/border-tax',
+  ACTION: 'File now',
+  TITLE: '🔓 Gaadi ab free hai',
+  BODY: '{vehicle} ab {state} border tax ke liye free hai. Dobara file kar sakte ho.',
+});
+
+/** A down govt site is back → drivers it stopped (refused at Pay, or failed on it) can file. */
+const BORDER_TAX_UP_PUSH = Object.freeze({
+  TYPE: 'border_tax_up',
+  SOURCE: 'border_tax',
+  CLICK_PATH: '/seva/border-tax',
+  ACTION: 'File now',
+  TITLE: '✅ Sarkari site wapas chalu',
+  BODY: '{site} ab chal rahi hai. Border tax ab file kar sakte ho.',
+  PORTAL: 'Checkpost portal',
+  STATE: '{state} ki payment site',
+});
+
+module.exports = { PUSH, PUSH_SOURCE, RENEWAL_REMINDER, BORDER_TAX_PAID_PUSH, BORDER_TAX_FREE_PUSH, BORDER_TAX_UP_PUSH };

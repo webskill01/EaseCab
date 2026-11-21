@@ -3,7 +3,8 @@
 import { useTranslations } from 'next-intl'
 import { ChevL, Check, Warning } from '@/components/ui/icons'
 import { useBorderTaxActions, useSecondsLeft } from '../hooks/useBorderTax'
-import { BT_STATUS as S, BT_STATES, BT_PREP_SEC, BT_CAPTCHA_SEC, prepStep, prepDeadline, daysOf, isDaysMode, fmtWhen, fmtClock } from '../lib/borderTax'
+import { Button } from '@/components/ui/button'
+import { BT_STATUS as S, BT_STATES, BT_PREP_SEC, BT_CAPTCHA_SEC, BT_FARE_SEC, rupees, prepStep, prepDeadline, daysOf, isDaysMode, fmtWhen, fmtClock } from '../lib/borderTax'
 import { CaptchaStep } from './FilingSteps'
 
 const STEPS = ['verify', 'docs', 'fetch', 'redirect']
@@ -68,6 +69,24 @@ export function SummaryCard({ f }) {
   )
 }
 
+/** The govt site's real amount, held before Pay Online (which blocks the vehicle ~30 min on the portal). */
+function FareCard({ fare, pending, onAnswer }) {
+  const t = useTranslations('seva')
+  const from = fmtWhen(fare.from)
+  const upto = fmtWhen(fare.upto)
+  return (
+    <div className="rounded-ec-card border border-ec-skyDeep bg-white px-4 py-4 text-center">
+      <p className="text-[17px] font-extrabold text-ec-ink">{t('bt.fare.title', { amount: rupees(fare.taxPaise) })}</p>
+      <p className="mt-1 text-[12.5px] font-bold text-ec-blueInk">{t('bt.prep.validity', { from: `${from.date}, ${from.time}`, to: `${upto.date}, ${upto.time}` })}</p>
+      <p className="mt-2 text-[12.5px] font-medium leading-snug text-ec-ink60">{t('bt.fare.sub')}</p>
+      <div className="mt-3.5 flex gap-3">
+        <Button type="button" size="lg" variant="outline" className="flex-1" disabled={pending} onClick={() => onAnswer(false)}>{t('bt.fare.cancel')}</Button>
+        <Button type="button" size="lg" className="flex-1" disabled={pending} onClick={() => onAnswer(true)}>{t('bt.fare.continue')}</Button>
+      </div>
+    </div>
+  )
+}
+
 /**
  * Full-screen "Preparing your border tax payment" (CabsWale-style) while the filing runs.
  * The captcha box shows inline only when OCR missed. Back just hides it — the filing keeps going
@@ -81,7 +100,8 @@ export function PreparingScreen({ f, onBack }) {
   const deadline = prepDeadline(f)
   const seconds = useSecondsLeft(deadline) ?? BT_PREP_SEC // queued: full ring until the worker picks it up
   const startsIn = useSecondsLeft(f.status === S.QUEUED ? f.live?.startsAt : null) // behind the portal's lookup gap
-  const pending = a.captcha.isPending || a.refresh.isPending || a.cancel.isPending
+  const fare = f.live?.fare
+  const pending = a.captcha.isPending || a.refresh.isPending || a.cancel.isPending || a.fare.isPending
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-ec-bg">
       <div className="flex items-center gap-1 px-2 pb-1 pt-2">
@@ -91,7 +111,7 @@ export function PreparingScreen({ f, onBack }) {
         <h1 className="text-[19px] font-extrabold tracking-tight text-ec-ink">{t('bt.title')}</h1>
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-8 pt-3">
-        <Ring seconds={seconds} total={captcha ? BT_CAPTCHA_SEC : BT_PREP_SEC} />
+        <Ring seconds={seconds} total={captcha ? BT_CAPTCHA_SEC : fare ? BT_FARE_SEC : BT_PREP_SEC} />
         <h2 className="text-center text-[19px] font-extrabold tracking-tight text-ec-ink">{t('bt.prep.title')}</h2>
         {!deadline && <p className="-mt-3 text-center text-[13px] font-semibold text-ec-ink60">{startsIn ? t('bt.prep.startsIn', { time: fmtClock(startsIn) }) : t('bt.prep.queued')}</p>}
         {captcha && (
@@ -102,6 +122,7 @@ export function PreparingScreen({ f, onBack }) {
               onSubmit={(answer) => a.captcha.mutate({ id: f.id, answer })} onRefresh={() => a.refresh.mutate(f.id)} />
           </div>
         )}
+        {fare && <FareCard fare={fare} pending={pending} onAnswer={(confirm) => a.fare.mutate({ id: f.id, confirm })} />}
         <Checklist at={prepStep(f)} />
         <SummaryCard f={f} />
         <div className="flex gap-3 rounded-ec-card border border-[#FDE68A] bg-ec-warnBg px-4 py-3.5">

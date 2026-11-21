@@ -124,7 +124,8 @@
       "payment_timeout": "No payment in time. If you paid, contact support — don't pay again.",
       "payment_unknown": "The govt payment page closed. If you paid, contact support — don't pay again.",
       "alreadyPaidT": "Tax already paid",
-      "alreadyPaidS": "Border tax is already paid for {from} – {to}. Pick a start date after that and file again."
+      "alreadyPaidS": "Border tax is already paid for {from} – {to}. Pick a start date after that and file again.",
+      "fare_declined": "Stopped at the amount — no money was cut and the vehicle isn't blocked. File again whenever you're ready."
     },
     "live": {
       "captchaTitle": "Type the code",
@@ -150,7 +151,8 @@
       "vehicleBusy": "This vehicle already has a filing in progress — see History.",
       "rateLimited": "Too many filings. Try again in an hour.",
       "generic": "Couldn't start. Please try again.",
-      "busy": "Govt site is busy. Try again in {time}"
+      "busy": "Govt site is busy. Try again in {time}",
+      "portalDown": "The govt border tax site is down right now. You'll get a notification as soon as it's back."
     },
     "prep": {
       "title": "Preparing your border tax payment",
@@ -171,7 +173,15 @@
       "cta": "Pay Border Tax {amount}",
       "note": "Opens the official govt payment page in a new tab. The link works for about 5 minutes. If a govt treasury page opens first, tap Continue there. EaseCab charges nothing."
     },
-    "latestFee": "Latest fee at this border: {amount} for {n, plural, one {# day} other {# days}} ({date})",
+    "fee": {
+      "mine": "This cab's last fee in this state: {amount} for {n, plural, one {# day} other {# days}}"
+    },
+    "fare": {
+      "title": "The govt site shows {amount}",
+      "sub": "Continue opens the payment page. After that the govt site holds this vehicle for about 30 minutes.",
+      "continue": "Continue to pay",
+      "cancel": "Cancel"
+    },
     "qr": {
       "title": "Pay Border Tax",
       "upiCta": "Pay {amount}",
@@ -232,6 +242,7 @@
       "title": "Border tax paid ✅",
       "sub": "We found your payment for {vehicle} ({state}). Your receipt is ready.",
       "cta": "View receipt"
-    }
+    },
+    "siteDown": "The govt border tax site is down right now. Filing won't go through until it's back."
   }
 }

@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Plus, Minus, Verified, ChevD } from '@/components/ui/icons'
 import { FormIssues } from '@/components/ui/FormIssues'
 import { SavedVehicleOptions, SAVED_RC_LIST } from '@/features/profile/components/SavedVehicleOptions'
-import { BT_STATES, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_DAYS_MODE, isDaysMode, btIssues, isStarted, validUpto, fmtWhen, titleCase, toLocalInput, rateFor, rupees, fmtClock } from '../lib/borderTax'
-import { useRates, useSecondsLeft, useLiveStates } from '../hooks/useBorderTax'
+import { BT_STATES, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_DAYS_MODE, isDaysMode, btIssues, isStarted, validUpto, fmtWhen, titleCase, toLocalInput, ownFee, rupees, fmtClock, siteDown } from '../lib/borderTax'
+import { useFilings, useSecondsLeft, useLiveStates, useDownSites } from '../hooks/useBorderTax'
 
 const CARD = 'rounded-ec-card border border-ec-line bg-white p-4 shadow-ec-card'
 const FIELD = 'h-12 w-full rounded-xl border border-ec-line bg-white px-3 text-[14px] font-semibold text-ec-ink outline-none focus:border-ec-blue'
@@ -38,11 +38,11 @@ function Field({ label, children, className = '' }) {
 /** "Latest fee here: ₹230 for 1 day (07 Nov)" — a real quote from a recent filing at this border. */
 function LatestFee({ form }) {
   const t = useTranslations('seva')
-  const rate = rateFor(useRates().data, form)
-  if (!rate) return null
+  const fee = ownFee(useFilings().data, form)
+  if (!fee) return null
   return (
     <p className="-mt-1.5 text-[12.5px] font-semibold text-ec-ink60">
-      {t('bt.latestFee', { amount: rupees(rate.taxPaise), n: rate.days, date: fmtWhen(rate.at).date })}
+      {t('bt.fee.mine', { amount: rupees(fee), n: form.days })}
     </p>
   )
 }
@@ -90,6 +90,7 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
   const errorText = error === 'busy' ? (busyLeft ? t('bt.errors.busy', { time: fmtClock(busyLeft) }) : null) : error && t(`bt.errors.${error}`)
   const st = BT_STATES[form.stateCd]
   const live = useLiveStates()
+  const down = siteDown(useDownSites(), form.stateCd)
   const upto = fmtWhen(validUpto(form.startAt, form.days, st?.calendarDays))
   const daysMode = isDaysMode(form)
   const now = new Date()
@@ -129,6 +130,7 @@ export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, bus
             </Select>
           </Field>
         </div>
+        {down && error !== 'portalDown' && <p className="rounded-xl bg-ec-dangerBg px-3 py-2 text-[13px] font-semibold text-ec-danger" role="status">{t('bt.siteDown')}</p>}
         {more && (<>
           {daysMode && <LatestFee form={form} />}
           {st?.taxModes.length > 1 && <ModePicker modes={st.taxModes} value={form.taxMode} onChange={(taxMode) => onChange({ taxMode })} />}

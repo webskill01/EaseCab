@@ -34,7 +34,6 @@ async function mockSeva(page, { member = true, failed = false, running = false, 
   await page.route('**/api/v1/subscriptions/me', (r) => r.fulfill(ok(member
     ? { status: 'active', isActive: true, expiresAt: new Date(Date.now() + 20 * 86_400_000).toISOString() }
     : { status: 'expired', isActive: false, expiresAt: null })))
-  await page.route('**/api/v1/border-tax/rates', (r) => r.fulfill(ok({ rates: [{ stateCd: 'HR', checkpost: 'PANCHKULA', seats: '4+1', days: 1, taxPaise: 23000, at: '2026-11-07T06:00:00.000Z' }] })))
   await page.route('**/api/v1/border-tax?**', (r) => r.fulfill(ok({ filings: created ? [filingState(step)] : [] }, { nextCursor: null })))
   await page.route('**/api/v1/border-tax', (r) => { created = true; return r.fulfill({ ...ok({ filing: filingState(0) }), status: 201 }) })
   await page.route('**/api/v1/border-tax/f1', (r) => {
@@ -65,7 +64,7 @@ test('border tax tab: one preparing screen (captcha inline) → Payment Details 
   await expect(page.getByLabel(/date for apply/i)).toHaveCount(0) // step 1: RC, seats, state, border only
   await shot(page, '1-form-step1')
   await fillForm(page)
-  await expect(page.getByText(/latest fee at this border: ₹230 for 1 day/i)).toBeVisible() // real quote from an earlier filing
+  await expect(page.getByText(/last fee in this state/i)).toHaveCount(0) // first filing for this cab: no fee to show
   await shot(page, '2-form')
   await page.getByRole('button', { name: /^pay now$/i }).click()
   await page.getByRole('dialog', { name: /confirm your tax validity/i }).getByRole('button', { name: 'Continue' }).click()

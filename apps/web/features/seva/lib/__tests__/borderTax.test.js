@@ -4,7 +4,7 @@ import {
   formFrom, resumable, lateUnseen, failKey, BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING, prepStep, prepDeadline, markPayOpened, BT_CAPTCHA_SEC, BT_PREP_SEC,
   BT_STATES, BT_STATUS, BT_FINAL, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_VEHICLE_RE,
   defaultStart, validUpto, BT_RECEIPT_KEEP_SEC, receiptGone, isFilable, isStarted, toCreateBody, emptyForm, createErrorKey, submitHandoff, toLocalInput, gettingReceipt,
-  canUnlock, unlocking,
+  canUnlock, unlocking, ownFee, BT_FARE_SEC, BT_PORTAL_KEY, siteDown,
 } from '../borderTax'
 import { BT_LIVE_STATES } from '../states'
 
@@ -22,7 +22,7 @@ describe('mirror of @easecab/shared', () => {
     expect(Object.values(shared.BORDER_TAX_FAILURE)).toEqual(expect.arrayContaining([...BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING]))
     expect(BT_SEATS).toEqual(shared.BORDER_TAX_SEATS)
     expect(BT_RECEIPT_KEEP_SEC).toBe(shared.BORDER_TAX.RECEIPT_KEEP_SEC)
-    expect([BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, String(BT_VEHICLE_RE), BT_CAPTCHA_SEC]).toEqual([shared.BORDER_TAX.MAX_DAYS, shared.BORDER_TAX.MAX_START_AHEAD_DAYS, String(shared.BORDER_TAX.VEHICLE_NO_REGEX), shared.BORDER_TAX.CAPTCHA_TIMEOUT_SEC])
+    expect([BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, String(BT_VEHICLE_RE), BT_CAPTCHA_SEC, BT_FARE_SEC, BT_PORTAL_KEY]).toEqual([shared.BORDER_TAX.MAX_DAYS, shared.BORDER_TAX.MAX_START_AHEAD_DAYS, String(shared.BORDER_TAX.VEHICLE_NO_REGEX), shared.BORDER_TAX.CAPTCHA_TIMEOUT_SEC, shared.BORDER_TAX.FARE_CONFIRM_SEC, shared.BORDER_TAX.PORTAL_KEY])
   })
 
   it('validUpto matches borderTaxWindow', () => {
@@ -84,6 +84,11 @@ describe('form', () => {
   it('createErrorKey maps 409 / rate limit', () => {
     expect([createErrorKey({ status: 409 }), createErrorKey({ code: 'RATE_LIMITED', status: 429 }), createErrorKey({})]).toEqual(['vehicleBusy', 'rateLimited', 'generic'])
     expect(createErrorKey({ code: 'RATE_LIMITED', status: 429, meta: { retryAfter: 90 } })).toBe('busy')
+    expect(createErrorKey({ status: 503, meta: { portalDown: 'HR' } })).toBe('portalDown')
+  })
+
+  it('siteDown: the chosen state down, or the checkpost portal down for every state', () => {
+    expect([siteDown(['HR'], 'HR'), siteDown(['HR'], 'HP'), siteDown(['HR'], ''), siteDown([BT_PORTAL_KEY], ''), siteDown([], 'HR')]).toEqual([true, false, false, true, false])
   })
 })
 
@@ -188,5 +193,22 @@ describe('failKey', () => {
     expect(failKey(t, null)).toBe('bt.fail.portal_error')
     expect(failKey(t, 'brand_new_code')).toBe('bt.fail.portal_error')
     expect(seva.bt.fail.portal_error).toMatch(/Sarkari portal/)
+  })
+})
+
+describe('ownFee (fee shown before filing)', () => {
+  const form = { stateCd: 'HP', seats: '4+1', days: 1, vehicleNo: 'pb 01 e9454', checkpost: 'GARAMORA' }
+  const mine = { stateCd: 'HP', vehicleNo: 'PB01E9454', taxMode: '1', taxPaise: 54500, taxFrom: '2026-11-01T00:00:00Z', taxUpto: '2026-11-01T23:59:00Z' }
+  const other = { ...mine, vehicleNo: 'PB10AB1234', taxPaise: 23000 }
+
+  it("only this cab's own last fee in the state for the same days, any border", () => {
+    expect(ownFee([other, { ...mine, stateCd: 'HR' }, mine], form)).toBe(54500)
+    expect(ownFee([mine], { ...form, checkpost: 'PARWANOO' })).toBe(54500)
+  })
+  it("never another cab's fee, another day count (no scaling) or a ₹0 already-paid quote", () => {
+    expect(ownFee([other], form)).toBeNull()
+    expect(ownFee([mine], { ...form, days: 2 })).toBeNull()
+    expect(ownFee([{ ...mine, taxPaise: 0 }], form)).toBeNull()
+    expect(ownFee(undefined, form)).toBeNull()
   })
 })

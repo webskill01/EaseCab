@@ -124,7 +124,8 @@
       "payment_timeout": "Time pe payment nahi hua. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
       "payment_unknown": "Payment page band ho gaya. Agar aapne pay kiya hai to support se baat karein — dobara pay na karein.",
       "alreadyPaidT": "Tax pehle se bhara hai",
-      "alreadyPaidS": "{from} – {to} ka border tax pehle se bhara hua hai. Iske baad ki start date chunein aur dobara file karein."
+      "alreadyPaidS": "{from} – {to} ka border tax pehle se bhara hua hai. Iske baad ki start date chunein aur dobara file karein.",
+      "fare_declined": "Fee par filing roki gayi — koi paisa nahi kata aur gaadi block nahi hui. Jab chahein dobara file karein."
     },
     "live": {
       "captchaTitle": "Code likhein",
@@ -150,7 +151,8 @@
       "vehicleBusy": "Is gaadi ki ek filing pehle se chal rahi hai — History dekhein.",
       "rateLimited": "Bahut zyada filings. Ek ghante baad try karein.",
       "generic": "Shuru nahi ho saka. Dobara try karein.",
-      "busy": "Govt site busy hai. {time} mein dobara try karein"
+      "busy": "Govt site busy hai. {time} mein dobara try karein",
+      "portalDown": "Sarkari border tax site abhi band hai. Chalu hote hi aapko notification aa jayegi."
     },
     "prep": {
       "title": "Aapka border tax payment taiyaar ho raha hai",
@@ -171,7 +173,15 @@
       "cta": "Border Tax Bharein {amount}",
       "note": "Official sarkari payment page naye tab mein khulega. Link lagbhag 5 minute chalta hai. Agar pehle sarkari treasury page khule, toh wahan Continue dabayein. EaseCab kuch charge nahi karta."
     },
-    "latestFee": "Is border ki latest fee: {amount}, {n} din ({date})",
+    "fee": {
+      "mine": "Is cab ki pichli fee is state mein: {amount}, {n} din"
+    },
+    "fare": {
+      "title": "Sarkari site par fee: {amount}",
+      "sub": "Aage badhne par payment page khulega. Uske baad sarkari site ye gaadi lagbhag 30 minute ke liye rok deti hai.",
+      "continue": "Pay karne ke liye aage badhein",
+      "cancel": "Cancel karein"
+    },
     "qr": {
       "title": "Border Tax bharein",
       "upiCta": "Pay {amount}",
@@ -232,6 +242,7 @@
       "title": "Border tax bhar gaya ✅",
       "sub": "{vehicle} ({state}) ki aapki payment mil gayi. Receipt tayyar hai.",
       "cta": "Receipt dekhein"
-    }
+    },
+    "siteDown": "Sarkari border tax site abhi band hai. Chalu hone tak filing nahi hogi."
   }
 }

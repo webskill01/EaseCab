@@ -262,8 +262,9 @@ async function fileCheckpost(page, job, io) {
   const quote = await taxStep(page, job);
   io.progress?.(3); // tax quoted; now the bank / payment page
   io.log(`quote ₹${quote.taxPaise / 100} ${istInput(quote.from)} → ${istInput(quote.upto)}`);
-  // no stop for a driver OK here (dropped 2026-11-06, user: one loading phase) — the app warns before
-  // filing that the portal locks the vehicle ~30 min once the bank page opens
+  // driver OKs the real amount before Pay Online, which locks the vehicle ~30 min (user, 2026-11-21: 1 in 3
+  // filings timed out unpaid at the QR, each leaving a lock; replaces the 2026-11-06 "no stop here")
+  await io.confirmFare?.(quote);
   await disclaimerStep(page, io);
   const handoff = await bankHandoff(page, job.stateCd, io);
   if (handoff.live) return { ...quote, payPage: handoff.live, ref: handoff.ref, pay: handoff.pay }; // runner shows the QR

@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createFiling, listFilings, listRates, listLiveStates, getFiling, getReceiptUrl, sendCaptcha, refreshCaptcha, cancelFiling, unlockFiling } from '../services/borderTaxApi'
+import { createFiling, listFilings, listLiveStates, getFiling, getReceiptUrl, sendCaptcha, refreshCaptcha, confirmFare, cancelFiling, unlockFiling } from '../services/borderTaxApi'
 import { isFinal, gettingReceipt, unlocking, BT_POLL_MS } from '../lib/borderTax'
 import { BT_LIVE_STATES } from '../lib/states'
 
@@ -19,15 +19,15 @@ export function useFilings() {
   return { ...q, data }
 }
 
-/** Latest real fee per border (from drivers' filings) — refreshed after each new filing. */
-export function useRates() {
-  return useQuery({ queryKey: [...LIST_KEY, 'rates'], queryFn: listRates, staleTime: 300000 })
+/** States the picker offers; the built-in list until the API answers (the API still refuses a paused one). */
+const useStates = () => useQuery({ queryKey: [...LIST_KEY, 'states'], queryFn: listLiveStates, staleTime: 60000 })
+export function useLiveStates() {
+  return useStates().data?.live ?? BT_LIVE_STATES
 }
 
-/** States the picker offers; the built-in list until the API answers (the API still refuses a paused one). */
-export function useLiveStates() {
-  const q = useQuery({ queryKey: [...LIST_KEY, 'states'], queryFn: listLiveStates, staleTime: 60000 })
-  return q.data ?? BT_LIVE_STATES
+/** Govt sites the watcher reads as down — the form warns before Pay (the API refuses with portalDown). */
+export function useDownSites() {
+  return useStates().data?.down ?? []
 }
 
 /** One filing, polled every 2s until it reaches a final status (and any lock clear has finished). */
@@ -46,7 +46,7 @@ export function useReceiptUrl(id, enabled) {
   return useQuery({ queryKey: [...LIST_KEY, id, 'receipt'], queryFn: () => getReceiptUrl(id), enabled: Boolean(id && enabled), staleTime: 120000, retry: false })
 }
 
-/** create / captcha / cancel / unlock — each refreshes the history + the open filing. */
+/** create / captcha / fare / cancel / unlock — each refreshes the history + the open filing. */
 export function useBorderTaxActions() {
   const qc = useQueryClient()
   const refresh = () => qc.invalidateQueries({ queryKey: LIST_KEY })
@@ -54,6 +54,7 @@ export function useBorderTaxActions() {
     create: useMutation({ mutationFn: createFiling, onSuccess: refresh }),
     captcha: useMutation({ mutationFn: ({ id, answer }) => sendCaptcha(id, answer), onSuccess: refresh }),
     refresh: useMutation({ mutationFn: (id) => refreshCaptcha(id), onSuccess: refresh }),
+    fare: useMutation({ mutationFn: ({ id, confirm }) => confirmFare(id, confirm), onSuccess: refresh }),
     cancel: useMutation({ mutationFn: (id) => cancelFiling(id), onSuccess: refresh }),
     unlock: useMutation({ mutationFn: (id) => unlockFiling(id), onSuccess: refresh }),
   }
