@@ -143,7 +143,7 @@
     },
     "gate": {
       "title": "Seva members ke liye hai",
-      "sub": "Border tax filing aur humara WhatsApp group EaseCab membership (₹149/month) ke saath free hai.",
+      "sub": "Border tax aur humara WhatsApp group membership ke saath free hai.",
       "subscribe": "Member banein",
       "notNow": "Abhi nahi"
     },
@@ -229,7 +229,7 @@
     },
     "confirm": {
       "title": "Tax validity confirm karein",
-      "sub": "Aapki chuni start date ke hisaab se tax neeche wali date tak hi valid rahega. Date badal sakte hain ya aage badhein.",
+      "sub": "Is start date se tax sirf neeche wali date tak valid rahega.",
       "start": "Shuru hone ki date",
       "upto": "Valid kab tak",
       "plan": "Chuna gaya plan",

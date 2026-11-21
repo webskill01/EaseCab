@@ -84,7 +84,7 @@
       "counted": "Counted ✓",
       "waiting": "Not paid yet"
     },
-    "error": "Could not load referrals. Try again.",
+    "error": "Couldn't load referrals. Please try again.",
     "driver": "Driver"
   }
 }

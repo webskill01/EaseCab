@@ -57,7 +57,7 @@
     "rateLimited": "Too many attempts. Please try again later.",
     "invalidOtp": "Couldn't verify that code. Check it and try again.",
     "verifyFailed": "Couldn't verify these details. Please check and retry.",
-    "network": "Network problem. Please try again.",
+    "network": "No internet. Check your connection and try again.",
     "generic": "Something went wrong. Please try again."
   },
   "timeline": {

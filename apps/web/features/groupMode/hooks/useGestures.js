@@ -27,17 +27,31 @@ export function useLongPress(onLong) {
   }
 }
 
-/** Swipe right from the left edge → onBack; the page follows the finger, snaps back if short. */
+const LEAVE_MS = 170 // leave as the 0.18s slide-out finishes
+
+/**
+ * Swipe right from the left edge → onBack; the page follows the finger, snaps back if short.
+ * `leave()` (also used by the Back button) slides the page out first, so leaving is never a snap.
+ * @returns {{ bind: object, leave: () => void }}
+ */
 export function useSwipeBack(onBack) {
   const ref = useRef(null)
   const start = useRef(null)
+  const leave = () => {
+    const el = ref.current
+    if (!el) { onBack(); return }
+    el.style.transition = 'transform 0.18s ease-in, opacity 0.18s ease-in'
+    el.style.transform = 'translateX(40%)'
+    el.style.opacity = '0'
+    setTimeout(onBack, LEAVE_MS)
+  }
   const move = (x) => {
     const el = ref.current
     if (!el) return
     el.style.transition = x ? 'none' : 'transform 0.2s ease'
     el.style.transform = x ? `translateX(${x}px)` : ''
   }
-  return {
+  const bind = {
     ref,
     onTouchStart: (e) => {
       const t = e.touches[0]
@@ -54,8 +68,9 @@ export function useSwipeBack(onBack) {
       if (!start.current) return
       const dx = e.changedTouches[0].clientX - start.current.x
       start.current = null
-      if (dx > SWIPE_BACK_PX) onBack()
+      if (dx > SWIPE_BACK_PX) leave()
       else move(0)
     },
   }
+  return { bind, leave }
 }

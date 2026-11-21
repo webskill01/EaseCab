@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
-import { SheetTitle } from '@/components/ui/SheetTitle'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { Button } from '@/components/ui/button'
 import { Crown, Whatsapp, Phone, Swap, Ban, Shield, Warning } from '@/components/ui/icons'
 import { contactRide, contactVerifiedRide, logContactRide, logContactVerifiedRide } from '../services/ridesApi'
@@ -103,9 +103,8 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
       ? { title: t('gate.renewTitle'), sub: t('gate.renewSub'), cta: t('gate.renew') }
       : { title: t('gate.contactTitle'), sub: t('gate.contactSub'), cta: t('gate.subscribe') }
     return (
-      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={g.title}>
-        <SheetTitle icon={<Crown size={22} />} tone="blue" title={g.title} sub={g.sub} />
-        <div className="flex flex-col gap-3 pb-2">
+      <StatusSheet tone="brand" icon={<Crown size={24} />} title={g.title} body={g.sub} onClose={onClose}>
+        <div className="flex flex-col gap-3 text-left">
           <RouteLine ride={ride} />
           <div className="flex items-center gap-3 rounded-2xl bg-ec-sky px-4 py-3.5">
             <span className="text-[30px] font-extrabold leading-none tracking-tight text-ec-blue">₹149<span className="text-[14px] font-bold text-ec-ink60">{t('gate.perMonth')}</span></span>
@@ -118,7 +117,7 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
             {t('gate.notNow')}
           </Button>
         </div>
-      </BottomSheet>
+      </StatusSheet>
     )
   }
 
@@ -126,9 +125,8 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
   // VERIFICATION_REQUIRED for an unverified user, so route them to verification.
   if (reveal.error?.code === 'VERIFICATION_REQUIRED') {
     return (
-      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('gate.verifyTitle')}>
-        <SheetTitle icon={<Shield size={22} />} tone="blueInk" title={t('gate.verifyTitle')} sub={t('gate.verifyBody')} />
-        <div className="flex flex-col gap-2.5 pb-2">
+      <StatusSheet tone="info" icon={<Shield size={24} />} title={t('gate.verifyTitle')} body={t('gate.verifyBody')} onClose={onClose}>
+        <div className="flex flex-col gap-2.5 text-left">
           <RouteLine ride={ride} />
           <Button type="button" size="lg" onClick={onVerify} className="w-full">
             {t('gate.verifyCta')}
@@ -137,7 +135,7 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
             {t('gate.notNow')}
           </Button>
         </div>
-      </BottomSheet>
+      </StatusSheet>
     )
   }
 
@@ -145,15 +143,14 @@ export function ContactSheet({ ride, membershipState, membershipLoading = false,
   // the subscription case above, so a remaining error means the reveal genuinely failed.
   if (reveal.isError) {
     return (
-      <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('reveal.failTitle')}>
-        <SheetTitle icon={<Ban size={22} />} tone="danger" title={t('reveal.failTitle')} sub={t(`reveal.${contactErrorKey(reveal.error)}`)} />
-        <div className="flex flex-col gap-3 pb-2">
+      <StatusSheet tone="danger" icon={<Ban size={24} />} title={t('reveal.failTitle')} body={t(`reveal.${contactErrorKey(reveal.error)}`)} onClose={onClose}>
+        <div className="flex flex-col gap-3 text-left">
           <RouteLine ride={ride} />
           <Button type="button" size="lg" onClick={() => reveal.mutate()} disabled={reveal.isPending} className="w-full">
             {reveal.isPending ? '…' : t('reveal.retry')}
           </Button>
         </div>
-      </BottomSheet>
+      </StatusSheet>
     )
   }
 

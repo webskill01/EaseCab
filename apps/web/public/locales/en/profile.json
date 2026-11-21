@@ -121,7 +121,7 @@
     "action": "Delete account",
     "sub": "Permanently remove your profile & data",
     "title": "Delete your account?",
-    "body": "Your profile and posts are removed. Sign in again within 30 days to restore everything; after that it's deleted for good.",
+    "body": "Sign in within 30 days to restore it. After that, it is gone for good.",
     "cancel": "Cancel",
     "confirm": "Delete account",
     "deleting": "Deleting…",
@@ -156,14 +156,14 @@
       "attachError": "Couldn't attach. Try a smaller image.",
       "submit": "Submit report",
       "submitting": "Submitting…",
-      "submitted": "Report received",
-      "submittedSub": "Thanks — our team will review this driver.",
+      "submitted": "Report sent",
+      "submittedSub": "Thanks. Our team will check it.",
       "already": "You've already reported this driver.",
       "error": "Couldn't submit. Please try again.",
       "errorSelf": "You can't report your own profile.",
       "errorRate": "You've reported too many drivers today. Please try again later.",
       "errorGone": "This driver is no longer available.",
-      "errorNetwork": "No connection. Check your internet and try again."
+      "errorNetwork": "No internet. Check your connection and try again."
     },
     "stats": {
       "baseCity": "Base city",

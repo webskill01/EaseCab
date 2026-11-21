@@ -78,6 +78,9 @@ export function FeedScreen() {
   // Group Mode (Phase 31, paid): the WhatsApp-style chat list replaces the feed.
   const gm = useGroupMode()
   useOpenAlertGroup(gm)
+  // Membership ran out with Group Mode on → save it off, so a renewal opens the normal app.
+  const { enabled, expired, saving, put } = gm
+  useEffect(() => { if (enabled && expired && !saving) put({ enabled: false }) }, [enabled, expired]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!gm.ready) return <div className="flex-1 bg-white" />
   return (
     <ModeView key={gm.on ? 'groups' : 'feed'} mode={gm.on ? 'groups' : 'feed'}>

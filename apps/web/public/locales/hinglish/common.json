@@ -6,7 +6,8 @@
     "cancel": "Cancel karein",
     "retry": "Dobara try karein",
     "back": "Back",
-    "close": "Band karein"
+    "close": "Band karein",
+    "ok": "Theek hai"
   },
   "shell": {
     "support": "Support",

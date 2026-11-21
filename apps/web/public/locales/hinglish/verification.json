@@ -57,7 +57,7 @@
     "rateLimited": "Bahut zyada attempts. Thodi der baad try karo.",
     "invalidOtp": "Yeh code verify nahi hua. Check karke phir try karo.",
     "verifyFailed": "Yeh details verify nahi huin. Check karke phir try karo.",
-    "network": "Network problem. Phir try karo.",
+    "network": "Internet nahi hai. Connection check karke dobara try karein.",
     "generic": "Kuch galat ho gaya. Phir try karo."
   },
   "timeline": {

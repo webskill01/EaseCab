@@ -121,7 +121,7 @@
     "action": "Delete account",
     "sub": "Apni profile aur data hamesha ke liye hatao",
     "title": "Apna account delete karein?",
-    "body": "Aapki profile aur posts hat jaayengi. 30 din ke andar dobara sign-in karke sab kuch wapas pa sakte ho; uske baad hamesha ke liye delete ho jaayega.",
+    "body": "30 din ke andar sign-in karke wapas pa sakte hain. Uske baad hamesha ke liye delete.",
     "cancel": "Cancel",
     "confirm": "Delete account",
     "deleting": "Delete ho raha hai…",
@@ -156,14 +156,14 @@
       "attachError": "Attach nahi hua. Choti image try karo.",
       "submit": "Report bhejo",
       "submitting": "Bhej rahe hain…",
-      "submitted": "Report mil gayi",
-      "submittedSub": "Shukriya — hamari team is driver ko review karegi.",
+      "submitted": "Report bhej di",
+      "submittedSub": "Shukriya. Hamari team ise check karegi.",
       "already": "Aap is driver ko pehle hi report kar chuke ho.",
       "error": "Bhej nahi sake. Phir try karo.",
       "errorSelf": "Aap apni hi profile report nahi kar sakte.",
       "errorRate": "Aaj aapne bahut saare drivers report kar diye hain. Baad mein try karo.",
       "errorGone": "Ye driver ab available nahi hai.",
-      "errorNetwork": "Connection nahi hai. Internet check karke dobara try karo."
+      "errorNetwork": "Internet nahi hai. Connection check karke dobara try karein."
     },
     "stats": {
       "baseCity": "Base city",

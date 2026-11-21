@@ -37,15 +37,27 @@ export function useGroupMode() {
   const put = (patch) => save.mutate({ enabled: Boolean(settings.data?.enabled), cityIds: groups.map((g) => g.cityId), pinned, ...patch })
   // Decide the screen once (no feed→groups flash); membership only matters when Group Mode is saved on.
   const ready = !settings.isPending && (!settings.data?.enabled || !membership.isPending)
-  return { groups, pinned, on: Boolean(settings.data?.enabled) && paid, paid, ready, put, saving: save.isPending }
+  const enabled = Boolean(settings.data?.enabled)
+  const expired = Boolean(membership.data) && !paid
+  return { groups, pinned, enabled, expired, on: enabled && paid, paid, ready, put, saving: save.isPending }
 }
 
 /** Chat-list rows (unread + last message per group), polled. */
 export function useGroupSummary(groups) {
+  const qc = useQueryClient()
   const keys = [GROUP_KEY.DUTIES, GROUP_KEY.ALL, ...groups.map((g) => g.cityId)]
   return useQuery({
     queryKey: ['groupSummary', keys.join(',')],
-    queryFn: () => { const seen = readSeen(); return getGroupSummary(keys.map((key) => ({ key, since: seen[key] || 0 }))) },
+    queryFn: async () => {
+      const seen = readSeen()
+      try {
+        return await getGroupSummary(keys.map((key) => ({ key, since: seen[key] || 0 })))
+      } catch (err) {
+        // Membership lapsed while the list was open: refresh it so Group Mode switches itself off.
+        if (err?.code === 'SUBSCRIPTION_EXPIRED') qc.invalidateQueries({ queryKey: ['membership'] })
+        throw err
+      }
+    },
     refetchInterval: POLL_MS,
     // App default staleTime is 5min: Back from a chat would replay the old preview text until
     // the next 20s poll (the list's live stream is off while a chat is open). Refetch on return.
@@ -54,22 +66,23 @@ export function useGroupSummary(groups) {
 }
 
 const SUMMARY_KEY = ['groupSummary']
-const REFETCH_AFTER_LIVE_MS = 1500
+const REFETCH_AFTER_LIVE_MS = 300 // batches a burst of rides into one refetch
 
 /** Zero one group's badge in every cached summary right away (no wait for the refetch). */
 export function clearUnread(qc, key) {
   qc.setQueriesData({ queryKey: SUMMARY_KEY }, (rows) => rows?.map((r) => (r.key === key ? { ...r, unread: 0 } : r)))
 }
 
-/** Chat list goes live: each SSE ride bumps its city + Mix Duty badges at once, then a quiet refetch fills the text. */
+/**
+ * Chat list goes live: each SSE ride triggers a quick refetch, so a row's badge, time and
+ * preview text change together (a local badge bump ran ahead of the text).
+ */
 export function useLiveSummary() {
   const qc = useQueryClient()
   const timer = useRef(null)
   useRideStream({
     url: RIDES_STREAM_URL,
-    onRide: (ride) => {
-      qc.setQueriesData({ queryKey: SUMMARY_KEY }, (rows) => rows?.map((r) => (r.key === GROUP_KEY.ALL || r.key === ride.pickupCityId
-        ? { ...r, unread: r.unread + 1, lastAt: ride.receivedAt, lastIsDuty: false } : r)))
+    onRide: () => {
       clearTimeout(timer.current)
       timer.current = setTimeout(() => qc.invalidateQueries({ queryKey: SUMMARY_KEY }), REFETCH_AFTER_LIVE_MS)
     },

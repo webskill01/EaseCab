@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { BottomSheet } from '@/components/ui/BottomSheet'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { Button } from '@/components/ui/button'
 import { LogOut, Trash, ChevR } from '@/components/ui/icons'
 import { useLogout } from '@/features/shell/hooks/useLogout'
@@ -43,40 +43,24 @@ export function AccountActionsCard() {
       </nav>
 
       {confirm === 'logout' && (
-        <BottomSheet onClose={close} label={t('logout.title')}>
-          <div className="flex flex-col gap-3 pb-2 text-center">
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger"><LogOut size={22} /></span>
-            <h2 className="text-[18px] font-extrabold text-ec-ink">{t('logout.title')}</h2>
-            <p className="text-[13.5px] font-medium leading-relaxed text-ec-ink60">{t('logout.body')}</p>
-            <div className="mt-1 flex gap-2.5">
-              <Button type="button" variant="outline" size="lg" onClick={close} className="flex-1">
-                {t('deleteAccount.cancel')}
-              </Button>
-              <Button type="button" variant="danger" size="lg" onClick={doLogout} className="flex-1">
-                {t('logout.action')}
-              </Button>
-            </div>
+        <StatusSheet tone="danger" icon={<LogOut size={22} />} title={t('logout.title')} body={t('logout.body')} onClose={close}>
+          <div className="flex gap-2.5">
+            <Button type="button" variant="outline" size="lg" onClick={close} className="flex-1">{t('deleteAccount.cancel')}</Button>
+            <Button type="button" variant="danger" size="lg" onClick={doLogout} className="flex-1">{t('logout.action')}</Button>
           </div>
-        </BottomSheet>
+        </StatusSheet>
       )}
 
       {confirm === 'delete' && (
-        <BottomSheet onClose={close} label={t('deleteAccount.title')}>
-          <div className="flex flex-col gap-3 pb-2 text-center">
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger"><Trash size={22} /></span>
-            <h2 className="text-[18px] font-extrabold text-ec-ink">{t('deleteAccount.title')}</h2>
-            <p className="text-[13.5px] font-medium leading-relaxed text-ec-ink60">{t('deleteAccount.body')}</p>
-            {del.error && <p className="text-[12.5px] font-bold text-ec-danger">{t('deleteAccount.error')}</p>}
-            <div className="mt-1 flex gap-2.5">
-              <Button type="button" variant="outline" size="lg" onClick={close} disabled={del.submitting} className="flex-1">
-                {t('deleteAccount.cancel')}
-              </Button>
-              <Button type="button" variant="danger" size="lg" onClick={del.run} disabled={del.submitting} className="flex-1">
-                {del.submitting ? t('deleteAccount.deleting') : t('deleteAccount.confirm')}
-              </Button>
-            </div>
+        <StatusSheet tone="danger" icon={<Trash size={22} />} title={t('deleteAccount.title')} body={t('deleteAccount.body')} onClose={close}>
+          {del.error && <p className="mb-3 text-[12.5px] font-bold text-ec-danger">{t('deleteAccount.error')}</p>}
+          <div className="flex gap-2.5">
+            <Button type="button" variant="outline" size="lg" onClick={close} disabled={del.submitting} className="flex-1">{t('deleteAccount.cancel')}</Button>
+            <Button type="button" variant="danger" size="lg" onClick={del.run} disabled={del.submitting} className="flex-1">
+              {del.submitting ? t('deleteAccount.deleting') : t('deleteAccount.confirm')}
+            </Button>
           </div>
-        </BottomSheet>
+        </StatusSheet>
       )}
     </>
   )

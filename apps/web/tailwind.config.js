@@ -115,6 +115,11 @@ module.exports = {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        // Group chat opens WhatsApp-like: a short slide from the right with a fade.
+        'ec-thread-in': {
+          '0%': { opacity: '0', transform: 'translateX(28px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
         // Bottom-sheet entrance: scrim fades in, panel slides up from below.
         'ec-scrim-in': {
           '0%': { opacity: '0' },
@@ -153,6 +158,7 @@ module.exports = {
         // fill so delayed items start hidden (pair with an inline animationDelay).
         'ec-rise': 'ec-page-rise 0.4s cubic-bezier(0.16,1,0.3,1) both',
         'ec-slide-in': 'ec-slide-in 0.22s ease both',
+        'ec-thread-in': 'ec-thread-in 0.24s cubic-bezier(0.16,1,0.3,1) backwards',
         'ec-scrim-in': 'ec-scrim-in 0.2s ease-out both',
         // Soft overshoot easing so the panel settles naturally, not a hard stop.
         'ec-sheet-up': 'ec-sheet-up 0.28s cubic-bezier(0.16,1,0.3,1) both',

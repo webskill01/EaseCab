@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { Plus, Trash, Bell, BellOff, PinOutline, PinFilled, Check } from '@/components/ui/icons'
 import { CityPicker } from '@/features/rides/components/CityPicker'
 import { NotificationsButton } from '@/features/rides/components/NotificationsButton'
@@ -19,6 +20,7 @@ import { useGroupAlerts } from '../hooks/useGroupAlerts'
 import { SevaStrip } from '@/features/seva/components/SevaStrip'
 import { GroupModeToggle } from './GroupModeToggle'
 import { GROUP_KEY, groupNumber } from '../lib/groupView'
+import { groupNav } from '../lib/inChatSound'
 
 const CHIPS = ['all', 'unread', 'duties']
 const BADGE_MAX = 99
@@ -103,40 +105,27 @@ function AddGroupSheet({ onPick, onClose }) {
   )
 }
 
-/** Confirmation after adding a city: "<City> Only Duty added to your list". */
+/** Confirmation after adding a city: "<City> Only Duty added". */
 function AddedSheet({ name, onClose }) {
   const t = useTranslations('rides.group')
-  const tc = useTranslations('common')
   const show = useLocalCityName()
-  const group = t('cityGroup', { city: show(name) })
   return (
-    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('addedTitle', { group })}>
-      <div className="flex flex-col items-center pt-1 text-center">
-        <span className="flex h-12 w-12 animate-ec-pop items-center justify-center rounded-full bg-ec-successBg text-ec-waDeep"><Check size={26} /></span>
-        <h2 className="mt-2.5 text-[18px] font-extrabold text-ec-ink">{t('addedTitle', { group })}</h2>
-        <p className="mt-1 text-[13.5px] font-semibold leading-snug text-ec-ink60">{t('addedBody')}</p>
-        <Button type="button" size="lg" className="mt-4 w-full" onClick={onClose}>{t('addedOk')}</Button>
-      </div>
-    </BottomSheet>
+    <StatusSheet tone="success" icon={<Check size={26} />} title={t('addedTitle', { group: t('cityGroup', { city: show(name) }) })} body={t('addedBody')} onClose={onClose}>
+      <Button type="button" size="lg" className="w-full" onClick={onClose}>{t('addedOk')}</Button>
+    </StatusSheet>
   )
 }
 
 /** "Remove <group>?" confirmation before a city group is deleted. */
 function RemoveSheet({ title, onConfirm, onClose }) {
   const t = useTranslations('rides.group')
-  const tc = useTranslations('common')
   return (
-    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('removeTitle', { group: title })}>
-      <div className="flex flex-col items-center pt-1 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger"><Trash size={22} /></span>
-        <h2 className="mt-2.5 text-[18px] font-extrabold text-ec-ink">{t('removeTitle', { group: title })}</h2>
-        <p className="mt-1 text-[13.5px] font-semibold leading-snug text-ec-ink60">{t('removeBody')}</p>
-        <div className="mt-4 flex w-full gap-2">
-          <Button type="button" size="lg" variant="outline" className="flex-1" onClick={onClose}>{t('removeCancel')}</Button>
-          <Button type="button" size="lg" variant="danger" className="flex-1" onClick={onConfirm}>{t('removeOk')}</Button>
-        </div>
+    <StatusSheet tone="danger" icon={<Trash size={22} />} title={t('removeTitle', { group: title })} body={t('removeBody')} onClose={onClose}>
+      <div className="flex gap-2.5">
+        <Button type="button" size="lg" variant="outline" className="flex-1" onClick={onClose}>{t('removeCancel')}</Button>
+        <Button type="button" size="lg" variant="danger" className="flex-1" onClick={onConfirm}>{t('removeOk')}</Button>
       </div>
-    </BottomSheet>
+    </StatusSheet>
   )
 }
 
@@ -184,6 +173,8 @@ export function GroupListScreen() {
   const [added, setAdded] = useState(null) // city name just added → confirmation popup
   const [removing, setRemoving] = useState(null) // row awaiting delete confirmation
   const scrollRef = useRef(null)
+  // Back from a chat: the list fades in (cached rows, no refetch flash) instead of snapping in.
+  const [fadeIn] = useState(() => { const b = groupNav.back; groupNav.back = false; return b })
   useLayoutEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = savedScroll }, [])
   const rows = useRows(gm.groups, gm.pinned).filter((r) => {
     if (chip === 'unread') return r.summary?.unread > 0
@@ -203,7 +194,7 @@ export function GroupListScreen() {
 
   return (
     // One scroll box for the whole screen: top row + Seva strip scroll away with the list, like the classic feed.
-    <div ref={scrollRef} onScroll={(e) => { savedScroll = e.currentTarget.scrollTop }} className="min-h-0 flex-1 overflow-y-auto bg-white">
+    <div ref={scrollRef} onScroll={(e) => { savedScroll = e.currentTarget.scrollTop }} className={`min-h-0 flex-1 overflow-y-auto bg-white ${fadeIn ? 'animate-ec-fade' : ''}`}>
       <div className="flex gap-2 px-4 pt-2">
         <NotificationsButton onClick={() => router.push('/notifications')} />
         <button type="button" onClick={() => setAdding(true)}

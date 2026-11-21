@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { clearUnread } from './useGroupMode'
 import { markSeen, readSeen } from '../lib/groupView'
+import { playInChatPop } from '../lib/inChatSound'
 
 const AT_BOTTOM_PX = 80
 const DIVIDER_GAP_PX = 12
@@ -44,6 +45,12 @@ export function useThreadFollow(groupKey, msgs) {
     clearUnread(qc, groupKey)
     return () => { clearUnread(qc, groupKey); qc.invalidateQueries({ queryKey: ['groupSummary'] }) }
   }, [groupKey, qc])
+  // A newer message than any shown (not the first load, not an older page) → in-chat pop.
+  const lastNewest = useRef(0)
+  useEffect(() => {
+    if (lastNewest.current && newest > lastNewest.current && document.visibilityState === 'visible') playInChatPop()
+    lastNewest.current = newest
+  }, [newest])
   // Read marker = newest message actually shown (server time, +1ms past it), not the phone clock.
   useEffect(() => { if (newest && atBottom) markSeen(groupKey, newest + 1) }, [groupKey, newest, atBottom])
 

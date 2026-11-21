@@ -6,7 +6,8 @@
     "cancel": "Cancel",
     "retry": "Retry",
     "back": "Back",
-    "close": "Close"
+    "close": "Close",
+    "ok": "OK"
   },
   "shell": {
     "support": "Support",

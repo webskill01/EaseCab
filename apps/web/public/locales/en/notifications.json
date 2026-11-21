@@ -17,7 +17,7 @@
     "searchCity": "Search city",
     "save": "Save Preferences",
     "remove": "Remove {city}",
-    "blockedHint": "Notifications are blocked. Turn them on for EaseCab in your browser or phone settings, then tap the toggle again."
+    "blockedHint": "Notifications are blocked. Allow them in phone settings, then tap again."
   },
   "error": {
     "geo": "Couldn't get your location.",
@@ -25,7 +25,7 @@
   },
   "permHelp": {
     "title": "{perm} is turned off",
-    "intro": "You blocked this earlier, so EaseCab can't ask again. Turn it back on in 3 quick steps:",
+    "intro": "You blocked this earlier. Turn it back on in 3 steps:",
     "step1": "Open your phone's Settings → Apps → EaseCab",
     "step2": "Tap Permissions → {perm}",
     "step3": "Choose Allow, then come back here",

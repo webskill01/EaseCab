@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { BottomSheet } from '@/components/ui/BottomSheet'
-import { SheetTitle } from '@/components/ui/SheetTitle'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { Whatsapp, Chat } from '@/components/ui/icons'
 import { useProfile } from '@/features/profile/hooks/useProfile'
 import { ProfileSteps } from '@/features/profile/components/ProfileGate'
@@ -31,11 +31,10 @@ export function WaGroupSheet({ onClose }) {
     )
   }
   return (
-    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('title')}>
-      <SheetTitle icon={<Whatsapp size={22} />} tone="success" title={t('title')} sub={t('sub')} />
+    <StatusSheet tone="success" icon={<Whatsapp size={24} />} title={t('title')} body={t('sub')} onClose={onClose}>
       <p className="mb-3 break-words rounded-xl bg-ec-successBg px-3 py-2 text-center text-[13.5px] font-extrabold tracking-wide text-ec-successTx">{t('group')}</p>
       <p className="mb-3 rounded-xl bg-ec-warnBg px-3 py-2 text-center text-[13px] font-bold leading-snug text-ec-warning">{t('sameNumber')}</p>
-      <ol className="mb-3 space-y-2">
+      <ol className="mb-3 space-y-2 text-left">
         {['step1', 'step2', 'step3'].map((k, i) => (
           <li key={k} className="flex items-start gap-2.5 rounded-2xl border border-ec-line bg-ec-bg p-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ec-wa text-[12px] font-extrabold text-white">{i + 1}</span>
@@ -48,6 +47,6 @@ export function WaGroupSheet({ onClose }) {
       <a href={waApprovalHref(prefill)} target="_blank" rel="noopener noreferrer" className={`${BTN} bg-ec-wa text-white`}>
         <Chat size={18} />{t('message')}
       </a>
-    </BottomSheet>
+    </StatusSheet>
   )
 }

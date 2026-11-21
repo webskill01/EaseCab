@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { BottomSheet } from '@/components/ui/BottomSheet'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { Button } from '@/components/ui/button'
 import { Shield, User, Check } from '@/components/ui/icons'
 import { env } from '@/config/env'
@@ -46,14 +46,10 @@ function Step({ icon, title, sub, done, t }) {
  */
 export function VerifyGateSheet({ profile, onClose, onGo }) {
   const t = useTranslations('post')
-  const tc = useTranslations('common')
   const e = postEligibility(profile)
   return (
-    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('gate.title')}>
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ec-blueInk text-white"><Shield size={22} /></span>
-      <h2 className="mt-3 pr-9 text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{t('gate.title')}</h2>
-      <p className="mt-1 text-[13px] font-medium leading-snug text-ec-ink60">{t('gate.body')}</p>
-      <ol className="mt-3.5 flex flex-col gap-2">
+    <StatusSheet tone="info" icon={<Shield size={24} />} title={t('gate.title')} body={t('gate.body')} onClose={onClose}>
+      <ol className="flex flex-col gap-2 text-left">
         {env.NEXT_PUBLIC_VERIFICATION_ENABLED
           ? <Step icon={<Shield size={18} />} title={t('gate.stepAadhaar')} sub={t('gate.stepAadhaarSub')} done={e.aadhaar} t={t} />
           : null}
@@ -67,6 +63,6 @@ export function VerifyGateSheet({ profile, onClose, onGo }) {
           {t('gate.notNow')}
         </Button>
       </div>
-    </BottomSheet>
+    </StatusSheet>
   )
 }

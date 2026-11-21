@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { BottomSheet } from '@/components/ui/BottomSheet'
+import { StatusSheet } from '@/components/ui/StatusSheet'
+import { Button } from '@/components/ui/button'
 import { Trash } from '@/components/ui/icons'
 import { useDeleteAccount } from '../hooks/useDeleteAccount'
 
@@ -22,22 +23,15 @@ export function DeleteAccountButton() {
       </button>
 
       {open && (
-        <BottomSheet onClose={() => setOpen(false)} label={t('deleteAccount.title')}>
-          <div className="flex flex-col gap-3 pb-2 text-center">
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger"><Trash size={22} /></span>
-            <h2 className="text-[18px] font-extrabold text-ec-ink">{t('deleteAccount.title')}</h2>
-            <p className="text-[13.5px] font-medium leading-relaxed text-ec-ink60">{t('deleteAccount.body')}</p>
-            {del.error && <p className="text-[12.5px] font-bold text-ec-danger">{t('deleteAccount.error')}</p>}
-            <div className="mt-1 flex gap-2.5">
-              <button type="button" onClick={() => setOpen(false)} disabled={del.submitting} className="min-h-[52px] min-w-0 flex-1 rounded-xl px-3 py-2 leading-tight border-[1.5px] border-ec-line bg-white text-[14px] font-extrabold text-ec-ink disabled:opacity-60">
-                {t('deleteAccount.cancel')}
-              </button>
-              <button type="button" onClick={del.run} disabled={del.submitting} className="min-h-[52px] min-w-0 flex-1 rounded-xl px-3 py-2 leading-tight bg-ec-danger text-[14px] font-extrabold text-white disabled:opacity-60">
-                {del.submitting ? t('deleteAccount.deleting') : t('deleteAccount.confirm')}
-              </button>
-            </div>
+        <StatusSheet tone="danger" icon={<Trash size={22} />} title={t('deleteAccount.title')} body={t('deleteAccount.body')} onClose={() => setOpen(false)}>
+          {del.error && <p className="mb-3 text-[12.5px] font-bold text-ec-danger">{t('deleteAccount.error')}</p>}
+          <div className="flex gap-2.5">
+            <Button type="button" variant="outline" size="lg" onClick={() => setOpen(false)} disabled={del.submitting} className="flex-1">{t('deleteAccount.cancel')}</Button>
+            <Button type="button" variant="danger" size="lg" onClick={del.run} disabled={del.submitting} className="flex-1">
+              {del.submitting ? t('deleteAccount.deleting') : t('deleteAccount.confirm')}
+            </Button>
           </div>
-        </BottomSheet>
+        </StatusSheet>
       )}
     </>
   )

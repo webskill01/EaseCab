@@ -143,7 +143,7 @@
     },
     "gate": {
       "title": "Seva is for members",
-      "sub": "Border tax filing and our WhatsApp group are free with EaseCab membership (₹149/month).",
+      "sub": "Border tax and our WhatsApp group are free with membership.",
       "subscribe": "Become a member",
       "notNow": "Not now"
     },
@@ -229,7 +229,7 @@
     },
     "confirm": {
       "title": "Confirm your tax validity",
-      "sub": "For the start date you picked, the tax stays valid only until the date below. You can change the start date or continue.",
+      "sub": "With this start date, the tax is valid only until the date below.",
       "start": "Starting date",
       "upto": "Valid upto",
       "plan": "Selected plan",

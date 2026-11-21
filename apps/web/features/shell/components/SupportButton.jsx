@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { SUPPORT_HOURS } from '@easecab/shared'
-import { BottomSheet } from '@/components/ui/BottomSheet'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { Button } from '@/components/ui/button'
 import { Headset } from '@/components/ui/icons'
 import { env } from '@/config/env'
@@ -41,7 +41,6 @@ export function guardSupport(e) {
 /** "Support is available 9 AM – 5 PM" popup; one instance listens for guardSupport. */
 export function SupportHoursSheet() {
   const t = useTranslations('common.supportHours')
-  const tc = useTranslations('common')
   const [open, setOpen] = useState(false)
   useEffect(() => {
     const show = () => setOpen(true)
@@ -50,14 +49,9 @@ export function SupportHoursSheet() {
   }, [])
   if (!open) return null
   return (
-    <BottomSheet centered closeLabel={tc('actions.close')} onClose={() => setOpen(false)} label={t('title')}>
-      <div className="flex flex-col items-center pt-1 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ec-sky text-ec-blue"><Headset size={24} /></span>
-        <h2 className="mt-2.5 text-[18px] font-extrabold text-ec-ink">{t('title')}</h2>
-        <p className="mt-1 text-[14px] font-semibold leading-snug text-ec-ink60">{t('body')}</p>
-        <Button type="button" size="lg" className="mt-4 w-full" onClick={() => setOpen(false)}>{t('ok')}</Button>
-      </div>
-    </BottomSheet>
+    <StatusSheet tone="info" icon={<Headset size={24} />} title={t('title')} body={t('body')} onClose={() => setOpen(false)}>
+      <Button type="button" size="lg" className="w-full" onClick={() => setOpen(false)}>{t('ok')}</Button>
+    </StatusSheet>
   )
 }
 

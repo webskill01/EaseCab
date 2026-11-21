@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useMutation } from '@tanstack/react-query'
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { SheetTitle } from '@/components/ui/SheetTitle'
 import { Button } from '@/components/ui/button'
 import { Flag, Check } from '@/components/ui/icons'
@@ -24,6 +25,7 @@ const REASONS = ['fake', 'spam', 'wrong_info', 'inappropriate', 'other']
  */
 export function ReportUserSheet({ userId, onClose }) {
   const t = useTranslations('profile')
+  const tc = useTranslations('common')
   const inputRef = useRef(null)
   const [reason, setReason] = useState('')
   const [remarks, setRemarks] = useState('')
@@ -62,14 +64,9 @@ export function ReportUserSheet({ userId, onClose }) {
   if (submit.isSuccess) {
     const already = submit.data?.alreadyReported
     return (
-      <BottomSheet onClose={onClose} label={t('poster.report.submitted')}>
-        <SheetTitle
-          icon={<Check size={22} />}
-          tone="success"
-          title={t('poster.report.submitted')}
-          sub={already ? t('poster.report.already') : t('poster.report.submittedSub')}
-        />
-      </BottomSheet>
+      <StatusSheet tone="success" icon={<Check size={26} />} title={t('poster.report.submitted')} body={already ? t('poster.report.already') : t('poster.report.submittedSub')} onClose={onClose}>
+        <Button type="button" size="lg" className="w-full" onClick={onClose}>{tc('actions.ok')}</Button>
+      </StatusSheet>
     )
   }
 

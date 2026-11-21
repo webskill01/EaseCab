@@ -17,7 +17,7 @@
     "searchCity": "Shehar dhoondo",
     "save": "Preferences save karo",
     "remove": "{city} hatao",
-    "blockedHint": "Notifications block hain. Inhe apne browser ya phone settings me EaseCab ke liye on karein, phir toggle dobara dabayein."
+    "blockedHint": "Notifications block hain. Phone settings mein allow karke dobara dabayein."
   },
   "error": {
     "geo": "Aapki location nahi mili.",
@@ -25,7 +25,7 @@
   },
   "permHelp": {
     "title": "{perm} band hai",
-    "intro": "Aapne pehle ise block kiya tha, isliye EaseCab dobara nahi pooch sakta. 3 steps mein wapas chalu karein:",
+    "intro": "Aapne ise pehle block kiya tha. 3 steps mein wapas on karein:",
     "step1": "Phone ki Settings → Apps → EaseCab kholein",
     "step2": "Permissions → {perm} par tap karein",
     "step3": "Allow chunein, phir yahan wapas aayein",

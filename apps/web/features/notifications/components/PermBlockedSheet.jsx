@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { BottomSheet } from '@/components/ui/BottomSheet'
+import { StatusSheet } from '@/components/ui/StatusSheet'
 import { Button } from '@/components/ui/button'
 import { BellEdit, Pin } from '@/components/ui/icons'
 import { isNative, openAppSettings } from '../services/nativePush'
@@ -17,17 +17,17 @@ export const BLOCKED_PERM = Object.freeze({ NOTIFICATIONS: 'notifications', LOCA
  */
 export function PermBlockedSheet({ kind, onRetry, onClose }) {
   const t = useTranslations('notifications')
-  const tc = useTranslations('common')
   const perm = t(`permHelp.perm.${kind}`)
   const steps = [t('permHelp.step1'), t('permHelp.step2', { perm }), t('permHelp.step3')]
   return (
-    <BottomSheet centered closeLabel={tc('actions.close')} onClose={onClose} label={t('permHelp.title', { perm })}>
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ec-warnBg text-ec-warning">
-        {kind === BLOCKED_PERM.LOCATION ? <Pin size={22} /> : <BellEdit size={22} />}
-      </span>
-      <h2 className="mt-3 pr-9 text-[18px] font-extrabold leading-tight tracking-tight text-ec-ink">{t('permHelp.title', { perm })}</h2>
-      <p className="mt-1 text-[13px] font-medium leading-snug text-ec-ink60">{t('permHelp.intro')}</p>
-      <ol className="mt-3 flex flex-col gap-2">
+    <StatusSheet
+      tone="warning"
+      icon={kind === BLOCKED_PERM.LOCATION ? <Pin size={24} /> : <BellEdit size={24} />}
+      title={t('permHelp.title', { perm })}
+      body={t('permHelp.intro')}
+      onClose={onClose}
+    >
+      <ol className="flex flex-col gap-2 text-left">
         {steps.map((s, i) => (
           <li key={i} className="flex items-start gap-2.5 rounded-xl bg-ec-bg px-3 py-2.5">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ec-blue text-[12px] font-extrabold text-white">{i + 1}</span>
@@ -46,6 +46,6 @@ export function PermBlockedSheet({ kind, onRetry, onClose }) {
           <Button type="button" size="lg" onClick={() => { onClose(); onRetry() }} className="flex-1">{t('permHelp.retry')}</Button>
         )}
       </div>
-    </BottomSheet>
+    </StatusSheet>
   )
 }
