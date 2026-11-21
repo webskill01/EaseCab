@@ -54,7 +54,9 @@ async function main() {
   let stopping = false; // browser going away: errors now are the shutdown's, not the portal's
   let draining = false; // deploy/stop asked: no new filings or clears, running ones finish
   const browser = () => {
-    launching ??= chromium.launch({ headless: false, env: CHROMIUM_ENV }).then((b) => {
+    // Playwright's own signal handlers close Chromium + process.exit(130) on PM2's SIGINT — that killed
+    // payments mid-drain and skipped stopDisplay (orphan Xvfb, 2026-11-21). shutdown() owns the signals.
+    launching ??= chromium.launch({ headless: false, env: CHROMIUM_ENV, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false }).then((b) => {
       b.on('disconnected', () => { launching = null; if (stopping) return; logger.warn('browser disconnected, relaunching on next filing'); alert('Chromium died, relaunching on next filing'); });
       return b;
     }, (err) => { launching = null; throw err; });
