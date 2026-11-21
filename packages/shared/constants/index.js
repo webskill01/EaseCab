@@ -31,4 +31,5 @@ module.exports = {
   ...require('./borderTax'),
   ...require('./groupMode'),
   ...require('./support'),
+  ...require('./fuel'),
 };

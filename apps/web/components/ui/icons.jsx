@@ -8,6 +8,7 @@ import {
   IconReceiptTax, IconMinus, IconExternalLink, IconLoader2, IconCircleX, IconCalendarCheck,
   IconBuildingBank, IconCalendarEvent, IconRosetteDiscountCheckFilled, IconArrowRight, IconChevronDown, IconStopwatch, IconGift,
   IconBell, IconBellOff, IconArrowsShuffle, IconPinned, IconPinnedFilled,
+  IconGasStation, IconCurrentLocation,
 } from '@tabler/icons-react'
 
 /**
@@ -87,6 +88,8 @@ export const BellOff = ic(IconBellOff, 18)
 export const Shuffle = ic(IconArrowsShuffle, 22)
 export const PinOutline = ic(IconPinned, 18)
 export const PinFilled = ic(IconPinnedFilled, 18)
+export const GasStation = ic(IconGasStation, 26)
+export const CurrentLocation = ic(IconCurrentLocation, 22)
 
 /**
  * Vehicle glyph by icon key (the `rideView.vehIconKey` output). Falls back to a

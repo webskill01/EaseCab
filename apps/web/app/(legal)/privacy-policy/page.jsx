@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
     <article className="prose prose-gray max-w-none">
       <h1>Privacy Policy</h1>
       <p className="text-sm text-gray-500">
-        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: November 17, 2026
+        Effective Date: May 30, 2026 &nbsp;·&nbsp; Last Updated: November 21, 2026
       </p>
 
       <h2>1. Introduction</h2>
@@ -40,11 +40,25 @@ export default function PrivacyPolicy() {
 
       <h3>2.3 Location Information</h3>
       <p>
-        We request approximate city-level location permission only to suggest your city for
-        targeted push notifications about new ride leads. We do not track precise GPS location or
-        your movement. Location permission is optional — you may decline without losing access to
-        the ride feed.
+        Location permission is optional — you may decline without losing access to the ride feed.
+        We use it in two places:
       </p>
+      <ul>
+        <li>
+          <strong>City suggestion:</strong> approximate location, used once to suggest your city for
+          targeted push notifications about new ride leads.
+        </li>
+        <li>
+          <strong>Fuel &amp; CNG finder:</strong> your precise location, sent to our server only
+          while you search, to find pumps near you or along your route. We do not save these
+          searches or track your movement.
+        </li>
+        <li>
+          <strong>Adding a missing pump:</strong> if you choose to add a pump, your current location
+          is saved as that pump&apos;s location, linked to your account so our team can review it.
+          If you delete your account, this link is removed.
+        </li>
+      </ul>
 
       <h3>2.4 Payment Information</h3>
       <p>
@@ -99,6 +113,12 @@ export default function PrivacyPolicy() {
         <li>
           <strong>Cloudflare R2</strong> — Secure cloud storage for profile pictures and border tax receipts (receipts are deleted 24 hours after the tax validity ends). Uploads are made through time-limited presigned URLs only — the storage bucket
           is never publicly accessible.
+        </li>
+        <li>
+          <strong>Google Maps Platform</strong> — Shows the in-app map in the fuel finder and works
+          out the road for route searches. The map loads from Google, which receives your device&apos;s
+          IP address and the map area you view; route searches send only the start and end points,
+          from our server. Google&apos;s Privacy Policy applies.
         </li>
       </ul>
 

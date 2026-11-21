@@ -9,7 +9,7 @@ import { membershipView, MEMBERSHIP_STATE } from '@/features/subscription/lib/me
  * Seva buttons (feed strip + Seva tab) are members-only: a non-member's tap opens the
  * gate instead. Loading membership counts as not-member (membershipView(undefined) = EXPIRED).
  * Refer & Earn is NOT gated: anyone can invite (and earn a free month).
- * @returns {{ openBorderTax: () => void, openWaGroup: () => void, openRefer: () => void, sheet: null | 'gate' | 'wa', close: () => void }}
+ * @returns {{ openBorderTax: () => void, openWaGroup: () => void, openFuel: () => void, openRefer: () => void, sheet: null | 'gate' | 'wa', close: () => void }}
  */
 export function useSevaActions() {
   const router = useRouter()
@@ -20,6 +20,7 @@ export function useSevaActions() {
   return {
     openBorderTax: guard(() => router.push('/seva/border-tax')),
     openWaGroup: guard(() => setSheet('wa')),
+    openFuel: guard(() => router.push('/seva/fuel')),
     openRefer: () => router.push('/refer'),
     sheet,
     close: () => setSheet(null),

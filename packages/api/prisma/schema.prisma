@@ -429,6 +429,8 @@ model User {
   referredBy              User?                    @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals               User[]                   @relation("Referrals")
   borderTaxRequests       BorderTaxRequest[]
+  fuelStationsAdded       FuelStation[]
+  fuelReports             FuelStationReport[]
   complimentary           ComplimentaryMember?
   notifyGeoCity           City?                    @relation("UserGeoAlertCity", fields: [notifyGeoCityId], references: [id], onDelete: SetNull)
 
@@ -800,4 +802,65 @@ model BorderTaxRequest {
   @@index([status])
   @@index([createdAt])
   @@map("border_tax_requests")
+}
+
+// Phase 30: fuel station finder. Seeded from IOCL/HPCL locators + CGD CNG lists
+// (source + source_ref = the upstream id, so re-imports upsert); drivers add
+// stations (pending → admin) and report CNG yes/no/closed.
+enum FuelStationStatus {
+  active
+  pending
+  rejected
+  closed
+}
+
+enum FuelReportKind {
+  cng_yes
+  cng_no
+  closed
+}
+
+model FuelStation {
+  id             String              @id @default(uuid()) @db.Uuid
+  name           String
+  brand          String
+  lat            Float
+  lng            Float
+  address        String?
+  city           String?
+  stateCode      String?             @map("state_code")
+  hasPetrol      Boolean             @default(true) @map("has_petrol")
+  hasDiesel      Boolean             @default(true) @map("has_diesel")
+  hasCng         Boolean             @default(false) @map("has_cng")
+  source         String
+  sourceRef      String?             @map("source_ref")
+  status         FuelStationStatus   @default(active)
+  addedById      String?             @map("added_by_id") @db.Uuid
+  addedBy        User?               @relation(fields: [addedById], references: [id], onDelete: SetNull)
+  cngConfirmedAt DateTime?           @map("cng_confirmed_at") @db.Timestamptz(6) // last driver "CNG mili"
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  reports        FuelStationReport[]
+
+  @@unique([source, sourceRef])
+  @@index([status, lat, lng])
+  @@index([addedById])
+  @@index([createdAt])
+  @@map("fuel_stations")
+}
+
+model FuelStationReport {
+  id         String         @id @default(uuid()) @db.Uuid
+  stationId  String         @map("station_id") @db.Uuid
+  station    FuelStation    @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  userId     String         @map("user_id") @db.Uuid
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       FuelReportKind
+  resolvedAt DateTime?      @map("resolved_at") @db.Timestamptz(6)
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([stationId, userId, kind]) // one vote per driver per kind; a repeat refreshes it
+  @@index([resolvedAt, createdAt])
+  @@index([userId])
+  @@map("fuel_station_reports")
 }

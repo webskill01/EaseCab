@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, BarChart3, TrendingUp, BadgeCheck, Flag, UserX, Users, MapPin, Route, Filter, MessagesSquare, Link2, X, HandCoins, Gift, HeartHandshake, Smartphone, Landmark, RefreshCw,
+  LayoutDashboard, BarChart3, TrendingUp, BadgeCheck, Flag, UserX, Users, MapPin, Route, Filter, MessagesSquare, Link2, X, HandCoins, Gift, HeartHandshake, Smartphone, Landmark, RefreshCw, Fuel,
 } from 'lucide-react'
 import { useStats } from '@/features/dashboard/hooks/useStats'
 import { cn } from '@/lib/utils'
@@ -23,6 +23,7 @@ const NAV = [
     { href: '/user-reports', label: 'User Reports', icon: UserX },
     { href: '/city-strings', label: 'City Strings', icon: MapPin, count: 'unresolvedCities' },
     { href: '/unresolved-rides', label: 'Unresolved Rides', icon: Route },
+    { href: '/fuel', label: 'Fuel Pumps', icon: Fuel },
   ] },
   { group: 'Manage', items: [
     { href: '/users', label: 'Users', icon: Users },

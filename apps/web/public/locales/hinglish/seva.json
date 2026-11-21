@@ -11,7 +11,8 @@
     "waGroup": "WhatsApp Group",
     "new": "New",
     "soon": "Jaldi aa raha",
-    "refer": "Refer karo, kamao"
+    "refer": "Refer karo, kamao",
+    "fuel": "Fuel / CNG"
   },
   "strip": {
     "btSub": "Members ke liye free",
@@ -115,6 +116,7 @@
       "portal_down": "Sarkari border tax site abhi down ya bahut slow hai. Thodi der baad try karein.",
       "no_handoff": "Sarkari site ne payment page nahi khola. Dobara try karein.",
       "pucc_expired": "Gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
+      "insurance_expired": "Gaadi ka insurance expire ho gaya hai. Renew karke dobara bharein.",
       "fitness_expired": "Gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
       "seat_class_mismatch": "RC mein gaadi ki class aur seats match nahi karti, isliye online tax nahi bhara ja sakta. RTO se RC theek karwayein ya border par tax bharein.",
       "vehicle_not_found": "Sarkari Vahan site par yeh gaadi number nahi mila. RC se number check karein.",
@@ -255,6 +257,87 @@
       "locked": "Gaadi abhi locked hai",
       "payment": "Payment nahi mila",
       "error": "Filing poori nahi hui"
+    }
+  },
+  "fuel": {
+    "title": "Paas ke Fuel & CNG pump",
+    "back": "Back",
+    "types": {
+      "cng": "CNG",
+      "petrol": "Petrol",
+      "diesel": "Diesel"
+    },
+    "brands": {
+      "iocl": "Indian Oil",
+      "hpcl": "HP",
+      "bpcl": "Bharat Petroleum",
+      "nayara": "Nayara",
+      "jiobp": "Jio-bp",
+      "shell": "Shell",
+      "cgd": "City gas (sirf CNG)",
+      "other": "Koi aur"
+    },
+    "km": "{km} km",
+    "navigate": "Raasta dekho",
+    "confirmed": "{days, plural, =0 {Aaj driver ne CNG confirm kiya} one {1 din pehle CNG confirm hua} other {# din pehle CNG confirm hua}}",
+    "report": {
+      "cng_yes": "CNG mili",
+      "cng_no": "CNG nahi hai",
+      "closed": "Pump band hai"
+    },
+    "thanks": "Shukriya — isse dusre drivers ki madad hogi.",
+    "loading": "Paas ke pump dhoondh rahe hain…",
+    "empty": "15 km mein abhi koi pump nahi mila. Neeche se jo pump pata hai woh add karo.",
+    "error": "Pump load nahi hue. Dobara try karo.",
+    "geo": {
+      "denied": "Location band hai. Phone settings mein EaseCab ko location ki permission do.",
+      "failed": "Location nahi mili. GPS on karke dobara try karo.",
+      "retry": "Dobara try karo"
+    },
+    "add": {
+      "cta": "Missing pump add karo",
+      "title": "Pump add karo",
+      "sub": "Pump par khade hokar add karo. Sabko dikhne se pehle hamari team check karegi.",
+      "name": "Pump ka naam",
+      "namePh": "jaise Sandhu Filling Station",
+      "brand": "Company",
+      "fuels": "Kya milta hai",
+      "here": "Aapki abhi ki location pump ki location save hogi.",
+      "submit": "Pump add karo",
+      "done": "Pump review ke liye bhej diya. Shukriya!",
+      "limit": "Ek din mein 5 pump tak add kar sakte ho."
+    },
+    "disclaimer": "Pump list oil companies aur drivers se. Stock badal sakta hai — lambe trip se pehle check karo. Map data © OpenStreetMap contributors.",
+    "mode": {
+      "near": "Mere paas",
+      "route": "Mere raste mein"
+    },
+    "map": {
+      "label": "Pumps ka map",
+      "error": "Map nahi khula. Neeche list chal rahi hai.",
+      "locate": "Meri location pe jaayein",
+      "locateFailed": "Location nahi mili. GPS on karke location allow karein."
+    },
+    "along": "{km} km par",
+    "off": "Sadak se {km} km door",
+    "route": {
+      "fromMe": "Kahan se: meri location",
+      "useMe": "Meri location use karein",
+      "to": "Kahan jaana hai (shehar)",
+      "hint": "Kahan jaa rahe ho chunein — raste ke pump dikhenge.",
+      "needFrom": "Location band hai. Shuru ka shehar chunein.",
+      "loading": "Raste ke pump dhoondh rahe hain…",
+      "error": "Rasta load nahi hua. Dobara try karein.",
+      "empty": "Is sadak ke 2 km andar abhi koi pump nahi.",
+      "summary": "{km} km · lagbhag {hrs} ghante · raste mein {count, plural, =0 {koi pump nahi} one {1 pump} other {# pump}}",
+      "approx": "Abhi sadak ka map nahi mila — dono jagah ke beech seedhi line ke paas {count, plural, =0 {koi pump nahi} one {1 pump} other {# pump}}."
+    },
+    "sheet": {
+      "label": "Pumps ki list",
+      "expand": "List badi karo",
+      "collapse": "Map bada karo",
+      "close": "List pe wapas",
+      "count": "{count, plural, =0 {Paas mein koi {fuel} pump nahi} one {Paas mein 1 {fuel} pump} other {Paas mein # {fuel} pumps}}"
     }
   }
 }

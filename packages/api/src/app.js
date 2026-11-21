@@ -48,6 +48,9 @@ const { createChatRouter } = require('./features/chat/chat.route');
 const { createBlocksRepository } = require('./features/blocks/blocks.repository');
 const { createBlocksService } = require('./features/blocks/blocks.service');
 const { createBlocksRouter } = require('./features/blocks/blocks.route');
+const { createFuelRepository } = require('./features/fuel/fuel.repository');
+const { createFuelService } = require('./features/fuel/fuel.service');
+const { createFuelRouter } = require('./features/fuel/fuel.route');
 const { createBorderTaxRepository } = require('./features/borderTax/borderTax.repository');
 const { createBorderTaxService } = require('./features/borderTax/borderTax.service');
 const { createBorderTaxRouter } = require('./features/borderTax/borderTax.route');
@@ -88,6 +91,9 @@ const { createAdminWaGroupsRouter } = require('./features/admin/adminWaGroups.ro
 const { createAdminWaInvitesRepository } = require('./features/admin/adminWaInvites.repository');
 const { createAdminWaInvitesService } = require('./features/admin/adminWaInvites.service');
 const { createAdminWaInvitesRouter } = require('./features/admin/adminWaInvites.route');
+const { createAdminFuelRepository } = require('./features/admin/adminFuel.repository');
+const { createAdminFuelService } = require('./features/admin/adminFuel.service');
+const { createAdminFuelRouter } = require('./features/admin/adminFuel.route');
 const { createAdminWaSessionsRepository } = require('./features/admin/adminWaSessions.repository');
 const { createAdminWaSessionsService } = require('./features/admin/adminWaSessions.service');
 const { createAdminWaSessionsRouter, createWaPairPublicRouter } = require('./features/admin/adminWaSessions.route');
@@ -139,6 +145,7 @@ const { createAdminReferralsRouter } = require('./features/admin/adminReferrals.
  *   - SEPARATE admin JWT secrets/TTLs (Step 24a, §6); a second createJwt instance.
  * @param {{ verifyOtpToken(idToken: string): Promise<{ phone: string }> }} deps.identity
  * @param {?object} [deps.smsOtp] - 2Factor client (OTP_PROVIDER=twofactor) or null
+ * @param {?object} [deps.googleRoutes] - Google Routes client (GOOGLE_MAPS_SERVER_KEY) or null → straight-line fallback
  * @param {?{ phone: string, code: string }} [deps.testLogin] - Play-reviewer login
  * @param {import('ioredis').Redis} deps.subscriber - dedicated redis subscriber
  *   (a `redis.duplicate()`) backing the rides SSE fan-out; a subscriber-mode
@@ -161,7 +168,7 @@ const { createAdminReferralsRouter } = require('./features/admin/adminReferrals.
  *   uploads routes touch it, so harnesses that don't exercise uploads may omit it.
  * @returns {import('express').Express}
  */
-function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, testLogin = null, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads }) {
+function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, testLogin = null, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads, googleRoutes = null }) {
   const app = express();
   app.disable('x-powered-by');
   // Behind Nginx — trust the first proxy hop so client IP (rate limiting) and
@@ -195,7 +202,8 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
       },
       // Minimal serializers — NEVER log headers/cookies (JWT + PII, §10).
       serializers: {
-        req: (req) => ({ id: req.id, method: req.method, url: req.url }),
+        // Fuel queries carry the driver's GPS (lat/lng) — log the path only (privacy policy §2.3).
+        req: (req) => ({ id: req.id, method: req.method, url: req.url.startsWith('/api/v1/fuel') ? req.url.split('?')[0] : req.url }),
         res: (res) => ({ statusCode: res.statusCode }),
       },
     }),
@@ -323,6 +331,9 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
       repo: createAdminWaInvitesRepository({ prisma }), groupsRepo: adminWaGroupsRepo, redis,
     });
     v1.use('/admin/wa-invites', createAdminWaInvitesRouter({ service: adminWaInvitesService, requireAdmin }));
+    // Fuel stations (Phase 30): driver-added stations + driver reports to review.
+    const adminFuelService = createAdminFuelService({ repo: createAdminFuelRepository({ prisma }) });
+    v1.use('/admin/fuel', createAdminFuelRouter({ service: adminFuelService, requireAdmin }));
     // WhatsApp sessions (Phase 25): add / name / pause / pair the numbers easecab-bot runs,
     // plus the public share page someone remote scans the QR from (token-gated).
     const adminWaSessionsService = createAdminWaSessionsService({
@@ -436,6 +447,10 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
   // the chat service (open/send check isBlockedBetween).
   const blocksService = createBlocksService({ repo: createBlocksRepository({ prisma }) });
   v1.use('/blocks', createBlocksRouter({ service: blocksService, requireAuth }));
+
+  // Fuel station finder (Phase 30): nearest CNG/petrol/diesel + driver contributions.
+  const fuelService = createFuelService({ repo: createFuelRepository({ prisma, redis }), routes: googleRoutes, logger });
+  v1.use('/fuel', createFuelRouter({ service: fuelService, requireAuth, redis }));
 
   const borderTaxService = createBorderTaxService({ repo: createBorderTaxRepository({ prisma, redis }), logger, r2: uploads });
   v1.use('/border-tax', createBorderTaxRouter({ service: borderTaxService, requireAuth }));

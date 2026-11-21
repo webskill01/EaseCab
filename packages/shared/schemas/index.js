@@ -23,4 +23,5 @@ module.exports = {
   ...require('./waSessions.schema'),
   ...require('./borderTax.schema'),
   ...require('./groupMode.schema'),
+  ...require('./fuel.schema'),
 };

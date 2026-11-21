@@ -11,7 +11,8 @@
     "waGroup": "WhatsApp Group",
     "new": "New",
     "soon": "Coming soon",
-    "refer": "Refer & Earn"
+    "refer": "Refer & Earn",
+    "fuel": "Fuel / CNG"
   },
   "strip": {
     "btSub": "Free for members",
@@ -115,6 +116,7 @@
       "portal_down": "The govt border tax site is down or very slow. Try again in a while.",
       "no_handoff": "The govt site didn't open the payment page. Try again.",
       "pucc_expired": "Your pollution certificate (PUC) has expired. Renew it, then file again.",
+      "insurance_expired": "Your vehicle's insurance has expired. Renew it, then file again.",
       "fitness_expired": "Your fitness certificate has expired. Renew it, then file again.",
       "seat_class_mismatch": "Your RC's vehicle class and seats don't match, so tax can't be paid online. Get the RC fixed at the RTO, or pay at the border.",
       "vehicle_not_found": "The govt Vahan site has no record of this number. Check it on your RC.",
@@ -255,6 +257,87 @@
       "locked": "Vehicle locked for now",
       "payment": "Payment not received",
       "error": "Filing didn't finish"
+    }
+  },
+  "fuel": {
+    "title": "Fuel & CNG near you",
+    "back": "Back",
+    "types": {
+      "cng": "CNG",
+      "petrol": "Petrol",
+      "diesel": "Diesel"
+    },
+    "brands": {
+      "iocl": "Indian Oil",
+      "hpcl": "HP",
+      "bpcl": "Bharat Petroleum",
+      "nayara": "Nayara",
+      "jiobp": "Jio-bp",
+      "shell": "Shell",
+      "cgd": "City gas (CNG only)",
+      "other": "Other"
+    },
+    "km": "{km} km",
+    "navigate": "Navigate",
+    "confirmed": "{days, plural, =0 {CNG confirmed today by a driver} one {CNG confirmed 1 day ago} other {CNG confirmed # days ago}}",
+    "report": {
+      "cng_yes": "CNG available",
+      "cng_no": "No CNG here",
+      "closed": "Pump closed"
+    },
+    "thanks": "Thanks — this helps other drivers.",
+    "loading": "Finding pumps near you…",
+    "empty": "No pumps found within 15 km yet. Add one you know below.",
+    "error": "Couldn't load pumps. Please try again.",
+    "geo": {
+      "denied": "Location is blocked. Allow location for EaseCab in your phone settings.",
+      "failed": "Couldn't get your location. Turn on GPS and try again.",
+      "retry": "Try again"
+    },
+    "add": {
+      "cta": "Add a missing pump",
+      "title": "Add a pump",
+      "sub": "Stand at the pump and add it. Our team checks it before it shows to everyone.",
+      "name": "Pump name",
+      "namePh": "e.g. Sandhu Filling Station",
+      "brand": "Company",
+      "fuels": "Sells",
+      "here": "Your current location will be saved as the pump's location.",
+      "submit": "Add pump",
+      "done": "Pump sent for review. Thank you!",
+      "limit": "You can add up to 5 pumps a day."
+    },
+    "disclaimer": "Pump list from oil companies and drivers. Stock can change — check before a long trip. Map data © OpenStreetMap contributors.",
+    "mode": {
+      "near": "Near me",
+      "route": "On my route"
+    },
+    "map": {
+      "label": "Map of pumps",
+      "error": "Map couldn't load. The list below still works.",
+      "locate": "Go to my location",
+      "locateFailed": "Couldn't get your location. Turn on GPS and allow location."
+    },
+    "along": "at {km} km",
+    "off": "{km} km off the road",
+    "route": {
+      "fromMe": "From: my location",
+      "useMe": "Use my location instead",
+      "to": "Going to (city)",
+      "hint": "Pick where you are going to see pumps on the way.",
+      "needFrom": "Location is off. Pick a starting city.",
+      "loading": "Finding pumps on your route…",
+      "error": "Couldn't load the route. Please try again.",
+      "empty": "No pumps within 2 km of this road yet.",
+      "summary": "{km} km · about {hrs} hrs · {count, plural, =0 {no pumps} one {1 pump} other {# pumps}} on the way",
+      "approx": "Road map unavailable right now — showing {count, plural, =0 {no pumps} one {1 pump} other {# pumps}} near a straight line between the two places."
+    },
+    "sheet": {
+      "label": "Pumps list",
+      "expand": "Show more of the list",
+      "collapse": "Show more of the map",
+      "close": "Back to the list",
+      "count": "{count, plural, =0 {No {fuel} pumps nearby} one {1 {fuel} pump nearby} other {# {fuel} pumps nearby}}"
     }
   }
 }

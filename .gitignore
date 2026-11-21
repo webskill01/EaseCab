@@ -101,3 +101,6 @@ __pycache__/
 cabswale_refrence/
 Surepass-*.pdf
 packages/bot/scripts/repair-commands.txt
+
+# Phase 30 fuel seed downloads (raw third-party data, never committed)
+packages/api/scripts/fuel/data/

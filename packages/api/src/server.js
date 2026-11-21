@@ -13,6 +13,7 @@ const { createChatStore } = require('./lib/firestoreChat');
 const { createPushSender } = require('./lib/fcm');
 const { createCashfreeClient, createStubCashfreeClient } = require('./lib/cashfree');
 const { createTwoFactorClient } = require('./lib/twoFactor');
+const { createGoogleRoutesClient } = require('./lib/googleRoutes');
 const { createSurepassClient, createStubSurepassClient } = require('./lib/surepass');
 const { createR2Client, createStubR2Client } = require('./lib/r2.js');
 
@@ -147,7 +148,9 @@ async function main() {
         publicBaseUrl: serverEnv.R2_PUBLIC_BASE_URL,
       });
 
-  const app = buildApp({ prisma, redis, logger, config, identity, smsOtp, testLogin, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads });
+  // Unset key → fuel route search falls back to a straight line (no Google call).
+  const googleRoutes = serverEnv.GOOGLE_MAPS_SERVER_KEY ? createGoogleRoutesClient({ apiKey: serverEnv.GOOGLE_MAPS_SERVER_KEY }) : null;
+  const app = buildApp({ prisma, redis, logger, config, identity, smsOtp, testLogin, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads, googleRoutes });
   const server = app.listen(serverEnv.PORT, () => {
     logger.info({ port: serverEnv.PORT, env: serverEnv.NODE_ENV }, 'easecab api listening');
   });
