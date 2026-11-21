@@ -10,6 +10,7 @@ test('portalError: an expired-PUC refusal gets its own code; other portal errors
   assert.strictEqual(portalError(F.PORTAL_ERROR, pucc).failureCode, F.PUCC_EXPIRED);
   assert.strictEqual(portalError(F.PORTAL_ERROR, pucc).message, pucc);
   assert.strictEqual(portalError(F.PORTAL_ERROR, 'Server busy').failureCode, F.PORTAL_ERROR);
+  assert.strictEqual(portalError(F.PORTAL_ERROR, 'No valid insurance detected. Please renew your vehicle policy!...\nOK').failureCode, F.INSURANCE_EXPIRED); // live HP, 2026-11-21
   assert.strictEqual(portalError(F.PORTAL_ERROR).failureCode, F.PORTAL_ERROR);
   assert.strictEqual(portalError(F.CAPTCHA_WRONG, pucc).failureCode, F.CAPTCHA_WRONG);
   const fit = 'Fitness Validity Must Be Greater Than Or Equal Current Date..\nPlease renew your vehicle Fitness\nOK'; // live, 2026-11-11

@@ -285,6 +285,7 @@ const BORDER_TAX_FAILURE = Object.freeze({
   VEHICLE_PENDING: 'vehicle_pending', // portal: an earlier unpaid attempt locks the registration
   ALREADY_PAID: 'already_paid', // portal: tax already paid for the requested window — driver picks new dates
   PUCC_EXPIRED: 'pucc_expired', // portal: the vehicle's pollution certificate (PUC) has lapsed — driver renews first
+  INSURANCE_EXPIRED: 'insurance_expired', // portal: no valid insurance on Vahan (HP 8464fed6, 2026-11-21) — driver renews first
   FITNESS_EXPIRED: 'fitness_expired', // portal: the vehicle's fitness certificate has lapsed — driver renews first
   SEAT_CLASS_MISMATCH: 'seat_class_mismatch', // portal: RC class vs seats (MAXI CAB needs 7–17; PB01B1302 = MAXI CAB, 5 seats) — RC fix
   ROAD_TAX_EXPIRED: 'road_tax_expired', // portal: the vehicle's home road tax has lapsed — driver renews first
