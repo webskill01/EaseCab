@@ -3,8 +3,8 @@
 /** Failure code → result group (title + icon). Unknown codes fall to 'error'. */
 const GROUP = Object.freeze({
   portal_error: 'siteDown', worker_restart: 'siteDown', bank_down: 'siteDown', portal_down: 'siteDown',
-  treasury_down: 'siteDown', no_qr: 'siteDown', no_handoff: 'siteDown',
-  road_tax_expired: 'vehicle', pucc_expired: 'vehicle', insurance_expired: 'vehicle', fitness_expired: 'vehicle', seat_class_mismatch: 'vehicle',
+  treasury_down: 'siteDown', no_qr: 'siteDown', no_handoff: 'siteDown', insurance_unverified: 'siteDown',
+  road_tax_expired: 'vehicle', pucc_expired: 'vehicle', fitness_expired: 'vehicle', seat_class_mismatch: 'vehicle',
   vehicle_not_found: 'vehicle', same_state: 'vehicle', no_tax_mode: 'vehicle',
   captcha_timeout: 'code', captcha_wrong: 'code',
   vehicle_pending: 'locked',

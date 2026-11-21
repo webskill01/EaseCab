@@ -37,7 +37,7 @@ function canvasCodeHook() {
 const PAPERS = Object.freeze([ // live HR runs 2026-11-11
   [/PUCC Validity/i, BORDER_TAX_FAILURE.PUCC_EXPIRED],
   [/Fitness Validity/i, BORDER_TAX_FAILURE.FITNESS_EXPIRED],
-  [/No valid insurance/i, BORDER_TAX_FAILURE.INSURANCE_EXPIRED], // HP 8464fed6 2026-11-21, at the Vahan step
+  [/No valid insurance/i, BORDER_TAX_FAILURE.INSURANCE_UNVERIFIED], // HP 8464fed6 2026-11-21 at the Vahan step; same filing passed 2 min later → retry allowed
   [/Seating capacity should be/i, BORDER_TAX_FAILURE.SEAT_CLASS_MISMATCH], // HR 2026-11-16: MAXI CAB with 5 seats on Vahan
   // HR 4b3bcf0f 2026-11-17: same inputs quoted ₹100 2h earlier; by evening those dates were "already paid"
   // (paid outside EaseCab) — the zero is the portal's clash with paid/in-flight tax → driver picks new dates

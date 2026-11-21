@@ -116,7 +116,7 @@
       "portal_down": "Sarkari border tax site abhi down ya bahut slow hai. Thodi der baad try karein.",
       "no_handoff": "Sarkari site ne payment page nahi khola. Dobara try karein.",
       "pucc_expired": "Gaadi ka pollution certificate (PUC) expire ho gaya hai. Renew karke dobara bharein.",
-      "insurance_expired": "Gaadi ka insurance expire ho gaya hai. Renew karke dobara bharein.",
+      "insurance_unverified": "Govt portal gaadi ka insurance confirm nahi kar paya. Dobara try karein. Baar baar ho to apni policy check karein.",
       "fitness_expired": "Gaadi ka fitness certificate expire ho gaya hai. Renew karke dobara bharein.",
       "seat_class_mismatch": "RC mein gaadi ki class aur seats match nahi karti, isliye online tax nahi bhara ja sakta. RTO se RC theek karwayein ya border par tax bharein.",
       "vehicle_not_found": "Sarkari Vahan site par yeh gaadi number nahi mila. RC se number check karein.",

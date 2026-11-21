@@ -116,7 +116,7 @@
       "portal_down": "The govt border tax site is down or very slow. Try again in a while.",
       "no_handoff": "The govt site didn't open the payment page. Try again.",
       "pucc_expired": "Your pollution certificate (PUC) has expired. Renew it, then file again.",
-      "insurance_expired": "Your vehicle's insurance has expired. Renew it, then file again.",
+      "insurance_unverified": "The govt portal couldn't confirm your vehicle's insurance. Please try again. If it keeps happening, check your policy.",
       "fitness_expired": "Your fitness certificate has expired. Renew it, then file again.",
       "seat_class_mismatch": "Your RC's vehicle class and seats don't match, so tax can't be paid online. Get the RC fixed at the RTO, or pay at the border.",
       "vehicle_not_found": "The govt Vahan site has no record of this number. Check it on your RC.",
