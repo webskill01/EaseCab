@@ -57,7 +57,7 @@ export function BottomSheet({ onClose, label, centered = false, closeLabel, chil
       >
         {!centered && <div className="mx-auto mb-4 h-1 w-10 rounded-[3px] bg-ec-line" />}
         {centered && closeLabel && (
-          <button type="button" onClick={requestClose} aria-label={closeLabel} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-ec-danger">
+          <button type="button" onClick={requestClose} aria-label={closeLabel} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ec-dangerBg text-ec-danger">
             <X size={16} />
           </button>
         )}
