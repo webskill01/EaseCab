@@ -71,6 +71,20 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     return Object.entries(await repo.siteState()).filter(([, v]) => v === '0').map(([k]) => k);
   }
 
+  /**
+   * Our own unpaid attempt still holds this vehicle's portal lock and its clear is booked → when it frees (+1 min).
+   * A retry before then only hits "pending" again — PB HR 2026-11-22 tried 7x in 2h from 2 accounts.
+   * @returns {Promise<?Date>} null = no lock of ours known
+   */
+  async function lockedUntil(vehicleNo, stateCd) {
+    const since = new Date(Date.now() - 2 * BORDER_TAX.UNLOCK_AFTER_SEC * 1000);
+    for (const id of await repo.recentForVehicle(vehicleNo, stateCd, since)) {
+      const u = await repo.getUnlock(id);
+      if ([U.WAITING, U.QUEUED].includes(u.status)) return new Date(Math.max(Number(u.at), Date.now()) + 60_000);
+    }
+    return null;
+  }
+
   return {
     move,
     busyFor,
@@ -82,7 +96,7 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
      * Free for subscribed members — the gate fires before the rate limit so it costs nothing.
      * Govt portal busy (lanes full / lookup gap) → 429 with meta.retryAfter (sec): nothing is queued, so the
      * driver's timer never runs while the bot is not filing.
-     * @throws {AppError} SUBSCRIPTION_EXPIRED, 422 state not live yet, 503 site down (meta.portalDown), RATE_LIMITED (busy: meta.retryAfter), or 409 when the vehicle already has a live filing
+     * @throws {AppError} SUBSCRIPTION_EXPIRED, 422 state not live yet, 503 site down (meta.portalDown), RATE_LIMITED (busy: meta.retryAfter), or 409 when the vehicle already has a live filing (meta.lockedUntil: our unpaid attempt's lock)
      */
     async create(userId, input) {
       if (!isSubscriptionActive(await repo.findSubscriptionByUserId(userId))) throw AppError.fromCode(ERROR_CODES.SUBSCRIPTION_EXPIRED);
@@ -93,6 +107,8 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
       if (await repo.findActiveForVehicle(input.vehicleNo)) {
         throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'A filing for this vehicle is already in progress', 409);
       }
+      const locked = await lockedUntil(input.vehicleNo, input.stateCd); // refused before the portal; the driver is pushed when free
+      if (locked) throw Object.assign(new AppError(ERROR_CODES.VALIDATION_ERROR, 'This vehicle is locked on the govt site for now', 409), { meta: { lockedUntil: locked } });
       const wait = await busyFor(); // before the create counter: a busy retry must not use up the driver's attempts
       if (wait) throw Object.assign(new AppError(ERROR_CODES.RATE_LIMITED, 'The govt portal is busy, try again shortly', 429), { meta: { retryAfter: wait } });
       const { MAX_PER_WINDOW, WINDOW_SEC } = BORDER_TAX.CREATE_RATE_LIMIT;

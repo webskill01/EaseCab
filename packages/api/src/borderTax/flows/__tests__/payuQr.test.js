@@ -83,6 +83,8 @@ test('watchStatus: reads PayU status off the post-back to the treasury only, unt
   assert.strictEqual(w.status(), null, 'other hosts ignored');
   post('https://egrashry.nic.in/WebPages/BankResponseHandling.aspx', 'mihpayid=1&status=SUCCESS');
   assert.strictEqual(w.status(), 'success');
+  post('https://egrashry.nic.in/WebPages/TransactionFailure.aspx', 'status=failure&unmappedstatus=userCancelled&error=E1605&error_Message=Transaction+cancelled+by+user');
+  assert.deepStrictEqual([w.status(), w.reason()], ['failure', 'userCancelled / E1605 / Transaction cancelled by user']);
   w.stop();
   assert.strictEqual(ctx.listenerCount('request'), 0);
 });

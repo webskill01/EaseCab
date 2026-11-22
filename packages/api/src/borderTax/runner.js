@@ -211,6 +211,25 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
     }
   }
 
+  /** A vehicle_pending filing whose lock another clear of ours removed after it was refused: no portal visit needed. */
+  async function freedBySibling(id, req) {
+    if (req.failureCode !== F.VEHICLE_PENDING) return false;
+    const since = new Date(req.createdAt.getTime() - 2 * BORDER_TAX.UNLOCK_AFTER_SEC * 1000);
+    for (const other of await repo.recentForVehicle(req.vehicleNo, req.stateCd, since)) {
+      const u = other !== id && (await repo.getUnlock(other));
+      if (u && [U.CLEARED, U.PAID].includes(u.status) && Number(u.at) >= req.createdAt.getTime()) return true;
+    }
+    return false;
+  }
+
+  /** Lock gone → vehicle_pending filings behind it run now (they queued ~2 min apart: free push 9 min late, HR 2026-11-22). */
+  async function wakeFollowers(req) {
+    for (const other of await repo.recentForVehicle(req.vehicleNo, req.stateCd, req.createdAt)) {
+      if (other === req.id || (await repo.getUnlock(other)).status !== U.WAITING) continue;
+      if ((await repo.findById(other))?.failureCode === F.VEHICLE_PENDING) await service.scheduleUnlock(other, Date.now());
+    }
+  }
+
   /**
    * Clears the pending-transaction lock(s) on a filing's vehicle in its state. A pending attempt that was
    * actually paid gives its receipt: this filing's own (same amount, not yet PAID) → the filing becomes PAID.
@@ -219,6 +238,10 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
   async function unlock(id) {
     const req = await repo.findById(id);
     if (!req) return;
+    if (await freedBySibling(id, req)) {
+      await service.unlockDone(id, {});
+      return void (await onFreed(req).catch((err) => logger.warn({ id, err: err.message }, 'freed push failed')));
+    }
     // filings go first: a clear never waits for (or takes) the slot while a filing is queued — it used to
     // restart a waiting driver's 2-min countdown (2026-11-13). ponytail: retried every UNLOCK_DEFER_SEC
     if ((await repo.countByStatus([S.QUEUED])) || (await repo.takeLookupSlot(BORDER_TAX.LOOKUP_GAP_SEC)) > 0) {
@@ -248,7 +271,8 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
           log(`late payment found by receipt lookup → paid (${late.receiptNo})`);
           await onLatePaid(req).catch((err) => logger.warn({ id, err: err.message }, 'late-paid push failed'));
           alert(`${req.stateCd} unlock ${id.slice(0, 8)}: no pending row, receipt ${late.receiptNo} found → marked paid`);
-          return void (await service.unlockDone(id, { receiptNo: late.receiptNo }));
+          await service.unlockDone(id, { receiptNo: late.receiptNo });
+          return void (await wakeFollowers(req).catch((err) => logger.warn({ id, err: err.message }, 'wake followers failed')));
         }
       }
       // bank PENDING: treasury never answered Vahan → ask again later; UNLOCK_TRIES of these → FAILED + alert
@@ -259,6 +283,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
       // unknown: never re-tapped (it may be a paid row whose receipt didn't load) — ops checks it
       await service.unlockDone(id, { retryAt, receiptNo: paidRow?.receiptNo, failed: Boolean(unknown) });
       if (!retryAt && !unknown && !paidRow) await onFreed(req).catch((err) => logger.warn({ id, err: err.message }, 'freed push failed'));
+      if (!retryAt && !unknown) await wakeFollowers(req).catch((err) => logger.warn({ id, err: err.message }, 'wake followers failed'));
     } catch (err) {
       logger.warn({ id, err: err.message }, 'border tax unlock failed');
       if (!(await service.unlockFailed(id))) alert(`${req.stateCd} unlock ${id.slice(0, 8)} gave up: ${err.message.slice(0, 200)}`);

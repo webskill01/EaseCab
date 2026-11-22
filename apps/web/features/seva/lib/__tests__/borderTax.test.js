@@ -85,6 +85,7 @@ describe('form', () => {
     expect([createErrorKey({ status: 409 }), createErrorKey({ code: 'RATE_LIMITED', status: 429 }), createErrorKey({})]).toEqual(['vehicleBusy', 'rateLimited', 'generic'])
     expect(createErrorKey({ code: 'RATE_LIMITED', status: 429, meta: { retryAfter: 90 } })).toBe('busy')
     expect(createErrorKey({ status: 503, meta: { portalDown: 'HR' } })).toBe('portalDown')
+    expect(createErrorKey({ status: 409, meta: { lockedUntil: '2026-11-22T16:00:00Z' } })).toBe('vehicleLocked')
   })
 
   it('siteDown: the chosen state down, or the checkpost portal down for every state', () => {

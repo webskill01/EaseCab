@@ -237,6 +237,7 @@ export function siteDown(down, stateCd) {
 export function createErrorKey(err) {
   if (err?.meta?.portalDown) return 'portalDown' // refused up front; the driver is pushed when it's back
   if (err?.meta?.retryAfter) return 'busy' // govt portal busy — the form counts down retryAfter
+  if (err?.meta?.lockedUntil) return 'vehicleLocked' // our unpaid attempt still locks it; pushed when free
   if (err?.code === 'RATE_LIMITED') return 'rateLimited'
   if (err?.status === 409) return 'vehicleBusy'
   return 'generic'

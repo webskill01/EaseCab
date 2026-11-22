@@ -87,7 +87,9 @@ function ModePicker({ modes, value, onChange }) {
 export function BorderTaxForm({ form, onChange, onSubmit, submitting, error, busyUntil }) {
   const t = useTranslations('seva')
   const busyLeft = useSecondsLeft(error === 'busy' ? busyUntil : null) // form kept; Submit is the "try again"
-  const errorText = error === 'busy' ? (busyLeft ? t('bt.errors.busy', { time: fmtClock(busyLeft) }) : null) : error && t(`bt.errors.${error}`)
+  const errorText = error === 'busy' ? (busyLeft ? t('bt.errors.busy', { time: fmtClock(busyLeft) }) : null)
+    : error === 'vehicleLocked' && busyUntil ? t('bt.errors.vehicleLocked', { time: fmtWhen(busyUntil).time })
+    : error && t(`bt.errors.${error}`)
   const st = BT_STATES[form.stateCd]
   const live = useLiveStates()
   const down = siteDown(useDownSites(), form.stateCd)

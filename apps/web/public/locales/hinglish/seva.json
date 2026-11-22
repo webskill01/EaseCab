@@ -122,7 +122,7 @@
       "vehicle_not_found": "Sarkari Vahan site par yeh gaadi number nahi mila. RC se number check karein.",
       "no_qr": "Sarkari payment page par QR nahi aaya. Thodi der baad try karein.",
       "treasury_down": "Sarkari payment site abhi down hai. Thodi der baad try karein.",
-      "payment_failed": "Payment fail hua. Paise kate hain to support se baat karein.",
+      "payment_failed": "Payment nahi hui. Koi doosra UPI app ya bank account try karein. Paise kat gaye hon to support se baat karein.",
       "payment_timeout": "Time par payment nahi mila. Pay kar diya hai to dobara na karein — support se baat karein.",
       "payment_unknown": "Payment confirm nahi hua. Pay kar diya hai to dobara na karein — support se baat karein.",
       "alreadyPaidT": "Tax pehle se bhara hai",
@@ -154,7 +154,8 @@
       "rateLimited": "Bahut zyada filings. Ek ghante baad try karein.",
       "generic": "Shuru nahi ho saka. Dobara try karein.",
       "busy": "Govt site busy hai. {time} mein dobara try karein",
-      "portalDown": "Sarkari border tax site abhi band hai. Chalu hote hi aapko notification aa jayegi."
+      "portalDown": "Sarkari border tax site abhi band hai. Chalu hote hi aapko notification aa jayegi.",
+      "vehicleLocked": "Is gaadi ki pichhli payment abhi govt site par khuli hai. {time} tak free ho jayegi. Hum notification bhejenge."
     },
     "prep": {
       "title": "Aapka border tax payment taiyaar ho raha hai",

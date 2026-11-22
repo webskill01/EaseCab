@@ -59,7 +59,7 @@ export function BorderTaxScreen() {
       onSuccess: (f) => { setSeed(f); setOpenId(f.id) },
       onError: (e) => {
         if (e.code === 'SUBSCRIPTION_EXPIRED') return setGate(true)
-        setBusyUntil(e.meta?.retryAfter ? new Date(Date.now() + e.meta.retryAfter * 1000) : null)
+        setBusyUntil(e.meta?.retryAfter ? new Date(Date.now() + e.meta.retryAfter * 1000) : e.meta?.lockedUntil ? new Date(e.meta.lockedUntil) : null)
         return setError(createErrorKey(e))
       },
     })

@@ -21,6 +21,7 @@ function fakeRepo(rows = {}, { sub = MEMBER, slotMs = 0, paused = [], sites = {}
     async waitForUp(site, userId) { waiting.push([site, userId]); },
     async setUnlock(id, f) { unlocks[id] = { ...unlocks[id], ...f }; },
     async getUnlock(id) { return unlocks[id] || {}; },
+    async recentForVehicle(v, st) { return Object.values(rows).filter((r) => r.vehicleNo === v && r.stateCd === st).map((r) => r.id); },
     async scheduleUnlock(id, at) { due[id] = at; },
     async transition(id, from, to, fields) {
       const r = rows[id];
@@ -287,4 +288,16 @@ test('restart: a lost payment page (payment_unknown) schedules an unlock — it 
   const repo = fakeRepo({ b1: { id: 'b1', status: 'awaiting_payment' } });
   await createBorderTaxService({ repo, logger }).recoverAfterRestart();
   assert.deepStrictEqual([repo.rows.b1.failureCode, repo.unlocks.b1.status], ['payment_unknown', 'waiting']);
+});
+
+test('create: our unpaid attempt still locks the vehicle → 409 with lockedUntil, nothing queued (driver retrying again and again)', async () => {
+  const at = Date.now() + 20 * 60_000;
+  const repo = fakeRepo({ a0: { id: 'a0', vehicleNo: 'PB01E9454', stateCd: 'HR', status: 'failed' } });
+  repo.unlocks.a0 = { status: 'waiting', at: String(at) };
+  const svc = createBorderTaxService({ repo, logger });
+  await assert.rejects(svc.create('u1', input()), (e) => e.statusCode === 409 && e.meta.lockedUntil.getTime() === at + 60_000);
+  assert.deepStrictEqual(repo.queue, []);
+  repo.unlocks.a0.status = 'cleared';
+  await svc.create('u1', input());
+  assert.strictEqual(repo.queue.length, 1, 'free once the clear ran');
 });

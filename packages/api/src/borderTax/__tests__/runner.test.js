@@ -14,7 +14,7 @@ const HANDOFF = Object.freeze({ method: 'POST', action: 'https://merchant.sbi.ba
 /** Fake repo: CAS rows + scripted captcha answers. */
 function setup({ answers = [], slots = [] } = {}) {
   const rows = {
-    b1: { id: 'b1', status: 'queued', stateCd: 'HR', vehicleNo: 'PB01E9454', checkpost: 'PANCHKULA', taxFrom: FROM, taxUpto: new Date(FROM.getTime() + 86_340_000), distanceKm: 50 },
+    b1: { id: 'b1', status: 'queued', stateCd: 'HR', vehicleNo: 'PB01E9454', checkpost: 'PANCHKULA', taxFrom: FROM, taxUpto: new Date(FROM.getTime() + 86_340_000), distanceKm: 50, createdAt: new Date() },
   };
   const jobs = [];
   const handoffs = {};
@@ -37,6 +37,7 @@ function setup({ answers = [], slots = [] } = {}) {
     async getUnlock(id) { return unlocks[id] || {}; },
     async scheduleUnlock(id, at) { due[id] = at; },
     async countByStatus(st) { return Object.values(rows).filter((r) => st.includes(r.status)).length; },
+    async recentForVehicle() { return []; },
   };
   let closed = 0;
   const newPage = async () => ({ context: () => ({ close: async () => { closed += 1; } }) });
@@ -282,4 +283,24 @@ test('fare step: "yes" goes on to Pay Online; "no" or no answer stops before it 
     assert.deepStrictEqual(t.unlocks, {});
   }
   assert.strictEqual(paidOnline, 1);
+});
+
+test('unlock: vehicle_pending filing whose lock another clear already removed → done + pushed, no portal visit', async () => {
+  const u = unlockSetup({ failureCode: 'vehicle_pending', createdAt: new Date(Date.now() - 600_000) }, new Error('portal must not be visited'));
+  u.repo.recentForVehicle = async () => ['b1', 'a0'];
+  u.unlocks.a0 = { status: 'cleared', at: String(Date.now() - 60_000) };
+  await u.unlock();
+  assert.deepStrictEqual([u.unlocks.b1.status, u.closed(), u.freed], ['cleared', 0, ['b1']]);
+});
+
+test('unlock: lock cleared → vehicle_pending filings waiting behind it run now (push not 9 min late)', async () => {
+  const u = unlockSetup({ createdAt: new Date(Date.now() - 1_900_000) }, { rows: [{ paymentId: 'HRP1', amount: '100', result: 'cleared' }], retryAt: null });
+  u.rows.f1 = { id: 'f1', failureCode: 'vehicle_pending' };
+  u.rows.f2 = { id: 'f2', failureCode: 'payment_failed' };
+  u.unlocks.f1 = { status: 'waiting', at: String(Date.now() + 300_000) };
+  u.unlocks.f2 = { status: 'waiting', at: String(Date.now() + 300_000) };
+  u.repo.recentForVehicle = async () => ['f2', 'f1', 'b1'];
+  await u.unlock();
+  assert.ok(u.due.f1 <= Date.now(), 'follower woken');
+  assert.strictEqual(u.due.f2, undefined, 'a bank-step attempt keeps its own time');
 });

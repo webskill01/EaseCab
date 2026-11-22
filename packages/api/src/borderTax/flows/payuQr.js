@@ -152,14 +152,14 @@ async function openQr(page, io) {
 /**
  * PayU's result post back to the treasury (`back` host), or the checkpost receipt showing up in any tab —
  * HP's first real payment (513710ed, 2026-11-19) was paid but never matched the post-back, so it timed out.
- * @returns {Promise<{ status: string, found?: object }>} PayU status ('success' when paid) @throws PAYMENT_TIMEOUT
+ * @returns {Promise<{ status: string, reason?: string, found?: object }>} PayU status ('success' when paid) @throws PAYMENT_TIMEOUT
  */
 async function payStatus(context, back) {
   const watch = watchStatus(context, back);
   try {
     const end = Date.now() + (BORDER_TAX.PAY_WAIT_SEC + BORDER_TAX.PAY_GRACE_SEC) * 1000;
     while (Date.now() < end) {
-      if (watch.status() !== null) return { status: watch.status() };
+      if (watch.status() !== null) return { status: watch.status(), reason: watch.reason() };
       const found = await receiptOn(context);
       if (found) return { status: 'success', found };
       await new Promise((r) => setTimeout(r, STATUS_POLL_MS));
@@ -173,17 +173,22 @@ async function payStatus(context, back) {
 /**
  * Listens for PayU's post-back to the treasury (`back` host). Also kept on through the after-timeout receipt
  * lookups: HR 7424aa51 (2026-11-21) got PayU's success ~8 min after the scan, 22s before we gave up.
- * @returns {{ status: () => ?string, stop: () => void }} status = PayU's (lower-case; 'success' when paid) or null
+ * reason = PayU's own words on a failure (unmappedstatus / error / error_Message, no PII) — 2026-11-22 HR had 2
+ * fast failures we could not explain.
+ * @returns {{ status: () => ?string, reason: () => string, stop: () => void }} status = PayU's (lower-case; 'success' when paid) or null
  */
 function watchStatus(context, back) {
   let status = null;
+  let reason = '';
   const onReq = (r) => {
     if (r.method() !== 'POST' || !back.test(r.url())) return;
     const form = new URLSearchParams(r.postData() || '');
-    if (form.has('status')) status = (form.get('status') || '').toLowerCase();
+    if (!form.has('status')) return;
+    status = (form.get('status') || '').toLowerCase();
+    reason = ['unmappedstatus', 'error', 'error_Message'].map((k) => form.get(k)).filter(Boolean).join(' / ').slice(0, 160);
   };
   context.on('request', onReq);
-  return { status: () => status, stop: () => context.off('request', onReq) };
+  return { status: () => status, reason: () => reason, stop: () => context.off('request', onReq) };
 }
 
 /** A context page showing the checkpost receipt (number + its QR drawn), or null. */
@@ -238,9 +243,9 @@ async function receiptPdf(page, log) {
  * @throws PAYMENT_TIMEOUT, PAYMENT_FAILED
  */
 async function awaitPaid(page, io, back) {
-  const { status, found: early } = await payStatus(page.context(), back);
-  io.log(`PayU status: ${early ? 'receipt page seen' : status || 'none'}`);
-  if (status !== 'success') throw portalError(F.PAYMENT_FAILED, `PayU status ${status || 'none'}`);
+  const { status, reason, found: early } = await payStatus(page.context(), back);
+  io.log(`PayU status: ${early ? 'receipt page seen' : status || 'none'}${reason ? ` (${reason})` : ''}`);
+  if (status !== 'success') throw portalError(F.PAYMENT_FAILED, `PayU status ${status || 'none'}${reason ? ` (${reason})` : ''}`);
   const found = early || (await receiptPage(page.context()));
   if (!found) return { receiptNo: null, pdf: null };
   io.log(`receipt ${found.receiptNo}`);
