@@ -1,7 +1,7 @@
 'use strict';
 
 const { z } = require('zod');
-const { BORDER_TAX, BORDER_TAX_STATES, BORDER_TAX_SEATS, BORDER_TAX_STATUS, BORDER_TAX_LIVE_STATES, BORDER_TAX_PAY_EVENTS, TAX_MODE } = require('../constants/borderTax');
+const { BORDER_TAX, BORDER_TAX_STATES, BORDER_TAX_SEATS, BORDER_TAX_STATUS, BORDER_TAX_LIVE_STATES, BORDER_TAX_PAY_EVENTS, BORDER_TAX_OUTCOME, TAX_MODE } = require('../constants/borderTax');
 const { ADMIN_BORDER_TAX } = require('../constants/admin');
 
 const DAY_MS = 86_400_000;
@@ -70,10 +70,12 @@ const adminBorderTaxQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(ADMIN_BORDER_TAX.MAX_PAGE_SIZE).default(ADMIN_BORDER_TAX.PAGE_SIZE),
   state: z.enum(Object.keys(BORDER_TAX_STATES)).optional(),
   status: z.enum(Object.values(BORDER_TAX_STATUS)).optional(),
+  outcome: z.enum(Object.values(BORDER_TAX_OUTCOME)).optional(), // result tag (borderTaxOutcome)
   from: istDay.optional(),
   to: istDay.optional(),
   who: z.enum(Object.values(ADMIN_BORDER_TAX.WHO)).default(ADMIN_BORDER_TAX.WHO.REAL),
-  q: z.string().trim().max(20).transform((v) => v.toUpperCase().replace(/[^A-Z0-9]/g, '')).optional(), // vehicle no. part
+  q: z.string().trim().max(40).optional(), // vehicle no. part, driver name or phone digits
+  userId: z.string().uuid().optional(), // one driver's filings (link from the user page)
 });
 
 /** PATCH /api/v1/admin/border-tax/states/:stateCd — switch a live state off/on for new filings. */

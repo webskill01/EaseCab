@@ -224,6 +224,8 @@ const BORDER_TAX = Object.freeze({
   PROXY_BYPASS: '*parivahan.gov.in, *payu.in, *gstatic.com, *google.com, *googleapis.com, *cloudfront.net, *clevertap-prod.com', // only eGRAS via proxy (data; the rest was ~13% of it, 2026-11-21). '*x' = x + subdomains; '.x' did NOT match in Chromium (2026-11-13)
   UNLOCK_DEFER_SEC: 30, // lock clear put off (filing queued / slot busy) → tried again after this
   LOOKUP_GAP_SEC: 120, // min gap between filings' Vahan lookups: 7 in ~70s locked us out, 9 at 2-min gaps did not (2026-11-05)
+  NUDGE_AFTER_SEC: 10, // QR / amount / captcha waiting this long and the app not polling the filing → push (a98a4e2e 2026-11-23: driver backed out 27s before the QR)
+  SEEN_FRESH_SEC: 8, // app polls a filing every 2s: no poll for this long = not on the screen
   PAY_WAIT_SEC: 300, // in-app QR: the app's pay timer = PayU's QR life (5 min, seen live 2026-11-11)
   PAY_GRACE_SEC: 120, // the bot keeps listening this much longer: a scan at 4:59 still reports back
   RECEIPT_WAIT_SEC: 120, // PayU success → checkpost receipt page in the bot's own session
@@ -303,6 +305,32 @@ const BORDER_TAX_FAILURE = Object.freeze({
 });
 
 /**
+ * Admin result tag (user, 2026-11-23): FAILED only when a server / govt site / our code broke — the failures
+ * we track. A driver who backs out, times out or whose bank declines is DRIVER; an RC / Vahan record problem
+ * is VEHICLE. Any code not listed (new ones too) counts as FAILED, so nothing technical hides.
+ */
+const BORDER_TAX_OUTCOME = Object.freeze({
+  RUNNING: 'running', PAID: 'paid', HANDED_OFF: 'handed_off', CANCELLED: 'cancelled',
+  FAILED: 'failed', DRIVER: 'driver', VEHICLE: 'vehicle',
+});
+const F_ = BORDER_TAX_FAILURE;
+const BORDER_TAX_DRIVER_CODES = Object.freeze([F_.FARE_DECLINED, F_.CAPTCHA_TIMEOUT, F_.CAPTCHA_WRONG, F_.PAYMENT_TIMEOUT, F_.PAYMENT_FAILED]);
+const BORDER_TAX_VEHICLE_CODES = Object.freeze([F_.VEHICLE_PENDING, F_.ALREADY_PAID, F_.PUCC_EXPIRED, F_.FITNESS_EXPIRED,
+  F_.SEAT_CLASS_MISMATCH, F_.ROAD_TAX_EXPIRED, F_.VEHICLE_NOT_FOUND, F_.SAME_STATE, F_.NO_TAX_MODE]);
+
+/** @param {{ status: string, failureCode?: ?string }} f @returns {string} BORDER_TAX_OUTCOME */
+function borderTaxOutcome({ status, failureCode }) {
+  const S_ = BORDER_TAX_STATUS;
+  if (status === S_.PAID) return BORDER_TAX_OUTCOME.PAID;
+  if (status === S_.HANDED_OFF) return BORDER_TAX_OUTCOME.HANDED_OFF;
+  if (status === S_.CANCELLED) return BORDER_TAX_OUTCOME.CANCELLED;
+  if (status !== S_.FAILED && status !== S_.EXPIRED) return BORDER_TAX_OUTCOME.RUNNING;
+  if (BORDER_TAX_DRIVER_CODES.includes(failureCode)) return BORDER_TAX_OUTCOME.DRIVER;
+  if (BORDER_TAX_VEHICLE_CODES.includes(failureCode)) return BORDER_TAX_OUTCOME.VEHICLE;
+  return BORDER_TAX_OUTCOME.FAILED;
+}
+
+/**
  * Portal tax window: full 24h blocks ending one minute early (10:00 → next day 09:59),
  * anything shorter makes the portal compute a zero cess and refuse.
  * @param {Date} startAt
@@ -338,5 +366,9 @@ module.exports = {
   BORDER_TAX_KEYS,
   BORDER_TAX_FAILURE,
   BORDER_TAX_UNLOCK,
+  BORDER_TAX_OUTCOME,
+  BORDER_TAX_DRIVER_CODES,
+  BORDER_TAX_VEHICLE_CODES,
+  borderTaxOutcome,
   borderTaxWindow,
 };

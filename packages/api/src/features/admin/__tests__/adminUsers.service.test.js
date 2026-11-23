@@ -84,3 +84,11 @@ test('detail returns rupee payments, images and counts; NOT_FOUND for unknown id
   assert.deepStrictEqual(u.counts, { postedRides: 3 });
     await assert.rejects(svc.detail('missing'), (e) => e.code === 'NOT_FOUND');
 });
+
+test('detail carries the driver\'s border tax filings grouped by result tag', async () => {
+  const detail = { ...ROW, profilePicUrl: null, licenseUrl: null, rcUrl: null, carFrontUrl: null, carBackUrl: null, payments: [], _count: {} };
+  const { repo } = fakeRepo({ async findDetail() { return detail; } });
+  const borderTax = { async userGroups() { return [{ status: 'paid', failureCode: null, count: 2, paise: 20000 }, { status: 'failed', failureCode: 'fare_declined', count: 1, paise: 0 }]; } };
+  const u = await createAdminUsersService({ repo, borderTax }).detail(USER_ID);
+  assert.deepStrictEqual(u.borderTax.map((o) => [o.outcome, o.count]), [['paid', 2], ['driver', 1]]);
+});

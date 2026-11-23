@@ -1,6 +1,6 @@
 'use strict';
 
-const { BORDER_TAX_KEYS: K, ADMIN_BORDER_TAX, ADMIN_STATISTICS } = require('@easecab/shared');
+const { BORDER_TAX_KEYS: K, ADMIN_BORDER_TAX, ADMIN_STATISTICS, BORDER_TAX_STATUS: S, BORDER_TAX_OUTCOME: O, BORDER_TAX_DRIVER_CODES, BORDER_TAX_VEHICLE_CODES } = require('@easecab/shared');
 
 const DAY_MS = 86_400_000;
 const istMidnight = (day) => new Date(`${day}T00:00:00+05:30`);
@@ -12,10 +12,38 @@ const ROW_SELECT = Object.freeze({
   user: { select: { name: true, phone: true } },
 });
 
+const ENDED = Object.freeze([S.FAILED, S.EXPIRED]);
+const RUNNING = Object.freeze([S.QUEUED, S.FILLING, S.AWAITING_CAPTCHA, S.AWAITING_PAYMENT]);
+
+/** Prisma where for one result tag — mirrors borderTaxOutcome (shared). */
+function outcomeWhere(outcome) {
+  const codes = [...BORDER_TAX_DRIVER_CODES, ...BORDER_TAX_VEHICLE_CODES];
+  return {
+    [O.RUNNING]: { status: { in: RUNNING } },
+    [O.PAID]: { status: S.PAID },
+    [O.HANDED_OFF]: { status: S.HANDED_OFF },
+    [O.CANCELLED]: { status: S.CANCELLED },
+    [O.DRIVER]: { status: { in: ENDED }, failureCode: { in: BORDER_TAX_DRIVER_CODES } },
+    [O.VEHICLE]: { status: { in: ENDED }, failureCode: { in: BORDER_TAX_VEHICLE_CODES } },
+    [O.FAILED]: { status: { in: ENDED }, OR: [{ failureCode: null }, { failureCode: { notIn: codes } }] },
+  }[outcome];
+}
+
+/** One search box: vehicle no. part, driver name, or phone digits (4+). */
+function searchWhere(q) {
+  const or = [{ user: { name: { contains: q, mode: 'insensitive' } } }];
+  const plate = q.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (plate) or.push({ vehicleNo: { contains: plate } });
+  const digits = q.replace(/\D/g, '');
+  if (digits.length >= 4) or.push({ user: { phone: { contains: digits } } });
+  return or;
+}
+
 /** Prisma where for the list filters. from/to are IST calendar days, inclusive. */
-function filingsWhere({ state, status, from, to, who, q }) {
-  const where = {};
-  if (q) where.vehicleNo = { contains: q };
+function filingsWhere({ state, status, outcome, from, to, who, q, userId }) {
+  const where = outcome ? { ...outcomeWhere(outcome) } : {};
+  if (q) where.AND = [{ OR: searchWhere(q) }];
+  if (userId) where.userId = userId;
   if (state) where.stateCd = state;
   if (status) where.status = status;
   if (from || to) {
@@ -46,10 +74,16 @@ function createAdminBorderTaxRepository({ prisma, redis }) {
       const [rows, total, groups] = await prisma.$transaction([
         prisma.borderTaxRequest.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit, select: ROW_SELECT }),
         prisma.borderTaxRequest.count({ where }),
-        prisma.borderTaxRequest.groupBy({ by: ['status'], where, _count: { _all: true }, _sum: { taxPaise: true }, orderBy: { status: 'asc' } }),
+        prisma.borderTaxRequest.groupBy({ by: ['status', 'failureCode'], where, _count: { _all: true }, _sum: { taxPaise: true }, orderBy: { status: 'asc' } }),
       ]);
-      const byStatus = groups.map((g) => ({ status: g.status, count: g._count._all, paise: g._sum.taxPaise || 0 }));
+      const byStatus = groups.map((g) => ({ status: g.status, failureCode: g.failureCode, count: g._count._all, paise: g._sum.taxPaise || 0 }));
       return { rows, total, byStatus };
+    },
+
+    /** One driver's filings grouped like the list totals (user page). */
+    async userGroups(userId) {
+      const groups = await prisma.borderTaxRequest.groupBy({ by: ['status', 'failureCode'], where: { userId }, _count: { _all: true }, _sum: { taxPaise: true }, orderBy: { status: 'asc' } });
+      return groups.map((g) => ({ status: g.status, failureCode: g.failureCode, count: g._count._all, paise: g._sum.taxPaise || 0 }));
     },
 
     /** Pending-lock clear hashes for these filings ({} when none). @returns {Promise<object[]>} */
@@ -77,4 +111,4 @@ function createAdminBorderTaxRepository({ prisma, redis }) {
   };
 }
 
-module.exports = { createAdminBorderTaxRepository, filingsWhere };
+module.exports = { createAdminBorderTaxRepository, filingsWhere, outcomeWhere, searchWhere };

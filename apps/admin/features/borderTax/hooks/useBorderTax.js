@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { fetchFilings, fetchStates, setStatePaused } from '../services/borderTaxApi'
 import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
-const DEFAULTS = { state: '', status: '', range: '', who: 'real', q: '' }
+const DEFAULTS = { state: '', status: '', outcome: '', range: '', who: 'real', q: '', userId: '' }
 const DAY_MS = 86_400_000
 const istDay = (ms) => new Date(ms + 19_800_000).toISOString().slice(0, 10)
 

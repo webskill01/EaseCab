@@ -1,6 +1,7 @@
 'use client'
 
-import { Landmark, FileDown, Eye } from 'lucide-react'
+import { useEffect } from 'react'
+import { Landmark, FileDown, Eye, X } from 'lucide-react'
 import { UserLink } from '@/features/shell/components/UserLink'
 import { useFilings } from '@/features/borderTax/hooks/useBorderTax'
 import { fetchReceiptUrl } from '@/features/borderTax/services/borderTaxApi'
@@ -10,6 +11,7 @@ import { QueryState } from '@/features/shell/components/QueryState'
 import { Pagination } from '@/features/shell/components/Pagination'
 import { ListFilters } from '@/features/shell/components/ListFilters'
 import { button, pill } from '@/lib/ui'
+import { OUTCOME, issueLabel, issueList } from '@/features/borderTax/lib/tags'
 
 const opts = (pairs) => pairs.map(([id, label]) => ({ id, label }))
 const STATES = opts([['', 'All'], ['HR', 'Haryana'], ['HP', 'Himachal'], ['UP', 'Uttar Pradesh'], ['RJ', 'Rajasthan'], ['UK', 'Uttarakhand'], ['PB', 'Punjab']])
@@ -19,6 +21,7 @@ const STATUS = {
   failed: ['Failed', 'red'], expired: ['Expired', 'red'], cancelled: ['Cancelled', 'slate'],
 }
 const STATUSES = opts([['', 'All'], ...Object.entries(STATUS).map(([id, [label]]) => [id, label])])
+const OUTCOMES = opts([['', 'All'], ...Object.entries(OUTCOME).map(([id, [label]]) => [id, label])])
 const RANGES = opts([['', 'All time'], ['today', 'Today'], ['yesterday', 'Yesterday'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days']])
 const WHO = opts([['real', 'Real drivers'], ['test', 'Test accounts'], ['all', 'Everyone']])
 const UNLOCK = { queued: 'Lock clear queued', waiting: 'Lock clear waiting', cleared: 'Lock cleared', paid: 'Lock: was paid', failed: 'Lock clear failed' }
@@ -26,16 +29,21 @@ const UNLOCK = { queued: 'Lock clear queued', waiting: 'Lock clear waiting', cle
 const when = (iso) => new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
 const inr = (paise) => `₹${(paise / 100).toLocaleString('en-IN')}`
 
-/** Totals over the whole filter: all, paid (+ amount), then each other status present. */
+/** Totals over the whole filter, one per result tag; failure codes listed under each. */
 function Totals({ byStatus }) {
   const all = byStatus.reduce((n, s) => n + s.count, 0)
-  const paid = byStatus.find((s) => s.status === 'paid')
+  const paid = byStatus.find((s) => s.outcome === 'paid')
   return (
-    <div className="mb-4 flex flex-wrap gap-2 text-sm">
-      <span className={pill()}>{all} filings</span>
-      {paid && <span className={pill({ tone: 'green' })}>{paid.count} paid · {inr(paid.paise)}</span>}
-      {byStatus.filter((s) => s.status !== 'paid').map((s) => (
-        <span key={s.status} className={pill({ tone: STATUS[s.status]?.[1] })}>{s.count} {STATUS[s.status]?.[0] || s.status}</span>
+    <div className="mb-4 space-y-2 text-sm">
+      <div className="flex flex-wrap gap-2">
+        <span className={pill()}>{all} filings</span>
+        {paid && <span className={pill({ tone: 'green' })}>{paid.count} paid · {inr(paid.paise)}</span>}
+        {byStatus.filter((s) => s.outcome !== 'paid').map((s) => (
+          <span key={s.outcome} className={pill({ tone: OUTCOME[s.outcome]?.[1] })}>{s.count} {OUTCOME[s.outcome]?.[0] || s.outcome}</span>
+        ))}
+      </div>
+      {byStatus.filter((s) => Object.keys(s.codes || {}).length).map((s) => (
+        <p key={s.outcome} className="text-xs text-ec-ink60"><b>{OUTCOME[s.outcome]?.[0] || s.outcome}:</b> {issueList(s.codes)}</p>
       ))}
     </div>
   )
@@ -47,7 +55,7 @@ async function openReceipt(id, view) {
 }
 
 function Row({ f }) {
-  const [label, tone] = STATUS[f.status] || [f.status, 'slate']
+  const [label, tone] = OUTCOME[f.outcome] || STATUS[f.status] || [f.status, 'slate']
   return (
     <li className="flex flex-col gap-2 px-4 py-3 text-sm lg:flex-row lg:items-center lg:justify-between">
       <div className="min-w-0">
@@ -60,7 +68,7 @@ function Row({ f }) {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <span className={pill({ tone })}>{label}</span>
-        {f.failureCode && <span className={pill({ tone: 'red' })}>{f.failureCode}</span>}
+        {f.failureCode && <span title={f.failureCode} className={pill({ tone: f.outcome === 'failed' ? 'red' : 'slate' })}>{issueLabel(f.failureCode)}</span>}
         {f.unlock && <span className={pill({ tone: f.unlock.status === 'failed' ? 'red' : 'slate' })}>{UNLOCK[f.unlock.status] || f.unlock.status}</span>}
         {f.hasReceipt && (
           <>
@@ -75,6 +83,12 @@ function Row({ f }) {
 
 export default function BorderTaxPage() {
   const f = useFilings()
+  const pickUser = f.setFilter('userId')
+  // ?user=<id> from a user page → that driver's filings only
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('user')
+    if (id) pickUser(id)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div>
       <PageHeader icon={Landmark} title="Border tax" description="Every filing drivers made in the app, newest first. Refreshes every 30 seconds." />
@@ -82,14 +96,20 @@ export default function BorderTaxPage() {
       <ListFilters
         q={f.q}
         onSearch={f.setFilter('q')}
-        placeholder="Search vehicle number"
+        placeholder="Vehicle no., driver name or phone"
         rows={[
           { label: 'State', options: STATES, value: f.state, onChange: f.setFilter('state') },
+          { label: 'Result', options: OUTCOMES, value: f.outcome, onChange: f.setFilter('outcome') },
           { label: 'Status', options: STATUSES, value: f.status, onChange: f.setFilter('status') },
           { label: 'Date', options: RANGES, value: f.range, onChange: f.setFilter('range') },
           { label: 'Who', options: WHO, value: f.who, onChange: f.setFilter('who') },
         ]}
       />
+      {f.userId && (
+        <button type="button" onClick={() => { pickUser(''); window.history.replaceState(null, '', window.location.pathname) }} className={`${pill({ tone: 'blue' })} mb-3 gap-1`}>
+          One driver{f.items[0]?.userName ? `: ${f.items[0].userName}` : ''} <X size={12} />
+        </button>
+      )}
       <Totals byStatus={f.byStatus} />
       <QueryState
         isLoading={f.isLoading}

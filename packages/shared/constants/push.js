@@ -97,4 +97,16 @@ const BORDER_TAX_UP_PUSH = Object.freeze({
   STATE: '{state} ki payment site',
 });
 
-module.exports = { PUSH, PUSH_SOURCE, RENEWAL_REMINDER, BORDER_TAX_PAID_PUSH, BORDER_TAX_FREE_PUSH, BORDER_TAX_UP_PUSH };
+/** Filing needs the driver (QR ready / amount to OK / captcha) but the app isn't on it — back out or left the app. */
+const BORDER_TAX_ACTION_PUSH = Object.freeze({
+  TYPE: 'border_tax_action',
+  SOURCE: 'border_tax',
+  CLICK_PATH: '/seva/border-tax',
+  ACTION: 'Open',
+  TITLE: '⏳ Border tax: aapka wait ho raha hai',
+  QR: '{vehicle} ka {state} border tax QR taiyaar hai. Jaldi pay karo, QR kuch minute mein band ho jayega.',
+  FARE: '{vehicle} ka {state} border tax amount aa gaya hai. App kholke OK karo.',
+  CAPTCHA: '{vehicle} ke liye code daalna hai. App kholke code bharo.',
+});
+
+module.exports = { PUSH, PUSH_SOURCE, RENEWAL_REMINDER, BORDER_TAX_ACTION_PUSH, BORDER_TAX_PAID_PUSH, BORDER_TAX_FREE_PUSH, BORDER_TAX_UP_PUSH };

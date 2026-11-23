@@ -49,3 +49,41 @@ test('filingsWhere: IST days inclusive, real excludes test phones', () => {
   assert.ok(w.user.phone.notIn.includes('+916283380110'));
   assert.strictEqual(filingsWhere({ who: 'all' }).user, undefined);
 });
+
+test('byOutcome: driver/vehicle outcomes are not counted as failed', () => {
+  const { byOutcome } = require('../adminBorderTax.service');
+  const out = byOutcome([
+    { status: 'failed', failureCode: 'fare_declined', count: 2, paise: 0 },
+    { status: 'expired', failureCode: 'payment_timeout', count: 3, paise: 30000 },
+    { status: 'failed', failureCode: 'vehicle_pending', count: 1, paise: 0 },
+    { status: 'failed', failureCode: 'no_qr', count: 4, paise: 0 },
+    { status: 'failed', failureCode: 'some_new_code', count: 1, paise: 0 },
+    { status: 'paid', failureCode: null, count: 5, paise: 50000 },
+  ]);
+  const by = Object.fromEntries(out.map((o) => [o.outcome, [o.count, o.codes]]));
+  assert.deepStrictEqual(by, {
+    driver: [5, { fare_declined: 2, payment_timeout: 3 }],
+    vehicle: [1, { vehicle_pending: 1 }],
+    failed: [5, { no_qr: 4, some_new_code: 1 }],
+    paid: [5, {}],
+  });
+});
+
+test('outcomeWhere: failed = ended rows whose code is neither driver nor vehicle (or none)', () => {
+  const { outcomeWhere } = require('../adminBorderTax.repository');
+  const w = outcomeWhere('failed');
+  assert.deepStrictEqual(w.status, { in: ['failed', 'expired'] });
+  assert.ok(w.OR[1].failureCode.notIn.includes('fare_declined'));
+  assert.ok(!w.OR[1].failureCode.notIn.includes('no_qr'));
+});
+
+test('search box: vehicle part, driver name or phone digits; kept apart from the test-account filter', () => {
+  const w = filingsWhere({ q: 'pb01 d', who: 'real', userId: 'u1' });
+  const or = w.AND[0].OR;
+  assert.ok(or.some((o) => o.vehicleNo?.contains === 'PB01D'));
+  assert.ok(or.some((o) => o.user?.name?.contains === 'pb01 d'));
+  assert.ok(!or.some((o) => o.user?.phone), 'under 4 digits: no phone match');
+  assert.ok(filingsWhere({ q: '98765' }).AND[0].OR.some((o) => o.user?.phone?.contains === '98765'));
+  assert.ok(w.user.phone.notIn, 'who filter still applies');
+  assert.strictEqual(w.userId, 'u1');
+});

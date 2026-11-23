@@ -168,6 +168,9 @@ const { createAdminReferralsRouter } = require('./features/admin/adminReferrals.
  *   uploads routes touch it, so harnesses that don't exercise uploads may omit it.
  * @returns {import('express').Express}
  */
+/** Caller ids for the request log (internal ids, not PII). */
+const who = (req) => (req.user ? { userId: req.user.id } : req.admin ? { adminId: req.admin.id } : {});
+
 function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, testLogin = null, subscriber, cashfree, surepass, chatStore, pushSender, pushSubscriber, uploads, googleRoutes = null }) {
   const app = express();
   app.disable('x-powered-by');
@@ -200,6 +203,10 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
         if (res.statusCode >= 400) return 'warn';
         return 'info';
       },
+      // who made the call (internal ids, not PII) — ties a driver's app activity to their filings (2026-11-23)
+      // (not customProps: it needs pino-http's own pino build and threw on every request here)
+      customSuccessObject: (req, _res, val) => ({ ...val, ...who(req) }),
+      customErrorObject: (req, _res, _err, val) => ({ ...val, ...who(req) }),
       // Minimal serializers — NEVER log headers/cookies (JWT + PII, §10).
       serializers: {
         // Fuel queries carry the driver's GPS (lat/lng) — log the path only (privacy policy §2.3).
@@ -303,7 +310,7 @@ function buildApp({ prisma, redis, logger, config, identity, smsOtp = null, test
 
     // User management (Step 24d) — searchable directory + flag-only soft-delete/restore.
     const adminUsersRepo = createAdminUsersRepository({ prisma });
-    const adminUsersService = createAdminUsersService({ repo: adminUsersRepo, r2: uploads });
+    const adminUsersService = createAdminUsersService({ repo: adminUsersRepo, r2: uploads, borderTax: createAdminBorderTaxRepository({ prisma, redis }) });
     v1.use('/admin/users', createAdminUsersRouter({ service: adminUsersService, requireAdmin }));
 
     // City-string resolution (Step 24e) — admin clears unresolved_city_strings by

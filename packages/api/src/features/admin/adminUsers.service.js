@@ -2,6 +2,7 @@
 
 const { AppError, ERROR_CODES, USER_ACTION } = require('@easecab/shared');
 const { createPresign } = require('./presign');
+const { byOutcome } = require('./adminBorderTax.service');
 
 /** Flatten the subscription to status + validUntil (paid expiry). */
 function toSubscription(sub) {
@@ -17,8 +18,9 @@ function toSubscription(sub) {
  * @param {object} deps
  * @param {ReturnType<import('./adminUsers.repository').createAdminUsersRepository>} deps.repo
  * @param {{ presignGet(args: { key: string }): Promise<string> }} [deps.r2] - optional R2 client
+ * @param {{ userGroups(userId: string): Promise<object[]> }} [deps.borderTax] - per-driver filing totals
  */
-function createAdminUsersService({ repo, r2 }) {
+function createAdminUsersService({ repo, r2, borderTax }) {
   const presign = createPresign(r2);
 
   async function toItem(row) {
@@ -52,7 +54,8 @@ function createAdminUsersService({ repo, r2 }) {
     async detail(id) {
       const row = await repo.findDetail(id);
       if (!row) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
-      return toDetail(row);
+      const groups = borderTax ? await borderTax.userGroups(id) : [];
+      return { ...(await toDetail(row)), borderTax: byOutcome(groups) };
     },
 
     /** Soft-delete or restore. NOT_FOUND if the user is gone. Returns the user. */

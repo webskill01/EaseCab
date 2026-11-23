@@ -1,17 +1,35 @@
 'use strict';
 
-const { AppError, ERROR_CODES, BORDER_TAX_STATES, BORDER_TAX_LIVE_STATES, ADMIN_STATISTICS } = require('@easecab/shared');
+const { AppError, ERROR_CODES, BORDER_TAX_STATES, BORDER_TAX_LIVE_STATES, ADMIN_STATISTICS, borderTaxOutcome } = require('@easecab/shared');
 
 /** List row for the admin panel: phone only as a test/real flag, receipt as a boolean. */
 function toItem(row, unlock) {
   const { user, receiptKey, ...rest } = row;
   return {
     ...rest,
+    outcome: borderTaxOutcome(rest),
     userName: user?.name || null,
     isTest: ADMIN_STATISTICS.EXCLUDED_PHONES.includes(user?.phone),
     hasReceipt: Boolean(receiptKey),
     unlock: unlock?.status ? { status: unlock.status, at: unlock.at ? new Date(Number(unlock.at)) : null } : null,
   };
+}
+
+/**
+ * (status, failureCode) groups → one total per result tag, plus each tag's codes ({ no_qr: 3 }) so the
+ * panel shows what the real failures were. Key stays `byStatus` (the panel's field).
+ */
+function byOutcome(groups) {
+  const out = new Map();
+  for (const g of groups) {
+    const key = borderTaxOutcome(g);
+    const o = out.get(key) || { outcome: key, count: 0, paise: 0, codes: {} };
+    o.count += g.count;
+    o.paise += g.paise;
+    if (g.failureCode) o.codes[g.failureCode] = (o.codes[g.failureCode] || 0) + g.count;
+    out.set(key, o);
+  }
+  return [...out.values()];
 }
 
 /**
@@ -26,9 +44,9 @@ function createAdminBorderTaxService({ repo, r2 = null, logger }) {
   return {
     /** Offset page of filings + totals for the filter. */
     async list(query) {
-      const { rows, total, byStatus } = await repo.list(query);
+      const { rows, total, byStatus: groups } = await repo.list(query);
       const unlocks = await repo.unlocks(rows.map((r) => r.id));
-      return { items: rows.map((r, i) => toItem(r, unlocks[i])), total, byStatus, page: query.page, limit: query.limit };
+      return { items: rows.map((r, i) => toItem(r, unlocks[i])), total, byStatus: byOutcome(groups), page: query.page, limit: query.limit };
     },
 
     /** Live states with their switch. @returns {Promise<{ stateCd: string, name: string, paused: boolean }[]>} */
@@ -57,4 +75,4 @@ function createAdminBorderTaxService({ repo, r2 = null, logger }) {
   };
 }
 
-module.exports = { createAdminBorderTaxService };
+module.exports = { createAdminBorderTaxService, byOutcome };
