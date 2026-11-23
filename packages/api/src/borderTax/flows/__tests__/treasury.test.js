@@ -152,7 +152,7 @@ test('treasury tab hangs mid-load → treated as not loaded: re-posted on a fres
     return c;
   };
   const again = { method: 'POST', action: `https://${HOST}/echallan`, fields: [['grn', '1']] };
-  const bank = await passTreasury(hung, { ...TREASURY.HP, findMs: 1500 }, captured, { log: () => {} }, again, respawn);
+  const bank = await passTreasury(hung, { ...TREASURY.HP, findMs: 1500, loadMs: 1500 }, captured, { log: () => {} }, again, respawn);
   assert.match(bank, /code=4bpd6c/);
 });
 
@@ -205,4 +205,40 @@ test('eGRAS-style Go covered by an overlay → DOM click still submits (once)', 
   const bank = await passTreasury(ok.context, { host: HOST }, ok.captured, { log: (m) => logs.push(m) });
   assert.match(bank, /grn=1/);
   assert.ok(logs.some((m) => /intercepts pointer events.*DOM click/.test(m)), logs.join('\n'));
+});
+
+test('pickSession: bad proxy session → fresh ones (up to 3), then bank_down before Submit (no lock)', async () => {
+  const { pickSession } = require('../treasury');
+  const ctx = (ok) => ({ request: { get: async () => { if (!ok) throw new Error('socket disconnected before TLS'); return { status: () => 200 }; } } });
+  const cfg = { host: 'egras.test', probe: 'https://egras.test/' };
+  const logs = [];
+  const io = { log: (m) => logs.push(m) };
+  const first = ctx(true);
+  assert.strictEqual(await pickSession(first, cfg, null, io), first); // good IP: stays
+  const good = ctx(true);
+  let spawned = 0;
+  assert.strictEqual(await pickSession(ctx(false), cfg, async () => { spawned += 1; return spawned === 2 ? good : ctx(false); }, io), good);
+  assert.strictEqual(spawned, 2);
+  await assert.rejects(pickSession(ctx(false), cfg, async () => ctx(false), io), (e) => e.failureCode === 'bank_down' && /3 proxy sessions/.test(e.message));
+  assert.ok(logs.some((m) => /treasury probe 2: socket disconnected/.test(m)));
+});
+
+test('slow treasury load is waited out, not re-posted (238a9491: the 2nd post bounced back to Vahan)', async (t) => {
+  let chromium;
+  try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
+  let browser;
+  try { browser = await chromium.launch(); } catch { return t.skip('chromium not installed'); }
+  t.after(() => browser.close());
+  const context = await browser.newContext();
+  let found;
+  const captured = new Promise((r) => { found = r; });
+  await context.route(`${BANK}*`, (route) => { found(route.request().postData()); return route.abort(); });
+  const form = `<form method="post" action="${BANK}"><input type="hidden" name="grn" value="1"><input type="submit" value="Continue"></form>`;
+  await context.route(`https://${HOST}/**`, async (route) => { await new Promise((r) => setTimeout(r, 3000)); return route.fulfill({ contentType: 'text/html', body: form }); });
+  (await context.newPage()).goto(`https://${HOST}/echallan`).catch(() => {});
+  const logs = [];
+  const again = { method: 'POST', action: `https://${HOST}/echallan`, fields: [['grn', '1']] };
+  const bank = await passTreasury(context, { host: HOST, findMs: 10_000, loadMs: 10_000 }, captured, { log: (m) => logs.push(m) }, again);
+  assert.match(bank, /grn=1/);
+  assert.ok(!logs.some((m) => /posting the challan request again/.test(m)), logs.join('\n'));
 });

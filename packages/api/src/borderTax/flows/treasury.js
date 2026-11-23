@@ -20,7 +20,8 @@ const { captchaImage, portalError } = require('./portal');
 const TREASURY = Object.freeze({
   // qr: bank host the worker stays on (in-app UPI QR); back: host PayU posts its result to (status field).
   // ping: host TCP-checked before filing + watched for down/up alerts. HR has none: eGRAS refuses TCP from the VPS.
-  HR: Object.freeze({ host: 'egrashry.nic.in', qr: /(^|\.)payu\.in$/, back: /egrashry\.nic\.in/i }),
+  // probe: GET through the filing's proxy just before eTransPgi Submit (no lock yet) — a bad IP is swapped, not locked
+  HR: Object.freeze({ host: 'egrashry.nic.in', probe: 'https://egrashry.nic.in/', qr: /(^|\.)payu\.in$/, back: /egrashry\.nic\.in/i }),
   HP: Object.freeze({ host: 'himkosh.hp.nic.in', ping: 'himkosh.hp.nic.in', mode: /e-?\s?banking/i, bank: /payu/i, qr: /(^|\.)payu\.in$/, back: /securepayments\.payu\.in\/himkosh\/response/i }), // status rides PayU's own post; himkosh only gets encdata (2026-11-20 log)
   // UP: Vahan → SBIePay Lite directly; sbi = its own QR + result flow (sbiQr.js, 2026-11-12)
   UP: Object.freeze({ qr: /(^|\.)sbi\.bank\.in$/, sbi: true, ping: 'merchant.sbi.bank.in' }),
@@ -29,9 +30,15 @@ const TREASURY = Object.freeze({
 });
 const TRIES = 3; // fill + submit rounds (a wrong code brings a new captcha); then the filing fails no_qr
 const VERDICT_MS = 20_000; // treasury submit → bank page
-// HR eGRAS never loaded within 30s on 2 live filings (2026-11-12): the bot's tab stayed on Vahan
-const FIND_MS = 60_000;
+// HR eGRAS never loaded within 30s on 2 live filings (2026-11-12): the bot's tab stayed on Vahan.
+// 90s: an in-flight post is waited out, not re-posted — 238a9491's 1st post hung 52s, the 2nd bounced back to Vahan (2026-11-23)
+const FIND_MS = 90_000;
 const UP_MS = 10_000; // treasury TCP check before filing
+// ~3-5% of proxy sessions can't reach eGRAS; the same session fails again, a new one works (VPS test 2026-11-23, both providers)
+const PROBE_MS = 10_000;
+const PROBE_TRIES = 3; // the filing's own session + 2 fresh ones
+const LOAD_MS = 90_000; // committed eGRAS tab → domcontentloaded, same reasoning
+const VEHICLE = /\b[A-Z]{2}\s?\d{1,2}\s?[A-Z]{0,3}\s?\d{3,4}\b/g; // masked out of logged page text
 const GO_CLICK_MS = 8000; // then a DOM click (clickGo)
 
 /** Tags the controls this page needs; returns which were found (names only — never values: PII). */
@@ -54,8 +61,11 @@ async function tagControls(page, { mode, bank }) {
 
 /** Where + form shape for the log when the pass-through fails: path, title, headings, control types/ids — no values. */
 async function describe(page) {
+  await page.waitForLoadState('domcontentloaded', { timeout: 10_000 }).catch(() => {});
+  // bounced back to Vahan (238a9491): its message says why — page chrome, vehicle no. masked
+  const said = /vahan/i.test(page.url()) ? ` said "${(await page.innerText('body').catch(() => '')).replace(VEHICLE, 'V').replace(/\s+/g, ' ').trim().slice(0, 200)}"` : '';
   const at = await page.evaluate(() => `${location.hostname}${location.pathname} "${document.title.slice(0, 40)}" ${[...document.querySelectorAll('h1,h2,h3,h4,.alert')].filter((e) => e.offsetParent).map((e) => e.innerText.trim().slice(0, 60)).filter(Boolean).slice(0, 5).join(' / ')}`).catch(() => '?');
-  return `${at} :: ${await controls(page)}`;
+  return `${at}${said} :: ${await controls(page)}`;
 }
 
 async function controls(page) {
@@ -112,19 +122,29 @@ async function attempt(page, cfg, captured, io) {
 }
 
 /** The context page that reached the treasury host (same tab or a popup). */
-async function treasuryPage(context, host, findMs = FIND_MS) {
-  for (let waited = 0; waited < findMs; waited += 500) {
-    const p = context.pages().find((x) => { try { return new URL(x.url()).hostname === host; } catch { return false; } });
-    // hung tab = not loaded → re-post on a fresh IP / treasury_down (clears the lock); a throw here was portal_error, lock left (HR d354b3da 2026-11-21)
-    if (p) return (await p.waitForLoadState('domcontentloaded').then(() => true, () => false)) ? p : null;
-    await new Promise((r) => setTimeout(r, 500));
+async function treasuryPage(context, host, findMs = FIND_MS, loadMs = LOAD_MS) {
+  // slow = waited out (findMs to commit, loadMs to domcontentloaded); a failed navigation ends the wait at once
+  let failed = null;
+  const failedP = new Promise((r) => { failed = r; });
+  const onFail = (r) => { if (r.isNavigationRequest() && new URL(r.url()).hostname === host) failed(null); };
+  context.on('requestfailed', onFail);
+  try {
+    let dead = false;
+    failedP.then(() => { dead = true; });
+    for (let waited = 0; waited < findMs && !dead; waited += 500) {
+      const p = context.pages().find((x) => { try { return new URL(x.url()).hostname === host; } catch { return false; } });
+      // hung tab = not loaded → re-post on a fresh IP / treasury_down (clears the lock); a throw here was portal_error, lock left (HR d354b3da 2026-11-21)
+      if (p) return Promise.race([p.waitForLoadState('domcontentloaded', { timeout: loadMs }).then(() => p, () => null), failedP]);
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    return null;
+  } finally {
+    context.off('requestfailed', onFail);
   }
-  return null;
 }
 
 /** Submits the captured treasury request ({ method, action, fields }) again as a form in the first tab. */
 async function repost(context, req, io) {
-  io.log?.('treasury pass-through: page never loaded — posting the challan request again');
   // ponytail: a fresh context posts from about:blank (no Vahan referer) — eGRAS took it in tests; watch the first live one
   const page = context.pages()[0] || (await context.newPage());
   await page?.evaluate(({ method, action, fields }) => {
@@ -145,13 +165,14 @@ async function repost(context, req, io) {
  * @throws TREASURY_DOWN when the treasury page never loads, even after the re-post
  */
 async function passTreasury(context, cfg, captured, io, again = null, respawn = null) {
-  let page = await treasuryPage(context, cfg.host, cfg.findMs);
+  let page = await treasuryPage(context, cfg.host, cfg.findMs, cfg.loadMs);
   if (!page && again) { // first load died/hung: post the same challan request again, on a new proxy IP when there is one
     const fresh = respawn && (await respawn().catch((e) => void io.log?.(`treasury: fresh proxy session failed: ${e.message.split('\n')[0]}`)));
     if (fresh) io.log?.('treasury pass-through: switching to a fresh proxy session');
     context = fresh || context;
+    io.log?.('treasury pass-through: page never loaded — posting the challan request again');
     await repost(context, again, io);
-    page = await treasuryPage(context, cfg.host, cfg.findMs);
+    page = await treasuryPage(context, cfg.host, cfg.findMs, cfg.loadMs);
   }
   if (!page) {
     io.log?.(`treasury pass-through: no ${cfg.host} tab — tabs: ${context.pages().map((p) => { try { const u = new URL(p.url()); return `${u.hostname}${u.pathname}`; } catch { return p.url().slice(0, 30); } }).join(' | ')}`);
@@ -173,6 +194,23 @@ async function passTreasury(context, cfg, captured, io, again = null, respawn = 
 }
 
 /**
+ * GETs cfg.probe through the context's proxy; on a failure moves to a fresh session (respawn), up to
+ * PROBE_TRIES sessions. Runs before eTransPgi Submit, so giving up leaves no lock (bank_down).
+ * @returns {Promise<import('playwright').BrowserContext>} the context whose session reached the treasury
+ */
+async function pickSession(context, cfg, respawn, io) {
+  for (let i = 1; ; i += 1) {
+    const t0 = Date.now();
+    const why = await context.request.get(cfg.probe, { timeout: PROBE_MS, ignoreHTTPSErrors: true })
+      .then((r) => (r.status() < 500 ? null : `HTTP ${r.status()}`), (e) => e.message.split('\n')[0].slice(0, 100));
+    io.log?.(`treasury probe ${i}: ${why || 'ok'} in ${Date.now() - t0}ms`);
+    if (!why) return context;
+    if (i >= PROBE_TRIES || !respawn) throw portalError(BORDER_TAX_FAILURE.BANK_DOWN, `${cfg.host} unreachable on ${i} proxy sessions`);
+    context = await respawn();
+  }
+}
+
+/**
  * TCP check that the treasury host answers. HP himkosh was unreachable for hours on 2026-11-14 and a
  * filing that reaches Vahan's Pay Online then locks the vehicle with a bank-side PENDING row.
  * ponytail: TCP only, not HTTPS — NIC cert chains can trip Node's TLS while Chromium is fine.
@@ -189,4 +227,4 @@ function treasuryUp(host, port = 443, ms = UP_MS) {
   });
 }
 
-module.exports = { TREASURY, passTreasury, treasuryUp };
+module.exports = { TREASURY, passTreasury, pickSession, repost, treasuryUp };

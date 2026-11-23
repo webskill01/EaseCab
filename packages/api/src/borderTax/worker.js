@@ -74,8 +74,10 @@ async function main() {
     const context = await open(job);
     // spare context on a new proxy session (new IP) for the treasury re-post — HR eGRAS dropped the
     // connection on one IP (2026-11-17/18); closed with the filing's own context
+    let spares = 0; // each call = a new session: the eGRAS probe may need 2, the re-post 1 more
     context.respawn = async () => {
-      const spare = await open(job && { ...job, sid: `r${job.sid}` });
+      spares += 1;
+      const spare = await open(job && { ...job, sid: `r${spares}${job.sid}` });
       context.once('close', () => spare.close().catch(() => {}));
       return spare;
     };

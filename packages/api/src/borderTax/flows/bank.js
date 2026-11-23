@@ -7,7 +7,7 @@
  */
 const { BORDER_TAX_FAILURE } = require('@easecab/shared');
 const { portalError } = require('./portal');
-const { TREASURY, passTreasury } = require('./treasury');
+const { TREASURY, passTreasury, pickSession, repost } = require('./treasury');
 const VAHAN_HOST = 'vahan.parivahan.gov.in';
 const HANDOFF_MS = 60_000;
 const FORM_TYPE = /application\/x-www-form-urlencoded/i;
@@ -58,6 +58,7 @@ async function bankHandoff(page, stateCd, io) {
   let reachedTreasury;
   let viaTreasury; // first request to the treasury page = fallback hand-off
   let staying = false; // in-app QR: once on the bank, every later navigation is followed
+  let moved = null; // probe picked a fresh proxy session: the treasury request is posted there, once
   const ref = { grn: null }; // eGRAS alert "Please note down GRN/TransactionID…: 161831387" — finds the receipt later
   const captured = new Promise((resolve) => { found = resolve; });
   const atTreasury = new Promise((resolve) => { reachedTreasury = resolve; });
@@ -78,6 +79,11 @@ async function bankHandoff(page, stateCd, io) {
     io?.log?.(`bank nav ${req.method()} ${host}${new URL(req.url()).pathname}`); // path only — queries can carry the vehicle no.
     if (treasury && host === treasury.host) {
       if (viaTreasury === undefined) { viaTreasury = toHandoff(req); reachedTreasury(true); }
+      if (moved && viaTreasury && frame.page().context() !== moved) {
+        io?.log?.('treasury: posting the challan on the probed proxy session');
+        repost(moved, viaTreasury, io);
+        return route.abort();
+      }
       return route.continue();
     }
     if (treasury?.qr?.test(host)) { staying = true; found({ live: frame.page(), ref, pay: treasury }); return route.continue(); }
@@ -108,11 +114,15 @@ async function bankHandoff(page, stateCd, io) {
   page.on('dialog', onDialog);
   await page.selectOption('#dropOperator', gateway);
   await page.check('#checkme');
+  if (treasury?.probe && respawn) {
+    const ok = await pickSession(page.context(), treasury, respawn, io);
+    if (ok !== page.context()) moved = ok;
+  }
   await page.click('#sendSubmit');
   // ponytail: a SweetAlert confirm after Submit was seen once on HP — click it if it shows, no wait otherwise
   page.locator('.swal2-popup button.swal2-confirm:visible').click({ timeout: 10_000 }).catch(() => {});
   const first = await Promise.race([captured, atTreasury, page.waitForTimeout(HANDOFF_MS).then(() => null)]);
-  const handoff = first === true ? (await passTreasury(page.context(), treasury, captured, io, viaTreasury, respawn)) || viaTreasury : first;
+  const handoff = first === true ? (await passTreasury(moved || page.context(), treasury, captured, io, viaTreasury, respawn)) || viaTreasury : first;
   if (!handoff) throw portalError(BORDER_TAX_FAILURE.NO_HANDOFF, `no bank page after Submit (${gateway}) — at ${await whereStuck(page)}`);
   return handoff;
 }
