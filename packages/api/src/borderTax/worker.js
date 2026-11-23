@@ -9,7 +9,7 @@ const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
 const { chromium } = require('playwright');
-const { BORDER_TAX, BORDER_TAX_KEYS, BORDER_TAX_STATES, BORDER_TAX_PAID_PUSH: PAID_PUSH, BORDER_TAX_FREE_PUSH: FREE_PUSH, BORDER_TAX_UP_PUSH: UP_PUSH, createTelegramNotifier } = require('@easecab/shared');
+const { BORDER_TAX, BORDER_TAX_KEYS, BORDER_TAX_STATES, BORDER_TAX_PAID_PUSH: PAID_PUSH, BORDER_TAX_ACTION_PUSH: ACTION_PUSH, BORDER_TAX_FREE_PUSH: FREE_PUSH, BORDER_TAX_UP_PUSH: UP_PUSH, createTelegramNotifier } = require('@easecab/shared');
 const { createBorderTaxRepository } = require('../features/borderTax/borderTax.repository');
 const { createBorderTaxService } = require('../features/borderTax/borderTax.service');
 const { createRunner } = require('./runner');
@@ -19,6 +19,7 @@ const { ocrReady, stopOcr } = require('./ocr');
 const { proxyFor } = require('./proxy');
 const { canvasCodeHook } = require('./flows/portal');
 const { serveBundles } = require('./flows/bundleCache');
+const { serveStatic } = require('./flows/staticCache');
 const { createTreasuryWatch } = require('./treasuryWatch');
 const { createPushRepository } = require('../features/push/push.repository');
 const { createPushSender } = require('../lib/fcm');
@@ -67,7 +68,8 @@ async function main() {
     // IST clock: the VPS runs Europe/Berlin, and the portal read our IST tax_from as browser-local → receipts 4h30 late (2026-11-14)
     const context = await (await browser()).newContext({ viewport: VIEWPORT, timezoneId: 'Asia/Kolkata', proxy: proxyFor(env.BORDER_TAX_PROXY_URL, job) });
     await context.addInitScript(canvasCodeHook); // declaration captcha typed exactly as drawn (portal.js)
-    await serveBundles(context); // checkpostv4's 4.9 MB main bundle from disk — the portal serves it at ~20 KB/s (bundleCache.js)
+    await serveStatic(context); // libraries + hashed images from memory after the first filing (staticCache.js); never captchas
+    await serveBundles(context); // registered after → checked first: checkpostv4's 4.9 MB bundle from disk (~20 KB/s from the portal)
     return context;
   };
   const newPage = async (job) => {
@@ -95,6 +97,9 @@ async function main() {
   const fill = (text, req) => text.replace('{vehicle}', req.vehicleNo).replace('{state}', BORDER_TAX_STATES[req.stateCd]?.name || req.stateCd);
   // payment found after the QR timed out: tell the driver (the feed banner covers a missed push)
   const onLatePaid = (req) => pushTo(req.userId, PAID_PUSH, fill(PAID_PUSH.BODY, req), `${PAID_PUSH.CLICK_PATH}?open=${req.id}`);
+  // QR / amount / captcha waiting and the app not on it → opens that filing (?open=)
+  const onAction = (req, kind) => pushTo(req.userId, ACTION_PUSH, fill(ACTION_PUSH[kind], req), `${ACTION_PUSH.CLICK_PATH}?open=${req.id}`)
+    .catch((err) => logger.warn({ id: req.id, err: err.message }, 'action push failed'));
   // lock cleared → the vehicle can be filed again; skipped when the driver already filed it again
   const onFreed = async (req) => {
     if ((await repo.recentForVehicle(req.vehicleNo, req.stateCd, req.createdAt)).some((other) => other !== req.id)) return;
@@ -108,7 +113,7 @@ async function main() {
     for (const u of users) await pushTo(u, UP_PUSH, UP_PUSH.BODY.replace('{site}', name)).catch((err) => logger.warn({ site, err: err.message }, 'site-up push failed'));
     logger.info({ site, users: users.length }, 'site back up: waiting drivers pushed');
   };
-  const runner = createRunner({ service, repo, newPage, logger, r2, alert, onLatePaid, onFreed, isStopping: () => stopping });
+  const runner = createRunner({ service, repo, newPage, logger, r2, alert, onAction, onLatePaid, onFreed, isStopping: () => stopping });
   const sweep = () => sweepReceipts({ repo, r2, logger }).catch((err) => logger.error({ err: err.message }, 'receipt sweep failed'));
   sweep();
   const sweepTimer = setInterval(sweep, RECEIPT_SWEEP_MS);

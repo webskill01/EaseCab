@@ -48,7 +48,7 @@ async function whereStuck(page) {
  * followed — in this tab or any popup it opens. A state treasury page (TREASURY) is followed and filled
  * so the bank page behind it is captured; if that fails, the treasury page is handed over instead.
  */
-async function bankHandoff(page, stateCd, io) {
+async function bankHandoff(page, stateCd, io, probed = null) {
   await page.waitForSelector('#dropOperator');
   const gateway = GATEWAY[stateCd] || (await page.$eval('#dropOperator', (sel) => [...sel.options]
     .find((o) => o.value && !/select/i.test(o.text))?.value));
@@ -69,13 +69,13 @@ async function bankHandoff(page, stateCd, io) {
       // HP's PayU result path is unmapped (2026-11-19): log every top-level move after the QR — field names only, never values
       const nav = req.isNavigationRequest() && req.frame() === req.frame().page().mainFrame();
       if (nav) io?.log?.(`pay nav ${req.method()} ${new URL(req.url()).hostname}${new URL(req.url()).pathname} [${FORM_TYPE.test(req.headers()['content-type'] || '') ? [...new URLSearchParams(req.postData() || '').keys()].join(',') : ''}]`);
-      return route.continue();
+      return nav ? route.continue() : route.fallback(); // PayU's own files can come from staticCache.js
     }
     const host = new URL(req.url()).hostname;
     const frame = req.frame();
     const top = frame === frame.page().mainFrame();
     const leaving = req.isNavigationRequest() && top && host !== VAHAN_HOST;
-    if (!leaving) return route.continue();
+    if (!leaving) return route.fallback(); // fallback, not continue: eGRAS static files come from staticCache.js
     io?.log?.(`bank nav ${req.method()} ${host}${new URL(req.url()).pathname}`); // path only — queries can carry the vehicle no.
     if (treasury && host === treasury.host) {
       if (viaTreasury === undefined) { viaTreasury = toHandoff(req); reachedTreasury(true); }
@@ -114,7 +114,11 @@ async function bankHandoff(page, stateCd, io) {
   page.on('dialog', onDialog);
   await page.selectOption('#dropOperator', gateway);
   await page.check('#checkme');
-  if (treasury?.probe && respawn) {
+  if (probed) {
+    // probed at filing start on unwired sessions (checkpostv4.js) → wire the one it picked now
+    const ok = await probed;
+    if (ok !== page.context()) moved = await wire(ok);
+  } else if (treasury?.probe && respawn) {
     const ok = await pickSession(page.context(), treasury, respawn, io);
     if (ok !== page.context()) moved = ok;
   }

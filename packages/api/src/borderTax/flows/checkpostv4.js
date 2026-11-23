@@ -18,7 +18,7 @@
 const { borderTaxWindow, BORDER_TAX_FAILURE, BORDER_TAX_STATES, TAX_MODE } = require('@easecab/shared');
 const { portalError, visibleBtn, alertText, solveCaptcha, VERDICT_MS } = require('./portal');
 const { bankHandoff } = require('./bank');
-const { TREASURY, treasuryUp } = require('./treasury');
+const { TREASURY, treasuryUp, pickSession } = require('./treasury');
 const { checkpostUp } = require('./bundleCache');
 
 const CHECKPOST = 'https://services.parivahan.gov.in/checkpostv4/';
@@ -253,6 +253,11 @@ async function fileCheckpost(page, job, io) {
     throw portalError(BORDER_TAX_FAILURE.BANK_DOWN, `${host} unreachable`);
   }
   if (!(await checkpostUp())) throw portalError(BORDER_TAX_FAILURE.PORTAL_DOWN, 'checkpost app bundle not cached and not downloading in time');
+  // HR: find a proxy session that reaches eGRAS now, while Vahan runs, not after the declaration (~10 s saved,
+  // 2026-11-23). Awaited in bankHandoff, before Submit → a dead proxy still fails with no lock (bank_down).
+  const cfg = TREASURY[job.stateCd];
+  const probed = cfg?.probe && page.context().respawn ? pickSession(page.context(), cfg, page.context().respawn, io) : null;
+  probed?.catch(() => {}); // its error surfaces when bankHandoff awaits it
   await openForm(page, job.stateCd);
   // io.progress(n) = steps done, the app's checklist ticks on these (real progress, not a timer)
   await ownerStep(page, job, io);
@@ -266,7 +271,7 @@ async function fileCheckpost(page, job, io) {
   // filings timed out unpaid at the QR, each leaving a lock; replaces the 2026-11-06 "no stop here")
   await io.confirmFare?.(quote);
   await disclaimerStep(page, io);
-  const handoff = await bankHandoff(page, job.stateCd, io);
+  const handoff = await bankHandoff(page, job.stateCd, io, probed);
   if (handoff.live) return { ...quote, payPage: handoff.live, ref: handoff.ref, pay: handoff.pay }; // runner shows the QR
   // No bank-page hand-off any more (2026-11-13): the driver paying outside the app left a pending
   // portal transaction (amount mismatch / vehicle locked). No QR → fail; the runner clears the lock.

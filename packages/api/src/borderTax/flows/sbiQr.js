@@ -12,6 +12,9 @@ const { tagQr, decodeQr, describe, receiptOn, receiptPdf } = require('./payuQr')
  * The result path (SBI → parivahan → receipt) was not seen paid yet: the first real payment maps it.
  */
 const QR_WAIT_MS = 25_000;
+const STEP_MS = 30_000; // was networkidle: SBI's 5-min QR timer is already running, every second counts (2026-11-23)
+const QR_POLL_MS = 400;
+const UPI_LINK = 'a[onclick*="paySubmitUPI"]';
 const FAILED = /fail|declin|reject|expir|cancel/i;
 const SBI_HOST = /(^|\.)(sbi\.bank\.in|onlinesbi\.sbi)$/; // UP: merchant.sbi.bank.in, PB: merchant.onlinesbi.sbi
 
@@ -25,14 +28,16 @@ async function secondsLeft(page) {
 
 /** @returns {Promise<{ qr: string, upi: ?string, secLeft: ?number }>} @throws NO_QR */
 async function openSbiQr(page, io) {
-  await page.waitForLoadState('networkidle').catch(() => {});
-  if (!(await page.locator('a[onclick*="paySubmitUPI"]').count())) throw portalError(F.NO_QR, `no UPI on SBIePay — [${await describe(page)}]`);
+  await page.locator(UPI_LINK).first().waitFor({ state: 'attached', timeout: STEP_MS }).catch(() => {});
+  if (!(await page.locator(UPI_LINK).count())) throw portalError(F.NO_QR, `no UPI on SBIePay — [${await describe(page)}]`);
+  const from = page.url();
   await page.evaluate("paySubmitUPI('UPI')"); // the arrow is covered by a stretched-link twin: call SBI's own handler
-  await page.waitForLoadState('networkidle').catch(() => {});
+  // on the next page before looking for CONFIRM (the click below then auto-waits for the button)
+  await page.waitForURL((u) => u.href !== from, { waitUntil: 'domcontentloaded', timeout: STEP_MS }).catch(() => {});
   await page.getByRole('button', { name: /confirm/i }).or(page.locator('input[value*="CONFIRM" i]')).first().click();
   let tag = { qr: false };
-  for (let t = 0; t < QR_WAIT_MS && !tag.qr; t += 1000) {
-    await page.waitForTimeout(1000);
+  for (let t = 0; t < QR_WAIT_MS && !tag.qr; t += QR_POLL_MS) {
+    await page.waitForTimeout(QR_POLL_MS);
     tag = await tagQr(page);
   }
   if (!tag.qr) throw portalError(F.NO_QR, `no QR on SBIePay — [${await describe(page)}]`);

@@ -19,7 +19,9 @@ const { portalError } = require('./portal');
  */
 const QR_WAIT_MS = 25_000;
 const STATUS_POLL_MS = 3000; // receipt-tab check while waiting for PayU's result
-const IDLE_MS = 5000; // networkidle cap before looking for the QR
+const IDLE_MS = 5000; // no QR tab by then → switch the checkout to its QR view by URL hash
+const QR_POLL_MS = 400;
+const GENERATE_GAP_MS = 2000;
 const BLANK_MS = 8000; // nothing on the checkout this long → reload (normal QR shows in ~5s)
 const QR_CANDIDATES = 4; // square images tried per poll (logos, icons, the QR)
 const MISS_DIR = path.join(os.tmpdir(), 'easecab-payu-misses');
@@ -89,7 +91,8 @@ async function findQr(page) {
  */
 async function generate(page) {
   const btn = page.getByText(/^\s*generate\s*qr\s*$/i).first();
-  if (await btn.isVisible().catch(() => false)) await btn.click({ timeout: 3000 }).catch(() => {});
+  if (!(await btn.isVisible().catch(() => false))) return false;
+  return btn.click({ timeout: 3000 }).then(() => true, () => false);
 }
 
 /** Full-page screenshot of a QR miss → VPS tmp, to map the checkout that beat us. Path or null. */
@@ -110,17 +113,24 @@ async function keepMissShot(page) {
  * in by itself, a reload does (HR 588ad820 2026-11-15: 32s blank, QR 5s after reload).
  */
 async function showQr(page, bailBlank = false) {
-  // ponytail: capped — a blank checkout kept the network busy and sat out Playwright's 30s default
-  await page.waitForLoadState('networkidle', { timeout: IDLE_MS }).catch(() => {});
+  // Polled from the first moment (was: up to IDLE_MS of networkidle first — PayU→QR median 7.8 s, 2026-11-23).
+  // Only a decoded upi:// QR counts, so looking early can't pick a wrong one.
   const qrTab = page.getByText(/scan.*qr|upi\s*qr|qr\s*code/i).first();
-  if (await qrTab.isVisible().catch(() => false)) await qrTab.click().catch(() => {});
-  else await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); }).catch(() => {});
+  const t0 = Date.now();
+  let onTab = false;
   let found = null;
-  for (let t = 0; t < QR_WAIT_MS && !found; t += 1000) {
-    await generate(page);
-    await page.waitForTimeout(1000);
+  let pressed = -Infinity; // Generate QR at most every GENERATE_GAP_MS: the real QR takes ~1 s to draw
+  while (!found && Date.now() - t0 < QR_WAIT_MS) {
+    if (!onTab && (await qrTab.isVisible().catch(() => false))) onTab = await qrTab.click({ timeout: 2000 }).then(() => true, () => false);
+    if (!onTab && Date.now() - t0 >= IDLE_MS) { // no QR tab on this checkout: jump to its QR view
+      await page.evaluate(() => { location.hash = location.hash.replace(/paymentoptions.*$/, 'upfrontQr'); }).catch(() => {});
+      onTab = true;
+    }
+    if (Date.now() - pressed >= GENERATE_GAP_MS && (await generate(page))) pressed = Date.now();
     found = await findQr(page);
-    if (bailBlank && !found && t + 1000 >= BLANK_MS && !(await describe(page))) break;
+    if (found) break;
+    if (bailBlank && Date.now() - t0 >= BLANK_MS && !(await describe(page))) break;
+    await page.waitForTimeout(QR_POLL_MS);
   }
   return found;
 }
