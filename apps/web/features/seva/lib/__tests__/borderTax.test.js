@@ -4,7 +4,7 @@ import {
   formFrom, resumable, lateUnseen, failKey, BT_FAIL_FIX_FIRST, BT_FAIL_VEHICLE_PENDING, prepStep, prepDeadline, markPayOpened, BT_CAPTCHA_SEC, BT_PREP_SEC,
   BT_STATES, BT_STATUS, BT_FINAL, BT_SEATS, BT_MAX_DAYS, BT_MAX_AHEAD_DAYS, BT_VEHICLE_RE,
   defaultStart, validUpto, BT_RECEIPT_KEEP_SEC, receiptGone, isFilable, isStarted, toCreateBody, emptyForm, createErrorKey, submitHandoff, toLocalInput, gettingReceipt,
-  canUnlock, unlocking, ownFee, BT_FARE_SEC, BT_PORTAL_KEY, siteDown,
+  canUnlock, unlocking, ownFee, reopenAfterBack, BT_FARE_SEC, BT_PORTAL_KEY, siteDown,
 } from '../borderTax'
 import { BT_LIVE_STATES } from '../states'
 
@@ -211,5 +211,23 @@ describe('ownFee (fee shown before filing)', () => {
     expect(ownFee([mine], { ...form, days: 2 })).toBeNull()
     expect(ownFee([{ ...mine, taxPaise: 0 }], form)).toBeNull()
     expect(ownFee(undefined, form)).toBeNull()
+  })
+})
+
+describe('reopenAfterBack', () => {
+  it('reopens a backed-out filing once it needs the driver, not in the status they closed', () => {
+    const f = (status) => [{ id: 'a', status }]
+    expect(reopenAfterBack(f('filling'), { id: 'a', status: 'filling' })).toBeNull()
+    expect(reopenAfterBack(f('awaiting_payment'), { id: 'a', status: 'filling' })?.id).toBe('a') // a98a4e2e: QR came up
+    expect(reopenAfterBack(f('awaiting_payment'), { id: 'a', status: 'awaiting_payment' })).toBeNull() // closed the QR itself
+    expect(reopenAfterBack(f('failed'), null)).toBeNull()
+  })
+})
+
+describe('gettingReceipt while the pending check runs', () => {
+  it('paid, no receipt, unlock queued → still getting it', () => {
+    const paidAt = new Date().toISOString()
+    expect(gettingReceipt({ status: 'paid', paidAt, receiptNo: null, live: { step: 'paid' }, unlock: { status: 'queued' } })).toBe(true)
+    expect(gettingReceipt({ status: 'paid', paidAt, receiptNo: 'R1', live: { step: 'paid' }, unlock: { status: 'queued' } })).toBe(false)
   })
 })

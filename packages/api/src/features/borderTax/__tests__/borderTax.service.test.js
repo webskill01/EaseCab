@@ -207,9 +207,11 @@ test('create: portal busy → 429 with retryAfter, nothing queued, no attempt us
 });
 
 test('get: a queued filing shows when the bot starts (lookup gap)', async () => {
-  const repo = { ...fakeRepo({ b1: { id: 'b1', userId: 'u1', status: 'queued' } }, { slotMs: 90_000 }), async getJob() { return {}; } };
+  const job = {};
+  const repo = { ...fakeRepo({ b1: { id: 'b1', userId: 'u1', status: 'queued' } }, { slotMs: 90_000 }), async getJob() { return {}; }, async setJob(id, f) { Object.assign(job, f); } };
   const { live } = await createBorderTaxService({ repo, logger }).get('u1', 'b1');
   assert.ok(Math.abs(live.startsAt - Date.now() - 90_000) < 1000);
+  assert.ok(Date.now() - Number(job.seen) < 1000, 'app poll marks the filing seen (worker push skips a watching driver)');
 });
 
 test('late receipt: PAID with step receipt → attachReceipt adds it; nothing found leaves PAID for support', async () => {

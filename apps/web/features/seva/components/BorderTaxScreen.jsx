@@ -7,7 +7,7 @@ import { ChevronLeft } from '@/components/ui/icons'
 import { useMembership } from '@/features/subscription/hooks/useMembership'
 import { membershipView, MEMBERSHIP_STATE } from '@/features/subscription/lib/membership'
 import { useFilings, useBorderTaxActions } from '../hooks/useBorderTax'
-import { emptyForm, formFrom, toCreateBody, createErrorKey, resumable } from '../lib/borderTax'
+import { emptyForm, formFrom, toCreateBody, createErrorKey, resumable, reopenAfterBack } from '../lib/borderTax'
 import { BorderTaxForm } from './BorderTaxForm'
 import { FilingHistory } from './FilingHistory'
 import { FilingSheet } from './FilingSheet'
@@ -23,6 +23,7 @@ export function BorderTaxScreen() {
   const membership = useMembership()
   const [form, setForm] = useState(() => emptyForm())
   const [picked, setOpenId] = useState(undefined) // undefined = driver hasn't chosen yet
+  const [dismissed, setDismissed] = useState(null) // {id, status} the driver closed a running filing at
   const [seed, setSeed] = useState(null)
   const [gate, setGate] = useState(false)
   const [confirm, setConfirm] = useState(false) // validity check before the filing starts
@@ -33,7 +34,9 @@ export function BorderTaxScreen() {
 
   // On arrival a running / just-finished filing reopens by itself (driver came back from the payment
   // tab or pressed back) until the driver opens or closes something.
-  const openId = picked === undefined ? (resumable(filings.data)?.id ?? null) : picked
+  // After Back on a running filing it opens again once it needs the driver (QR / code up).
+  const openId = picked === undefined ? (resumable(filings.data)?.id ?? null) : (picked ?? reopenAfterBack(filings.data, dismissed)?.id ?? null)
+  const close = (f) => { setDismissed(f ? { id: f.id, status: f.status } : null); setOpenId(null) }
 
   // ?open=<id> (late-payment push / feed popup) opens that filing's receipt
   useEffect(() => {
@@ -79,7 +82,7 @@ export function BorderTaxScreen() {
         <FilingHistory filings={filings.data ?? []} isLoading={filings.isLoading} onOpen={setOpenId}
           hasMore={filings.hasNextPage} loadingMore={filings.isFetchingNextPage} onMore={() => filings.fetchNextPage()} />
       </div>
-      {openId && <FilingSheet id={openId} seed={seed} onClose={() => setOpenId(null)} onRetry={retry} />}
+      {openId && <FilingSheet id={openId} seed={seed} onClose={close} onRetry={retry} />}
       {confirm && <ConfirmValiditySheet form={form} onChange={() => { setConfirm(false); scroller.current?.scrollTo({ top: 0, behavior: 'smooth' }) }} onContinue={start} />}
       {gate && <SevaGateSheet onClose={() => setGate(false)} />}
     </div>

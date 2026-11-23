@@ -141,14 +141,15 @@ function ResultSheet({ f, onClose, onRetry }) {
 /**
  * One filing, polled: running → full-screen preparing; payment page ready → Payment Details;
  * anything else → the result.
- * @param {{ id: string, seed?: object, onClose: () => void, onRetry: (filing: object) => void }} props
+ * @param {{ id: string, seed?: object, onClose: (filing?: object) => void, onRetry: (filing: object) => void }} props
  */
 export function FilingSheet({ id, seed, onClose, onRetry }) {
   const { data } = useFiling(id)
   const f = data ?? (seed?.id === id ? seed : null) // just created: show the preparing screen before the first poll
   if (!f) return null
-  if (f.status === S.AWAITING_PAYMENT) return <PayQrSheet f={f} onClose={onClose} />
-  if (!isFinal(f.status)) return <PreparingScreen f={f} onBack={onClose} />
+  // Back on a running filing: the screen reopens it only once it reaches a status the driver hasn't closed
+  if (f.status === S.AWAITING_PAYMENT) return <PayQrSheet f={f} onClose={() => onClose(f)} />
+  if (!isFinal(f.status)) return <PreparingScreen f={f} onBack={() => onClose(f)} />
   if (f.status === S.HANDED_OFF && f.live?.handoff) return <PaymentSheet f={f} onClose={onClose} />
   return <ResultSheet f={f} onClose={onClose} onRetry={onRetry} />
 }

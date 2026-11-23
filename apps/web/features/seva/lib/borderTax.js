@@ -45,7 +45,7 @@ export const isFinal = (status) => BT_FINAL.includes(status)
 const RECEIPT_LOOKUP_MS = 10 * 60_000 // worker's late lookup (3 tries, 1 min apart) ends well inside this
 /** Paid, receipt still being looked up by the worker — keep polling. Time-capped: a worker restart leaves the step behind. */
 export const gettingReceipt = (f, now = Date.now()) =>
-  f?.status === BT_STATUS.PAID && f.live?.step === 'receipt' && now - new Date(f.paidAt).getTime() < RECEIPT_LOOKUP_MS
+  f?.status === BT_STATUS.PAID && !f.receiptNo && (f.live?.step === 'receipt' || unlocking(f)) && now - new Date(f.paidAt).getTime() < RECEIPT_LOOKUP_MS
 
 /** Pending-lock clear status (mirrors BORDER_TAX_UNLOCK). */
 export const BT_UNLOCK = Object.freeze({ QUEUED: 'queued', WAITING: 'waiting', CLEARED: 'cleared', PAID: 'paid', FAILED: 'failed' })
@@ -82,6 +82,17 @@ export function resumable(filings, now = Date.now(), opened = readOpened()) {
   const f = filings?.[0]
   if (!f || opened.includes(f.id)) return null
   return !isFinal(f.status) || now - new Date(f.createdAt).getTime() < RESUME_MS ? f : null
+}
+
+const NEEDS_DRIVER = Object.freeze([BT_STATUS.AWAITING_CAPTCHA, BT_STATUS.AWAITING_PAYMENT])
+/**
+ * Driver pressed Back while the filing ran (`dismissed` = {id, status} at that moment): the latest filing
+ * opens again once it needs them (code / QR) in a status they haven't already closed (a98a4e2e 2026-11-23).
+ */
+export function reopenAfterBack(filings, dismissed) {
+  const f = filings?.[0]
+  if (!f || !NEEDS_DRIVER.includes(f.status)) return null
+  return dismissed?.id === f.id && dismissed.status === f.status ? null : f
 }
 
 const LATE_KEY = 'ec-bt-late-seen'

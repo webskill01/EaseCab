@@ -304,3 +304,38 @@ test('unlock: lock cleared → vehicle_pending filings waiting behind it run now
   assert.ok(u.due.f1 <= Date.now(), 'follower woken');
   assert.strictEqual(u.due.f2, undefined, 'a bank-step attempt keeps its own time');
 });
+
+const PAID_NO_RECEIPT = { status: 'paid', failureCode: null, receiptNo: null, paidAt: new Date() };
+
+test('unlock: paid in-app, no receipt (PB01D0397) → the paid pending row gives it; driver pushed, never "free"', async () => {
+  const u = unlockSetup(PAID_NO_RECEIPT, { rows: [{ paymentId: 'HRP1', amount: '100', result: 'paid', receiptNo: 'HRR8', pdf: Buffer.from('%PDF') }], retryAt: null });
+  await u.unlock();
+  assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.puts.length, u.pushed, u.freed], ['paid', 'HRR8', 1, ['b1'], []]);
+  assert.match(u.alerts.join(), /receipt attached to this paid filing/);
+});
+
+test('unlock: paid, no receipt, nothing pending → receipt list looked up and attached', async () => {
+  const u = unlockSetup(PAID_NO_RECEIPT, { rows: [], retryAt: null }, async () => ({ receiptNo: 'HRR9', pdf: Buffer.from('%PDF') }));
+  await u.unlock();
+  assert.deepStrictEqual([u.rows.b1.status, u.rows.b1.receiptNo, u.pushed], ['paid', 'HRR9', ['b1']]);
+});
+
+test('unlock: paid, no receipt anywhere → operator alerted to find it by hand, no "free" push', async () => {
+  const u = unlockSetup(PAID_NO_RECEIPT, { rows: [], retryAt: null });
+  await u.unlock();
+  assert.deepStrictEqual([u.rows.b1.receiptNo, u.freed], [null, []]);
+  assert.match(u.alerts.join(), /PAID but no receipt/);
+});
+
+test('captcha waiting and the app not polling the filing → one action push; app on it → none', async (ctx) => {
+  ctx.mock.timers.enable({ apis: ['setTimeout'] });
+  for (const [seen, want] of [['0', ['CAPTCHA']], [null, []]]) {
+    const t = setup({ answers: ['x7k2'] });
+    t.repo.getJob = async () => ({ step: 'vahan', seen: seen ?? String(Date.now()) });
+    const pushed = [];
+    await createRunner({ ...t, logger, onAction: async (_req, kind) => { pushed.push(kind); }, flows: { HR: flowWithCaptcha } }).run('b1', {});
+    ctx.mock.timers.tick(10_000);
+    await new Promise((r) => setImmediate(r));
+    assert.deepStrictEqual(pushed, want);
+  }
+});

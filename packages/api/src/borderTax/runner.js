@@ -7,10 +7,12 @@ const { openQr, awaitPaid, watchStatus } = require('./flows/payuQr');
 const { openSbiQr, awaitSbiPaid } = require('./flows/sbiQr');
 const { lookupReceipt } = require('./flows/receiptLookup');
 const { clearPending } = require('./flows/clearPending');
+const { toJob } = require('./job');
+const { createNudge } = require('./nudge');
+const { createReceipts } = require('./receipts');
 
 // All use the shared checkpostv4 portal; a state without a flow fails fast.
 const FLOWS = Object.freeze({ HR: fileCheckpost, HP: fileCheckpost, UP: fileCheckpost, RJ: fileCheckpost, UK: fileCheckpost, PB: fileCheckpost });
-const DAY_MS = 86_400_000;
 const STOPPED = 'filing no longer active'; // driver cancelled / filing expired — not our fault, no alert
 // Our side broke (vs a driver/vehicle outcome like captcha timeout or expired PUC) → Telegram.
 const ALERT_ON = new Set([F.PORTAL_ERROR, F.BANK_DOWN, F.NO_HANDOFF, F.NO_QR, F.TREASURY_DOWN, F.PAYMENT_UNKNOWN]);
@@ -18,15 +20,6 @@ const ALERT_ON = new Set([F.PORTAL_ERROR, F.BANK_DOWN, F.NO_HANDOFF, F.NO_QR, F.
 // Timed out at the QR: the driver may have paid and PayU's result never reached the bot (HP 513710ed, 2026-11-19)
 const MAYBE_PAID = new Set([F.PAYMENT_TIMEOUT, F.PAYMENT_UNKNOWN]);
 const BANK_STEP = new Set([F.NO_HANDOFF, F.NO_QR, F.TREASURY_DOWN, F.PAYMENT_FAILED, F.PAYMENT_TIMEOUT]);
-
-/** DB row → flow job. Window ends a minute early, so +1 min gives whole days. */
-function toJob(req) {
-  const days = Math.round((req.taxUpto.getTime() - req.taxFrom.getTime() + 60_000) / DAY_MS);
-  return {
-    stateCd: req.stateCd, permitType: req.permitType, vehicleNo: req.vehicleNo,
-    checkpost: req.checkpost, startAt: req.taxFrom, days, distanceKm: req.distanceKm, taxMode: req.taxMode,
-  };
-}
 
 /**
  * Runs one filing: portal flow (OCR first, misses relayed to the driver) → quote →
@@ -43,10 +36,12 @@ function toJob(req) {
  * @param {Record<string, Function>} [deps.flows]
  * @param {(ms: number) => Promise<void>} [deps.sleep]
  */
-function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, onLatePaid = async () => {}, onFreed = async () => {}, isStopping = () => false, clearLocks = clearPending, lookup = lookupReceipt, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, onAction = async () => {}, onLatePaid = async () => {}, onFreed = async () => {}, isStopping = () => false, clearLocks = clearPending, lookup = lookupReceipt, flows = FLOWS, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
   const until = (sec) => String(Date.now() + sec * 1000);
+  const nudge = createNudge({ repo, logger, onAction });
+  const { storeReceipt, recordReceipt } = createReceipts({ r2, logger, service });
 
-  function makeIo(id, conn) {
+  function makeIo(id, conn, req) {
     const moveOrStop = async (to) => {
       if (!(await service.move(id, to))) throw portalError(F.PORTAL_ERROR, STOPPED);
     };
@@ -57,6 +52,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
         await repo.clearAnswers(id);
         await moveOrStop(S.AWAITING_CAPTCHA);
         await repo.setJob(id, { step, captcha: image, refresh: canRefresh ? '1' : '', deadline: until(BORDER_TAX.CAPTCHA_TIMEOUT_SEC) });
+        nudge(req, step, 'CAPTCHA');
         const answer = await repo.popAnswer(conn, id, BORDER_TAX.CAPTCHA_TIMEOUT_SEC);
         await repo.setJob(id, { step: 'filling', captcha: '', deadline: '' });
         if (answer === null) throw portalError(F.CAPTCHA_TIMEOUT);
@@ -68,6 +64,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
         await repo.clearAnswers(id);
         const t0 = Date.now();
         await repo.setJob(id, { step: 'fare', fare: JSON.stringify({ taxPaise, from, upto }), deadline: until(BORDER_TAX.FARE_CONFIRM_SEC) });
+        nudge(req, 'fare', 'FARE');
         const answer = await repo.popAnswer(conn, id, BORDER_TAX.FARE_CONFIRM_SEC);
         await repo.setJob(id, { step: 'filling', fare: '', deadline: '' });
         logger.info({ id }, `fare ${answer ?? 'no answer'} after ${Math.round((Date.now() - t0) / 1000)}s`);
@@ -80,19 +77,6 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
   // ponytail: per-filing gap, not per-lookup — a flow's own retries (refresh, next day) ride on its slot
   async function waitLookupSlot() {
     for (let ms = await repo.takeLookupSlot(BORDER_TAX.LOOKUP_GAP_SEC); ms > 0; ms = await repo.takeLookupSlot(BORDER_TAX.LOOKUP_GAP_SEC)) await sleep(ms);
-  }
-
-  /** Receipt PDF → R2. Upload trouble never loses a paid filing: key null → the app shows support. */
-  async function storeReceipt(id, pdf) {
-    if (!pdf) return null;
-    const key = `${BORDER_TAX.RECEIPT_PREFIX}${id}.pdf`;
-    try {
-      await r2.putObject({ key, body: pdf, contentType: 'application/pdf' });
-      return key;
-    } catch (err) {
-      logger.error({ id, err: err.message }, 'border tax receipt upload failed');
-      return null;
-    }
   }
 
   /**
@@ -122,6 +106,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
   async function collect(id, req, { payPage, ref, pay, ...quote }, io) {
     const { qr, upi, secLeft } = pay.sbi ? await openSbiQr(payPage, io) : await openQr(payPage, io);
     if (!(await service.awaitPayment(id, { ...quote, qr, upi, deadline: until(secLeft ?? BORDER_TAX.PAY_WAIT_SEC) }))) return false;
+    nudge(req, 'pay', 'QR');
     const { receiptNo, pdf } = pay.sbi ? await awaitSbiPaid(payPage, io, secLeft) : await awaitPaid(payPage, io, pay.back).catch(async (err) => {
       if (err.failureCode !== F.PAYMENT_TIMEOUT) throw err;
       return lookupAfterTimeout(id, req, { payPage, pay, quote }, io, err);
@@ -140,6 +125,12 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
     const lateKey = await storeReceipt(id, late?.pdf);
     await service.attachReceipt(id, { receiptNo: late?.receiptNo, receiptKey: lateKey });
     if (lateKey) await notify(req);
+    // PB01D0397 2026-11-23: PayU success, Vahan's return page hung, no receipt in 3 lookups — the attempt sat
+    // on Check Pending Transaction instead. Same pending check as an unpaid one, once the portal allows it.
+    if (!late) {
+      io.log('paid, no receipt yet → pending check scheduled');
+      await service.scheduleUnlock(id);
+    }
     return true;
   }
 
@@ -174,7 +165,7 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
     try {
       page = await newPage({ stateCd: req.stateCd, sid: id }); // inside try: a dead browser fails the filing instead of leaving the driver on a spinner
       logger.info({ id, stateCd: req.stateCd }, 'border tax filing started'); // step timings = log time deltas from here
-      const io = makeIo(id, conn);
+      const io = makeIo(id, conn, req);
       const result = await flow(page, toJob(req), io);
       // in-app QR only: a bank-page hand-off let drivers pay outside the app → pending/mismatch locks
       if (!result.payPage) throw portalError(F.NO_QR, 'no in-app QR page (bank hand-off is off)');
@@ -231,6 +222,10 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
   }
 
   /**
+   * A receipt found by a clear/lookup belongs to this filing: an unpaid-looking one becomes PAID, a paid one
+   * without a receipt (needReceipt) gets it attached. @returns {Promise<boolean>} recorded
+   */
+  /**
    * Clears the pending-transaction lock(s) on a filing's vehicle in its state. A pending attempt that was
    * actually paid gives its receipt: this filing's own (same amount, not yet PAID) → the filing becomes PAID.
    * @param {string} id - filing id (scheduled by scheduleUnlock)
@@ -254,20 +249,24 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
       const { rows, retryAt } = await clearLocks(page.context(), req, log);
       const paidRow = rows.find((r) => r.result === 'paid');
       const unknown = rows.find((r) => r.result === 'unknown');
+      // paid in-app, receipt never came (collect scheduled this): the pending row or the receipt list has it
+      const needReceipt = req.status === S.PAID && !req.receiptNo;
       if (unknown) alert(`${req.stateCd} unlock ${id.slice(0, 8)}: unexpected portal answer (${unknown.note})`);
       if (paidRow) {
-        const own = req.status !== S.PAID && req.taxPaise && Math.round(Number(paidRow.amount) * 100) === req.taxPaise;
-        if (own && (await service.latePaid(id, { receiptNo: paidRow.receiptNo, receiptKey: await storeReceipt(id, paidRow.pdf) }))) {
-          log('late payment found → paid');
+        const sameAmount = req.taxPaise && Math.round(Number(paidRow.amount) * 100) === req.taxPaise;
+        const own = sameAmount && (req.status !== S.PAID || needReceipt);
+        if (own && (await recordReceipt(id, req, paidRow))) {
+          log(needReceipt ? 'receipt found on the pending check' : 'late payment found → paid');
           await onLatePaid(req).catch((err) => logger.warn({ id, err: err.message }, 'late-paid push failed')); // the app banner still shows it
         }
         // not own = paid outside this filing (HR 94275939 2026-11-15: no EaseCab filing made that attempt) — FYI only
-        alert(`${req.stateCd} unlock ${id.slice(0, 8)}: pending attempt was PAID (${paidRow.receiptNo}${own ? ', this filing → marked paid' : ', not this filing — FYI, vehicle free'})`);
+        alert(`${req.stateCd} unlock ${id.slice(0, 8)}: pending attempt was PAID (${paidRow.receiptNo}${own ? (needReceipt ? ', receipt attached to this paid filing' : ', this filing → marked paid') : ', not this filing — FYI, vehicle free'})`);
       }
       // nothing pending after a QR timeout = the attempt went through: find its receipt (same Tax From + amount)
-      if (!rows.length && !retryAt && MAYBE_PAID.has(req.failureCode) && req.status !== S.PAID && req.taxPaise) {
+      const lookFor = (MAYBE_PAID.has(req.failureCode) && req.status !== S.PAID) || needReceipt;
+      if (!rows.length && !retryAt && lookFor && req.taxPaise) {
         const late = await lookup(page.context(), { stateCd: req.stateCd, vehicleNo: req.vehicleNo, taxFrom: req.taxFrom, amountPaise: req.taxPaise }, log, sleep);
-        if (late && (await service.latePaid(id, { receiptNo: late.receiptNo, receiptKey: await storeReceipt(id, late.pdf) }))) {
+        if (late && (await recordReceipt(id, req, late))) {
           log(`late payment found by receipt lookup → paid (${late.receiptNo})`);
           await onLatePaid(req).catch((err) => logger.warn({ id, err: err.message }, 'late-paid push failed'));
           alert(`${req.stateCd} unlock ${id.slice(0, 8)}: no pending row, receipt ${late.receiptNo} found → marked paid`);
@@ -280,9 +279,11 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
         if (!(await service.unlockFailed(id, BORDER_TAX.UNLOCK_BANK_PENDING_SEC))) alert(`${req.stateCd} unlock ${id.slice(0, 8)} gave up: bank still PENDING`);
         return;
       }
+      // paid driver still without a slip after the pending check + lookup: a person has to find it (GRN in the log)
+      if (needReceipt && !retryAt && !paidRow) alert(`${req.stateCd} filing ${id.slice(0, 8)}: PAID but no receipt after pending check + lookup — find it by hand`);
       // unknown: never re-tapped (it may be a paid row whose receipt didn't load) — ops checks it
       await service.unlockDone(id, { retryAt, receiptNo: paidRow?.receiptNo, failed: Boolean(unknown) });
-      if (!retryAt && !unknown && !paidRow) await onFreed(req).catch((err) => logger.warn({ id, err: err.message }, 'freed push failed'));
+      if (!retryAt && !unknown && !paidRow && !needReceipt) await onFreed(req).catch((err) => logger.warn({ id, err: err.message }, 'freed push failed'));
       if (!retryAt && !unknown) await wakeFollowers(req).catch((err) => logger.warn({ id, err: err.message }, 'wake followers failed'));
     } catch (err) {
       logger.warn({ id, err: err.message }, 'border tax unlock failed');

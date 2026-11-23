@@ -145,6 +145,8 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     async get(userId, id) {
       const filing = await repo.findForUser(id, userId);
       if (!filing) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
+      // the app is on this filing right now: the worker pushes only a driver who isn't (runner nudge)
+      if (RUNNING.includes(filing.status)) await repo.setJob(id, { seen: String(Date.now()) });
       const { step = null, captcha = '', refresh = '', deadline = '', started = '', qr = '', upi = '', progress = '', fare = '' } = await repo.getJob(id);
       const handoff = filing.status === S.HANDED_OFF ? await repo.getHandoff(id) : null;
       const paying = filing.status === S.AWAITING_PAYMENT;

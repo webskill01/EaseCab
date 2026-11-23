@@ -14,6 +14,8 @@ export function useFilings() {
     initialPageParam: null,
     getNextPageParam: (last) => last.nextCursor || undefined,
     staleTime: 30000,
+    // a filing still running → keep the list fresh so a backed-out filing reopens when its QR / code is up
+    refetchInterval: (q) => (q.state.data?.pages[0]?.filings[0] && !isFinal(q.state.data.pages[0].filings[0].status) ? BT_POLL_MS : false),
   })
   const data = useMemo(() => q.data?.pages.flatMap((p) => p.filings), [q.data])
   return { ...q, data }
