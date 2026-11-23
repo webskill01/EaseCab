@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { fetchFilings, fetchStates, setStatePaused } from '../services/borderTaxApi'
 import { useSessionState } from '@/features/shell/hooks/useSessionState'
 
-const DEFAULTS = { state: '', status: '', outcome: '', range: '', who: 'real', q: '', userId: '' }
+const DEFAULTS = { state: '', status: '', outcome: '', range: '', q: '' } // real drivers only: the API defaults who=real
 const DAY_MS = 86_400_000
 const istDay = (ms) => new Date(ms + 19_800_000).toISOString().slice(0, 10)
 
@@ -20,7 +20,7 @@ function rangeDays(range, now = Date.now()) {
 /** Border tax filings (filters kept per tab session) + byStatus totals over the whole filter. */
 export function useFilings() {
   const [page, setPage] = useSessionState('bordertax:page', 1)
-  const [filters, setFilters] = useSessionState('bordertax:filters', DEFAULTS)
+  const [filters, setFilters] = useSessionState('bordertax:filters:v2', DEFAULTS) // v2: drops saved who/userId filters
   const { range, ...rest } = filters
   const query = useQuery({
     queryKey: ['borderTax', filters, page],
@@ -33,6 +33,22 @@ export function useFilings() {
     page, setPage, ...filters, setFilter,
     items: query.data?.filings ?? [],
     byStatus: query.data?.byStatus ?? [],
+    total: query.data?.meta?.total ?? 0,
+    limit: query.data?.meta?.limit ?? 30,
+    isLoading: query.isLoading,
+    isError: query.isError,
+  }
+}
+
+/** One driver's filings for the user page — test accounts included (who=all). */
+export function useUserFilings(userId, page) {
+  const query = useQuery({
+    queryKey: ['borderTax', 'user', userId, page],
+    queryFn: () => fetchFilings({ page, userId, who: 'all' }),
+    placeholderData: keepPreviousData,
+  })
+  return {
+    items: query.data?.filings ?? [],
     total: query.data?.meta?.total ?? 0,
     limit: query.data?.meta?.limit ?? 30,
     isLoading: query.isLoading,

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, ShieldCheck, Crown, Trash2, RotateCcw, ExternalLink, Car, User, Receipt, Activity, Bell, Landmark } from 'lucide-react'
-import { OUTCOME, issueList } from '@/features/borderTax/lib/tags'
+import { UserFilings } from '@/features/borderTax/components/UserFilings'
 import { useUser } from '@/features/users/hooks/useUsers'
 import { PhoneLink } from '@/features/shell/components/PhoneLink'
 import { Avatar } from '@/features/shell/components/Avatar'
@@ -132,7 +132,7 @@ export default function UserProfilePage() {
         </Section>
 
         <Section icon={Landmark} title="Border tax">
-          <BorderTaxFacts userId={user.id} groups={user.borderTax ?? []} />
+          <UserFilings userId={user.id} groups={user.borderTax ?? []} />
         </Section>
 
         <Section icon={Activity} title="Activity">
@@ -150,28 +150,5 @@ export default function UserProfilePage() {
         </Section>
       </div>
     </div>
-  )
-}
-
-/** Filings by result tag (only "Failed" = our side), paid total, link to the full list. */
-function BorderTaxFacts({ userId, groups }) {
-  const total = groups.reduce((n, g) => n + g.count, 0)
-  if (!total) return <p className="text-sm text-ec-ink60">No filings yet.</p>
-  const paid = groups.find((g) => g.outcome === 'paid')
-  return (
-    <>
-      <div className="flex flex-wrap gap-2 text-sm">
-        <span className={pill()}>{total} filed</span>
-        {groups.map((g) => (
-          <span key={g.outcome} className={pill({ tone: OUTCOME[g.outcome]?.[1] ?? 'slate' })}>
-            {g.count} {OUTCOME[g.outcome]?.[0] ?? g.outcome}{g.outcome === 'paid' && paid.paise ? ` · ₹${(paid.paise / 100).toLocaleString('en-IN')}` : ''}
-          </span>
-        ))}
-      </div>
-      {groups.filter((g) => Object.keys(g.codes || {}).length).map((g) => (
-        <p key={g.outcome} className="mt-2 text-xs text-ec-ink60"><b>{OUTCOME[g.outcome]?.[0] ?? g.outcome}:</b> {issueList(g.codes)}</p>
-      ))}
-      <Link href={`/border-tax?user=${userId}`} className="mt-3 inline-block text-sm font-semibold text-ec-blue hover:underline">See all filings →</Link>
-    </>
   )
 }
