@@ -31,6 +31,10 @@ const ROAD_TAX_EXPIRED = /road tax validity is expired/i; // UK, PB01C7365 (2026
 const SAME_STATE = /same state vehicle/i; // HR, after Get Details (2026-11-14)
 const NO_DATA = /no data found for this vehicle/i; // HR a7f5c3a3 2026-11-16: number not on Vahan, Get Details then disabled
 const OPEN_TRIES = 3;
+// Vahan's insurance check glitches: PB01E7801 refused twice 2026-11-23 22:34/22:37, loaded clean an hour later
+// (HP 8464fed6 passed 2 min later). Nothing is locked at this step, so the worker retries it itself.
+const INSURANCE_RETRIES = 2;
+const INSURANCE_GAP_MS = 20_000;
 const VAHAN_CAPTCHA_LEN = 6; // portal: "Captcha must be six characters"
 const CALC_MS = 30_000;
 const MODES_MS = 15_000;
@@ -104,6 +108,21 @@ async function ownerStep(page, job, io) {
   if (PENDING.test(alert)) throw portalError(BORDER_TAX_FAILURE.VEHICLE_PENDING, alert);
   await pickCheckpost(page, job);
   await visibleBtn(page, 'Next').click();
+}
+
+/** Form + Vahan lookup; a fresh form after an insurance refusal (the open one may keep Get Details disabled). */
+async function vahanLookup(page, job, io, steps = { openForm, ownerStep }) {
+  for (let left = INSURANCE_RETRIES; ; left -= 1) {
+    await steps.openForm(page, job.stateCd);
+    try {
+      return await steps.ownerStep(page, job, io);
+    } catch (err) {
+      if (err.failureCode !== BORDER_TAX_FAILURE.INSURANCE_UNVERIFIED || left === 0) throw err;
+      io.log(`Vahan insurance check refused, retry in ${INSURANCE_GAP_MS / 1000}s (${left} left)`);
+      await page.waitForTimeout(INSURANCE_GAP_MS);
+      await page.goto('about:blank'); // the form is a hash route: leave it so openForm loads it fresh
+    }
+  }
 }
 
 /**
@@ -258,9 +277,8 @@ async function fileCheckpost(page, job, io) {
   const cfg = TREASURY[job.stateCd];
   const probed = cfg?.probe && page.context().respawn ? pickSession(page.context(), cfg, page.context().respawn, io) : null;
   probed?.catch(() => {}); // its error surfaces when bankHandoff awaits it
-  await openForm(page, job.stateCd);
   // io.progress(n) = steps done, the app's checklist ticks on these (real progress, not a timer)
-  await ownerStep(page, job, io);
+  await vahanLookup(page, job, io);
   io.progress?.(1); // vehicle found on Vahan
   await vehicleStep(page, job);
   io.progress?.(2); // vehicle details + checkpost accepted
@@ -278,4 +296,4 @@ async function fileCheckpost(page, job, io) {
   throw portalError(BORDER_TAX_FAILURE.NO_QR, `no in-app QR page (bank ${new URL(handoff.action).hostname})`);
 }
 
-module.exports = { fileCheckpost, istInput, portalWindow, fromPortal, vahanRefusal, entryUrl };
+module.exports = { fileCheckpost, vahanLookup, istInput, portalWindow, fromPortal, vahanRefusal, entryUrl };
