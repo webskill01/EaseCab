@@ -23,8 +23,8 @@ function perUserLimit(redis, name, max, windowSec) {
 
 /**
  * Fuel station finder (Phase 30), all authed:
- *   GET  /api/v1/fuel/stations?lat&lng&fuel&radiusKm — nearest stations
- *   GET  /api/v1/fuel/route?(fromCityId|fromLat&fromLng)&toCityId&fuel — pumps along the road
+ *   GET  /api/v1/fuel/stations?(lat&lng|cityId)&fuel&radiusKm — nearest stations (cityId adds `center`)
+ *   GET  /api/v1/fuel/route?(fromCityId|fromLat&fromLng)&toCityId&fuel — road options, each with its pumps
  *   POST /api/v1/fuel/stations                       — add a missing station (pending)
  *   POST /api/v1/fuel/stations/:id/reports           — CNG yes / CNG no / closed
  *
@@ -36,7 +36,8 @@ function createFuelRouter({ service, requireAuth, redis }) {
   router.use(requireAuth);
 
   router.get('/stations', validate(fuelNearbyQuerySchema, 'query'), async (req, res) => {
-    sendSuccess(res, { data: { stations: await service.nearby(req.valid.query) } });
+    const q = req.valid.query;
+    sendSuccess(res, { data: q.cityId ? await service.inCity(q) : { stations: await service.nearby(q) } });
   });
 
   router.get(

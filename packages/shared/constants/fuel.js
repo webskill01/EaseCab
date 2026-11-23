@@ -63,7 +63,7 @@ const FUEL = Object.freeze({
 /** Google Routes API (server key; Essentials SKU = DRIVE + TRAFFIC_UNAWARE). */
 const GOOGLE_ROUTES = Object.freeze({
   URL: 'https://routes.googleapis.com/directions/v2:computeRoutes',
-  FIELD_MASK: 'routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline',
+  FIELD_MASK: 'routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline,routes.description',
   TIMEOUT_MS: 8000,
 });
 

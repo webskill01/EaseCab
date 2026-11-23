@@ -10,9 +10,16 @@ export async function listNearby({ lat, lng, fuel }) {
   return data.stations
 }
 
+/** A city's pumps around its centre. @returns {Promise<{ center: { lat, lng }, stations: object[] }>} */
+export async function cityStations({ cityId, fuel }) {
+  const { data } = await apiFetch(`/fuel/stations?cityId=${cityId}&fuel=${fuel}`)
+  return data
+}
+
 /**
  * Pumps along the road from `from` ({ cityId } or { lat, lng }) to the drop city.
- * @returns {Promise<{ route: { from, to, points: number[][], distanceKm: ?number, durationMin: ?number, approx: boolean }, stations: object[] }>}
+ * Up to 3 road options (Google alternatives), each with its own pumps.
+ * @returns {Promise<{ from, to, routes: { points: number[][], distanceKm: ?number, durationMin: ?number, label: ?string, approx: boolean, stations: object[] }[] }>}
  */
 export async function routeStations({ from, toCityId, fuel }) {
   const start = from.cityId ? `fromCityId=${from.cityId}` : `fromLat=${from.lat}&fromLng=${from.lng}`

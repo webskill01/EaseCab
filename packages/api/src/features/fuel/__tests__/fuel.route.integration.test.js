@@ -98,12 +98,24 @@ test('POST /fuel/stations/:id/reports → 201 queued; unknown station → 404; b
   assert.strictEqual((await request(app).post(`/api/v1/fuel/stations/${SID}/reports`).set('Cookie', cookie).send({ kind: 'maybe' })).status, 422);
 });
 
+test('GET /fuel/stations?cityId → city centre + its pumps; 404 unknown city; 422 city + position', async () => {
+  const app = makeApp();
+  const res = await request(app).get(`/api/v1/fuel/stations?cityId=${SID}`).set('Cookie', cookie);
+  assert.strictEqual(res.status, 200);
+  assert.deepStrictEqual(res.body.data.center, { lat: 30.34, lng: 76.39 });
+  assert.deepStrictEqual(res.body.data.stations.map((s) => s.id), ['a', 'b']);
+  const missing = '22222222-2222-4222-8222-222222222222';
+  assert.strictEqual((await request(app).get(`/api/v1/fuel/stations?cityId=${missing}`).set('Cookie', cookie)).status, 404);
+  assert.strictEqual((await request(app).get(`/api/v1/fuel/stations?cityId=${SID}&lat=30.3&lng=76.4`).set('Cookie', cookie)).status, 422);
+});
+
 test('GET /fuel/route → pumps along a straight-line route; 422 without a from; 404 unknown city', async () => {
   const app = makeApp();
   const ok = await request(app).get(`/api/v1/fuel/route?fromLat=30.20&fromLng=76.3869&toCityId=${SID}&fuel=cng`).set('Cookie', cookie);
   assert.strictEqual(ok.status, 200);
-  assert.strictEqual(ok.body.data.route.approx, true);
-  assert.deepStrictEqual(ok.body.data.stations.map((s) => s.id), ['a']); // 'b' lies past the drop point
+  assert.strictEqual(ok.body.data.routes.length, 1);
+  assert.strictEqual(ok.body.data.routes[0].approx, true);
+  assert.deepStrictEqual(ok.body.data.routes[0].stations.map((s) => s.id), ['a']); // 'b' lies past the drop point
   assert.strictEqual((await request(app).get(`/api/v1/fuel/route?toCityId=${SID}`).set('Cookie', cookie)).status, 422);
   const missing = '22222222-2222-4222-8222-222222222222';
   assert.strictEqual((await request(app).get(`/api/v1/fuel/route?fromCityId=${missing}&toCityId=${SID}`).set('Cookie', cookie)).status, 404);

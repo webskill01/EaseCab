@@ -10,6 +10,7 @@ const FALLBACK_CENTER = Object.freeze({ lat: 30.73, lng: 76.78 }) // Chandigarh,
 const LOCATE_ZOOM = 15
 const ZOOM_STEP_MS = 120
 const REVEAL_MS = 700
+const NO_ALTS = Object.freeze([])
 // Quiet base map: no shop / transit icons competing with the pump pins.
 const STYLES = Object.freeze([
   { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
@@ -60,6 +61,16 @@ function drawRoute(g, map, route) {
   return () => { cancelAnimationFrame(raf); [casing, line, ...ends].forEach((o) => o.setMap(null)) }
 }
 
+/** The road options not picked: grey, under the picked road; tap one to switch to it. */
+function drawAlts(g, map, alts, onPick) {
+  const lines = alts.map(({ points, index }) => {
+    const line = new g.Polyline({ map, path: points.map(([lat, lng]) => ({ lat, lng })), strokeColor: MAP_COLORS.ALT, strokeWeight: 7, strokeOpacity: 1, zIndex: 0, clickable: true })
+    line.addListener('click', () => onPick.current?.(index))
+    return line
+  })
+  return () => lines.forEach((l) => l.setMap(null))
+}
+
 /** Glide like Google Maps' locate button: pan first, then one zoom level at a time. */
 function flyTo(g, map, p, target) {
   map.panTo(p)
@@ -73,9 +84,9 @@ function flyTo(g, map, p, target) {
 }
 
 /** Zoom to the whole route, or to the driver + nearby pumps, clear of the header and sheet. */
-function fit(g, map, { me, route, stations, pad }) {
+function fit(g, map, { me, route, alts, stations, pad }) {
   const bounds = new g.LatLngBounds()
-  if (route) route.points.forEach(([lat, lng]) => bounds.extend({ lat, lng }))
+  if (route) [route, ...alts].forEach((r) => r.points.forEach(([lat, lng]) => bounds.extend({ lat, lng })))
   else {
     if (me) bounds.extend(me)
     stations.forEach((s) => bounds.extend({ lat: s.lat, lng: s.lng }))
@@ -111,8 +122,8 @@ function usePins(ready, map, { stations, fuel, selectedId, onSelect }) {
   }, [ready, selectedId, fuel, stations])
 }
 
-/** Full-bleed Google map of pumps (and the road when `route` is given). Ref exposes `locate()`. */
-export const FuelMap = forwardRef(function FuelMap({ me: given, route, stations, fuel, selectedId, onSelect, pad }, ref) {
+/** Full-bleed Google map of pumps (and the road when `route` is given, other road options in grey). Ref exposes `locate()`. */
+export const FuelMap = forwardRef(function FuelMap({ me: given, route, alts = NO_ALTS, onPickRoute, stations, fuel, selectedId, onSelect, pad }, ref) {
   const t = useTranslations('seva.fuel.map')
   const box = useRef(null)
   const map = useRef(null)
@@ -120,6 +131,8 @@ export const FuelMap = forwardRef(function FuelMap({ me: given, route, stations,
   const [located, setLocated] = useState(null) // from the locate button; wins over the screen's position
   const me = located || given
   const ready = state === 'ready'
+  const pickRoute = useRef(onPickRoute)
+  pickRoute.current = onPickRoute
 
   useImperativeHandle(ref, () => ({
     /** Fresh GPS fix → dot + glide in. Throws when location is off so the caller can say so. */
@@ -146,13 +159,14 @@ export const FuelMap = forwardRef(function FuelMap({ me: given, route, stations,
 
   usePins(ready, map, { stations, fuel, selectedId, onSelect })
   useEffect(() => (ready && route ? drawRoute(window.google.maps, map.current, route) : undefined), [ready, route])
+  useEffect(() => (ready && route && alts.length ? drawAlts(window.google.maps, map.current, alts, pickRoute) : undefined), [ready, route, alts])
   useEffect(() => {
     if (!ready || !me) return undefined
     const dot = new window.google.maps.Marker({ map: map.current, position: me, icon: meIcon(window.google.maps), zIndex: 1002 })
     return () => dot.setMap(null)
   }, [ready, me])
   useEffect(() => {
-    if (ready) fit(window.google.maps, map.current, { me: given, route, stations, pad })
+    if (ready) fit(window.google.maps, map.current, { me: given, route, alts, stations, pad })
   }, [ready, given, route, stations]) // eslint-disable-line react-hooks/exhaustive-deps -- pad is a constant per screen
   useEffect(() => {
     const s = ready && stations.find((x) => x.id === selectedId)

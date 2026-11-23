@@ -43,22 +43,24 @@ function createFuelService({ repo, routes = null, logger }) {
   }
 
   /**
-   * Road route from cache or Google; straight line (approx) when Google is off or fails,
-   * so the driver still gets pumps. @returns {Promise<{ pts: number[][], distanceKm: ?number, durationMin: ?number, approx: boolean }>}
+   * Road routes (main + Google's alternatives) from cache or Google; one straight line
+   * (approx) when Google is off or fails, so the driver still gets pumps.
+   * @returns {Promise<Array<{ pts: number[][], distanceKm: ?number, durationMin: ?number, label: ?string, approx: boolean }>>}
    */
-  async function roadRoute(from, to) {
-    const cached = await repo.getRoute(from, to);
-    let route = cached;
-    if (!route && routes) {
+  async function roadRoutes(from, to) {
+    let list = await repo.getRoute(from, to);
+    if (!list && routes) {
       try {
-        route = await routes.computeRoute(from, to);
-        if (route) await repo.setRoute(from, to, route);
+        list = await routes.computeRoutes(from, to);
+        if (list.length) await repo.setRoute(from, to, list);
       } catch (err) {
         logger?.warn({ err: err.message }, 'google routes failed; straight-line fallback');
       }
     }
-    if (route) return { pts: decodePolyline(route.encoded), distanceKm: route.distanceKm, durationMin: route.durationMin, approx: false };
-    return { pts: corridor.straightLine(from, to), distanceKm: null, durationMin: null, approx: true };
+    if (list?.length) {
+      return list.map((r) => ({ pts: decodePolyline(r.encoded), distanceKm: r.distanceKm, durationMin: r.durationMin, label: r.label ?? null, approx: false }));
+    }
+    return [{ pts: corridor.straightLine(from, to), distanceKm: null, durationMin: null, label: null, approx: true }];
   }
 
   /** Active pumps selling `fuel` within the corridor, in road order. */
@@ -80,17 +82,26 @@ function createFuelService({ repo, routes = null, logger }) {
 
   return {
     /**
-     * Pumps along the road from pickup (city or position) to the drop city.
-     * EXPLAIN ANALYZE: one findInBox per ~25 km piece, same index as nearby().
+     * Pumps along each road option from pickup (city or position) to the drop city; the
+     * driver picks a road in the app, so every option carries its own pumps.
+     * EXPLAIN ANALYZE: one findInBox per ~25 km piece per option, same index as nearby().
      */
     async alongRoute({ fromCityId, fromLat, fromLng, toCityId, fuel }) {
       const [from, to] = await Promise.all([
         fromCityId ? cityPoint(fromCityId) : snap({ lat: fromLat, lng: fromLng }),
         cityPoint(toCityId),
       ]);
-      const { pts, ...meta } = await roadRoute(from, to);
-      const stations = await pumpsAlong(pts, fuel);
-      return { route: { from, to, ...meta, points: corridor.downsample(pts, FUEL.ROUTE_DRAW_POINTS) }, stations };
+      const options = await roadRoutes(from, to);
+      const list = await Promise.all(options.map(async ({ pts, ...meta }) => ({
+        ...meta, points: corridor.downsample(pts, FUEL.ROUTE_DRAW_POINTS), stations: await pumpsAlong(pts, fuel),
+      })));
+      return { from, to, routes: list };
+    },
+
+    /** A city's pumps: nearest to its centre first (same radius as "near me"). */
+    async inCity({ cityId, fuel, radiusKm }) {
+      const center = await cityPoint(cityId);
+      return { center, stations: await this.nearby({ ...center, fuel, radiusKm }) };
     },
 
     /** Nearest active stations selling `fuel`, closest first, capped at FUEL.NEARBY_LIMIT. */

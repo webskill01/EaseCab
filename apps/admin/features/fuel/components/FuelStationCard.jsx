@@ -7,6 +7,8 @@ import { UserLink } from '@/features/shell/components/UserLink'
 const REPORT = { cng_yes: { label: 'CNG available', tone: 'green' }, cng_no: { label: 'No CNG', tone: 'amber' }, closed: { label: 'Closed', tone: 'red' } }
 const FUELS = [['hasCng', 'CNG'], ['hasPetrol', 'Petrol'], ['hasDiesel', 'Diesel']]
 const mapUrl = (s) => `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`
+// Keyless embed (no Maps quota); needs frame-src google.com in next.config.js CSP.
+const embedUrl = (s) => `https://www.google.com/maps?q=${s.lat},${s.lng}&z=17&output=embed`
 const day = (d) => new Date(d).toLocaleDateString('en-IN')
 
 /** Pending station → Approve / Reject. Reported station → act on the reports, or Dismiss them. */
@@ -30,7 +32,7 @@ function Actions({ s, onDecide }) {
   )
 }
 
-/** One pump in the review queue: details, map link, who added it, open driver reports, actions. */
+/** One pump in the review queue: details, its spot on a map + coordinates link, who added it, open driver reports, actions. */
 export function FuelStationCard({ station: s, onDecide }) {
   return (
     <div className={card}>
@@ -49,6 +51,8 @@ export function FuelStationCard({ station: s, onDecide }) {
         {s.addedBy && <span>added by <UserLink id={s.addedBy.id}>{s.addedBy.name ?? '—'}</UserLink></span>}
         <span>{day(s.createdAt)}</span>
       </div>
+      <iframe src={embedUrl(s)} title={`Map: ${s.name}`} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+        className="mt-3 h-52 w-full rounded-xl border border-ec-line bg-slate-50" />
       {s.reports?.length > 0 && (
         <ul className="mt-3 flex flex-col gap-1.5">
           {s.reports.map((r) => (

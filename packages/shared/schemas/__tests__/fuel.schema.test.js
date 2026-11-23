@@ -13,6 +13,14 @@ test('nearby: coerces query strings, defaults to CNG / 15 km, rejects outside In
   assert.equal(fuelNearbyQuerySchema.safeParse({ lat: '30', lng: '76', fuel: 'lpg' }).success, false);
 });
 
+test('nearby: a city instead of a position, exactly one of the two', () => {
+  const cityId = '11111111-1111-4111-8111-111111111111';
+  assert.deepEqual(fuelNearbyQuerySchema.parse({ cityId }), { cityId, fuel: 'cng', radiusKm: 15 });
+  assert.equal(fuelNearbyQuerySchema.safeParse({ cityId, lat: '30', lng: '76' }).success, false);
+  assert.equal(fuelNearbyQuerySchema.safeParse({ lat: '30' }).success, false);
+  assert.equal(fuelNearbyQuerySchema.safeParse({ cityId: 'patiala' }).success, false);
+});
+
 test('driver add: needs a name and 1+ fuels; brand defaults to other; no extra keys', () => {
   const ok = fuelStationCreateSchema.parse({ name: ' Gill Fuels ', lat: 30.3, lng: 76.4, fuels: ['cng'] });
   assert.equal(ok.name, 'Gill Fuels');

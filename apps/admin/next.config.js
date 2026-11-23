@@ -6,7 +6,8 @@ const apiOrigin = process.env.NEXT_PUBLIC_API_URL || ''
 // Content-Security-Policy for the admin panel (security-review M1). 'unsafe-inline'
 // is required for styles (Tailwind/Next inject inline <style>) and for Next's
 // inline hydration bootstrap script — without per-request nonces this is the
-// tightest workable policy. No external script/style/frame sources are allowed.
+// tightest workable policy. No external script/style sources are allowed; the only
+// external frame is Google's keyless map embed (fuel review cards show the pump's spot).
 //
 // Computed per call so NODE_ENV is read at request time: Next's dev server + HMR
 // evaluate bundled code with eval()/new Function(), so DEVELOPMENT must allow
@@ -26,6 +27,7 @@ function buildCsp() {
     "img-src 'self' data: blob: https://*.r2.cloudflarestorage.com https://cdn.easecab.com",
     "font-src 'self'",
     `connect-src 'self' ${apiOrigin}`.trim(),
+    'frame-src https://www.google.com https://maps.google.com',
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

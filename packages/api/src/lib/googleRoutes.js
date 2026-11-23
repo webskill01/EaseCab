@@ -41,26 +41,30 @@ function createGoogleRoutesClient({ apiKey }) {
   const at = ({ lat, lng }) => ({ location: { latLng: { latitude: lat, longitude: lng } } });
   return {
     /**
+     * The main road plus Google's alternatives (up to 3 in all). Alternatives stay on the
+     * Essentials SKU — only traffic, waypoint optimising, 11+ waypoints or location modifiers bill Pro.
      * @param {{ lat: number, lng: number }} from @param {{ lat: number, lng: number }} to
-     * @returns {Promise<{ encoded: string, distanceKm: number, durationMin: number } | null>} null = no road route
+     * @returns {Promise<Array<{ encoded: string, distanceKm: number, durationMin: number, label: ?string }>>} empty = no road route
      */
-    async computeRoute(from, to) {
+    async computeRoutes(from, to) {
       const res = await fetch(GOOGLE_ROUTES.URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': apiKey, 'X-Goog-FieldMask': GOOGLE_ROUTES.FIELD_MASK },
         body: JSON.stringify({
           origin: at(from), destination: at(to), travelMode: 'DRIVE', routingPreference: 'TRAFFIC_UNAWARE', polylineQuality: 'HIGH_QUALITY',
+          computeAlternativeRoutes: true,
         }),
         signal: AbortSignal.timeout(GOOGLE_ROUTES.TIMEOUT_MS),
       });
       if (!res.ok) throw new Error(`google routes ${res.status}`);
-      const route = (await res.json()).routes?.[0];
-      if (!route?.polyline?.encodedPolyline) return null;
-      return {
-        encoded: route.polyline.encodedPolyline,
-        distanceKm: Math.round(route.distanceMeters / 100) / 10,
-        durationMin: Math.round(parseInt(route.duration, 10) / 60),
-      };
+      return ((await res.json()).routes || [])
+        .filter((r) => r.polyline?.encodedPolyline)
+        .map((r) => ({
+          encoded: r.polyline.encodedPolyline,
+          distanceKm: Math.round(r.distanceMeters / 100) / 10,
+          durationMin: Math.round(parseInt(r.duration, 10) / 60),
+          label: r.description || null, // e.g. "NH44" — Google's name for the main road
+        }));
     },
   };
 }

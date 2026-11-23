@@ -124,24 +124,27 @@ test('alongRoute: no Google client → straight line, approx, deduped pumps in r
     st('end', 30.70, 76.746), st('start', 30.36, 76.407), st('off', 30.50, 76.70), // 'off' ~20 km from the line
   ]);
   const out = await createFuelService({ repo }).alongRoute({ fromCityId: 'c1', toCityId: 'c2', fuel: 'cng' });
-  assert.strictEqual(out.route.approx, true);
-  assert.deepStrictEqual(out.route.from, { lat: 30.34, lng: 76.39 }); // snapped to 2 dp
-  assert.deepStrictEqual(out.stations.map((s) => s.id), ['start', 'end']); // every chunk returned them; listed once
-  assert.ok(out.stations[0].alongKm < out.stations[1].alongKm);
+  assert.strictEqual(out.routes.length, 1);
+  const [r] = out.routes;
+  assert.strictEqual(r.approx, true);
+  assert.deepStrictEqual(out.from, { lat: 30.34, lng: 76.39 }); // snapped to 2 dp
+  assert.deepStrictEqual(r.stations.map((s) => s.id), ['start', 'end']); // every chunk returned them; listed once
+  assert.ok(r.stations[0].alongKm < r.stations[1].alongKm);
   assert.ok(repo.calls.boxes >= 2);
 });
 
 test('alongRoute: Google route used and cached; a cached route skips Google', async () => {
-  const google = { encoded: encode(straightLine({ lat: 30.34, lng: 76.39 }, { lat: 30.73, lng: 76.78 })), distanceKm: 68, durationMin: 95 };
+  const google = [{ encoded: encode(straightLine({ lat: 30.34, lng: 76.39 }, { lat: 30.73, lng: 76.78 })), distanceKm: 68, durationMin: 95, label: 'NH7' }];
   let calls = 0;
-  const routes = { async computeRoute() { calls += 1; return google; } };
+  const routes = { async computeRoutes() { calls += 1; return google; } };
 
   const repo = routeRepo([st('a', 30.5, 76.55)]);
   const out = await createFuelService({ repo, routes }).alongRoute({ fromLat: 30.3412, fromLng: 76.3901, toCityId: 'c2', fuel: 'cng' });
-  assert.strictEqual(out.route.approx, false);
-  assert.strictEqual(out.route.distanceKm, 68);
+  assert.strictEqual(out.routes[0].approx, false);
+  assert.strictEqual(out.routes[0].distanceKm, 68);
+  assert.strictEqual(out.routes[0].label, 'NH7');
   assert.strictEqual(repo.calls.set.r, google);
-  assert.deepStrictEqual(out.stations.map((s) => s.id), ['a']);
+  assert.deepStrictEqual(out.routes[0].stations.map((s) => s.id), ['a']);
 
   await createFuelService({ repo: routeRepo([], { cached: google }), routes }).alongRoute({ fromCityId: 'c1', toCityId: 'c2', fuel: 'cng' });
   assert.strictEqual(calls, 1);
@@ -149,10 +152,32 @@ test('alongRoute: Google route used and cached; a cached route skips Google', as
 
 test('alongRoute: Google error → logged, straight-line fallback; unknown city → NOT_FOUND', async () => {
   const warned = [];
-  const routes = { async computeRoute() { throw new Error('google routes 500'); } };
+  const routes = { async computeRoutes() { throw new Error('google routes 500'); } };
   const logger = { warn: (_o, m) => warned.push(m) };
   const out = await createFuelService({ repo: routeRepo([]), routes, logger }).alongRoute({ fromCityId: 'c1', toCityId: 'c2', fuel: 'cng' });
-  assert.strictEqual(out.route.approx, true);
+  assert.strictEqual(out.routes[0].approx, true);
   assert.strictEqual(warned.length, 1);
   await assert.rejects(createFuelService({ repo: routeRepo([]) }).alongRoute({ fromCityId: 'nope', toCityId: 'c2', fuel: 'cng' }), { code: 'NOT_FOUND' });
+});
+
+test('alongRoute: every road option carries only its own pumps', async () => {
+  const a = { lat: 30.34, lng: 76.39 };
+  const b = { lat: 30.73, lng: 76.78 };
+  const viaWest = { lat: 30.55, lng: 76.40 }; // a detour ~19 km off the direct line
+  const direct = { encoded: encode(straightLine(a, b)), distanceKm: 68, durationMin: 95, label: 'NH7' };
+  const detour = { encoded: encode([...straightLine(a, viaWest), ...straightLine(viaWest, b)]), distanceKm: 80, durationMin: 110, label: 'SH12' };
+  const routes = { async computeRoutes() { return [direct, detour]; } };
+  const repo = routeRepo([st('onDirect', 30.5, 76.55), st('onDetour', 30.55, 76.401)]);
+  const out = await createFuelService({ repo, routes }).alongRoute({ fromCityId: 'c1', toCityId: 'c2', fuel: 'cng' });
+  assert.deepStrictEqual(out.routes.map((r) => r.label), ['NH7', 'SH12']);
+  assert.deepStrictEqual(out.routes[0].stations.map((s) => s.id), ['onDirect']);
+  assert.deepStrictEqual(out.routes[1].stations.map((s) => s.id), ['onDetour']);
+});
+
+test('inCity: pumps around the city centre plus the centre; unknown city -> NOT_FOUND', async () => {
+  const repo = routeRepo([st('near', 30.345, 76.39), st('far', 30.9, 76.39)]);
+  const out = await createFuelService({ repo }).inCity({ cityId: 'c1', fuel: 'cng', radiusKm: 15 });
+  assert.deepStrictEqual(out.center, { lat: 30.34, lng: 76.39 });
+  assert.deepStrictEqual(out.stations.map((s) => s.id), ['near']);
+  await assert.rejects(createFuelService({ repo }).inCity({ cityId: 'nope', fuel: 'cng', radiusKm: 15 }), { code: 'NOT_FOUND' });
 });

@@ -6,7 +6,7 @@ import { FUEL_TYPES } from '@easecab/shared'
 
 export const MAP_COLORS = Object.freeze({
   [FUEL_TYPES.CNG]: '#16A34A', [FUEL_TYPES.PETROL]: '#F97316', [FUEL_TYPES.DIESEL]: '#0284C7', // green / orange / blue
-  ME: '#2C5BD8', ROUTE: '#4D8DF6', CASING: '#FFFFFF', START: '#0F172A', END: '#E11D48',
+  ME: '#2C5BD8', ROUTE: '#4D8DF6', ALT: '#A9BCD8', CASING: '#FFFFFF', START: '#0F172A', END: '#E11D48',
 })
 
 const svgUrl = (svg) => `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`

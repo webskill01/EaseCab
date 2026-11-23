@@ -7,13 +7,18 @@ const lat = z.coerce.number().min(FUEL.LAT_MIN).max(FUEL.LAT_MAX);
 const lng = z.coerce.number().min(FUEL.LNG_MIN).max(FUEL.LNG_MAX);
 const fuel = z.enum(Object.values(FUEL_TYPES));
 
-/** GET /fuel/stations — nearest stations selling `fuel` around the driver. */
-const fuelNearbyQuerySchema = z.object({
-  lat,
-  lng,
-  fuel: fuel.default(FUEL_TYPES.CNG),
-  radiusKm: z.coerce.number().min(1).max(FUEL.MAX_RADIUS_KM).default(FUEL.DEFAULT_RADIUS_KM),
-});
+/** GET /fuel/stations — nearest stations selling `fuel` around the driver (lat+lng) or a city's centre (cityId). */
+const fuelNearbyQuerySchema = z
+  .object({
+    lat: lat.optional(),
+    lng: lng.optional(),
+    cityId: z.string().uuid().optional(),
+    fuel: fuel.default(FUEL_TYPES.CNG),
+    radiusKm: z.coerce.number().min(1).max(FUEL.MAX_RADIUS_KM).default(FUEL.DEFAULT_RADIUS_KM),
+  })
+  .refine((q) => Boolean(q.cityId) !== (q.lat !== undefined && q.lng !== undefined), {
+    message: 'give lat+lng or cityId',
+  });
 
 /**
  * GET /fuel/route — pumps along the road from pickup to drop. Drop is always a city;

@@ -5,7 +5,7 @@ import { renderWithIntl } from '@/test/intl'
 import { FuelScreen } from '../FuelScreen'
 import { daysSince, mapsUrl } from '../FuelStationCard'
 
-const api = vi.hoisted(() => ({ listNearby: vi.fn(), routeStations: vi.fn(), addStation: vi.fn(), reportStation: vi.fn() }))
+const api = vi.hoisted(() => ({ listNearby: vi.fn(), cityStations: vi.fn(), routeStations: vi.fn(), addStation: vi.fn(), reportStation: vi.fn() }))
 const cities = vi.hoisted(() => ({ searchCities: vi.fn(), allCities: vi.fn(), nearestCity: vi.fn() }))
 const geo = vi.hoisted(() => ({ getCurrentPosition: vi.fn(), geoDenied: vi.fn() }))
 vi.mock('../../services/fuelApi', () => api)
@@ -84,8 +84,8 @@ describe('FuelScreen', () => {
   })
 
   it('On my route: from my location to a picked city → road on the map + list with km along + navigate via the pump', async () => {
-    const ROUTE = { from: { lat: 30.34, lng: 76.39 }, to: { lat: 30.73, lng: 76.78 }, points: [[30.34, 76.39], [30.73, 76.78]], distanceKm: 67.9, durationMin: 95, approx: false }
-    api.routeStations.mockResolvedValue({ route: ROUTE, stations: [{ ...STATION, alongKm: 23.4, offKm: 0.4 }] })
+    const ROUTE = { points: [[30.34, 76.39], [30.73, 76.78]], distanceKm: 67.9, durationMin: 95, label: 'NH7', approx: false, stations: [{ ...STATION, alongKm: 23.4, offKm: 0.4 }] }
+    api.routeStations.mockResolvedValue({ from: { lat: 30.34, lng: 76.39 }, to: { lat: 30.73, lng: 76.78 }, routes: [ROUTE] })
     cities.searchCities.mockResolvedValue([{ id: 'c-chd', canonicalName: 'Chandigarh' }])
     const user = userEvent.setup()
     renderWithIntl(<FuelScreen />)
@@ -99,10 +99,54 @@ describe('FuelScreen', () => {
     await waitFor(() => expect(api.routeStations).toHaveBeenCalledWith({ from: POS, toCityId: 'c-chd', fuel: 'cng' }))
     expect(await screen.findByTestId('map')).toHaveTextContent('1 pins + road')
     expect(screen.getByText(/68 km · about 1.6 hrs · 1 pump on the way/)).toBeInTheDocument()
+    expect(screen.queryByRole('radiogroup', { name: 'Road options' })).not.toBeInTheDocument() // one road → no chooser
 
     expect(screen.getByText('at 23 km')).toBeInTheDocument()
     expect(screen.getByText('0.4 km off the road')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /navigate/i })).toHaveAttribute('href', 'https://www.google.com/maps/dir/?api=1&destination=30.73,76.78&waypoints=30.35,76.4')
+  })
+
+  it('On my route: 2 roads → driver picks the second and sees only its pumps', async () => {
+    const road = (label, km, stations) => ({ points: [[30.34, 76.39], [30.73, 76.78]], distanceKm: km, durationMin: 95, label, approx: false, stations })
+    api.routeStations.mockResolvedValue({ from: POS, to: { lat: 30.73, lng: 76.78 }, routes: [
+      road('NH7', 68, [{ ...STATION, alongKm: 23.4, offKm: 0.4 }]),
+      road('SH12', 80, [{ ...STATION, id: 's2', name: 'Gill CNG', alongKm: 40, offKm: 1 }, { ...STATION, id: 's3', name: 'Brar CNG', alongKm: 60, offKm: 1 }]),
+    ] })
+    cities.searchCities.mockResolvedValue([{ id: 'c-chd', canonicalName: 'Chandigarh' }])
+    const user = userEvent.setup()
+    renderWithIntl(<FuelScreen />)
+    await screen.findByText('Sandhu CNG')
+    await user.click(screen.getByRole('button', { name: 'On my route' }))
+    await user.click(screen.getByRole('button', { name: 'Going to (city)' }))
+    await user.type(screen.getByRole('textbox'), 'Chan')
+    await user.click(await screen.findByRole('button', { name: 'Chandigarh' }))
+
+    const second = await screen.findByRole('radio', { name: /Via SH12/ })
+    expect(screen.getByRole('radio', { name: /Via NH7/ })).toHaveAttribute('aria-checked', 'true')
+    expect(second).toHaveTextContent('80 km · 1.6 hrs2 pumps')
+    await user.click(second)
+    expect(second).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByText('Gill CNG')).toBeInTheDocument()
+    expect(screen.queryByText('Sandhu CNG')).not.toBeInTheDocument()
+    expect(screen.getByTestId('map')).toHaveTextContent('2 pins + road')
+  })
+
+  it('City: pick a city → its pumps on the map and in the list, no "me" needed', async () => {
+    api.cityStations.mockResolvedValue({ center: { lat: 30.21, lng: 74.95 }, stations: [{ ...STATION, id: 's9', name: 'Bathinda CNG', distanceKm: 3.1 }] })
+    cities.searchCities.mockResolvedValue([{ id: 'c-bti', canonicalName: 'Bathinda' }])
+    const user = userEvent.setup()
+    renderWithIntl(<FuelScreen />)
+    await screen.findByText('Sandhu CNG')
+    await user.click(screen.getByRole('button', { name: 'City' }))
+    expect(screen.getByText(/Pick a city to see its pumps/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Which city?' }))
+    await user.type(screen.getByRole('textbox'), 'Bath')
+    await user.click(await screen.findByRole('button', { name: 'Bathinda' }))
+    await waitFor(() => expect(api.cityStations).toHaveBeenCalledWith({ cityId: 'c-bti', fuel: 'cng' }))
+    expect(await screen.findByText('Bathinda CNG')).toBeInTheDocument()
+    expect(screen.getByText('1 CNG pump in Bathinda')).toBeInTheDocument()
+    expect(screen.getByText('3.1 km from centre')).toBeInTheDocument()
+    expect(screen.getByTestId('map')).toHaveTextContent('1 pins')
   })
 
   it('mapsUrl: a city start adds the origin', () => {

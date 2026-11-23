@@ -43,10 +43,11 @@ function Meta({ station, fuel, route }) {
   )
 }
 
-const distance = (t, s, route) => (route ? t('along', { km: Math.round(s.alongKm) }) : t('km', { km: s.distanceKm }))
+/** km along the road, from the picked city's centre, or from the driver. */
+const distance = (t, s, route, fromCentre) => (route ? t('along', { km: Math.round(s.alongKm) }) : t(fromCentre ? 'kmCentre' : 'km', { km: s.distanceKm }))
 
 /** One list row: tap opens the pump; the round arrow starts navigation straight away. */
-export function FuelStationRow({ station, fuel, route, index, onOpen }) {
+export function FuelStationRow({ station, fuel, route, fromCentre, index, onOpen }) {
   const t = useTranslations('seva.fuel')
   return (
     <li className="flex animate-ec-rise items-center gap-3 border-b border-ec-line/70 py-3 last:border-b-0 motion-reduce:animate-none"
@@ -56,7 +57,7 @@ export function FuelStationRow({ station, fuel, route, index, onOpen }) {
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline gap-2">
             <span className="min-w-0 flex-1 truncate text-[15px] font-extrabold text-ec-ink">{station.name}</span>
-            <span className="shrink-0 text-[13px] font-extrabold tabular-nums text-ec-blue">{distance(t, station, route)}</span>
+            <span className="shrink-0 text-[13px] font-extrabold tabular-nums text-ec-blue">{distance(t, station, route, fromCentre)}</span>
           </span>
           <Meta station={station} fuel={fuel} route={route} />
         </span>
@@ -70,7 +71,7 @@ export function FuelStationRow({ station, fuel, route, index, onOpen }) {
 }
 
 /** The tapped pump: big navigate button + driver reports. */
-export function FuelStationDetail({ station, fuel, route, onReport, onClose }) {
+export function FuelStationDetail({ station, fuel, route, fromCentre, onReport, onClose }) {
   const t = useTranslations('seva.fuel')
   const [sent, setSent] = useState(false)
   const report = (kind) => { setSent(true); onReport(station.id, kind) }
@@ -89,7 +90,7 @@ export function FuelStationDetail({ station, fuel, route, onReport, onClose }) {
       </div>
       <a href={mapsUrl(station, route)} target="_blank" rel="noopener noreferrer"
         className="mt-3 flex h-12 items-center justify-center gap-2 rounded-ec-chip bg-ec-blue text-[15px] font-extrabold text-white shadow-ec-blue transition-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blueInk focus-visible:ring-offset-2">
-        {t('navigate')} <span className="font-bold opacity-80 tabular-nums">· {distance(t, station, route)}</span>
+        {t('navigate')} <span className="font-bold opacity-80 tabular-nums">· {distance(t, station, route, fromCentre)}</span>
       </a>
       {sent ? (
         <p role="status" className="mt-3 animate-ec-fade text-center text-[12.5px] font-bold text-ec-ink60">{t('thanks')}</p>

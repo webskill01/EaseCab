@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { FUEL_TYPES } from '@easecab/shared'
-import { listNearby, routeStations, addStation, reportStation } from '../services/fuelApi'
+import { listNearby, cityStations, routeStations, addStation, reportStation } from '../services/fuelApi'
 
 const KEY = ['fuel']
 const PREF_KEY = 'ec_fuel'
@@ -26,6 +26,16 @@ export function useNearby(pos, fuel) {
     queryFn: () => listNearby({ ...pos, fuel }),
     enabled: Boolean(pos),
     staleTime: 60000,
+  })
+}
+
+/** A picked city's pumps; idle until a city is picked. */
+export function useCityPumps(cityId, fuel) {
+  return useQuery({
+    queryKey: [...KEY, 'city', cityId, fuel],
+    queryFn: () => cityStations({ cityId, fuel }),
+    enabled: Boolean(cityId),
+    staleTime: 300000,
   })
 }
 

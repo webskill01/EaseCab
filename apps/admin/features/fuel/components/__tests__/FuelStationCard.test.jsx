@@ -11,6 +11,7 @@ describe('FuelStationCard', () => {
     expect(screen.getByText('CNG · Petrol')).toBeTruthy()
     expect(screen.getByText('Gurpreet')).toBeTruthy()
     expect(screen.getByRole('link', { name: /30.33980, 76.38690/ }).getAttribute('href')).toBe('https://www.google.com/maps/search/?api=1&query=30.3398,76.3869')
+    expect(screen.getByTitle(/^Map: /).getAttribute('src')).toBe('https://www.google.com/maps?q=30.3398,76.3869&z=17&output=embed')
     fireEvent.click(screen.getByRole('button', { name: /approve/i }))
     fireEvent.click(screen.getByRole('button', { name: /reject/i }))
     expect(onDecide.mock.calls).toEqual([['s1', { status: 'active' }], ['s1', { status: 'rejected' }]])

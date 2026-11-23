@@ -7,13 +7,14 @@ import { FUEL_TYPES } from '@easecab/shared'
 import { Plus, CurrentLocation, Spinner } from '@/components/ui/icons'
 import { Bar } from '@/components/ui/Skeleton'
 import { getCurrentPosition, geoDenied } from '@/features/notifications/services/geoClient'
-import { useNearby, useFuelActions, savedFuel, saveFuel } from '../hooks/useFuel'
+import { CityPicker } from '@/features/rides/components/CityPicker'
+import { useNearby, useCityPumps, useFuelActions, savedFuel, saveFuel } from '../hooks/useFuel'
 import { AddFuelStationSheet } from './AddFuelStationSheet'
 import { FuelMap } from './FuelMap'
 import { FuelOverlay, MODES } from './FuelOverlay'
 import { FuelSheet, SNAPS, PEEK_PX, TOP_PX } from './FuelSheet'
 import { FuelStationRow, FuelStationDetail } from './FuelStationCard'
-import { useRouteFuel, RoutePickers, routeTitle } from './RouteFuel'
+import { useRouteFuel, RoutePickers, RouteOptions, routeTitle } from './RouteFuel'
 
 const EMPTY = Object.freeze([])
 const MAP_PAD = Object.freeze({ top: TOP_PX, bottom: PEEK_PX + 16, left: 40, right: 40 })
@@ -39,6 +40,14 @@ function nearTitle(t, geo, query, fuel) {
   if (!geo.pos || query.isLoading) return { text: t('loading'), busy: true }
   if (query.isError) return { text: t('error'), danger: true }
   return { text: t('sheet.count', { count: query.data?.length ?? 0, fuel: t(`types.${fuel}`) }) }
+}
+
+/** Sheet title for "City": what to pick, or the count of pumps in that city. */
+function cityTitle(t, city, query, fuel) {
+  if (!city) return { text: t('city.hint') }
+  if (query.isLoading) return { text: t('loading'), busy: true }
+  if (query.isError) return { text: t('error'), danger: true }
+  return { text: t('city.count', { count: query.data?.stations.length ?? 0, fuel: t(`types.${fuel}`), city: city.name }) }
 }
 
 function SheetTitle({ title }) {
@@ -94,16 +103,20 @@ function useFuelScreen() {
   const [mode, setMode] = useState(MODES.NEAR)
   const [snap, setSnap] = useState(SNAPS.PEEK)
   const [selectedId, setSelectedId] = useState(null)
+  const [city, setCity] = useState(null)
   const near = useNearby(geo.pos, fuel)
+  const inCity = useCityPumps(city?.id, fuel)
   const r = useRouteFuel(geo, fuel, () => setSnap(SNAPS.PEEK)) // destination picked → drop the sheet so the road shows
   const isRoute = mode === MODES.ROUTE
-  const stations = (isRoute ? r.stations : near.data) ?? EMPTY
+  const isCity = mode === MODES.CITY
+  const stations = (isRoute ? r.stations : isCity ? inCity.data?.stations : near.data) ?? EMPTY
+  const pickCity = (c) => { setCity(c); setSelectedId(null); setSnap(SNAPS.PEEK) }
 
   useEffect(() => { setFuel(savedFuel()) }, []) // after mount: localStorage is client-only
   const pickFuel = (f) => { setFuel(f); saveFuel(f); setSelectedId(null) }
-  const pickMode = (m) => { setMode(m); setSelectedId(null); setSnap(m === MODES.ROUTE ? SNAPS.HALF : SNAPS.PEEK) }
+  const pickMode = (m) => { setMode(m); setSelectedId(null); setSnap(m !== MODES.NEAR ? SNAPS.HALF : SNAPS.PEEK) }
   const open = useCallback((id) => { setSelectedId(id); setSnap(SNAPS.PEEK) }, [])
-  return { geo, fuel, mode, isRoute, snap, setSnap, near, r, stations, selected: stations.find((s) => s.id === selectedId), open, close: () => setSelectedId(null), pickFuel, pickMode }
+  return { geo, fuel, mode, isRoute, isCity, city, pickCity, inCity, snap, setSnap, near, r, stations, selected: stations.find((s) => s.id === selectedId), open, close: () => setSelectedId(null), pickFuel, pickMode }
 }
 
 /** Seva → Fuel: full-screen map of CNG / petrol / diesel pumps under a draggable list sheet. */
@@ -131,22 +144,27 @@ export function FuelScreen() {
     onError: (e) => setAddError(e.code === 'RATE_LIMITED' ? 'add.limit' : 'error'),
   })
   const rows = (
-    <ul>{s.stations.map((st, i) => <FuelStationRow key={st.id} station={st} fuel={s.fuel} route={route} index={i} onOpen={s.open} />)}</ul>
+    <ul>{s.stations.map((st, i) => <FuelStationRow key={st.id} station={st} fuel={s.fuel} route={route} fromCentre={s.isCity} index={i} onOpen={s.open} />)}</ul>
   )
-  const title = s.isRoute ? routeTitle(tr, s.r, s.geo) : nearTitle(t, s.geo, s.near, s.fuel)
+  const title = s.isRoute ? routeTitle(tr, s.r, s.geo) : s.isCity ? cityTitle(t, s.city, s.inCity, s.fuel) : nearTitle(t, s.geo, s.near, s.fuel)
 
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden bg-ec-bg">
-      <FuelMap ref={mapRef} me={s.isRoute && s.r.fromCity ? null : s.geo.pos} route={route} stations={s.stations} fuel={s.fuel} selectedId={s.selected?.id} onSelect={s.open} pad={MAP_PAD} />
+      <FuelMap ref={mapRef} me={s.isCity || (s.isRoute && s.r.fromCity) ? null : s.geo.pos} route={route} alts={s.isRoute ? s.r.alts : undefined} onPickRoute={s.r.setPick} stations={s.stations} fuel={s.fuel} selectedId={s.selected?.id} onSelect={s.open} pad={MAP_PAD} />
       <FuelOverlay mode={s.mode} onMode={s.pickMode} fuel={s.fuel} onFuel={s.pickFuel} onBack={() => (window.history.length > 1 ? router.back() : router.push('/seva'))} />
       {locErr && <p role="alert" className="absolute inset-x-6 top-28 z-20 animate-ec-fade rounded-ec-chip bg-ec-ink px-4 py-2.5 text-center text-[12.5px] font-bold text-white shadow-ec-float">{t('map.locateFailed')}</p>}
       <FuelSheet snap={s.snap} onSnap={s.setSnap} header={s.selected ? null : <SheetTitle title={title} />}
         aside={<button type="button" onClick={locate} aria-label={t('map.locate')} className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ec-blueInk shadow-ec-float active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue"><CurrentLocation size={22} /></button>}>
         {added && <p role="status" className="mb-2 animate-ec-fade rounded-xl bg-ec-successBg px-3 py-2 text-[13px] font-bold text-ec-successTx">{t('add.done')}</p>}
         {s.selected ? (
-          <FuelStationDetail key={s.selected.id} station={s.selected} fuel={s.fuel} route={route} onReport={(id, kind) => report.mutate({ id, kind })} onClose={s.close} />
+          <FuelStationDetail key={s.selected.id} station={s.selected} fuel={s.fuel} route={route} fromCentre={s.isCity} onReport={(id, kind) => report.mutate({ id, kind })} onClose={s.close} />
         ) : s.isRoute ? (
-          <><RoutePickers r={s.r} />{s.r.stations?.length === 0 ? <Note>{t('route.empty')}</Note> : rows}</>
+          <><RoutePickers r={s.r} /><RouteOptions r={s.r} />{s.r.stations?.length === 0 ? <Note>{t('route.empty')}</Note> : rows}</>
+        ) : s.isCity ? (
+          <>
+            <div className="pb-1"><CityPicker label={t('city.label')} value={s.city} onPick={s.pickCity} /></div>
+            {s.inCity.isLoading ? <RowsSkeleton /> : s.inCity.data?.stations.length === 0 ? <Note>{t('city.empty')}</Note> : rows}
+          </>
         ) : (
           <NearBody geo={s.geo} query={s.near} rows={rows} onAdd={() => { setAddError(null); setAdding(true) }} />
         )}

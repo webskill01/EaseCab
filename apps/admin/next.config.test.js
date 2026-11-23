@@ -25,6 +25,7 @@ describe('admin security headers (M1)', () => {
     expect(csp).toContain("frame-ancestors 'none'")
     expect(csp).toContain("object-src 'none'")
     expect(csp).toContain('connect-src')
+    expect(csp).toContain('frame-src https://www.google.com https://maps.google.com') // fuel pump map embed only
   })
 
   it("allows 'unsafe-eval' in development so Next dev/HMR can hydrate", async () => {

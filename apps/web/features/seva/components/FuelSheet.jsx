@@ -27,6 +27,12 @@ function useParentHeight(ref) {
   return h
 }
 
+/** The snap nearest where a release at `y` moving `v` px/ms would coast to. */
+const settle = (offs, y, v) => {
+  const aim = y + v * FLING_MS
+  return Object.values(SNAPS).reduce((a, b) => (Math.abs(offs[b] - aim) < Math.abs(offs[a] - aim) ? b : a))
+}
+
 /** Pointer drag on the grip: follows the finger 1:1, then settles on the snap the fling points at. */
 function useDrag(set, offs, snap, onSnap) {
   const d = useRef(null)
@@ -47,12 +53,61 @@ function useDrag(set, offs, snap, onSnap) {
     d.current = null
     if (!s) return
     if (Math.abs(e.clientY - s.y0) < TAP_PX) return onSnap(NEXT[snap])
-    const aim = s.y + s.v * FLING_MS
-    const target = Object.values(SNAPS).reduce((a, b) => (Math.abs(offs[b] - aim) < Math.abs(offs[a] - aim) ? b : a))
+    const target = settle(offs, s.y, s.v)
     set(offs[target], true) // React may not re-render when the snap is unchanged
     onSnap(target)
   }
   return { onPointerDown: down, onPointerMove: move, onPointerUp: up, onPointerCancel: up }
+}
+
+/**
+ * The list drives the sheet like Google Maps: below full, swiping the list moves the sheet
+ * (up = open fully) instead of scrolling it; at full, the list scrolls, and pulling down
+ * from its top drags the sheet back down. Wheel does the same on desktop.
+ * ponytail: a pull that starts mid-list needs a second pull once at the top; browsers won't
+ * let a started native scroll be taken over.
+ */
+function useBodyDrag(body, live) {
+  useEffect(() => {
+    const el = body.current
+    let s = null
+    const start = (e) => {
+      const { snap, offs } = live.current
+      s = { y0: e.touches[0].clientY, from: offs[snap], y: offs[snap], v: 0, t: e.timeStamp, on: false }
+    }
+    const move = (e) => {
+      if (!s) return
+      const { snap, offs, paint } = live.current
+      const cy = e.touches[0].clientY
+      if (!s.on) {
+        const dy = cy - s.y0
+        if (Math.abs(dy) < TAP_PX) return
+        if (snap === SNAPS.FULL && !(el.scrollTop <= 0 && dy > 0)) { s = null; return } // plain list scroll
+        Object.assign(s, { on: true, y0: cy })
+      }
+      e.preventDefault()
+      const y = Math.min(offs.peek, Math.max(offs.full, s.from + cy - s.y0))
+      s.v = (y - s.y) / Math.max(1, e.timeStamp - s.t)
+      Object.assign(s, { y, t: e.timeStamp })
+      paint(y, false)
+    }
+    const end = () => {
+      const d = s
+      s = null
+      if (!d?.on) return
+      const { offs, paint, onSnap } = live.current
+      const target = d.y < d.from ? SNAPS.FULL : settle(offs, d.y, d.v) // any lift opens the list fully
+      paint(offs[target], true)
+      onSnap(target)
+    }
+    const wheel = (e) => {
+      const { snap, onSnap } = live.current
+      if (snap !== SNAPS.FULL && e.deltaY > 0) { e.preventDefault(); onSnap(SNAPS.FULL) } else if (snap === SNAPS.FULL && e.deltaY < 0 && el.scrollTop <= 0) onSnap(SNAPS.HALF)
+    }
+    const on = [['touchstart', start, { passive: true }], ['touchmove', move, { passive: false }], ['touchend', end], ['touchcancel', end], ['wheel', wheel, { passive: false }]]
+    on.forEach(([n, f, o]) => el.addEventListener(n, f, o))
+    return () => on.forEach(([n, f]) => el.removeEventListener(n, f))
+  }, [body, live])
 }
 
 /**
@@ -70,6 +125,11 @@ export function FuelSheet({ snap, onSnap, header, aside, children }) {
     el.current.style.transform = `translateY(${y}px)`
   }
   const drag = useDrag(paint, offs, snap, onSnap)
+  const body = useRef(null)
+  const live = useRef(null)
+  live.current = { snap, offs, paint, onSnap }
+  useBodyDrag(body, live)
+  useEffect(() => { if (snap !== SNAPS.FULL && body.current) body.current.scrollTop = 0 }, [snap]) // folded list starts at its top
   return (
     <section ref={el} aria-label={t('label')}
       className="absolute inset-x-0 top-0 z-10 flex h-full flex-col rounded-t-[24px] bg-white shadow-[0_-6px_24px_rgba(15,23,42,0.14)] transition-transform duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform motion-reduce:transition-none"
@@ -83,7 +143,7 @@ export function FuelSheet({ snap, onSnap, header, aside, children }) {
         </button>
         {header}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4" style={{ paddingBottom: offs[snap] + 24 }}>
+      <div ref={body} className={`min-h-0 flex-1 overscroll-contain px-4 ${snap === SNAPS.FULL ? 'overflow-y-auto' : 'overflow-hidden'}`} style={{ paddingBottom: offs[snap] + 24 }}>
         {children}
       </div>
     </section>

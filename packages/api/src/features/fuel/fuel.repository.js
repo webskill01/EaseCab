@@ -22,7 +22,8 @@ const BOX_CAP = 3000;
  * @param {{ prisma: import('@prisma/client').PrismaClient, redis?: import('ioredis').Redis }} deps
  */
 function createFuelRepository({ prisma, redis }) {
-  const routeKey = (from, to) => redisKey('fuel', 'route', `${from.lat},${from.lng}`, `${to.lat},${to.lng}`);
+  // 'routes' (was 'route'): the value is now the list of alternatives, so old single-route entries are never read.
+  const routeKey = (from, to) => redisKey('fuel', 'routes', `${from.lat},${from.lng}`, `${to.lat},${to.lng}`);
   return {
     /**
      * Active stations selling `fuel` inside a lat/lng box.
@@ -48,15 +49,15 @@ function createFuelRepository({ prisma, redis }) {
       return c && c.lat !== null && c.lng !== null ? { lat: Number(c.lat), lng: Number(c.lng) } : null;
     },
 
-    /** Cached Google route between two snapped points, or null. */
+    /** Cached Google routes (main + alternatives) between two snapped points, or null. */
     async getRoute(from, to) {
       const raw = await redis.get(routeKey(from, to));
       return raw ? JSON.parse(raw) : null;
     },
 
-    /** Cache a Google route; expires inside Google's 30-day coordinate-caching limit. */
-    async setRoute(from, to, route) {
-      await redis.set(routeKey(from, to), JSON.stringify(route), 'EX', FUEL.ROUTE_CACHE_TTL_SEC);
+    /** Cache Google's routes; expires inside Google's 30-day coordinate-caching limit. */
+    async setRoute(from, to, routes) {
+      await redis.set(routeKey(from, to), JSON.stringify(routes), 'EX', FUEL.ROUTE_CACHE_TTL_SEC);
     },
 
     /** Insert a station row. @param {object} data */
