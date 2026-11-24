@@ -225,6 +225,7 @@ const BORDER_TAX = Object.freeze({
   UNLOCK_DEFER_SEC: 30, // lock clear put off (filing queued / slot busy) → tried again after this
   LOOKUP_GAP_SEC: 120, // min gap between filings' Vahan lookups: 7 in ~70s locked us out, 9 at 2-min gaps did not (2026-11-05)
   NUDGE_AFTER_SEC: 10, // QR / amount / captcha waiting this long and the app not polling the filing → push (a98a4e2e 2026-11-23: driver backed out 27s before the QR)
+  NUDGE_EVERY_SEC: 3, // then re-checked this often while the step waits: one push as soon as the app stops polling
   SEEN_FRESH_SEC: 8, // app polls a filing every 2s: no poll for this long = not on the screen
   PAY_WAIT_SEC: 300, // in-app QR: the app's pay timer = PayU's QR life (5 min, seen live 2026-11-11)
   PAY_GRACE_SEC: 120, // the bot keeps listening this much longer: a scan at 4:59 still reports back
