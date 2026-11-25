@@ -59,9 +59,10 @@ function createRunner({ service, repo, newPage, logger, r2, alert = () => {}, on
         await moveOrStop(S.FILLING);
         return answer;
       },
-      // portal's real amount, held on the tax page: Pay Online (= the 30-min vehicle lock) only after the driver's OK
+      // portal's real amount, held on the tax page: Pay Online (= the 30-min vehicle lock) only after the driver's OK; cancelled meanwhile (560bb110) → stop, no fare/push
       async confirmFare({ taxPaise, from, upto }) {
         await repo.clearAnswers(id);
+        if ((await repo.findById(id))?.status === S.CANCELLED) throw portalError(F.PORTAL_ERROR, STOPPED);
         const t0 = Date.now();
         await repo.setJob(id, { step: 'fare', fare: JSON.stringify({ taxPaise, from, upto }), deadline: until(BORDER_TAX.FARE_CONFIRM_SEC) });
         nudge(req, 'fare', 'FARE');

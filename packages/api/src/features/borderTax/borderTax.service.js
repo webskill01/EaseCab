@@ -192,6 +192,7 @@ function createBorderTaxService({ repo, logger, r2 = null }) {
     async cancel(userId, id) {
       if (!(await repo.findForUser(id, userId))) throw AppError.fromCode(ERROR_CODES.NOT_FOUND);
       if (!(await move(id, S.CANCELLED))) throw new AppError(ERROR_CODES.VALIDATION_ERROR, 'This filing can no longer be cancelled', 409);
+      await repo.pushAnswer(id, 'no'); // wakes a worker waiting on the fare/captcha now, not after its timeout
     },
 
     /**

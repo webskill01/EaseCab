@@ -176,7 +176,9 @@
     },
     "fare": {
       "label": "Govt fee",
-      "sub": "Next you'll get the payment QR. Please finish paying — if you leave midway, the govt site makes you wait about 30 min to file again.",
+      "govt": "This full amount goes to the govt",
+      "noCommission": "0% commission",
+      "free": "EaseCab takes no commission on tax filing — it's free for members.",
       "continue": "Continue",
       "cancel": "Cancel"
     },

@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { ChevL, Check, Warning } from '@/components/ui/icons'
+import { ChevL, Check, ShieldOk, Warning } from '@/components/ui/icons'
 import { useBorderTaxActions, useSecondsLeft } from '../hooks/useBorderTax'
 import { Button } from '@/components/ui/button'
 import { BT_STATUS as S, BT_STATES, BT_PREP_SEC, BT_CAPTCHA_SEC, BT_FARE_SEC, rupees, prepStep, prepDeadline, daysOf, isDaysMode, fmtWhen, fmtClock } from '../lib/borderTax'
@@ -81,9 +81,14 @@ function FareCard({ fare, pending, onAnswer }) {
       <p className="mx-auto mt-3 w-fit rounded-full bg-ec-sky px-3 py-1 text-[12.5px] font-bold text-ec-blueInk">
         {from.date}, {from.time} → {upto.date}, {upto.time}
       </p>
-      <p className="mt-3 flex items-start justify-center gap-1.5 text-left text-[12.5px] font-medium leading-snug text-ec-ink60">
-        <span className="mt-px shrink-0 text-ec-amberTx"><Warning size={15} /></span>{t('bt.fare.sub')}
-      </p>
+      <p className="mt-2 text-[13px] font-semibold text-ec-ink60">{t('bt.fare.govt')}</p>
+      <div className="mt-4 flex items-start gap-3 rounded-xl bg-ec-successBg px-3.5 py-3 text-left">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-ec-successTx"><ShieldOk size={20} /></span>
+        <div className="min-w-0">
+          <p className="text-[15px] font-extrabold leading-tight text-ec-successTx">{t('bt.fare.noCommission')}</p>
+          <p className="mt-0.5 text-[12.5px] font-medium leading-snug text-ec-ink">{t('bt.fare.free')}</p>
+        </div>
+      </div>
       <Button type="button" size="lg" className="mt-4 w-full" disabled={pending} onClick={() => onAnswer(true)}>{t('bt.fare.continue')}</Button>
       <button type="button" disabled={pending} onClick={() => onAnswer(false)} className="mt-1 w-full rounded-xl bg-white py-2.5 text-[14px] font-bold text-ec-danger disabled:opacity-50">{t('bt.fare.cancel')}</button>
     </div>

@@ -285,6 +285,17 @@ test('fare step: "yes" goes on to Pay Online; "no" or no answer stops before it 
   assert.strictEqual(paidOnline, 1);
 });
 
+test('fare step: cancelled just before the amount → no fare shown, no push, no wait (560bb110)', async () => {
+  const quote = { taxPaise: 10000, from: FROM, upto: new Date(FROM.getTime() + 86_340_000) };
+  const t = setup({ answers: ['yes'] });
+  const flow = async (_page, _job, io) => { await t.service.cancel('u1', 'b1'); await io.confirmFare(quote); throw new Error('went on to Pay Online'); };
+  t.repo.findForUser = async () => t.rows.b1;
+  t.repo.pushAnswer = async () => {};
+  await createRunner({ ...t, logger, flows: { HR: flow } }).run('b1', {});
+  assert.strictEqual(t.rows.b1.status, 'cancelled');
+  assert.ok(!t.jobs.some((j) => j.step === 'fare'), 'fare never shown');
+});
+
 test('unlock: vehicle_pending filing whose lock another clear already removed → done + pushed, no portal visit', async () => {
   const u = unlockSetup({ failureCode: 'vehicle_pending', createdAt: new Date(Date.now() - 600_000) }, new Error('portal must not be visited'));
   u.repo.recentForVehicle = async () => ['b1', 'a0'];

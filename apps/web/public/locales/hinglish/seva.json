@@ -176,7 +176,9 @@
     },
     "fare": {
       "label": "Sarkari fee",
-      "sub": "Aage payment ka QR aayega. Payment poori karein — beech mein chhodne par sarkari site dobara file karne ke liye lagbhag 30 minute rukwati hai.",
+      "govt": "Ye poora amount sarkar ko jaata hai",
+      "noCommission": "0% commission",
+      "free": "EaseCab tax filing par koi commission nahi leta — members ke liye bilkul free.",
       "continue": "Aage badhein",
       "cancel": "Cancel karein"
     },
