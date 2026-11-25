@@ -176,7 +176,7 @@
     },
     "fare": {
       "label": "Sarkari fee",
-      "sub": "Aage badhke payment na milne par sarkari site gaadi ko lagbhag 30 minute lock kar deti hai.",
+      "sub": "Aage payment ka QR aayega. Payment poori karein — beech mein chhodne par sarkari site dobara file karne ke liye lagbhag 30 minute rukwati hai.",
       "continue": "Aage badhein",
       "cancel": "Cancel karein"
     },

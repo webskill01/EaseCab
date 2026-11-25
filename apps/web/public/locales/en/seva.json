@@ -176,7 +176,7 @@
     },
     "fare": {
       "label": "Govt fee",
-      "sub": "If you continue and don't pay, the govt site locks this vehicle for about 30 minutes.",
+      "sub": "Next you'll get the payment QR. Please finish paying — if you leave midway, the govt site makes you wait about 30 min to file again.",
       "continue": "Continue",
       "cancel": "Cancel"
     },

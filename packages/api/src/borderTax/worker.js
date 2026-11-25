@@ -9,6 +9,9 @@ const { PrismaClient } = require('@prisma/client');
 const Redis = require('ioredis');
 const pino = require('pino');
 const { chromium } = require('playwright');
+// Screenshots wait for document.fonts.ready; one hung font request stalled a captcha read 30s → portal_error
+// (PB01G3673, 2026-11-25). Captchas/QRs are images or canvas — web fonts never matter to them.
+process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY = '1';
 const { BORDER_TAX, BORDER_TAX_KEYS, BORDER_TAX_STATES, BORDER_TAX_PAID_PUSH: PAID_PUSH, BORDER_TAX_ACTION_PUSH: ACTION_PUSH, BORDER_TAX_FREE_PUSH: FREE_PUSH, BORDER_TAX_UP_PUSH: UP_PUSH, createTelegramNotifier } = require('@easecab/shared');
 const { createBorderTaxRepository } = require('../features/borderTax/borderTax.repository');
 const { createBorderTaxService } = require('../features/borderTax/borderTax.service');
