@@ -1,4 +1,5 @@
 'use strict';
+/* global document, window -- page.evaluate callbacks run in the browser */
 
 /**
  * eTransPgi → bank page hand-off for the checkpostv4 flow (split out of checkpostv4.js 2026-11-12).
@@ -44,38 +45,27 @@ async function whereStuck(page) {
   return at.join(' | ');
 }
 
+/** Why the page's jQuery handler wasn't bound: jQuery loaded? + each script's HTTP status and size. */
+function whyUnbound(page) {
+  return page.evaluate(() => `jQuery=${typeof window.jQuery} ready=${document.readyState} ${performance.getEntriesByType('resource')
+    .filter((e) => e.initiatorType === 'script').map((e) => `${e.name.split('/').pop()}:${e.responseStatus}:${e.decodedBodySize}b`).join(',')}`)
+    .catch((e) => `n/a ${e.message}`);
+}
+
 /**
- * Gateway pick → terms box. HR 26 Nov (ed9c8959, 7d3f1438): the box stayed disabled after the pick, re-firing
- * the change didn't help → log the page's background requests + visible controls (ids/options only) to map it.
+ * Gateway pick → terms box ticked → Submit enabled. eTransPgi's own jQuery rule (page source, 26 Nov): a non-CSC
+ * gateway enables #checkme, ticking it enables #sendSubmit — client-side only, no payment state, no hidden fields.
+ * On ed9c8959 / 7d3f1438 / 45b1e5e2 that handler never bound (no XHR, re-firing did nothing) → apply the same rule.
  */
 async function pickGateway(page, gateway, io) {
-  const xhrs = [];
-  const isXhr = (q) => ['xhr', 'fetch'].includes(q.resourceType());
-  const onRes = async (r) => {
-    if (!isXhr(r.request())) return;
-    const body = await r.text().catch(() => '');
-    const err = body.match(/<error-name>([^<]{0,60})|ViewExpired/)?.[0] || '';
-    xhrs.push(`${r.request().method()} ${new URL(r.url()).pathname} ${r.status()} ${body.length}b ${err}`.trim());
-  };
-  const onFail = (q) => { if (isXhr(q)) xhrs.push(`${new URL(q.url()).pathname} failed ${q.failure()?.errorText}`); };
-  page.on('response', onRes);
-  page.on('requestfailed', onFail);
-  const enabled = () => page.locator('#checkme:enabled').waitFor({ timeout: TERMS_MS }).then(() => true, () => false);
-  try {
-    await page.selectOption('#dropOperator', gateway);
-    if (await enabled()) return void (await page.check('#checkme'));
-    io?.log?.('terms checkbox still disabled — re-firing the gateway change');
-    await page.dispatchEvent('#dropOperator', 'change');
-    if (await enabled()) return void (await page.check('#checkme'));
-    const controls = await page.$$eval('select, input:not([type=hidden]), button', (els) => els.filter((e) => e.offsetParent)
-      .map((e) => `${e.id || e.name || e.tagName}${e.disabled ? '(off)' : ''}${e.tagName === 'SELECT' ? `=${e.value}[${[...e.options].map((o) => o.value).join('/')}]` : ''}`)
-      .slice(0, 20).join(',')).catch(() => '');
-    io?.log?.(`terms box disabled: xhr [${xhrs.join(' | ')}] controls [${controls}]`);
-    throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, 'terms checkbox never enabled on eTransPgi');
-  } finally {
-    page.off('response', onRes);
-    page.off('requestfailed', onFail);
+  await page.selectOption('#dropOperator', gateway);
+  if (!(await page.locator('#checkme:enabled').waitFor({ timeout: TERMS_MS }).then(() => true, () => false))) {
+    if (gateway === 'CSC') throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, 'CSC gateway needs a CSC ID'); // the one case the rule keeps it off
+    io?.log?.(`terms box handler missing (${await whyUnbound(page)}) — applying the page's rule`);
+    await page.$eval('#checkme', (c) => { c.disabled = false; });
   }
+  await page.check('#checkme');
+  await page.$eval('#sendSubmit', (b) => { b.disabled = false; }); // = the page's checkbox handler; no-op when it ran
 }
 
 /**
@@ -165,4 +155,4 @@ async function bankHandoff(page, stateCd, io, probed = null) {
   return handoff;
 }
 
-module.exports = { bankHandoff, toHandoff };
+module.exports = { bankHandoff, toHandoff, pickGateway };
