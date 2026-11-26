@@ -10,6 +10,7 @@ const { portalError } = require('./portal');
 const { TREASURY, passTreasury, pickSession, repost } = require('./treasury');
 const VAHAN_HOST = 'vahan.parivahan.gov.in';
 const HANDOFF_MS = 60_000;
+const TERMS_MS = 5_000; // gateway pick → terms checkbox enabled (instant normally)
 const FORM_TYPE = /application\/x-www-form-urlencoded/i;
 // eTransPgi gateway: HR lists several (EGRAS-PNBA → PayU mapped live 2026-11-03), HP only CTP;
 // UP/UK (SBI Multi Bank) and RJ (IFMS) list one — taken as offered
@@ -113,6 +114,11 @@ async function bankHandoff(page, stateCd, io, probed = null) {
   const respawn = page.context().respawn && (async () => wire(await page.context().respawn()));
   page.on('dialog', onDialog);
   await page.selectOption('#dropOperator', gateway);
+  // terms box stayed disabled 30s (HR ed9c8959, 26 Nov): a slow page bound its change handler after our pick → fire it again
+  if (!(await page.locator('#checkme:enabled').waitFor({ timeout: TERMS_MS }).then(() => true, () => false))) {
+    io?.log?.('terms checkbox still disabled — re-firing the gateway change');
+    await page.dispatchEvent('#dropOperator', 'change');
+  }
   await page.check('#checkme');
   if (probed) {
     // probed at filing start on unwired sessions (checkpostv4.js) → wire the one it picked now

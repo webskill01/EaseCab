@@ -289,7 +289,8 @@ async function fileCheckpost(page, job, io) {
   // filings timed out unpaid at the QR, each leaving a lock; replaces the 2026-11-06 "no stop here")
   await io.confirmFare?.(quote);
   await disclaimerStep(page, io);
-  const handoff = await bankHandoff(page, job.stateCd, io, probed);
+  // past Pay Online = a pending row on Vahan: any failure here must clear it (HR ed9c8959 had no clear, no push)
+  const handoff = await bankHandoff(page, job.stateCd, io, probed).catch((e) => { throw Object.assign(e, { atBank: true }); });
   if (handoff.live) return { ...quote, payPage: handoff.live, ref: handoff.ref, pay: handoff.pay }; // runner shows the QR
   // No bank-page hand-off any more (2026-11-13): the driver paying outside the app left a pending
   // portal transaction (amount mismatch / vehicle locked). No QR → fail; the runner clears the lock.
