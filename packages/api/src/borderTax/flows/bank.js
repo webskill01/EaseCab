@@ -45,6 +45,40 @@ async function whereStuck(page) {
 }
 
 /**
+ * Gateway pick → terms box. HR 26 Nov (ed9c8959, 7d3f1438): the box stayed disabled after the pick, re-firing
+ * the change didn't help → log the page's background requests + visible controls (ids/options only) to map it.
+ */
+async function pickGateway(page, gateway, io) {
+  const xhrs = [];
+  const isXhr = (q) => ['xhr', 'fetch'].includes(q.resourceType());
+  const onRes = async (r) => {
+    if (!isXhr(r.request())) return;
+    const body = await r.text().catch(() => '');
+    const err = body.match(/<error-name>([^<]{0,60})|ViewExpired/)?.[0] || '';
+    xhrs.push(`${r.request().method()} ${new URL(r.url()).pathname} ${r.status()} ${body.length}b ${err}`.trim());
+  };
+  const onFail = (q) => { if (isXhr(q)) xhrs.push(`${new URL(q.url()).pathname} failed ${q.failure()?.errorText}`); };
+  page.on('response', onRes);
+  page.on('requestfailed', onFail);
+  const enabled = () => page.locator('#checkme:enabled').waitFor({ timeout: TERMS_MS }).then(() => true, () => false);
+  try {
+    await page.selectOption('#dropOperator', gateway);
+    if (await enabled()) return void (await page.check('#checkme'));
+    io?.log?.('terms checkbox still disabled — re-firing the gateway change');
+    await page.dispatchEvent('#dropOperator', 'change');
+    if (await enabled()) return void (await page.check('#checkme'));
+    const controls = await page.$$eval('select, input:not([type=hidden]), button', (els) => els.filter((e) => e.offsetParent)
+      .map((e) => `${e.id || e.name || e.tagName}${e.disabled ? '(off)' : ''}${e.tagName === 'SELECT' ? `=${e.value}[${[...e.options].map((o) => o.value).join('/')}]` : ''}`)
+      .slice(0, 20).join(',')).catch(() => '');
+    io?.log?.(`terms box disabled: xhr [${xhrs.join(' | ')}] controls [${controls}]`);
+    throw portalError(BORDER_TAX_FAILURE.PORTAL_ERROR, 'terms checkbox never enabled on eTransPgi');
+  } finally {
+    page.off('response', onRes);
+    page.off('requestfailed', onFail);
+  }
+}
+
+/**
  * eTransPgi: gateway + terms + Submit; the first top-level navigation leaving Vahan is captured, not
  * followed — in this tab or any popup it opens. A state treasury page (TREASURY) is followed and filled
  * so the bank page behind it is captured; if that fails, the treasury page is handed over instead.
@@ -113,13 +147,7 @@ async function bankHandoff(page, stateCd, io, probed = null) {
   await wire(page.context());
   const respawn = page.context().respawn && (async () => wire(await page.context().respawn()));
   page.on('dialog', onDialog);
-  await page.selectOption('#dropOperator', gateway);
-  // terms box stayed disabled 30s (HR ed9c8959, 26 Nov): a slow page bound its change handler after our pick → fire it again
-  if (!(await page.locator('#checkme:enabled').waitFor({ timeout: TERMS_MS }).then(() => true, () => false))) {
-    io?.log?.('terms checkbox still disabled — re-firing the gateway change');
-    await page.dispatchEvent('#dropOperator', 'change');
-  }
-  await page.check('#checkme');
+  await pickGateway(page, gateway, io);
   if (probed) {
     // probed at filing start on unwired sessions (checkpostv4.js) → wire the one it picked now
     const ok = await probed;
