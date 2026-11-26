@@ -140,7 +140,8 @@ async function showQr(page, bailBlank = false) {
  * @throws NO_QR
  */
 async function openQr(page, io) {
-  await page.waitForURL(/api\.payu\.in/, { timeout: QR_WAIT_MS });
+  // HTML is enough — showQr polls for the QR; a hung subresource kept 'load' from firing (HR 638b321d, 26 Nov)
+  await page.waitForURL(/api\.payu\.in/, { waitUntil: 'domcontentloaded', timeout: QR_WAIT_MS });
   let found = await showQr(page, true);
   // checkout rendered nothing (HR d549dc6c 2026-11-15: no button on the page) → reload once
   if (!found && !(await describe(page))) {
