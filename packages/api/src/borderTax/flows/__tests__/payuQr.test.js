@@ -14,7 +14,7 @@ test('decodeQr: reads the full upi link (amount + txn ref) from a QR PNG; junk �
   assert.strictEqual(decodeQr(Buffer.from('not a png')), null);
 });
 
-test('openQr: blank PayU checkout → reload after ~8s (not 30s+) → QR', async (t) => {
+test('openQr: blank PayU checkout (footer links only) → reload after ~8s (not 30s+) → QR', async (t) => {
   let chromium;
   try { ({ chromium } = require('playwright')); } catch { return t.skip('playwright not installed'); }
   let browser;
@@ -26,7 +26,7 @@ test('openQr: blank PayU checkout → reload after ~8s (not 30s+) → QR', async
   const context = await browser.newContext();
   await context.route('https://api.payu.in/**', (route) => {
     loads += 1;
-    const body = loads === 1 ? '<body></body>' : `<body><button>Pay</button><img width="200" height="200" src="data:image/png;base64,${png}"></body>`;
+    const body = loads === 1 ? '<body><a href="#">Privacy Policy</a> | <a href="#">Manage Consent</a></body>' : `<body><button>Pay</button><img width="200" height="200" src="data:image/png;base64,${png}"></body>`;
     return route.fulfill({ contentType: 'text/html', body });
   });
   const page = await context.newPage();

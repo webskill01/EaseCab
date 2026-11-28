@@ -63,6 +63,9 @@ async function describe(page) {
     .map((e) => (e.innerText || '').trim().slice(0, 20)).filter(Boolean).slice(0, 25).join(',')).catch(() => '');
 }
 
+/** Nothing but PayU's footer links (HR aedb8059 27 Nov: empty UPI pane + footer → counted as filled, no reload). */
+const isBlank = async (page) => !(await describe(page)).replace(/Privacy Policy|Manage Consent|,/g, '').trim();
+
 /**
  * Candidate QR elements (visible square-ish img/canvas/svg ≥ 120px, biggest first) → the first whose
  * screenshot decodes to a upi:// link. Only a decoded QR counts: on HP's other PayU checkout the biggest
@@ -129,7 +132,7 @@ async function showQr(page, bailBlank = false) {
     if (Date.now() - pressed >= GENERATE_GAP_MS && (await generate(page))) pressed = Date.now();
     found = await findQr(page);
     if (found) break;
-    if (bailBlank && Date.now() - t0 >= BLANK_MS && !(await describe(page))) break;
+    if (bailBlank && Date.now() - t0 >= BLANK_MS && (await isBlank(page))) break;
     await page.waitForTimeout(QR_POLL_MS);
   }
   return found;
@@ -144,7 +147,7 @@ async function openQr(page, io) {
   await page.waitForURL(/api\.payu\.in/, { waitUntil: 'domcontentloaded', timeout: QR_WAIT_MS });
   let found = await showQr(page, true);
   // checkout rendered nothing (HR d549dc6c 2026-11-15: no button on the page) → reload once
-  if (!found && !(await describe(page))) {
+  if (!found && (await isBlank(page))) {
     io.log(`PayU checkout blank (${new URL(page.url()).pathname}) — reloading`);
     await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
     found = await showQr(page);
